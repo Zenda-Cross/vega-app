@@ -7,8 +7,11 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+export type HomeStackParamList = {
+  Home: undefined;
+  Info: {link: string};
+};
 const Tab = createBottomTabNavigator();
-
 const App = () => {
   const HomeStack = createNativeStackNavigator();
 

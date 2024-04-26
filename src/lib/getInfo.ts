@@ -1,5 +1,5 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
+import fetcher from './fetcher';
 
 export interface Info {
   title: string;
@@ -12,7 +12,7 @@ export interface Info {
 export const getInfo = async (link: string): Promise<Info> => {
   try {
     const url = `https://vegamovies.ph/${link}`;
-    const response = await axios.get(url);
+    const response = await fetcher(url);
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
     const heading = infoContainer?.find('h3');

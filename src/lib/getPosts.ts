@@ -1,5 +1,5 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
+import fetcher from './fetcher';
 
 export interface Post {
   title: string;
@@ -12,10 +12,11 @@ export const getPosts = async (
   page: number,
 ): Promise<Post[]> => {
   try {
+    const baseUrl = 'https://vegamovies.ph';
     const url = filter.includes('category')
-      ? `https://vegamovies.ph/${filter}/page/${page}/`
-      : `https://vegamovies.ph/page/${page}/?s=${filter}`;
-    const urlRes = await axios.get(url);
+      ? `${baseUrl}/${filter}/page/${page}/`
+      : `${baseUrl}/${page}/?s=${filter}`;
+    const urlRes = await fetcher(url);
     // if res 301 change url to res.headers.location
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
