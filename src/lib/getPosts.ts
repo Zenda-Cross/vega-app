@@ -8,13 +8,13 @@ export interface Post {
 }
 
 export const getPosts = async (
-  fiter: string,
+  filter: string,
   page: number,
 ): Promise<Post[]> => {
   try {
-    const url = fiter.includes('category')
-      ? `https://vegamovies.ph/${fiter}/page/${page}/`
-      : `https://vegamovies.ph/page/${page}/?s=${fiter}`;
+    const url = filter.includes('category')
+      ? `https://vegamovies.ph/${filter}/page/${page}/`
+      : `https://vegamovies.ph/page/${page}/?s=${filter}`;
     const urlRes = await axios.get(url);
     // if res 301 change url to res.headers.location
     const $ = cheerio.load(urlRes.data);
@@ -32,7 +32,11 @@ export const getPosts = async (
             $(element)?.find('a')?.attr('title')?.replace('Download', '') ||
             '',
 
-          link: $(element)?.find('a')?.attr('href')?.replace(url, '') || '',
+          link:
+            $(element)
+              ?.find('a')
+              ?.attr('href')
+              ?.replace('https://vegamovies.ph/', '') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
             $(element).find('a').find('img').attr('src') ||

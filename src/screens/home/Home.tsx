@@ -1,4 +1,4 @@
-import {SafeAreaView, ScrollView, View} from 'react-native';
+import {SafeAreaView, ScrollView} from 'react-native';
 import Slider from '../../components/Slider';
 import React from 'react';
 
