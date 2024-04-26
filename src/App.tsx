@@ -1,4 +1,3 @@
-import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
@@ -6,7 +5,7 @@ import Settings from './screens/Settings';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import Entypo from 'react-native-vector-icons/Entypo';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +16,7 @@ const App = () => {
     return (
       <HomeStack.Navigator
         screenOptions={{
+          headerShown: false,
           headerBlurEffect: 'light',
           headerTintColor: 'tomato',
           headerStyle: {backgroundColor: '#171717'},
@@ -37,21 +37,28 @@ const App = () => {
           tabBarStyle: {backgroundColor: 'black'},
         }}>
         <Tab.Screen
-          name="Home"
+          name="HomeStack"
           component={HomeStackScreen}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <Entypo name="home" color={color} size={size} />
-            ),
+            title: 'Home',
+            tabBarIcon: ({focused, color, size}) =>
+              focused ? (
+                <Ionicons name="home" color={color} size={size} />
+              ) : (
+                <Ionicons name="home-outline" color={color} size={size} />
+              ),
           }}
         />
         <Tab.Screen
           name="Settings"
           component={Settings}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <Entypo name="cog" color={color} size={size} />
-            ),
+            tabBarIcon: ({focused, color, size}) =>
+              focused ? (
+                <Ionicons name="settings" color={color} size={size} />
+              ) : (
+                <Ionicons name="settings-outline" color={color} size={size} />
+              ),
           }}
         />
       </Tab.Navigator>
@@ -60,5 +67,3 @@ const App = () => {
 };
 
 export default App;
-
-const styles = StyleSheet.create({});
