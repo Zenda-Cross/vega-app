@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <SafeAreaView className="bg-black p-4 h-full w-full">
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Slider filter="" title="Latest" />
+        <Slider filter="d" title="Latest" />
         <Slider filter="category/web-series/netflix" title="Netflix" />
         <Slider
           filter="category/web-series/amazon-prime-video"

@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import fetcher from './fetcher';
+import axios from 'axios';
 
 export interface Info {
   title: string;
@@ -7,12 +7,19 @@ export interface Info {
   synopsis: string;
   imdbId: string;
   type: string;
+  linkList?: Link[];
+}
+
+export interface Link {
+  title: string;
+  movieLinks: string;
+  episodeLinks: string;
 }
 
 export const getInfo = async (link: string): Promise<Info> => {
   try {
     const url = `https://vegamovies.ph/${link}`;
-    const response = await fetcher(url);
+    const response = await axios(url);
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
     const heading = infoContainer?.find('h3');
@@ -44,12 +51,41 @@ export const getInfo = async (link: string): Promise<Info> => {
     //   console.log(image);
 
     console.log({title, synopsis, image, imdbId, type});
+    /// Links
+    const hr = infoContainer?.first()?.find('hr');
+    const list = hr?.nextUntil('hr');
+    const links: Link[] = [];
+    list.each((index, element: any) => {
+      element = $(element);
+      const title = element?.text() || '';
+      // console.log(title);
+      // movieLinks
+      const movieLinks = element
+        ?.next()
+        .find('.dwd-button')
+        ?.parent()
+        ?.attr('href');
+
+      // episode links
+      const episodeLinks = element
+        ?.next()
+        .find(
+          ".btn-outline[style='background:linear-gradient(135deg,#0ebac3,#09d261); color: white;']",
+        )
+        ?.parent()
+        ?.attr('href');
+      if (movieLinks || episodeLinks) {
+        links.push({title, movieLinks, episodeLinks});
+      }
+    });
+    console.log(links);
     return {
       title,
       synopsis,
       image,
       imdbId,
       type,
+      linkList: links,
     };
   } catch (error) {
     console.error('getInfo error');
@@ -59,6 +95,7 @@ export const getInfo = async (link: string): Promise<Info> => {
       image: '',
       imdbId: '',
       type: '',
+      linkList: [],
     };
   }
 };

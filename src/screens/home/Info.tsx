@@ -6,6 +6,7 @@ import {getInfo} from '../../lib/getInfo';
 import type {Info} from '../../lib/getInfo';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
+import SeasonList from '../../components/SeasonList';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props) {
@@ -84,6 +85,7 @@ export default function Info({route}: Props) {
             : info?.synopsis || ''}
         </Text>
       </View>
+      <SeasonList LinkList={info?.linkList || []} />
     </SafeAreaView>
   );
 }

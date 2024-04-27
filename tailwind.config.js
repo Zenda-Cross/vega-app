@@ -7,6 +7,7 @@ module.exports = {
         primary: '#FF6347',
         secondary: '#000000',
         tertiary: '#171717',
+        quaternary: '#1a1a1a',
       },
     },
   },

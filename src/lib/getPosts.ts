@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import fetcher from './fetcher';
+import axios from 'axios';
 
 export interface Post {
   title: string;
@@ -15,8 +15,8 @@ export const getPosts = async (
     const baseUrl = 'https://vegamovies.ph';
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
-      : `${baseUrl}/${page}/?s=${filter}`;
-    const urlRes = await fetcher(url);
+      : `${baseUrl}/page/${page}/?s=${filter}`;
+    const urlRes = await axios(url);
     // if res 301 change url to res.headers.location
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
