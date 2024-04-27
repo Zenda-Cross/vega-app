@@ -16,7 +16,7 @@ export async function getStream(dotlink: string) {
       '',
       '',
     ];
-    // console.log(vLinkRedirect);
+    // console.log(vLinkRedirect[1]);
     const getTokenRes = await axios(vLinkRedirect[1]);
 
     const getTokenText = getTokenRes.data;
@@ -28,7 +28,7 @@ export async function getStream(dotlink: string) {
     const vcloudLink = blogRes.data.match(
       /https:\/\/v-cloud\.bio\/\w+\?token=([a-zA-Z0-9_-]+)/,
     );
-    // console.log('vcloudLink', vcloudLink?.[0]);
+    // console.log('vcloudLink', vcloudLink[0]);
     const vcloudRes = await axios(vcloudLink?.[0]);
     const $ = cheerio.load(vcloudRes.data);
 
@@ -37,7 +37,7 @@ export async function getStream(dotlink: string) {
     linkClass.each((index, element) => {
       const itm = $(element);
       const link = itm.attr('href') || '';
-      if (link?.includes('workers.dev')) {
+      if (link?.includes('workers.dev') || link?.includes('pixeldrain')) {
         streamLinks.push(link);
       }
     });

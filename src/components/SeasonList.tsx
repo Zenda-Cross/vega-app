@@ -6,10 +6,13 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  Pressable,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
 import {getStream} from '../lib/getStream';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useNavigation} from '@react-navigation/native';
 
 const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
   if (Platform.OS === 'android') {
@@ -17,6 +20,7 @@ const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
   }
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [acc, setAcc] = useState<string>('');
   const [stream, setStream] = useState<string>('');
   useEffect(() => {
@@ -55,8 +59,12 @@ const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
                 maxHeight: acc === link.title ? 200 : 0,
                 overflow: 'hidden',
               }}>
-              <Text className="text-white">{link.movieLinks}</Text>
-              <Text className="text-white">{stream}</Text>
+              {stream && (
+                <Pressable
+                  onPress={() => navigation.navigate('Player', {stream})}>
+                  <Text>watch</Text>
+                </Pressable>
+              )}
             </Animated.ScrollView>
           </View>
         ))}

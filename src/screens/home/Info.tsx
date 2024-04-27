@@ -7,9 +7,10 @@ import type {Info} from '../../lib/getInfo';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
+import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
-export default function Info({route}: Props) {
+export default function Info({route}: Props): React.JSX.Element {
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function Info({route}: Props) {
   }, []);
   return (
     <SafeAreaView className="bg-black h-full w-full">
+      <OrientationLocker orientation={PORTRAIT} />
       <View className="relative w-full h-[30%]">
         <Image
           source={{uri: meta?.background || info?.image}}

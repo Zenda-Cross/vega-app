@@ -1,6 +1,7 @@
 import React from 'react';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
+import Player from './screens/home/Player';
 import Settings from './screens/Settings';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -10,6 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string};
+  Player: {stream: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -26,6 +28,7 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
+        <HomeStack.Screen name="Player" component={Player} />
       </HomeStack.Navigator>
     );
   }
