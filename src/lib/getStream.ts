@@ -24,12 +24,11 @@ export async function getStream(dotlink: string) {
     // console.log(getToken?.[1]);
     const blogLink = `https://bloggingvector.shop/re/${getToken?.[1]}?_=631252793`;
     const blogRes = await axios(blogLink);
-    // console.log(blogRes.data);
-    const vcloudLink = blogRes.data.match(
-      /https:\/\/v-cloud\.bio\/\w+\?token=([a-zA-Z0-9_-]+)/,
-    );
-    // console.log('vcloudLink', vcloudLink[0]);
-    const vcloudRes = await axios(vcloudLink?.[0]);
+    console.log(blogRes.data);
+    // console.log('blogLink', blogLink);
+    const vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
+    // console.log('vcloudLink', vcloudLink[1]);
+    const vcloudRes = await axios(vcloudLink?.[1]);
     const $ = cheerio.load(vcloudRes.data);
 
     const linkClass = $('.btn-success.btn-lg.h6');
@@ -42,7 +41,7 @@ export async function getStream(dotlink: string) {
       }
     });
 
-    // console.log(streamLinks);
+    console.log('streamLinks', streamLinks);
     return streamLinks[0];
   } catch (error) {
     console.error(error);
