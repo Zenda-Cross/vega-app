@@ -11,11 +11,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string};
+};
+
+export type RootStackParamList = {
+  TabStack: undefined;
   Player: {stream: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
-  const HomeStack = createNativeStackNavigator();
+  const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+  const Stack = createNativeStackNavigator<RootStackParamList>();
 
   function HomeStackScreen() {
     return (
@@ -28,13 +33,12 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
-        <HomeStack.Screen name="Player" component={Player} />
       </HomeStack.Navigator>
     );
   }
 
-  return (
-    <NavigationContainer>
+  function TabStack() {
+    return (
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -68,6 +72,21 @@ const App = () => {
           }}
         />
       </Tab.Navigator>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          headerBlurEffect: 'light',
+          headerTintColor: 'tomato',
+          headerStyle: {backgroundColor: '#171717'},
+        }}>
+        <Stack.Screen name="TabStack" component={TabStack} />
+        <Stack.Screen name="Player" component={Player} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
