@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
+import {headers} from './header';
 
 export interface Post {
   title: string;
@@ -16,7 +17,7 @@ export const getPosts = async (
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
       : `${baseUrl}/page/${page}/?s=${filter}`;
-    const urlRes = await axios(url);
+    const urlRes = await axios.get(url, {headers});
     // if res 301 change url to res.headers.location
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];

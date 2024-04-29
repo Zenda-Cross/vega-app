@@ -7,6 +7,8 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import 'react-native-reanimated';
+import 'react-native-gesture-handler';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -15,7 +17,7 @@ export type HomeStackParamList = {
 
 export type RootStackParamList = {
   TabStack: undefined;
-  Player: {stream: string};
+  Player: {link: string; type: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {

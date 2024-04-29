@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
+import {headers} from './header';
 
 export interface Info {
   title: string;
@@ -13,13 +14,13 @@ export interface Info {
 export interface Link {
   title: string;
   movieLinks: string;
-  episodeLinks: string;
+  episodesLink: string;
 }
 
 export const getInfo = async (link: string): Promise<Info> => {
   try {
     const url = `https://vegamovies.ph/${link}`;
-    const response = await axios(url);
+    const response = await axios.get(url, {headers});
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
     const heading = infoContainer?.find('h3');
@@ -50,7 +51,7 @@ export const getInfo = async (link: string): Promise<Info> => {
       infoContainer?.find('img[data-lazy-src]')?.attr('data-lazy-src') || '';
     //   console.log(image);
 
-    console.log({title, synopsis, image, imdbId, type});
+    // console.log({title, synopsis, image, imdbId, type});
     /// Links
     const hr = infoContainer?.first()?.find('hr');
     const list = hr?.nextUntil('hr');
@@ -67,18 +68,18 @@ export const getInfo = async (link: string): Promise<Info> => {
         ?.attr('href');
 
       // episode links
-      const episodeLinks = element
+      const episodesLink = element
         ?.next()
         .find(
-          ".btn-outline[style='background:linear-gradient(135deg,#0ebac3,#09d261); color: white;']",
+          ".btn-outline[style='background:linear-gradient(135deg,#ed0b0b,#f2d152); color: white;']",
         )
         ?.parent()
         ?.attr('href');
-      if (movieLinks || episodeLinks) {
-        links.push({title, movieLinks, episodeLinks});
+      if (movieLinks || episodesLink) {
+        links.push({title, movieLinks, episodesLink});
       }
     });
-    console.log(links);
+    // console.log(links);
     return {
       title,
       synopsis,
