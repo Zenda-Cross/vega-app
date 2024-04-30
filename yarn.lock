@@ -6537,6 +6537,11 @@ react-native-linear-gradient@^2.8.3:
   resolved "https://registry.npmjs.org/react-native-linear-gradient/-/react-native-linear-gradient-2.8.3.tgz"
   integrity sha512-KflAXZcEg54PXkLyflaSZQ3PJp4uC4whM7nT/Uot9m0e/qxFV3p6uor1983D1YOBJbJN7rrWdqIjq0T42jOJyA==
 
+react-native-media-console@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/react-native-media-console/-/react-native-media-console-2.2.0.tgz"
+  integrity sha512-TsClEFUz9OZ3d2wU4w0wYY9RA2ULCi3VFyKW4ho9by9WHGMokSwCViDMVE6+PuE6Fi4a+IgwgtcJ0euqI2aYAg==
+
 react-native-mmkv-storage@^0.9.1:
   version "0.9.1"
   resolved "https://registry.npmjs.org/react-native-mmkv-storage/-/react-native-mmkv-storage-0.9.1.tgz"
@@ -6591,11 +6596,11 @@ react-native-vector-icons@^10.0.3:
     yargs "^16.1.1"
 
 react-native-video@^6.0.0-alpha.11:
-  version "6.0.0-alpha.11"
-  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.0.0-alpha.11.tgz"
-  integrity sha512-Z1FqIkNBqQWdBVKoh5WlmM01LIVhxlOsddKVV9IzMJ3EDl8PAU4ln7hdo85RHCHhgWSHzathPDo0UK7gPB48MA==
+  version "6.0.0-rc.0"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.0.0-rc.0.tgz"
+  integrity sha512-X8x3dJZYAhYR7dpg8RciHJXawhVkqrhwFWMrHGagFV6+pRLVfkErOShf4jzPt9i/fIBJjdKtFgeJY2jgqnCjgA==
 
-react-native@*, react-native@>=0.63.2, react-native@0.74.0:
+react-native@*, react-native@>=0.46.0, react-native@>=0.63.2, react-native@0.74.0:
   version "0.74.0"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.74.0.tgz"
   integrity sha512-Vpp9WPmkCm4TUH5YDxwQhqktGVon/yLpjbTgjgLqup3GglOgWagYCX3MlmK1iksIcqtyMJHMEWa+UEzJ3G9T8w==

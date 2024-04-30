@@ -150,7 +150,11 @@ export default function Info({route}: Props): React.JSX.Element {
               ))}
             </View>
           ) : (
-            <SeasonList LinkList={info?.linkList || []} />
+            <SeasonList
+              LinkList={info?.linkList || []}
+              poster={meta?.logo?.replace('medium', 'large') || ''}
+              title={meta?.name || ''}
+            />
           )}
         </View>
       </ScrollView>

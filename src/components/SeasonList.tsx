@@ -17,7 +17,15 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 
-const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
+const SeasonList = ({
+  LinkList,
+  poster,
+  title,
+}: {
+  LinkList: Link[];
+  poster: string;
+  title: string;
+}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [acc, setAcc] = useState<string>('');
@@ -83,6 +91,8 @@ const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
                         navigation.navigate('Player', {
                           link: episode.link,
                           type: 'series',
+                          title: title + ' - ' + episode.title,
+                          poster: poster,
                         })
                       }>
                       <Ionicons name="play-circle" size={28} color="tomato" />
@@ -106,6 +116,8 @@ const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
                       navigation.navigate('Player', {
                         link: link.movieLinks,
                         type: 'movie',
+                        title: title,
+                        poster: poster,
                       })
                     }>
                     <Ionicons name="play-circle" size={28} color="tomato" />
