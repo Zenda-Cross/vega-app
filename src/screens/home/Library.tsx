@@ -3,8 +3,8 @@ import React from 'react';
 
 const Library = () => {
   return (
-    <View>
-      <Text>Library</Text>
+    <View className="h-full w-full bg-black flex justify-center items-center">
+      <Text>nothing in library</Text>
     </View>
   );
 };

@@ -38,9 +38,12 @@ function Hero() {
             resizeMode: 'contain',
           }}
         />
+        <Text className="text-white text-lg font-bold">
+          {post?.genres?.slice(0, 3).map((genre: string) => '•' + genre)}
+        </Text>
         <TouchableOpacity className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center">
           <FontAwesome6 name="play" size={20} color="black" />
-          <Text className="text-black font-bold text-base">Play</Text>
+          <Text className="text-black font-bold text-base">Watch</Text>
         </TouchableOpacity>
       </View>
       <LinearGradient
