@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
+import {MMKV} from '../App';
 
 export interface Info {
   title: string;
@@ -19,7 +20,8 @@ export interface Link {
 
 export const getInfo = async (link: string): Promise<Info> => {
   try {
-    const url = `https://vegamovies.ph/${link}`;
+    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.earth';
+    const url = `${baseUrl}/${link}`;
     const response = await axios.get(url, {headers});
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
@@ -90,6 +92,7 @@ export const getInfo = async (link: string): Promise<Info> => {
     };
   } catch (error) {
     console.error('getInfo error');
+    console.error(error);
     return {
       title: '',
       synopsis: '',

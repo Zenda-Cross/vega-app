@@ -7,8 +7,13 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
+import {MMKVLoader} from 'react-native-mmkv-storage';
+import Library from './screens/home/Library';
+
+export const MMKV = new MMKVLoader().initialize();
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -58,6 +63,18 @@ const App = () => {
                 <Ionicons name="home" color={color} size={size} />
               ) : (
                 <Ionicons name="home-outline" color={color} size={size} />
+              ),
+          }}
+        />
+        <Tab.Screen
+          name="Library"
+          component={Library}
+          options={{
+            tabBarIcon: ({focused, color, size}) =>
+              focused ? (
+                <Entypo name="folder-video" color={color} size={size} />
+              ) : (
+                <Entypo name="folder-video" color={color} size={size} />
               ),
           }}
         />

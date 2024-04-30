@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
+import {MMKV} from '../App';
 
 export interface Post {
   title: string;
@@ -13,12 +14,11 @@ export const getPosts = async (
   page: number,
 ): Promise<Post[]> => {
   try {
-    const baseUrl = 'https://vegamovies.ph';
+    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.earth';
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
       : `${baseUrl}/page/${page}/?s=${filter}`;
     const urlRes = await axios.get(url, {headers});
-    // if res 301 change url to res.headers.location
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
     $('.blog-items')
@@ -34,11 +34,7 @@ export const getPosts = async (
             $(element)?.find('a')?.attr('title')?.replace('Download', '') ||
             '',
 
-          link:
-            $(element)
-              ?.find('a')
-              ?.attr('href')
-              ?.replace('https://vegamovies.ph/', '') || '',
+          link: $(element)?.find('a')?.attr('href')?.replace(baseUrl, '') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
             $(element).find('a').find('img').attr('src') ||
@@ -50,7 +46,8 @@ export const getPosts = async (
     // console.log(posts);
     return posts;
   } catch (error) {
-    console.error('error');
+    console.error('getPosts error: ');
+    // console.error(error);
     return [];
   }
 };

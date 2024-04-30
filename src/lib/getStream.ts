@@ -12,8 +12,7 @@ export async function getStream(link: string, type: string) {
       );
       const dotlinkText = dotlinkRes.data;
       // console.log('dotlinkText', dotlinkText);
-      const vlink =
-        dotlinkText.match(/<a\s+href="([^"]*v-cloud\.bio[^"]*)"/i) || [];
+      const vlink = dotlinkText.match(/<a\s+href="([^"]*cloud\.[^"]*)"/i) || [];
       // console.log('vLink', vlink[1]);
       link = vlink[1];
     }
@@ -57,6 +56,7 @@ export async function getStream(link: string, type: string) {
     // console.log('streamLinks', streamLinks);
     return streamLinks[0];
   } catch (error) {
+    console.error('getStream error: ');
     console.error(error);
     return '';
   }

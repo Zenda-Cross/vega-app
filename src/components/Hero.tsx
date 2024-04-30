@@ -22,13 +22,16 @@ function Hero() {
   return (
     <View className="relative">
       <Image
-        source={{uri: post?.background || post?.poster}}
+        source={{
+          uri:
+            post?.background || post?.poster || 'https://via.placeholder.com',
+        }}
         className="h-96 w-full"
         style={{resizeMode: 'cover'}}
       />
       <View className="absolute bottom-0 w-full z-20 justify-center gap-3 flex items-center">
         <Image
-          source={{uri: post?.logo}}
+          source={{uri: post?.logo || 'https://via.placeholder.com'}}
           style={{
             width: 200,
             height: 100,
