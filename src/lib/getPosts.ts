@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
 import {MMKV} from '../App';
+import {homeList} from './constants';
 
 export interface Post {
   title: string;
@@ -50,4 +51,20 @@ export const getPosts = async (
     // console.error(error);
     return [];
   }
+};
+
+export interface HomePageData {
+  title: string;
+  Posts: Post[];
+}
+export const getHomePageData = async (): Promise<HomePageData[]> => {
+  const homeData: HomePageData[] = [];
+  for (const item of homeList) {
+    const data = await getPosts(item.filter, 1);
+    homeData.push({
+      title: item.title,
+      Posts: data,
+    });
+  }
+  return homeData;
 };

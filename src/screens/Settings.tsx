@@ -9,13 +9,13 @@ const Settings = () => {
     if (text.endsWith('/')) {
       text = text.slice(0, -1);
     }
-    if (text.length < 19) return;
     await MMKV.setString('baseUrl', text);
     setBaseUrl(text);
   };
   useLayoutEffect(() => {
     const fetchBaseUrl = async () => {
-      const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.earth';
+      const baseUrl =
+        (await MMKV.getString('baseUrl')) || 'https://vegamovies.earth';
       setBaseUrl(baseUrl);
     };
     fetchBaseUrl();
@@ -27,7 +27,7 @@ const Settings = () => {
         <Text className="text-white font-semibold">Base Url</Text>
         <TextInput
           className="bg-secondary text-white p-1 px-2 rounded-md"
-          placeholder="Base Url"
+          placeholder="example-https://vegamovies.earth"
           value={BaseUrl}
           onChangeText={onChange}
         />

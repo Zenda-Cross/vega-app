@@ -1,7 +1,6 @@
 import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import type {Post} from '../lib/getPosts';
-import {getPosts} from '../lib/getPosts';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
@@ -9,26 +8,17 @@ import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
 
 export default function Slider({
-  filter,
+  isLoading,
   title,
+  posts,
 }: {
-  filter: string;
+  isLoading: boolean;
   title: string;
+  posts: Post[];
 }): JSX.Element {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      const data = await getPosts(filter, 1);
-      setPosts(data);
-      setLoading(false);
-    };
-    fetchPosts();
-  }, []);
   return (
     <>
       <MotiView
@@ -37,7 +27,7 @@ export default function Slider({
         transition={{type: 'timing', delay: 0}}
         className="gap-3 mt-7">
         <Text className="text-2xl text-primary font-semibold">{title}</Text>
-        {loading ? (
+        {isLoading ? (
           <View className="flex flex-row gap-2 overflow-hidden">
             {[...Array(4)].map((_, i) => (
               <View className="mx-1 gap-1 flex" key={i}>

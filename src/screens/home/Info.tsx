@@ -1,4 +1,4 @@
-import {Image, Text, View} from 'react-native';
+import {Image, Text, View, RefreshControl, ScrollView} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../App';
@@ -9,13 +9,14 @@ import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
-import {MotiSafeAreaView, ScrollView} from 'moti';
+import {MotiSafeAreaView} from 'moti';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     const fetchInfo = async () => {
       setInfoLoading(true);
@@ -29,14 +30,26 @@ export default function Info({route}: Props): React.JSX.Element {
       console.log(info?.linkList);
     };
     fetchInfo();
-  }, []);
+  }, [refreshing]);
   return (
     <MotiSafeAreaView
       animate={{backgroundColor: 'black'}}
       //@ts-ignore
       transition={{type: 'timing'}}
       className="h-full w-full">
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            colors={['tomato']}
+            tintColor="tomato"
+            progressBackgroundColor={'black'}
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              setTimeout(() => setRefreshing(false), 1000);
+            }}
+          />
+        }>
         <OrientationLocker orientation={PORTRAIT} />
         <View className="relative w-full h-[230px]">
           <View className="absolute w-full h-full">
@@ -104,7 +117,11 @@ export default function Info({route}: Props): React.JSX.Element {
             ))}
           </View>
           {/* synopsis */}
-          <Text className="text-white text-lg font-semibold">Synopsis</Text>
+          <View className="mb-2">
+            <Skeleton show={infoLoading} colorMode="dark" width={80}>
+              <Text className="text-white text-lg font-semibold">Synopsis</Text>
+            </Skeleton>
+          </View>
           <Skeleton show={infoLoading} colorMode="dark" height={50}>
             <Text className="text-white text-xs">
               {meta?.description
@@ -116,13 +133,25 @@ export default function Info({route}: Props): React.JSX.Element {
           </Skeleton>
         </View>
         <View className="p-4">
-          <Skeleton
-            show={infoLoading}
-            colorMode="dark"
-            height={200}
-            width={'100%'}>
+          {infoLoading ? (
+            <View className="gap-y-3 items-start mb-4 p-3">
+              <Skeleton show={true} colorMode="dark" height={30} width={80} />
+              {[...Array(4)].map((_, i) => (
+                <View
+                  className="bg-tertiary py-1 rounded-md gap-3 mt-3"
+                  key={i}>
+                  <Skeleton
+                    show={true}
+                    colorMode="dark"
+                    height={40}
+                    width={'100%'}
+                  />
+                </View>
+              ))}
+            </View>
+          ) : (
             <SeasonList LinkList={info?.linkList || []} />
-          </Skeleton>
+          )}
         </View>
       </ScrollView>
     </MotiSafeAreaView>

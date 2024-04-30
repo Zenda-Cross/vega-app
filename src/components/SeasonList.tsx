@@ -49,7 +49,7 @@ const SeasonList = ({LinkList}: {LinkList: Link[]}) => {
       transition={{
         type: 'timing',
       }}>
-      <Text className="text-white text-lg font-semibold mb-2">Stream</Text>
+      <Text className="text-white text-lg font-semibold mb-2">Streams</Text>
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
         {LinkList.map((link, i) => (
           <View
