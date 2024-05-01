@@ -29,6 +29,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         title={route.params.title}
         navigator={navigation}
         seekColor="tomato"
+        subtitleStyle={{fontSize: 20}}
         showDuration={true}
         toggleResizeModeOnFullscreen={true}
         fullscreen={true}

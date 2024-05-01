@@ -49,7 +49,7 @@ export async function getStream(link: string, type: string) {
       const itm = $(element);
       const link = itm.attr('href') || '';
       if (
-        link?.includes('workers.dev') ||
+        link?.includes('.dev') ||
         link?.includes('pixeldrain') ||
         link?.includes('hubcloud')
       ) {
