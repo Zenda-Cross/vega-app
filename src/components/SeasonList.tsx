@@ -138,7 +138,7 @@ const SeasonList = ({
                       })
                     }>
                     <Ionicons name="play-circle" size={28} color="tomato" />
-                    <Text className="text-white">Play Movie</Text>
+                    <Text className="text-white">Play</Text>
                   </TouchableOpacity>
                 </View>
               )}

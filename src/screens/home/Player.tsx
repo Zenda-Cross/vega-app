@@ -10,13 +10,13 @@ import {useNavigation} from '@react-navigation/native';
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 const Player = ({route}: Props): React.JSX.Element => {
-  const [stream, setStream] = useState<string>('');
+  const [stream, setStream] = useState<string[]>([]);
   const navigation = useNavigation();
   useEffect(() => {
     const fetchStream = async () => {
       const data = await getStream(route.params.link, route.params.type);
       setStream(data);
-      console.log('st', data);
+      // console.log('st', data);
     };
     fetchStream();
   }, [route.params.link]);
@@ -24,7 +24,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     <View className="bg-black h-full w-full p-4">
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
-        source={{uri: stream}}
+        source={{uri: stream[0]}}
         poster={route.params.poster}
         title={route.params.title}
         navigator={navigation}

@@ -43,21 +43,25 @@ export async function getStream(link: string, type: string) {
     const vcloudRes = await axios(vcloudLink?.[1], {headers});
     const $ = cheerio.load(vcloudRes.data);
 
-    const linkClass = $('.btn-success.btn-lg.h6');
+    const linkClass = $('.btn-success.btn-lg.h6,.btn-danger');
     const streamLinks: string[] = [];
     linkClass.each((index, element) => {
       const itm = $(element);
       const link = itm.attr('href') || '';
-      if (link?.includes('workers.dev') || link?.includes('pixeldrain')) {
+      if (
+        link?.includes('workers.dev') ||
+        link?.includes('pixeldrain') ||
+        link?.includes('hubcloud')
+      ) {
         streamLinks.push(link);
       }
     });
 
-    // console.log('streamLinks', streamLinks);
-    return streamLinks[0];
+    console.log('streamLinks', streamLinks);
+    return streamLinks;
   } catch (error) {
     console.error('getStream error: ');
     console.error(error);
-    return '';
+    return [];
   }
 }

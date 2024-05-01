@@ -5,6 +5,7 @@ import Player from './screens/home/Player';
 import Settings from './screens/Settings';
 import Library from './screens/Library';
 import Search from './screens/Search';
+import ScrollList from './screens/ScrollList';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -19,12 +20,12 @@ export const MMKV = new MMKVLoader().initialize();
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string};
+  ScrollList: {filter: string; title?: string};
 };
 
 export type RootStackParamList = {
   TabStack: undefined;
   Player: {link: string; type: string; title: string; poster: string};
-  Search: undefined;
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
+        <HomeStack.Screen name="ScrollList" component={ScrollList} />
       </HomeStack.Navigator>
     );
   }
@@ -49,11 +51,13 @@ const App = () => {
   function TabStack() {
     return (
       <Tab.Navigator
+        detachInactiveScreens={true}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: 'tomato',
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {backgroundColor: 'black'},
+          tabBarHideOnKeyboard: true,
         }}>
         <Tab.Screen
           name="HomeStack"
