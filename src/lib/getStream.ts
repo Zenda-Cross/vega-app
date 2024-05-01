@@ -60,8 +60,8 @@ export async function getStream(link: string, type: string) {
     console.log('streamLinks', streamLinks);
     return streamLinks;
   } catch (error) {
-    console.error('getStream error: ');
-    console.error(error);
+    console.log('getStream error: ');
+    // console.error(error);
     return [];
   }
 }

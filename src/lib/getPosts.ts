@@ -47,7 +47,7 @@ export const getPosts = async (
     // console.log(posts);
     return posts;
   } catch (error) {
-    console.error('getPosts error: ');
+    console.log('getPosts error: ');
     // console.error(error);
     return [];
   }

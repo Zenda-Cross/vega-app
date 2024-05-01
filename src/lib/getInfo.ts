@@ -91,8 +91,8 @@ export const getInfo = async (link: string): Promise<Info> => {
       linkList: links,
     };
   } catch (error) {
-    console.error('getInfo error');
-    console.error(error);
+    console.log('getInfo error');
+    // console.error(error);
     return {
       title: '',
       synopsis: '',

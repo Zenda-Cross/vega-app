@@ -4,7 +4,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
 import {getPosts, Post} from '../lib/getPosts';
 import {Image} from 'react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
@@ -18,10 +18,17 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const {filter} = route.params;
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isEnd, setIsEnd] = useState<boolean>(false);
   useEffect(() => {
     const fetchPosts = async () => {
       setIsLoading(true);
       const newPosts = await getPosts(filter, page);
+      console.log(newPosts);
+      if (newPosts.length === 0) {
+        setIsEnd(true);
+        setIsLoading(false);
+        return;
+      }
       setPosts(prev => [...prev, ...newPosts]);
       setIsLoading(false);
     };
@@ -29,13 +36,14 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   }, [page]);
 
   const onEndReached = async () => {
+    if (isEnd) return;
     setIsLoading(true);
     setPage(page + 1);
   };
 
   return (
     <MotiView
-      className="h-full w-full bg-black p-3 justify-center items-center flex-1"
+      className="h-full w-full bg-black p-3"
       animate={{backgroundColor: 'black'}}
       //@ts-ignore
       transition={{
@@ -79,26 +87,23 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           justifyContent: 'center',
           alignItems: 'center',
         }}
-        onStartReached={async () => {}}
         keyExtractor={(item, i) => item.title + i}
         renderItem={({item}) => (
-          <>
-            <View className="flex flex-col m-3 w-full">
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Info', {link: item.link})}>
-                <Image
-                  className="rounded-md"
-                  source={{uri: item.image}}
-                  style={{width: 100, height: 150}}
-                />
-              </TouchableOpacity>
-              <Text className="text-white text-center truncate w-24 text-xs">
-                {item.title.length > 24
-                  ? item.title.slice(0, 24) + '...'
-                  : item.title}
-              </Text>
-            </View>
-          </>
+          <View className="flex flex-col m-3">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Info', {link: item.link})}>
+              <Image
+                className="rounded-md"
+                source={{uri: item.image}}
+                style={{width: 100, height: 150}}
+              />
+            </TouchableOpacity>
+            <Text className="text-white text-center truncate w-24 text-xs">
+              {item.title.length > 24
+                ? item.title.slice(0, 24) + '...'
+                : item.title}
+            </Text>
+          </View>
         )}
         onEndReached={onEndReached}
       />

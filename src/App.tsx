@@ -43,6 +43,20 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
+      </HomeStack.Navigator>
+    );
+  }
+
+  function SearchStack() {
+    return (
+      <HomeStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          headerBlurEffect: 'light',
+          headerTintColor: 'tomato',
+          headerStyle: {backgroundColor: '#171717'},
+        }}>
+        <HomeStack.Screen name="Search" component={Search} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
       </HomeStack.Navigator>
     );
@@ -73,9 +87,10 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="Search"
-          component={Search}
+          name="SearchStack"
+          component={SearchStack}
           options={{
+            title: 'Search',
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
                 <Ionicons name="search" color={color} size={size} />

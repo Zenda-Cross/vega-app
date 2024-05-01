@@ -20,6 +20,8 @@ export default function Info({route}: Props): React.JSX.Element {
   useEffect(() => {
     const fetchInfo = async () => {
       setInfoLoading(true);
+      setMeta(undefined);
+      setInfo(undefined);
       const data = await getInfo(route.params.link);
       try {
         const metaRes = await axios.get(
