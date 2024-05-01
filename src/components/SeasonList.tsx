@@ -6,6 +6,7 @@ import {
   UIManager,
   LayoutAnimation,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
@@ -63,8 +64,8 @@ const SeasonList = ({
           <View
             className="bg-quaternary min-w-full p-2 rounded-md"
             key={link.title + i}>
-            <Text
-              className="text-white font-medium px-1"
+            <Pressable
+              className="text-white font-medium px-1 gap-1"
               onPress={() => {
                 LayoutAnimation.configureNext(
                   LayoutAnimation.Presets.easeInEaseOut,
@@ -73,8 +74,24 @@ const SeasonList = ({
                 setActEp(link.episodesLink || '');
                 actEp === link.episodesLink ? '' : setEpisodeList([]);
               }}>
-              {link.title}
-            </Text>
+              <Text className="text-primary">
+                {link.title.match(/^([^{\[]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/)?.[0]}
+              </Text>
+              <View className="flex-row items-center gap-1">
+                <Text className="text-xs">
+                  {link.title.match(/{([^}]+)}/)?.[1] ||
+                    link.title.match(/\[([^\]]+)\]/)?.[1]}
+                </Text>
+                <Text className="text-xs">
+                  {'•'}
+                  {link.title.match(/(\d+(?:\.\d+)?)([KMGT]B(?:\/E)?)/g)?.[0]}
+                </Text>
+                <Text className="text-xs">
+                  {'•'}
+                  {link.title.match(/\d+p\b/)?.[0]}
+                </Text>
+              </View>
+            </Pressable>
             <Animated.ScrollView
               style={{
                 maxHeight: acc === link.title ? '100%' : 0,

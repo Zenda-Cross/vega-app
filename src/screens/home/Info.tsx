@@ -21,11 +21,15 @@ export default function Info({route}: Props): React.JSX.Element {
     const fetchInfo = async () => {
       setInfoLoading(true);
       const data = await getInfo(route.params.link);
-      const metaRes = await axios.get(
-        `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
-      );
+      try {
+        const metaRes = await axios.get(
+          `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
+        );
+        setMeta(metaRes.data.meta);
+      } catch (e) {
+        console.log(e);
+      }
       setInfo(data);
-      setMeta(metaRes.data.meta);
       setInfoLoading(false);
       console.log(info?.linkList);
     };

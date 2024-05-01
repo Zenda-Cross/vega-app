@@ -3,6 +3,8 @@ import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
 import Settings from './screens/Settings';
+import Library from './screens/Library';
+import Search from './screens/Search';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -11,7 +13,6 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import {MMKVLoader} from 'react-native-mmkv-storage';
-import Library from './screens/home/Library';
 
 export const MMKV = new MMKVLoader().initialize();
 
@@ -23,6 +24,7 @@ export type HomeStackParamList = {
 export type RootStackParamList = {
   TabStack: undefined;
   Player: {link: string; type: string; title: string; poster: string};
+  Search: undefined;
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -63,6 +65,18 @@ const App = () => {
                 <Ionicons name="home" color={color} size={size} />
               ) : (
                 <Ionicons name="home-outline" color={color} size={size} />
+              ),
+          }}
+        />
+        <Tab.Screen
+          name="Search"
+          component={Search}
+          options={{
+            tabBarIcon: ({focused, color, size}) =>
+              focused ? (
+                <Ionicons name="search" color={color} size={size} />
+              ) : (
+                <Ionicons name="search-outline" color={color} size={size} />
               ),
           }}
         />
