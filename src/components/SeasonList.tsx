@@ -75,9 +75,15 @@ const SeasonList = ({
                 actEp === link.episodesLink ? '' : setEpisodeList([]);
               }}>
               <Text className="text-primary">
-                {link.title.match(/^([^{\[]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/)?.[0]}
+                {link.title.match(
+                  /^(?:\[?[^\[\{]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/,
+                )?.[0]?.length! > 0
+                  ? link.title.match(
+                      /^(?:\[?[^\[\{]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/,
+                    )?.[0]
+                  : link.title}
               </Text>
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row items-center flex-wrap gap-1">
                 <Text className="text-xs">
                   {link.title.match(/{([^}]+)}/)?.[1] ||
                     link.title.match(/\[([^\]]+)\]/)?.[1]}

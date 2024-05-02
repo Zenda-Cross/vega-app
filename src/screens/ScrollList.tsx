@@ -43,13 +43,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <MotiView
-      className="h-full w-full bg-black p-3"
+      className="h-full w-full bg-black p-"
       animate={{backgroundColor: 'black'}}
       //@ts-ignore
       transition={{
         type: 'timing',
       }}>
-      <View className="w-full px-4 font-semibold">
+      <View className="w-full px-4 font-semibold mt-2">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
         </Text>
@@ -84,7 +84,6 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         contentContainerStyle={{
           flexDirection: 'row',
           flexWrap: 'wrap',
-          justifyContent: 'center',
           alignItems: 'center',
         }}
         keyExtractor={(item, i) => item.title + i}

@@ -103,6 +103,7 @@ const App = () => {
           name="Library"
           component={Library}
           options={{
+            unmountOnBlur: true,
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
                 <Entypo name="folder-video" color={color} size={size} />

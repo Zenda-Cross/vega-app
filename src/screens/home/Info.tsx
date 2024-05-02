@@ -10,6 +10,8 @@ import SeasonList from '../../components/SeasonList';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
 import {MotiSafeAreaView} from 'moti';
+import {MMKV} from '../../App';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
@@ -17,6 +19,11 @@ export default function Info({route}: Props): React.JSX.Element {
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [inLibrary, setInLibrary] = useState(
+    MMKV.getArray('library')?.some(
+      (item: any) => item.link === route.params.link,
+    ),
+  );
   useEffect(() => {
     const fetchInfo = async () => {
       setInfoLoading(true);
@@ -37,6 +44,24 @@ export default function Info({route}: Props): React.JSX.Element {
     };
     fetchInfo();
   }, [refreshing]);
+
+  const addLibrary = () => {
+    const library = MMKV.getArray('library') || [];
+    library.push({
+      title: meta?.name || info?.title,
+      poster: meta?.poster || info?.image,
+      link: route.params.link,
+    });
+    MMKV.setArray('library', library);
+    setInLibrary(true);
+  };
+
+  const removeLibrary = () => {
+    const library = MMKV.getArray('library') || [];
+    const newLibrary = library.filter(item => item.link !== route.params.link);
+    MMKV.setArray('library', newLibrary);
+    setInLibrary(false);
+  };
   return (
     <MotiSafeAreaView
       animate={{backgroundColor: 'black'}}
@@ -123,10 +148,25 @@ export default function Info({route}: Props): React.JSX.Element {
             ))}
           </View>
           {/* synopsis */}
-          <View className="mb-2">
-            <Skeleton show={infoLoading} colorMode="dark" width={80}>
-              <Text className="text-white text-lg font-semibold">Synopsis</Text>
+          <View className="mb-2 w-full flex-row items-center justify-between">
+            <Skeleton show={infoLoading} colorMode="dark" width={85}>
+              <Text className="text-white text-xl font-semibold">Synopsis</Text>
             </Skeleton>
+            {inLibrary ? (
+              <Ionicons
+                name="bookmark"
+                size={30}
+                color="tomato"
+                onPress={() => removeLibrary()}
+              />
+            ) : (
+              <Ionicons
+                name="bookmark-outline"
+                size={30}
+                color="tomato"
+                onPress={() => addLibrary()}
+              />
+            )}
           </View>
           <Skeleton show={infoLoading} colorMode="dark" height={50}>
             <Text className="text-white text-xs">
