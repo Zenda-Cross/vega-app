@@ -88,6 +88,8 @@ const DownloadComponent = ({
     const url = await getStream(link, type);
 
     let task = download({
+      isAllowedOverMetered: true,
+      isAllowedOverRoaming: true,
       id: jobId,
       url: url[0],
       destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}`,

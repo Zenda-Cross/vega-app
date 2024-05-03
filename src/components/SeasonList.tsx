@@ -39,7 +39,7 @@ const SeasonList = ({
       if (!actEp) return;
       setEpisodeLoading(true);
       const episodes = await getEpisodeLinks(actEp);
-      console.log(episodes);
+      // console.log(episodes);
       setEpisodeList(episodes);
       setEpisodeLoading(false);
     };
