@@ -33,10 +33,16 @@ export type RootStackParamList = {
     file?: string;
   };
 };
+
+export type SearchStackParamList = {
+  Search: undefined;
+  ScrollList: {filter: string; title?: string};
+};
 const Tab = createBottomTabNavigator();
 const App = () => {
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
+  const SearchStack = createNativeStackNavigator<SearchStackParamList>();
 
   function HomeStackScreen() {
     return (
@@ -53,9 +59,9 @@ const App = () => {
     );
   }
 
-  function SearchStack() {
+  function SearchStackScreen() {
     return (
-      <HomeStack.Navigator
+      <SearchStack.Navigator
         screenOptions={{
           headerShown: false,
           headerBlurEffect: 'light',
@@ -64,7 +70,7 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Search" component={Search} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
-      </HomeStack.Navigator>
+      </SearchStack.Navigator>
     );
   }
 
@@ -94,7 +100,7 @@ const App = () => {
         />
         <Tab.Screen
           name="SearchStack"
-          component={SearchStack}
+          component={SearchStackScreen}
           options={{
             title: 'Search',
             tabBarIcon: ({focused, color, size}) =>

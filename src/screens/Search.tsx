@@ -2,7 +2,7 @@ import {View, Text, ScrollView} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../App';
+import {SearchStackParamList} from '../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {TextInput} from 'react-native';
 import {genresList} from '../lib/constants';
@@ -10,7 +10,7 @@ import {TouchableOpacity} from 'react-native';
 
 const Search = () => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+    useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   return (
     <View className="h-full w-full bg-black p-4 items-center">
       <View className="flex flex-row gap-1 items-center">

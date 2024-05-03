@@ -12,11 +12,13 @@ const Library = () => {
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [library, setLibrary] = useState(MMKV.getArray('library') || []);
   return (
-    <ScrollView className="h-full w-full bg-black p-2">
-      <Text className="text-primary text-4xl">Library</Text>
-      <View className="flex-row flex-wrap gap-2 mt-3">
+    <ScrollView
+      className="h-full w-full bg-black p-2"
+      contentContainerStyle={{alignItems: 'center', justifyContent: 'center'}}>
+      <Text className="text-primary text-4xl font-semibold">Library</Text>
+      <View className="flex-row flex-wrap gap-2 mt-3 w-full">
         {library.map((item: any, index: number) => (
-          <View className="flex flex-col m-3">
+          <View className="flex flex-col m-3" key={item.link + index}>
             <TouchableOpacity
               onPress={() => navigation.navigate('Info', {link: item.link})}>
               <Image
@@ -33,6 +35,9 @@ const Library = () => {
           </View>
         ))}
       </View>
+      {library.length === 0 && (
+        <Text className="text-white text-center mt-5">No items in library</Text>
+      )}
     </ScrollView>
   );
 };
