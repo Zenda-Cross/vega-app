@@ -108,23 +108,47 @@ const SeasonList = ({
                 {!episodeLoading &&
                   episodeList?.length > 0 &&
                   episodeList?.map((episode, i) => (
-                    <TouchableOpacity
-                      key={episode.link + i}
-                      className="rounded-md bg-white/30 w-[90%] h-12 justify-center items-center p-2 flex-row gap-x-2"
-                      onPress={() =>
-                        navigation.navigate('Player', {
-                          link: episode.link,
-                          type: 'series',
-                          title: title + ' - ' + episode.title,
-                          poster: poster,
-                        })
-                      }>
-                      <Ionicons name="play-circle" size={28} color="tomato" />
-                      <Text className="text-white">{episode.title}</Text>
-                    </TouchableOpacity>
+                    <View className="w-full justify-center items-center gap-2 flex-row">
+                      <View className="flex-row w-full justify-between gap-2 items-center">
+                        <TouchableOpacity
+                          className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
+                          onPress={() =>
+                            navigation.navigate('Player', {
+                              link: episode.link,
+                              type: 'series',
+                              title: title,
+                              file:
+                                link.title
+                                  .replaceAll(' ', '_')
+                                  .replaceAll('/', '') +
+                                episode.title.replaceAll(' ', '_') +
+                                '.mkv',
+                              poster: poster,
+                            })
+                          }>
+                          <Ionicons
+                            name="play-circle"
+                            size={28}
+                            color="tomato"
+                          />
+                          <Text className="text-white">{episode.title}</Text>
+                        </TouchableOpacity>
+                        <Downloader
+                          link={episode.link}
+                          type="series"
+                          fileName={
+                            link.title
+                              .replaceAll(' ', '_')
+                              .replaceAll('/', '') +
+                            episode.title.replaceAll(' ', '_') +
+                            '.mkv'
+                          }
+                        />
+                      </View>
+                    </View>
                   ))}
                 {episodeLoading &&
-                  [...Array(3).keys()].map(i => (
+                  [...Array(5).keys()].map(i => (
                     <View
                       key={'itm' + i}
                       style={{width: '100%', alignItems: 'center'}}>

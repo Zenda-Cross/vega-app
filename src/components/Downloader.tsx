@@ -33,12 +33,12 @@ const DownloadComponent = ({
       setAlreadyDownloaded(exists);
 
       // check if download is already in progress
-      const tasks = await checkForExistingDownloads();
-      console.log('Tasks:', tasks);
-      const task = tasks.find(task => task.id === 'fileId');
-      if (task) {
-        setIsDownloading(true);
-      }
+      // const tasks = await checkForExistingDownloads();
+      // console.log('Tasks:', tasks);
+      // const task = tasks.find(task => task.id === 'fileId');
+      // if (task) {
+      //   setIsDownloading(true);
+      // }
     };
     checkIfDownloaded();
   }, []);
@@ -84,7 +84,7 @@ const DownloadComponent = ({
     //   setIsDownloading(false);
     // }
 
-    const jobId = 'fileId';
+    const jobId = fileName;
     const url = await getStream(link, type);
 
     let task = download({
