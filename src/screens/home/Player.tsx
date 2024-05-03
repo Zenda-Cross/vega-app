@@ -20,9 +20,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         const exists = await ifExists(route.params.file);
         if (exists) {
           setStream([exists]);
+          return;
         }
-
-        return;
       }
       const data = await getStream(route.params.link, route.params.type);
       setStream(data);

@@ -1,5 +1,5 @@
 import React, {useLayoutEffect, useState} from 'react';
-import {View, Button, Text, TouchableOpacity} from 'react-native';
+import {View, Button, Text, TouchableOpacity, Alert, Modal} from 'react-native';
 import RNFS from 'react-native-fs';
 import {ifExists} from '../lib/file/ifExists';
 import {
@@ -22,7 +22,10 @@ const DownloadComponent = ({
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState(null);
-  const [alreadyDownloaded, setAlreadyDownloaded] = useState(false);
+  const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
+    false,
+  );
+  const [deleteModal, setDeleteModal] = useState(false);
 
   useLayoutEffect(() => {
     const checkIfDownloaded = async () => {
@@ -106,6 +109,7 @@ const DownloadComponent = ({
       })
       .error(({error, errorCode}) => {
         console.log('Download canceled due to error: ', {error, errorCode});
+        Alert.alert('Download Error', error);
         setIsDownloading(false);
         task.stop();
       });
@@ -115,10 +119,21 @@ const DownloadComponent = ({
     };
   };
 
+  // handle download deletion
+  const deleteDownload = async () => {
+    try {
+      await RNFS.unlink(`${RNFS.DownloadDirectoryPath}/vega/${fileName}`);
+      setAlreadyDownloaded(false);
+      setDeleteModal(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <View className="flex-row items-center mt-1 justify-between rounded-full bg-tertiary p-2">
       {alreadyDownloaded ? (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setDeleteModal(true)}>
           <MaterialIcons name="file-download-done" size={24} color="white" />
         </TouchableOpacity>
       ) : isDownloading ? (
@@ -129,6 +144,30 @@ const DownloadComponent = ({
         <TouchableOpacity onPress={downloadFile}>
           <MaterialIcons name="file-download" size={24} color="white" />
         </TouchableOpacity>
+      )}
+      {deleteModal && (
+        <Modal animationType="fade" visible={deleteModal} transparent={true}>
+          <View className="flex-1 bg-black/50 justify-center items-center p-4">
+            <View className="bg-quaternary p-3 w-96 rounded-md justify-center items-center">
+              <Text className="text-lg font-semibold my-3">
+                Are you sure you want to delete this file?
+              </Text>
+              <Text className="text-sm">{fileName}</Text>
+              <View className="flex-row items-center justify-evenly w-full my-5">
+                <Button
+                  color={'tomato'}
+                  title="Yes"
+                  onPress={() => deleteDownload()}
+                />
+                <Button
+                  color={'tomato'}
+                  title="No"
+                  onPress={() => setDeleteModal(false)}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
