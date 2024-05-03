@@ -6,6 +6,7 @@ import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import {getStream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
+import {ifExists} from '../../lib/file/ifExists';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -14,6 +15,15 @@ const Player = ({route}: Props): React.JSX.Element => {
   const navigation = useNavigation();
   useEffect(() => {
     const fetchStream = async () => {
+      // check if downloaded
+      if (route.params.file) {
+        const exists = await ifExists(route.params.file);
+        if (exists) {
+          setStream([exists]);
+        }
+
+        return;
+      }
       const data = await getStream(route.params.link, route.params.type);
       setStream(data);
       // console.log('st', data);

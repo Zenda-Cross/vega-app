@@ -17,6 +17,7 @@ import {EpisodeLink, getEpisodeLinks} from '../lib/getEpisodesLink';
 import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
+import Downloader from './Downloader';
 
 const SeasonList = ({
   LinkList,
@@ -132,20 +133,28 @@ const SeasonList = ({
                   ))}
               </View>
               {link.movieLinks && (
-                <View className="w-full justify-center items-center p-2">
-                  <TouchableOpacity
-                    className="rounded-md bg-white/30 w-[70%] h-12 justify-center items-center p-2 flex-row gap-x-2"
-                    onPress={() =>
-                      navigation.navigate('Player', {
-                        link: link.movieLinks,
-                        type: 'movie',
-                        title: title,
-                        poster: poster,
-                      })
-                    }>
-                    <Ionicons name="play-circle" size={28} color="tomato" />
-                    <Text className="text-white">Play</Text>
-                  </TouchableOpacity>
+                <View className="w-full justify-center items-center p-2 gap-2 flex-row">
+                  <View className="flex-row w-full justify-between gap-2 items-center">
+                    <TouchableOpacity
+                      className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
+                      onPress={() =>
+                        navigation.navigate('Player', {
+                          link: link.movieLinks,
+                          type: 'movie',
+                          title: title,
+                          file: link.title.replaceAll(' ', '_') + '.mkv',
+                          poster: poster,
+                        })
+                      }>
+                      <Ionicons name="play-circle" size={28} color="tomato" />
+                      <Text className="text-white">Play</Text>
+                    </TouchableOpacity>
+                    <Downloader
+                      link={link.movieLinks}
+                      type="movie"
+                      fileName={link.title.replaceAll(' ', '_') + '.mkv'}
+                    />
+                  </View>
                 </View>
               )}
             </Animated.ScrollView>

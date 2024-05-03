@@ -25,7 +25,13 @@ export type HomeStackParamList = {
 
 export type RootStackParamList = {
   TabStack: undefined;
-  Player: {link: string; type: string; title: string; poster: string};
+  Player: {
+    link: string;
+    type: string;
+    title: string;
+    poster: string;
+    file?: string;
+  };
 };
 const Tab = createBottomTabNavigator();
 const App = () => {

@@ -40,7 +40,7 @@ export default function Info({route}: Props): React.JSX.Element {
       }
       setInfo(data);
       setInfoLoading(false);
-      console.log(info?.linkList);
+      // console.log(info?.linkList);
     };
     fetchInfo();
   }, [refreshing]);
