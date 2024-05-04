@@ -7,11 +7,21 @@ import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getPosts';
 import {homeList} from '../../lib/constants';
 import {MmmkvCache} from '../../App';
+import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 
 const Home = () => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [homeData, setHomeData] = React.useState<HomePageData[]>([]);
   const [loading, setLoading] = React.useState(true);
+
+  const deleteDownload = async () => {
+    const tasks = await checkForExistingDownloads();
+    for (const task of tasks) {
+      if (task.state !== 'DOWNLOADING') {
+        task.stop();
+      }
+    }
+  };
   useEffect(() => {
     let ignore = false;
     const fetchHomeData = async () => {
@@ -24,7 +34,7 @@ const Home = () => {
         setHomeData(data);
       }
       const data = await getHomePageData();
-      if (data.length === 0) {
+      if (data[1].Posts.length === 0) {
         return;
       }
       setLoading(false);
@@ -33,6 +43,7 @@ const Home = () => {
     };
     if (!ignore) {
       fetchHomeData();
+      deleteDownload();
     }
     return () => {
       ignore = true;

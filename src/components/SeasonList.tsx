@@ -64,6 +64,7 @@ const SeasonList = ({
   return (
     <MotiView
       animate={{backgroundColor: '#0000'}}
+      delay={0}
       //@ts-ignore
       transition={{
         type: 'timing',

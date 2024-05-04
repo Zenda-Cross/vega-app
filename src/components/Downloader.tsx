@@ -34,7 +34,7 @@ const DownloadComponent = ({
       // check if download is already in progress
       const tasks = await checkForExistingDownloads();
       // console.log('Tasks:', tasks);
-      const task = tasks.find(task => task.id === 'fileId');
+      const task = tasks.find(task => task.id === fileName);
       if (task?.state === 'DOWNLOADING') {
         setIsDownloading(true);
       } else {
@@ -91,7 +91,7 @@ const DownloadComponent = ({
       isAllowedOverMetered: true,
       isAllowedOverRoaming: true,
       id: jobId,
-      url: url[0],
+      url: url[url.length - 1],
       destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}`,
       metadata: {},
       isNotificationVisible: true,
@@ -111,7 +111,7 @@ const DownloadComponent = ({
       })
       .error(({error, errorCode}) => {
         console.log('Download canceled due to error: ', {error, errorCode});
-        Alert.alert('Download Canceled');
+        Alert.alert('Download Canceled', 'failed to download');
         setIsDownloading(false);
         task.stop();
       });
@@ -133,7 +133,7 @@ const DownloadComponent = ({
   };
 
   return (
-    <View className="flex-row items-center mt-1 justify-between rounded-full bg-tertiary p-2">
+    <View className="flex-row items-center mt-1 justify-between rounded-full bg-gray-800 p-1">
       {alreadyDownloaded ? (
         <TouchableOpacity onPress={() => setDeleteModal(true)}>
           <MaterialIcons name="file-download-done" size={27} color="white" />
@@ -144,7 +144,11 @@ const DownloadComponent = ({
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={downloadFile}>
-          <MaterialIcons name="file-download" size={27} color="white" />
+          <MaterialIcons
+            name="download-for-offline"
+            size={27}
+            color="#c1c4c9"
+          />
         </TouchableOpacity>
       )}
       {deleteModal && (
@@ -154,7 +158,7 @@ const DownloadComponent = ({
               <Text className="text-lg font-semibold my-3">
                 Are you sure you want to delete this file?
               </Text>
-              <Text className="text-sm">{fileName}</Text>
+              <Text className="text-xs text-center">{fileName}</Text>
               <View className="flex-row items-center justify-evenly w-full my-5">
                 <Button
                   color={'tomato'}
