@@ -18,6 +18,7 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
+import {MmmkvCache} from '../App';
 
 const SeasonList = ({
   LinkList,
@@ -38,7 +39,15 @@ const SeasonList = ({
     const fetchList = async () => {
       if (!actEp) return;
       setEpisodeLoading(true);
+      const cacheEpisodes = await MmmkvCache.getItem(actEp);
+      if (cacheEpisodes) {
+        setEpisodeList(JSON.parse(cacheEpisodes as string));
+        console.log('cache', JSON.parse(cacheEpisodes as string));
+        setEpisodeLoading(false);
+      }
       const episodes = await getEpisodeLinks(actEp);
+      if (episodes.length === 0) return;
+      MmmkvCache.setItem(actEp, JSON.stringify(episodes));
       // console.log(episodes);
       setEpisodeList(episodes);
       setEpisodeLoading(false);
@@ -102,13 +111,16 @@ const SeasonList = ({
             <Animated.ScrollView
               style={{
                 maxHeight: acc === link.title ? '100%' : 0,
+                minHeight: acc === link.title ? 120 : 0,
                 overflow: 'hidden',
               }}>
               <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
                 {!episodeLoading &&
                   episodeList?.length > 0 &&
                   episodeList?.map((episode, i) => (
-                    <View className="w-full justify-center items-center gap-2 flex-row">
+                    <View
+                      key={episode.link + i}
+                      className="w-full justify-center items-center gap-2 flex-row">
                       <View className="flex-row w-full justify-between gap-2 items-center">
                         <TouchableOpacity
                           className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"

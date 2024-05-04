@@ -21,7 +21,6 @@ const DownloadComponent = ({
 }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState(null);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
   );
@@ -33,19 +32,20 @@ const DownloadComponent = ({
       setAlreadyDownloaded(exists);
 
       // check if download is already in progress
-      // const tasks = await checkForExistingDownloads();
+      const tasks = await checkForExistingDownloads();
       // console.log('Tasks:', tasks);
-      // const task = tasks.find(task => task.id === 'fileId');
-      // if (task) {
-      //   setIsDownloading(true);
-      // }
+      const task = tasks.find(task => task.id === 'fileId');
+      if (task?.state === 'DOWNLOADING') {
+        setIsDownloading(true);
+      } else {
+        task?.stop();
+      }
     };
     checkIfDownloaded();
   }, []);
 
   const downloadFile = async () => {
     setIsDownloading(true);
-    setDownloadError(null); // Reset error
 
     if (await ifExists(fileName)) {
       console.log('File already exists');
@@ -111,7 +111,7 @@ const DownloadComponent = ({
       })
       .error(({error, errorCode}) => {
         console.log('Download canceled due to error: ', {error, errorCode});
-        Alert.alert('Download Error', error);
+        Alert.alert('Download Canceled');
         setIsDownloading(false);
         task.stop();
       });
@@ -136,21 +136,21 @@ const DownloadComponent = ({
     <View className="flex-row items-center mt-1 justify-between rounded-full bg-tertiary p-2">
       {alreadyDownloaded ? (
         <TouchableOpacity onPress={() => setDeleteModal(true)}>
-          <MaterialIcons name="file-download-done" size={24} color="white" />
+          <MaterialIcons name="file-download-done" size={27} color="white" />
         </TouchableOpacity>
       ) : isDownloading ? (
         <TouchableOpacity onPress={() => console.log('Cancel download')}>
-          <MaterialIcons name="downloading" size={24} color="tomato" />
+          <MaterialIcons name="downloading" size={27} color="tomato" />
         </TouchableOpacity>
       ) : (
         <TouchableOpacity onPress={downloadFile}>
-          <MaterialIcons name="file-download" size={24} color="white" />
+          <MaterialIcons name="file-download" size={27} color="white" />
         </TouchableOpacity>
       )}
       {deleteModal && (
         <Modal animationType="fade" visible={deleteModal} transparent={true}>
           <View className="flex-1 bg-black/50 justify-center items-center p-4">
-            <View className="bg-quaternary p-3 w-96 rounded-md justify-center items-center">
+            <View className="bg-quaternary p-3 w-80 rounded-md justify-center items-center">
               <Text className="text-lg font-semibold my-3">
                 Are you sure you want to delete this file?
               </Text>

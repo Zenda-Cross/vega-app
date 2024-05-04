@@ -6,6 +6,7 @@ import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getPosts';
 import {homeList} from '../../lib/constants';
+import {MmmkvCache} from '../../App';
 
 const Home = () => {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -15,9 +16,20 @@ const Home = () => {
     let ignore = false;
     const fetchHomeData = async () => {
       setLoading(true);
+      const cache = (await MmmkvCache.getItem('homeData')) || '';
+      // console.log('cache', cache);
+      if (cache) {
+        const data = JSON.parse(cache as string);
+        setLoading(false);
+        setHomeData(data);
+      }
       const data = await getHomePageData();
+      if (data.length === 0) {
+        return;
+      }
       setLoading(false);
       setHomeData(data);
+      MmmkvCache.setItem('homeData', JSON.stringify(data));
     };
     if (!ignore) {
       fetchHomeData();

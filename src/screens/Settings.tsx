@@ -15,7 +15,7 @@ const Settings = () => {
   useLayoutEffect(() => {
     const fetchBaseUrl = async () => {
       const baseUrl =
-        (await MMKV.getString('baseUrl')) || 'https://vegamovies.earth';
+        (await MMKV.getString('baseUrl')) || 'https://vegamovies.ph';
       setBaseUrl(baseUrl);
     };
     fetchBaseUrl();

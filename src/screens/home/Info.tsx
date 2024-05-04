@@ -12,12 +12,13 @@ import {Skeleton} from 'moti/skeleton';
 import {MotiSafeAreaView} from 'moti';
 import {MMKV} from '../../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {MmmkvCache} from '../../App';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
-  const [infoLoading, setInfoLoading] = useState(true);
+  const [infoLoading, setInfoLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [inLibrary, setInLibrary] = useState(
     MMKV.getArray('library')?.some(
@@ -26,24 +27,42 @@ export default function Info({route}: Props): React.JSX.Element {
   );
   useEffect(() => {
     const fetchInfo = async () => {
-      setInfoLoading(true);
       setMeta(undefined);
       setInfo(undefined);
+      setInfoLoading(true);
+      // cache
+      const cacheDataRes = (await MmmkvCache.getItem(route.params.link)) || '';
+      if (cacheDataRes) {
+        const cacheData = JSON.parse(cacheDataRes as string);
+        const cahceMeta = await MmmkvCache.getItem(cacheData.imdbId);
+        if (cahceMeta) {
+          const cacheMeta = JSON.parse(cahceMeta as string);
+          setMeta(cacheMeta);
+        }
+        setInfo(cacheData);
+        setInfoLoading(false);
+      }
       const data = await getInfo(route.params.link);
+      if (data.linkList?.length === 0) {
+        return;
+      }
+      MmmkvCache.setItem(route.params.link, JSON.stringify(data));
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
         );
         setMeta(metaRes.data.meta);
+        MmmkvCache.setItem(data.imdbId, JSON.stringify(metaRes.data.meta));
       } catch (e) {
         console.log(e);
+        setMeta(undefined);
       }
       setInfo(data);
       setInfoLoading(false);
       // console.log(info?.linkList);
     };
     fetchInfo();
-  }, [refreshing]);
+  }, [refreshing, route.params.link]);
 
   const addLibrary = () => {
     const library = MMKV.getArray('library') || [];
