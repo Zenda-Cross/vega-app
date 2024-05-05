@@ -1,4 +1,4 @@
-package com.vegamovies
+package com.vega
 
 import android.app.Application
 import com.facebook.react.PackageList
