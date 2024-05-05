@@ -43,7 +43,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <MotiView
-      className="h-full w-full bg-black p-"
+      className="h-full w-full bg-black items-center p-4"
       animate={{backgroundColor: 'black'}}
       //@ts-ignore
       transition={{
@@ -54,58 +54,61 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           {route.params.title}
         </Text>
       </View>
-      <FlatList
-        ListHeaderComponent={<View className="h-4" />}
-        ListFooterComponent={
-          isLoading ? (
-            <View className="flex flex-row gap-2 flex-wrap justify-center items-center">
-              {[...Array(6)].map((_, i) => (
-                <View className="mx-1 gap-1 flex" key={i}>
-                  <Skeleton
-                    key={i}
-                    show={true}
-                    colorMode="dark"
-                    height={150}
-                    width={100}
-                  />
-                  <View className="h-1" />
-                  <Skeleton
-                    show={true}
-                    colorMode="dark"
-                    height={10}
-                    width={100}
-                  />
-                </View>
-              ))}
+      <View className="justify-center flex-row w-96 ">
+        <FlatList
+          ListFooterComponent={
+            isLoading ? (
+              <View className="flex flex-row gap-2 flex-wrap justify-center items-center">
+                {[...Array(6)].map((_, i) => (
+                  <View className="mx-3 gap-1 flex" key={i}>
+                    <Skeleton
+                      key={i}
+                      show={true}
+                      colorMode="dark"
+                      height={150}
+                      width={100}
+                    />
+                    <View className="h-1" />
+                    <Skeleton
+                      show={true}
+                      colorMode="dark"
+                      height={10}
+                      width={100}
+                    />
+                  </View>
+                ))}
+              </View>
+            ) : null
+          }
+          data={posts}
+          contentContainerStyle={{
+            width: 'auto',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            justifyContent: 'flex-start',
+          }}
+          keyExtractor={(item, i) => item.title + i}
+          renderItem={({item}) => (
+            <View className="flex flex-col m-3">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Info', {link: item.link})}>
+                <Image
+                  className="rounded-md"
+                  source={{uri: item.image}}
+                  style={{width: 100, height: 150}}
+                />
+              </TouchableOpacity>
+              <Text className="text-white text-center truncate w-24 text-xs">
+                {item.title.length > 24
+                  ? item.title.slice(0, 24) + '...'
+                  : item.title}
+              </Text>
             </View>
-          ) : null
-        }
-        data={posts}
-        contentContainerStyle={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-        keyExtractor={(item, i) => item.title + i}
-        renderItem={({item}) => (
-          <View className="flex flex-col m-3">
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Info', {link: item.link})}>
-              <Image
-                className="rounded-md"
-                source={{uri: item.image}}
-                style={{width: 100, height: 150}}
-              />
-            </TouchableOpacity>
-            <Text className="text-white text-center truncate w-24 text-xs">
-              {item.title.length > 24
-                ? item.title.slice(0, 24) + '...'
-                : item.title}
-            </Text>
-          </View>
-        )}
-        onEndReached={onEndReached}
-      />
+          )}
+          onEndReached={onEndReached}
+        />
+      </View>
     </MotiView>
   );
 };

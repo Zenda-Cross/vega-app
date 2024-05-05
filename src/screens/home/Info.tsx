@@ -190,9 +190,11 @@ export default function Info({route}: Props): React.JSX.Element {
           <Skeleton show={infoLoading} colorMode="dark" height={50}>
             <Text className="text-white text-xs">
               {meta?.description
-                ? meta?.description
-                : info?.synopsis?.length! > 200
-                ? info?.synopsis.slice(0, 200) + '...'
+                ? meta?.description.length > 180
+                  ? meta?.description.slice(0, 180) + '...'
+                  : meta?.description
+                : info?.synopsis?.length! > 180
+                ? info?.synopsis.slice(0, 148) + '...'
                 : info?.synopsis || ''}
             </Text>
           </Skeleton>

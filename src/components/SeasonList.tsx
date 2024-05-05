@@ -197,6 +197,11 @@ const SeasonList = ({
             </Animated.ScrollView>
           </View>
         ))}
+        {LinkList.length === 0 && (
+          <Text className="text-white text-lg font-semibold min-h-20">
+            No Streams Available
+          </Text>
+        )}
       </View>
     </MotiView>
   );
