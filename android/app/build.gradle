@@ -76,13 +76,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.vegamovies"
+    namespace "com.vega"
     defaultConfig {
-        applicationId "com.vegamovies"
+        applicationId "com.vega"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.1"
+        versionCode 3
+        versionName "1.0.9"
     }
     signingConfigs {
         release {
@@ -112,6 +112,34 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+     splits {
+        abi {
+            reset()
+            enable true
+            universalApk true
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+    }
+       // add the code from below line.
+        applicationVariants.all{
+            // this method is use to rename your release apk only
+            variant ->
+                variant.outputs.each{
+                    // on below line we are setting a name to our apk
+                    output->
+                        // on below line we are specifying our app name.
+                        project.ext { appName = 'Vega' }
+                        // on below line we are adding the formatted date to our apk file name.
+                        def version = variant.versionName
+                        def newName = output.outputFile.name
+                        // on below line we are replacing our previous name with our app name.
+                        newName = newName.replace("app-", "$project.ext.appName-")
+                        // on below line we are replacing -release with our formatted date.
+                        newName = newName.replace("-release", "-release-" + version )
+                        // at last we are setting our apk name to it.
+                        output.outputFileName  = newName
+                }
+        }
 }
 
 dependencies {
