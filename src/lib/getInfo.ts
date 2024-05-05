@@ -66,17 +66,30 @@ export const getInfo = async (link: string): Promise<Info> => {
       const movieLinks = element
         ?.next()
         .find('.dwd-button')
-        ?.parent()
-        ?.attr('href');
+        .text()
+        .toLowerCase()
+        .includes('download')
+        ? element?.next().find('.dwd-button')?.parent()?.attr('href')
+        : '';
 
       // episode links
-      const episodesLink = element
+      const vcloudLinks = element
         ?.next()
         .find(
           ".btn-outline[style='background:linear-gradient(135deg,#ed0b0b,#f2d152); color: white;']",
         )
         ?.parent()
         ?.attr('href');
+      const episodesLink = vcloudLinks
+        ? vcloudLinks
+        : element
+            ?.next()
+            .find('.dwd-button')
+            .text()
+            .toLowerCase()
+            .includes('episode')
+        ? element?.next().find('.dwd-button')?.parent()?.attr('href')
+        : '';
       if (movieLinks || episodesLink) {
         links.push({title, movieLinks, episodesLink});
       }
@@ -92,7 +105,7 @@ export const getInfo = async (link: string): Promise<Info> => {
     };
   } catch (error) {
     console.log('getInfo error');
-    // console.error(error);
+    console.error(error);
     return {
       title: '',
       synopsis: '',
