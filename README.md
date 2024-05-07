@@ -1,4 +1,13 @@
-# Getting Started
+# Vega-App
+![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/99420590/be5a5d84-9867-4868-be0e-41895a1b2aec)
+
+# Download
+1. Download- https://github.com/Zenda-Cross/vega-app/releases
+2. Install and open
+3. Change the base URL in settings to the latest active URL and restart.
+
+
+# Developement
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
 
