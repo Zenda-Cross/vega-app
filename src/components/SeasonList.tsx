@@ -1,13 +1,4 @@
-import {
-  View,
-  Text,
-  Animated,
-  Platform,
-  UIManager,
-  LayoutAnimation,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native';
+import {View, Text, LayoutAnimation, TouchableOpacity} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -49,6 +40,7 @@ const SeasonList = ({
         setEpisodeList(JSON.parse(cacheEpisodes as string));
         console.log('cache', JSON.parse(cacheEpisodes as string));
         setEpisodeLoading(false);
+        return;
       }
       const episodes = await getEpisodeLinks(actEp);
       if (episodes.length === 0) return;
@@ -191,7 +183,7 @@ const SeasonList = ({
                       </View>
                     </View>
                   ))}
-                {episodeList.length === 0 && (
+                {episodeLoading && (
                   <MotiView
                     animate={{backgroundColor: '#0000'}}
                     delay={0}
