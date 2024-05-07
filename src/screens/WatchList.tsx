@@ -15,7 +15,7 @@ const Library = () => {
     <ScrollView
       className="h-full w-full bg-black p-2"
       contentContainerStyle={{alignItems: 'center', justifyContent: 'center'}}>
-      <Text className="text-primary text-4xl font-semibold">Library</Text>
+      <Text className="text-primary text-2xl font-semibold">Watch List</Text>
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
           {library.map((item: any, index: number) => (
@@ -38,7 +38,9 @@ const Library = () => {
         </View>
       </View>
       {library.length === 0 && (
-        <Text className="text-white text-center mt-5">No items in library</Text>
+        <Text className="text-white text-center mt-5">
+          No items in Watch List
+        </Text>
       )}
     </ScrollView>
   );

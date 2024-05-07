@@ -3,7 +3,7 @@ import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
 import Settings from './screens/Settings';
-import Library from './screens/Library';
+import WatchList from './screens/WatchList';
 import Search from './screens/Search';
 import ScrollList from './screens/ScrollList';
 import {NavigationContainer} from '@react-navigation/native';
@@ -38,6 +38,7 @@ export type RootStackParamList = {
 export type SearchStackParamList = {
   Search: undefined;
   ScrollList: {filter: string; title?: string};
+  Info: {link: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -56,6 +57,7 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
+        <HomeStack.Screen name="ScrollList" component={ScrollList} />
       </HomeStack.Navigator>
     );
   }
@@ -71,6 +73,7 @@ const App = () => {
         }}>
         <HomeStack.Screen name="Search" component={Search} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
+        <HomeStack.Screen name="Info" component={Info} />
       </SearchStack.Navigator>
     );
   }
@@ -113,8 +116,8 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="Library"
-          component={Library}
+          name="Watch List"
+          component={WatchList}
           options={{
             unmountOnBlur: true,
             tabBarIcon: ({focused, color, size}) =>
