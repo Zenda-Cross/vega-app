@@ -38,7 +38,7 @@ const Settings = () => {
         <Text className="text-white font-semibold">Base Url</Text>
         <TextInput
           className="bg-secondary text-white p-1 px-2 rounded-md"
-          placeholder="example-https://vegamovies.earth"
+          placeholder="example-https://vegamovies.cash"
           value={BaseUrl}
           onChangeText={onChange}
         />
