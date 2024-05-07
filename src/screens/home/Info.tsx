@@ -18,7 +18,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
-  const [infoLoading, setInfoLoading] = useState(false);
+  const [infoLoading, setInfoLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [inLibrary, setInLibrary] = useState(
     MMKV.getArray('library')?.some(

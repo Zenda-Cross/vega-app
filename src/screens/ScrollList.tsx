@@ -42,13 +42,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   };
 
   return (
-    <MotiView
-      className="h-full w-full bg-black items-center p-4"
-      animate={{backgroundColor: 'black'}}
-      //@ts-ignore
-      transition={{
-        type: 'timing',
-      }}>
+    <View className="h-full w-full bg-black items-center p-4">
       <View className="w-full px-4 font-semibold mt-2">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
@@ -58,7 +52,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         <FlatList
           ListFooterComponent={
             isLoading ? (
-              <View className="flex flex-row gap-2 flex-wrap justify-center items-center">
+              <MotiView
+                animate={{backgroundColor: 'black'}}
+                //@ts-ignore
+                transition={{
+                  type: 'timing',
+                }}
+                className="flex flex-row gap-2 flex-wrap justify-center items-center">
                 {[...Array(6)].map((_, i) => (
                   <View className="mx-3 gap-1 flex" key={i}>
                     <Skeleton
@@ -77,7 +77,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                     />
                   </View>
                 ))}
-              </View>
+              </MotiView>
             ) : null
           }
           data={posts}
@@ -109,7 +109,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           onEndReached={onEndReached}
         />
       </View>
-    </MotiView>
+    </View>
   );
 };
 
