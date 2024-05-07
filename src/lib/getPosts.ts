@@ -15,7 +15,7 @@ export const getPosts = async (
   page: number,
 ): Promise<Post[]> => {
   try {
-    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.earth';
+    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.cash';
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
       : `${baseUrl}/page/${page}/?s=${filter}`;
