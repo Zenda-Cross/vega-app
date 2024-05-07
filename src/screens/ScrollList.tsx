@@ -1,7 +1,7 @@
 import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../App';
+import {HomeStackParamList, SearchStackParamList} from '../App';
 import {getPosts, Post} from '../lib/getPosts';
 import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
 const ScrollList = ({route}: Props): React.ReactElement => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+    useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
   const {filter} = route.params;
   const [page, setPage] = useState<number>(1);
@@ -108,6 +108,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           )}
           onEndReached={onEndReached}
         />
+        {!isLoading && posts.length === 0 ? (
+          <View className="w-full h-full flex items-center justify-center">
+            <Text className="text-white text-center font-semibold text-lg">
+              Not Found
+            </Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
