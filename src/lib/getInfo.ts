@@ -20,7 +20,7 @@ export interface Link {
 
 export const getInfo = async (link: string): Promise<Info> => {
   try {
-    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.earth';
+    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.cash';
     const url = `${baseUrl}/${link}`;
     const response = await axios.get(url, {headers});
     const $ = cheerio.load(response.data);

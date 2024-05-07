@@ -1,7 +1,7 @@
 import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../App';
+import {HomeStackParamList, SearchStackParamList} from '../App';
 import {getPosts, Post} from '../lib/getPosts';
 import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
 const ScrollList = ({route}: Props): React.ReactElement => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+    useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
   const {filter} = route.params;
   const [page, setPage] = useState<number>(1);
@@ -42,13 +42,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   };
 
   return (
-    <MotiView
-      className="h-full w-full bg-black items-center p-4"
-      animate={{backgroundColor: 'black'}}
-      //@ts-ignore
-      transition={{
-        type: 'timing',
-      }}>
+    <View className="h-full w-full bg-black items-center p-4">
       <View className="w-full px-4 font-semibold mt-2">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
@@ -58,7 +52,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         <FlatList
           ListFooterComponent={
             isLoading ? (
-              <View className="flex flex-row gap-2 flex-wrap justify-center items-center">
+              <MotiView
+                animate={{backgroundColor: 'black'}}
+                //@ts-ignore
+                transition={{
+                  type: 'timing',
+                }}
+                className="flex flex-row gap-2 flex-wrap justify-center items-center">
                 {[...Array(6)].map((_, i) => (
                   <View className="mx-3 gap-1 flex" key={i}>
                     <Skeleton
@@ -77,7 +77,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                     />
                   </View>
                 ))}
-              </View>
+              </MotiView>
             ) : null
           }
           data={posts}
@@ -108,8 +108,15 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           )}
           onEndReached={onEndReached}
         />
+        {!isLoading && posts.length === 0 ? (
+          <View className="w-full h-full flex items-center justify-center">
+            <Text className="text-white text-center font-semibold text-lg">
+              Not Found
+            </Text>
+          </View>
+        ) : null}
       </View>
-    </MotiView>
+    </View>
   );
 };
 
