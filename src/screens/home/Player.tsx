@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from 'react-native';
+import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
@@ -13,10 +13,8 @@ import {
   AudioTrack,
   TextTrack,
   SelectedAudioTrack,
-  AudioTrackSelectionType,
   SelectedTextTrack,
 } from 'react-native-video';
-import {MotiView, ScrollView} from 'moti';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -32,7 +30,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [selectedAudioTrack, setSelectedAudioTrack] =
-    useState<SelectedAudioTrack>({type: 'language', value: 'hi'});
+    useState<SelectedAudioTrack>({type: 'index', value: '0'});
   const [textTracks, setTextTracks] = useState<TextTrack[]>([]);
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'disabled'},
@@ -56,7 +54,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     fetchStream();
   }, [route.params.link]);
   return (
-    <MotiView
+    <View
       from={{opacity: 0}}
       animate={{opacity: 1}}
       //@ts-ignore
@@ -267,7 +265,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           </View>
         )
       }
-    </MotiView>
+    </View>
   );
 };
 
