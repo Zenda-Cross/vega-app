@@ -212,8 +212,8 @@ const Player = ({route}: Props): React.JSX.Element => {
                       key={i}
                       onPress={() => {
                         setSelectedTextTrack({
-                          type: 'index',
-                          value: track.index,
+                          type: 'language',
+                          value: track.language,
                         });
                         setShowSettings(false);
                         playerRef?.current?.resume();
