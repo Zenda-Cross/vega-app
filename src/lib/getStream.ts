@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
+import {ToastAndroid} from 'react-native';
 
 export async function getStream(link: string, type: string) {
   try {
@@ -62,6 +63,7 @@ export async function getStream(link: string, type: string) {
   } catch (error) {
     console.log('getStream error: ');
     // console.error(error);
+    ToastAndroid.show('Error getting stream links', ToastAndroid.SHORT);
     return [];
   }
 }

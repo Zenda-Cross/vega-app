@@ -43,9 +43,9 @@ export default function Info({route}: Props): React.JSX.Element {
         setInfoLoading(false);
       }
       const data = await getInfo(route.params.link);
-      if (data.linkList?.length === 0) {
-        return;
-      }
+      // if (data.linkList?.length === 0) {
+      //   return;
+      // }
       MmmkvCache.setItem(route.params.link, JSON.stringify(data));
       try {
         const metaRes = await axios.get(
