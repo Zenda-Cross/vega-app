@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
 import {MMKV} from '../App';
+import {ToastAndroid} from 'react-native';
 
 export interface Info {
   title: string;
@@ -20,8 +21,17 @@ export interface Link {
 
 export const getInfo = async (link: string): Promise<Info> => {
   try {
-    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.cash';
+    let baseUrl = '';
+    if (MMKV.getBool('UseCustomUrl')) {
+      baseUrl = MMKV.getString('baseUrl') || '';
+    } else {
+      const baseUrlRes = await axios.get(
+        'https://himanshu8443.github.io/providers/modflix.json',
+      );
+      baseUrl = baseUrlRes.data.Vega.url;
+    }
     const url = `${baseUrl}/${link}`;
+    console.log('url', url);
     const response = await axios.get(url, {headers});
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
@@ -51,7 +61,7 @@ export const getInfo = async (link: string): Promise<Info> => {
     // image
     const image =
       infoContainer?.find('img[data-lazy-src]')?.attr('data-lazy-src') || '';
-    //   console.log(image);
+    // console.log(image);
 
     // console.log({title, synopsis, image, imdbId, type});
     /// Links
@@ -80,16 +90,24 @@ export const getInfo = async (link: string): Promise<Info> => {
         )
         ?.parent()
         ?.attr('href');
-      const episodesLink = vcloudLinks
-        ? vcloudLinks
-        : element
-            ?.next()
-            .find('.dwd-button')
-            .text()
-            .toLowerCase()
-            .includes('episode')
-        ? element?.next().find('.dwd-button')?.parent()?.attr('href')
-        : '';
+      const episodesLink =
+        (vcloudLinks
+          ? vcloudLinks
+          : element
+              ?.next()
+              .find('.dwd-button')
+              .text()
+              .toLowerCase()
+              .includes('episode')
+          ? element?.next().find('.dwd-button')?.parent()?.attr('href')
+          : '') ||
+        element
+          ?.next()
+          .find(
+            ".btn-outline[style='background:linear-gradient(135deg,#0ebac3,#09d261); color: white;']",
+          )
+          ?.parent()
+          ?.attr('href');
       if (movieLinks || episodesLink) {
         links.push({title, movieLinks, episodesLink});
       }
@@ -106,6 +124,7 @@ export const getInfo = async (link: string): Promise<Info> => {
   } catch (error) {
     console.log('getInfo error');
     console.error(error);
+    ToastAndroid.show('Error fetching data', ToastAndroid.SHORT);
     return {
       title: '',
       synopsis: '',

@@ -267,6 +267,9 @@ const SeasonList = ({
             }}>
             <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
           </MotiView>
+          <Text className="text-white text-lg font-semibold mt-2">
+            Opening in VLC
+          </Text>
         </View>
       )}
     </View>

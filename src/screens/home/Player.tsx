@@ -1,4 +1,10 @@
-import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ScrollView,
+  Text,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
@@ -14,6 +20,7 @@ import {
   TextTrack,
   SelectedAudioTrack,
   SelectedTextTrack,
+  ResizeMode,
 } from 'react-native-video';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
@@ -79,6 +86,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         isFullscreen={true}
         disableVolume={true}
         showHours={true}
+        onError={() => {
+          ToastAndroid.show(
+            'could not play video try downloading',
+            ToastAndroid.SHORT,
+          );
+        }}
+        resizeMode={ResizeMode.NONE}
         //@ts-ignore
         selectedAudioTrack={selectedAudioTrack}
         onAudioTracks={e => {
