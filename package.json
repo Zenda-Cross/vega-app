@@ -21,6 +21,7 @@
     "nativewind": "^2.0.11",
     "react": "18.2.0",
     "react-native": "0.74.0",
+    "react-native-element-dropdown": "^2.12.0",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.16.0",
     "react-native-linear-gradient": "^2.8.3",
