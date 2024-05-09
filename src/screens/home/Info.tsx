@@ -43,10 +43,10 @@ export default function Info({route}: Props): React.JSX.Element {
         setInfoLoading(false);
       }
       const data = await getInfo(route.params.link);
-      // if (data.linkList?.length === 0) {
-      //   return;
-      // }
-      MmmkvCache.setItem(route.params.link, JSON.stringify(data));
+      if (data.linkList?.length === 0) {
+        return;
+      }
+      setInfo(data);
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
@@ -57,7 +57,6 @@ export default function Info({route}: Props): React.JSX.Element {
         console.log(e);
         setMeta(undefined);
       }
-      setInfo(data);
       setInfoLoading(false);
       // console.log(info?.linkList);
     };
@@ -88,18 +87,19 @@ export default function Info({route}: Props): React.JSX.Element {
       transition={{type: 'timing'}}
       className="h-full w-full">
       <ScrollView
-        refreshControl={
-          <RefreshControl
-            colors={['tomato']}
-            tintColor="tomato"
-            progressBackgroundColor={'black'}
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              setTimeout(() => setRefreshing(false), 1000);
-            }}
-          />
-        }>
+      // refreshControl={
+      //   <RefreshControl
+      //     colors={['tomato']}
+      //     tintColor="tomato"
+      //     progressBackgroundColor={'black'}
+      //     refreshing={refreshing}
+      //     onRefresh={() => {
+      //       setRefreshing(true);
+      //       setTimeout(() => setRefreshing(false), 1000);
+      //     }}
+      //   />
+      // }
+      >
         <OrientationLocker orientation={PORTRAIT} />
         <View className="relative w-full h-[230px]">
           <View className="absolute w-full h-full">
@@ -218,7 +218,14 @@ export default function Info({route}: Props): React.JSX.Element {
             </View>
           ) : (
             <SeasonList
-              LinkList={info?.linkList || []}
+              LinkList={
+                info?.linkList?.filter(
+                  item =>
+                    MMKV.getArray('ExcludedQualities')?.includes(
+                      item.quality,
+                    ) === false,
+                ) || []
+              }
               poster={meta?.logo?.replace('medium', 'large') || ''}
               title={meta?.name || ''}
             />

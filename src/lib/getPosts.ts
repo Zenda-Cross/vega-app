@@ -22,11 +22,11 @@ export const getPosts = async (
       if (
         MmmkvCache.getString('baseUrl') &&
         MmmkvCache.getInt('baseUrlTime') &&
-        // 60 minutes
-        Date.now() - MmmkvCache.getInt('baseUrlTime') < 60 * 60 * 1000
+        // 30 minutes
+        Date.now() - MmmkvCache.getInt('baseUrlTime') < 1800000
       ) {
         baseUrl = MmmkvCache.getString('baseUrl');
-        // console.log('baseUrl from cache', baseUrl);
+        console.log('baseUrl from cache', baseUrl);
       } else {
         const baseUrlRes = await axios.get(
           'https://himanshu8443.github.io/providers/modflix.json',

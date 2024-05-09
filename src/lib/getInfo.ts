@@ -15,6 +15,7 @@ export interface Info {
 
 export interface Link {
   title: string;
+  quality: string;
   movieLinks: string;
   episodesLink: string;
 }
@@ -70,7 +71,14 @@ export const getInfo = async (link: string): Promise<Info> => {
     const links: Link[] = [];
     list.each((index, element: any) => {
       element = $(element);
-      const title = element?.text() || '';
+      // title
+      const title =
+        element
+          ?.text()
+          .match(/^(?:\[?[^\[\{]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/)?.[0] +
+          (element?.text().match(/\d+p\b/)?.[0] || '') || '';
+
+      const quality = element?.text().match(/\d+p\b/)?.[0] || '';
       // console.log(title);
       // movieLinks
       const movieLinks = element
@@ -109,7 +117,7 @@ export const getInfo = async (link: string): Promise<Info> => {
           ?.parent()
           ?.attr('href');
       if (movieLinks || episodesLink) {
-        links.push({title, movieLinks, episodesLink});
+        links.push({title, movieLinks, episodesLink, quality});
       }
     });
     // console.log(links);
@@ -123,8 +131,8 @@ export const getInfo = async (link: string): Promise<Info> => {
     };
   } catch (error) {
     console.log('getInfo error');
-    console.error(error);
-    ToastAndroid.show('Error fetching data', ToastAndroid.SHORT);
+    // console.error(error);
+    ToastAndroid.show('No Network', ToastAndroid.SHORT);
     return {
       title: '',
       synopsis: '',
