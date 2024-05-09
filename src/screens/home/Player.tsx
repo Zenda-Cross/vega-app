@@ -91,6 +91,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         showHours={true}
         onError={e => {
           console.log('PlayerError', e);
+          setSelectedStream(stream?.[1]);
           ToastAndroid.show(
             'could not play video try downloading',
             ToastAndroid.SHORT,
