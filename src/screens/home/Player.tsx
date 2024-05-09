@@ -284,7 +284,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                               ? 'text-primary'
                               : 'text-white'
                           }`}>
-                          {track.server}
+                          {track.server + ' server'}
                         </Text>
                       </TouchableOpacity>
                     ))}
