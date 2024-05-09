@@ -11,6 +11,7 @@ import React from 'react';
 import {MMKV} from '../App';
 import {useState} from 'react';
 import {MmmkvCache} from '../App';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 const Settings = () => {
   const [BaseUrl, setBaseUrl] = useState(
@@ -92,6 +93,10 @@ const Settings = () => {
                 ExcludedQualities.includes(quality) ? 'bg-primary' : ''
               }`}
               onPress={() => {
+                ReactNativeHapticFeedback.trigger('effectTick', {
+                  enableVibrateFallback: true,
+                  ignoreAndroidSystemSettings: false,
+                });
                 if (ExcludedQualities.includes(quality)) {
                   setExcludedQualities(prev => prev.filter(q => q !== quality));
                   MMKV.setArray(
@@ -119,6 +124,10 @@ const Settings = () => {
         <TouchableOpacity
           className="bg-secondary p-2 rounded-md"
           onPress={() => {
+            ReactNativeHapticFeedback.trigger('virtualKey', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
             MmmkvCache.clearStore();
           }}>
           <Text className="text-white rounded-md px-2">Clear</Text>

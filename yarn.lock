@@ -6557,6 +6557,11 @@ react-native-gesture-handler@^2.16.0:
     lodash "^4.17.21"
     prop-types "^15.7.2"
 
+react-native-haptic-feedback@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/react-native-haptic-feedback/-/react-native-haptic-feedback-2.2.0.tgz"
+  integrity sha512-3tqJOjCguWhIrX0nkURn4yw6kXdsSDjjrvZCRjKXYGlL28hdQmoW2okAHduDTD9FWj9lA+lHgwFWgGs4aFNN7A==
+
 react-native-linear-gradient@^2.8.3:
   version "2.8.3"
   resolved "https://registry.npmjs.org/react-native-linear-gradient/-/react-native-linear-gradient-2.8.3.tgz"
@@ -6630,7 +6635,7 @@ react-native-video@^6.0.0-alpha.11:
   resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.0.0-rc.0.tgz"
   integrity sha512-X8x3dJZYAhYR7dpg8RciHJXawhVkqrhwFWMrHGagFV6+pRLVfkErOShf4jzPt9i/fIBJjdKtFgeJY2jgqnCjgA==
 
-react-native@*, react-native@>=0.46.0, react-native@>=0.57.0, react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.0:
+react-native@*, react-native@>=0.46.0, react-native@>=0.57.0, react-native@>=0.60.0, react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.0:
   version "0.74.0"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.74.0.tgz"
   integrity sha512-Vpp9WPmkCm4TUH5YDxwQhqktGVon/yLpjbTgjgLqup3GglOgWagYCX3MlmK1iksIcqtyMJHMEWa+UEzJ3G9T8w==
