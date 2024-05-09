@@ -22,7 +22,7 @@ const Settings = () => {
     MMKV.getBool('UseCustomUrl') || false,
   );
   const [ExcludedQualities, setExcludedQualities] = useState(
-    MMKV.getArray('ExcludedQualities') || ['480p', '720p'],
+    MMKV.getArray('ExcludedQualities') || [],
   );
 
   const onChange = async (text: string) => {
