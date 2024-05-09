@@ -256,7 +256,7 @@ export default function Info({route}: Props): React.JSX.Element {
               LinkList={
                 info?.linkList?.filter(
                   item =>
-                    MMKV.getArray('ExcludedQualities')?.includes(
+                    (MMKV.getArray('ExcludedQualities') || [])?.includes(
                       item.quality,
                     ) === false,
                 ) || []
