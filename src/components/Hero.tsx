@@ -16,9 +16,9 @@ function Hero() {
   useEffect(() => {
     const fetchPosts = async () => {
       const data = await axios(
-        'https://cinemeta-catalogs.strem.io/top/catalog/series/top.json',
+        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
       );
-      const list = data.data.metas;
+      const list = data.data.metas?.slice(0, 5);
       setPost(list[Math.floor(Math.random() * list.length)]);
     };
     fetchPosts();
