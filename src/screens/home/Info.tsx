@@ -166,6 +166,15 @@ export default function Info({route}: Props): React.JSX.Element {
               </Text>
             ))}
           </View>
+          {/* Awards */}
+          {meta?.awards && (
+            <View className="mb-2 w-full flex-row items-baseline gap-2">
+              <Text className="text-white text- font-semibold">Awards:</Text>
+              <Text className="text-white text-xs bg-tertiary">
+                {meta?.awards}
+              </Text>
+            </View>
+          )}
           {/* synopsis */}
           <View className="mb-2 w-full flex-row items-center justify-between">
             <Skeleton show={infoLoading} colorMode="dark" width={85}>
@@ -198,12 +207,29 @@ export default function Info({route}: Props): React.JSX.Element {
                 : info?.synopsis || ''}
             </Text>
           </Skeleton>
+          {/* cast */}
+          {meta?.cast?.length! > 0 && (
+            <View className="mb-2 w-full flex-row items-start gap-2">
+              <Text className="text-white text-lg font-semibold py-1">
+                Cast
+              </Text>
+              <View className="flex-row gap-2 flex-wrap">
+                {meta?.cast?.slice(0, 5).map((actor: string) => (
+                  <Text
+                    key={actor}
+                    className="text-white text-xs bg-tertiary p-1 rounded-md">
+                    {actor}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
         <View className="p-4">
           {infoLoading ? (
             <View className="gap-y-3 items-start mb-4 p-3">
               <Skeleton show={true} colorMode="dark" height={30} width={80} />
-              {[...Array(4)].map((_, i) => (
+              {[...Array(2)].map((_, i) => (
                 <View
                   className="bg-tertiary py-1 rounded-md gap-3 mt-3"
                   key={i}>
