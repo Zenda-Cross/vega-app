@@ -1,9 +1,15 @@
-import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ScrollView,
+  Text,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
-import {getStream} from '../../lib/getStream';
+import {getStream, Stream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
@@ -14,13 +20,15 @@ import {
   TextTrack,
   SelectedAudioTrack,
   SelectedTextTrack,
+  ResizeMode,
 } from 'react-native-video';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 const Player = ({route}: Props): React.JSX.Element => {
   const playerRef: React.RefObject<VideoRef> = useRef(null);
-  const [stream, setStream] = useState<string[]>([]);
+  const [stream, setStream] = useState<Stream[]>([]);
+  const [selectedStream, setSelectedStream] = useState<Stream>(stream[0]);
 
   // controls
   const [showControls, setShowControls] = useState(true);
@@ -43,12 +51,14 @@ const Player = ({route}: Props): React.JSX.Element => {
       if (route.params.file) {
         const exists = await ifExists(route.params.file);
         if (exists) {
-          setStream([exists]);
+          setStream([{server: 'downloaded', link: exists}]);
+          setSelectedStream({server: 'downloaded', link: exists});
           return;
         }
       }
       const data = await getStream(route.params.link, route.params.type);
       setStream(data);
+      setSelectedStream(data[0]);
       // console.log('st', data);
     };
     fetchStream();
@@ -63,7 +73,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       className="bg-black h-full w-full p-4 relative">
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
-        source={{uri: stream[0]}}
+        source={{uri: selectedStream?.link}}
         videoRef={playerRef}
         poster={route.params.poster}
         title={route.params.title}
@@ -79,6 +89,15 @@ const Player = ({route}: Props): React.JSX.Element => {
         isFullscreen={true}
         disableVolume={true}
         showHours={true}
+        onError={e => {
+          console.log('PlayerError', e);
+          setSelectedStream(stream?.[1]);
+          ToastAndroid.show(
+            'could not play video try downloading',
+            ToastAndroid.SHORT,
+          );
+        }}
+        resizeMode={ResizeMode.NONE}
         //@ts-ignore
         selectedAudioTrack={selectedAudioTrack}
         onAudioTracks={e => {
@@ -145,7 +164,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className={`text-lg ${
                       activeTab === 'video'
                         ? 'font-bold text-primary'
-                        : 'font-normal'
+                        : 'font-normal text-white'
                     }`}>
                     Video
                   </Text>
@@ -211,10 +230,15 @@ const Player = ({route}: Props): React.JSX.Element => {
                       }
                       key={i}
                       onPress={() => {
-                        setSelectedTextTrack({
-                          type: 'language',
-                          value: track.language,
-                        });
+                        track.index === 0
+                          ? setSelectedTextTrack({
+                              type: 'language',
+                              value: track.language,
+                            })
+                          : setSelectedTextTrack({
+                              type: 'index',
+                              value: track.index,
+                            });
                         setShowSettings(false);
                         playerRef?.current?.resume();
                       }}>
@@ -243,22 +267,27 @@ const Player = ({route}: Props): React.JSX.Element => {
               {/* video */}
               {activeTab === 'video' && (
                 <ScrollView className="w-full p-3">
-                  {stream.map((track, i) => (
-                    <TouchableOpacity
-                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
-                      key={i}
-                      onPress={() => {
-                        setShowSettings(false);
-                        playerRef?.current?.resume();
-                      }}>
-                      <Text
-                        className={`text-base font-semibold ${
-                          track ? 'text-primary' : 'text-white'
-                        }`}>
-                        server {i + 1}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {stream
+                    .filter(track => track.server !== 'hubcloud')
+                    .map((track, i) => (
+                      <TouchableOpacity
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                        key={i}
+                        onPress={() => {
+                          setSelectedStream(track);
+                          setShowSettings(false);
+                          playerRef?.current?.resume();
+                        }}>
+                        <Text
+                          className={`text-base font-semibold ${
+                            track.link === selectedStream.link
+                              ? 'text-primary'
+                              : 'text-white'
+                          }`}>
+                          {track.server + ' server'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                 </ScrollView>
               )}
             </View>

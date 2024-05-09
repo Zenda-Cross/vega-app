@@ -13,6 +13,7 @@ import {MotiSafeAreaView} from 'moti';
 import {MMKV} from '../../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {MmmkvCache} from '../../App';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
@@ -46,7 +47,7 @@ export default function Info({route}: Props): React.JSX.Element {
       if (data.linkList?.length === 0) {
         return;
       }
-      MmmkvCache.setItem(route.params.link, JSON.stringify(data));
+      setInfo(data);
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
@@ -57,7 +58,6 @@ export default function Info({route}: Props): React.JSX.Element {
         console.log(e);
         setMeta(undefined);
       }
-      setInfo(data);
       setInfoLoading(false);
       // console.log(info?.linkList);
     };
@@ -65,6 +65,10 @@ export default function Info({route}: Props): React.JSX.Element {
   }, [refreshing, route.params.link]);
 
   const addLibrary = () => {
+    ReactNativeHapticFeedback.trigger('effectClick', {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     const library = MMKV.getArray('library') || [];
     library.push({
       title: meta?.name || info?.title,
@@ -76,6 +80,10 @@ export default function Info({route}: Props): React.JSX.Element {
   };
 
   const removeLibrary = () => {
+    ReactNativeHapticFeedback.trigger('effectClick', {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     const library = MMKV.getArray('library') || [];
     const newLibrary = library.filter(item => item.link !== route.params.link);
     MMKV.setArray('library', newLibrary);
@@ -88,18 +96,19 @@ export default function Info({route}: Props): React.JSX.Element {
       transition={{type: 'timing'}}
       className="h-full w-full">
       <ScrollView
-        refreshControl={
-          <RefreshControl
-            colors={['tomato']}
-            tintColor="tomato"
-            progressBackgroundColor={'black'}
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              setTimeout(() => setRefreshing(false), 1000);
-            }}
-          />
-        }>
+      // refreshControl={
+      //   <RefreshControl
+      //     colors={['tomato']}
+      //     tintColor="tomato"
+      //     progressBackgroundColor={'black'}
+      //     refreshing={refreshing}
+      //     onRefresh={() => {
+      //       setRefreshing(true);
+      //       setTimeout(() => setRefreshing(false), 1000);
+      //     }}
+      //   />
+      // }
+      >
         <OrientationLocker orientation={PORTRAIT} />
         <View className="relative w-full h-[230px]">
           <View className="absolute w-full h-full">
@@ -166,6 +175,15 @@ export default function Info({route}: Props): React.JSX.Element {
               </Text>
             ))}
           </View>
+          {/* Awards */}
+          {meta?.awards && (
+            <View className="mb-2 w-full flex-row items-baseline gap-2">
+              <Text className="text-white text- font-semibold">Awards:</Text>
+              <Text className="text-white text-xs bg-tertiary">
+                {meta?.awards}
+              </Text>
+            </View>
+          )}
           {/* synopsis */}
           <View className="mb-2 w-full flex-row items-center justify-between">
             <Skeleton show={infoLoading} colorMode="dark" width={85}>
@@ -198,12 +216,29 @@ export default function Info({route}: Props): React.JSX.Element {
                 : info?.synopsis || ''}
             </Text>
           </Skeleton>
+          {/* cast */}
+          {meta?.cast?.length! > 0 && (
+            <View className="mb-2 w-full flex-row items-start gap-2">
+              <Text className="text-white text-lg font-semibold py-1">
+                Cast
+              </Text>
+              <View className="flex-row gap-2 flex-wrap">
+                {meta?.cast?.slice(0, 5).map((actor: string) => (
+                  <Text
+                    key={actor}
+                    className="text-white text-xs bg-tertiary p-1 rounded-md">
+                    {actor}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
         <View className="p-4">
           {infoLoading ? (
             <View className="gap-y-3 items-start mb-4 p-3">
               <Skeleton show={true} colorMode="dark" height={30} width={80} />
-              {[...Array(4)].map((_, i) => (
+              {[...Array(2)].map((_, i) => (
                 <View
                   className="bg-tertiary py-1 rounded-md gap-3 mt-3"
                   key={i}>
@@ -218,7 +253,14 @@ export default function Info({route}: Props): React.JSX.Element {
             </View>
           ) : (
             <SeasonList
-              LinkList={info?.linkList || []}
+              LinkList={
+                info?.linkList?.filter(
+                  item =>
+                    MMKV.getArray('ExcludedQualities')?.includes(
+                      item.quality,
+                    ) === false,
+                ) || []
+              }
               poster={meta?.logo?.replace('medium', 'large') || ''}
               title={meta?.name || ''}
             />

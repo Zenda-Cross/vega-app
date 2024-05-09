@@ -1,7 +1,12 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
+import {ToastAndroid} from 'react-native';
 
+export interface Stream {
+  server: string;
+  link: string;
+}
 export async function getStream(link: string, type: string) {
   try {
     console.log('dotlink', link);
@@ -44,16 +49,18 @@ export async function getStream(link: string, type: string) {
     const $ = cheerio.load(vcloudRes.data);
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger');
-    const streamLinks: string[] = [];
+    const streamLinks: Stream[] = [];
     linkClass.each((index, element) => {
       const itm = $(element);
       const link = itm.attr('href') || '';
-      if (
-        link?.includes('.dev') ||
-        link?.includes('pixeldrain') ||
-        link?.includes('hubcloud')
-      ) {
-        streamLinks.push(link);
+      if (link?.includes('.dev')) {
+        streamLinks.push({server: 'cloudfare', link: link});
+      }
+      if (link?.includes('pixeldrain')) {
+        streamLinks.push({server: 'pixeldrain', link: link});
+      }
+      if (link?.includes('hubcloud')) {
+        streamLinks.push({server: 'hubcloud', link: link});
       }
     });
 
@@ -62,6 +69,7 @@ export async function getStream(link: string, type: string) {
   } catch (error) {
     console.log('getStream error: ');
     // console.error(error);
+    ToastAndroid.show('Error getting stream links', ToastAndroid.SHORT);
     return [];
   }
 }

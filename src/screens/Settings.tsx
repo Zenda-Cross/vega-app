@@ -5,44 +5,63 @@ import {
   Switch,
   // TouchableOpacity,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import React from 'react';
 import {MMKV} from '../App';
-import {useLayoutEffect, useState} from 'react';
-// import {MmmkvCache} from '../App';
+import {useState} from 'react';
+import {MmmkvCache} from '../App';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 const Settings = () => {
-  const [BaseUrl, setBaseUrl] = useState('');
-  const [OpenVlc, setOpenVlc] = useState(false);
+  const [BaseUrl, setBaseUrl] = useState(
+    MMKV.getString('baseUrl') || 'https://vegamovies.cash',
+  );
+  const [OpenVlc, setOpenVlc] = useState(MMKV.getBool('vlc') || false);
+  const [UseCustomUrl, setUseCustomUrl] = useState(
+    MMKV.getBool('UseCustomUrl') || false,
+  );
+  const [ExcludedQualities, setExcludedQualities] = useState(
+    MMKV.getArray('ExcludedQualities') || ['480p', '720p'],
+  );
+
   const onChange = async (text: string) => {
     if (text.endsWith('/')) {
       text = text.slice(0, -1);
     }
-    await MMKV.setString('baseUrl', text);
+    MMKV.setString('baseUrl', text);
     setBaseUrl(text);
   };
-  useLayoutEffect(() => {
-    const fetchBaseUrl = async () => {
-      const baseUrl =
-        (await MMKV.getString('baseUrl')) || 'https://vegamovies.ph';
-      setBaseUrl(baseUrl);
-      const openVlc = await MMKV.getBool('vlc');
-      setOpenVlc(openVlc);
-    };
-    fetchBaseUrl();
-  }, []);
+  console.log(ExcludedQualities);
+
   return (
     <View className="w-full h-full bg-black p-4">
       <Text className="text-2xl font-bold text-white">Settings</Text>
+      {/* use custom base URL */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">Base Url</Text>
-        <TextInput
-          className="bg-secondary text-white p-1 px-2 rounded-md"
-          placeholder="example-https://vegamovies.cash"
-          value={BaseUrl}
-          onChangeText={onChange}
+        <Text className="text-white font-semibold">use custom base URL</Text>
+        <Switch
+          thumbColor={UseCustomUrl ? 'tomato' : 'gray'}
+          value={UseCustomUrl}
+          onValueChange={val => {
+            MMKV.setBool('UseCustomUrl', val);
+            setUseCustomUrl(val);
+          }}
         />
       </View>
+      {/* Base URL */}
+
+      {UseCustomUrl && (
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold">Base Url</Text>
+          <TextInput
+            className="bg-secondary text-white p-1 px-2 rounded-md"
+            placeholder="example-https://vegamovies.cash"
+            value={BaseUrl}
+            onChangeText={onChange}
+          />
+        </View>
+      )}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">
           Open video in VLC player
@@ -50,8 +69,8 @@ const Settings = () => {
         <Switch
           thumbColor={OpenVlc ? 'tomato' : 'gray'}
           value={OpenVlc}
-          onValueChange={async val => {
-            await MMKV.setBool('vlc', val);
+          onValueChange={val => {
+            MMKV.setBool('vlc', val);
             setOpenVlc(val);
             if (val) {
               Alert.alert(
@@ -64,16 +83,56 @@ const Settings = () => {
           }}
         />
       </View>
-      {/* <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+        <Text className="text-white font-semibold">Excluded qualities</Text>
+        <View className="flex flex-row flex-wrap">
+          {['480p', '720p', '1080p'].map((quality, index) => (
+            <TouchableOpacity
+              key={index}
+              className={`bg-secondary p-2 rounded-md m-1 ${
+                ExcludedQualities.includes(quality) ? 'bg-primary' : ''
+              }`}
+              onPress={() => {
+                ReactNativeHapticFeedback.trigger('effectTick', {
+                  enableVibrateFallback: true,
+                  ignoreAndroidSystemSettings: false,
+                });
+                if (ExcludedQualities.includes(quality)) {
+                  setExcludedQualities(prev => prev.filter(q => q !== quality));
+                  MMKV.setArray(
+                    'ExcludedQualities',
+                    ExcludedQualities.filter(q => q !== quality),
+                  );
+                } else {
+                  setExcludedQualities(prev => [...prev, quality]);
+                  MMKV.setArray('ExcludedQualities', [
+                    ...ExcludedQualities,
+                    quality,
+                  ]);
+                }
+                console.log(ExcludedQualities);
+              }}>
+              <Text className="text-white text-xs rounded-md px-1">
+                {quality}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
         <TouchableOpacity
           className="bg-secondary p-2 rounded-md"
-          onPress={async () => {
-            await MmmkvCache.clearMemoryCache();
+          onPress={() => {
+            ReactNativeHapticFeedback.trigger('virtualKey', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
+            MmmkvCache.clearStore();
           }}>
           <Text className="text-white rounded-md px-2">Clear</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
     </View>
   );
 };

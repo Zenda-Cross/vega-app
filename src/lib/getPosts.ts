@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../App';
 import {homeList} from './constants';
 
 export interface Post {
@@ -15,7 +15,27 @@ export const getPosts = async (
   page: number,
 ): Promise<Post[]> => {
   try {
-    const baseUrl = MMKV.getString('baseUrl') || 'https://vegamovies.cash';
+    let baseUrl = '';
+    if (MMKV.getBool('UseCustomUrl')) {
+      baseUrl = MMKV.getString('baseUrl');
+    } else {
+      if (
+        MmmkvCache.getString('baseUrl') &&
+        MmmkvCache.getInt('baseUrlTime') &&
+        // 30 minutes
+        Date.now() - MmmkvCache.getInt('baseUrlTime') < 1800000
+      ) {
+        baseUrl = MmmkvCache.getString('baseUrl');
+        console.log('baseUrl from cache', baseUrl);
+      } else {
+        const baseUrlRes = await axios.get(
+          'https://himanshu8443.github.io/providers/modflix.json',
+        );
+        baseUrl = baseUrlRes.data.Vega.url;
+        MmmkvCache.setString('baseUrl', baseUrl);
+        MmmkvCache.setInt('baseUrlTime', Date.now());
+      }
+    }
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
       : `${baseUrl}/page/${page}/?s=${filter}`;
