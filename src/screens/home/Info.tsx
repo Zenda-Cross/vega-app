@@ -13,6 +13,7 @@ import {MotiSafeAreaView} from 'moti';
 import {MMKV} from '../../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {MmmkvCache} from '../../App';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
@@ -64,6 +65,10 @@ export default function Info({route}: Props): React.JSX.Element {
   }, [refreshing, route.params.link]);
 
   const addLibrary = () => {
+    ReactNativeHapticFeedback.trigger('effectClick', {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     const library = MMKV.getArray('library') || [];
     library.push({
       title: meta?.name || info?.title,
@@ -75,6 +80,10 @@ export default function Info({route}: Props): React.JSX.Element {
   };
 
   const removeLibrary = () => {
+    ReactNativeHapticFeedback.trigger('effectClick', {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     const library = MMKV.getArray('library') || [];
     const newLibrary = library.filter(item => item.link !== route.params.link);
     MMKV.setArray('library', newLibrary);
