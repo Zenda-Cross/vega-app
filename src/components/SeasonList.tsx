@@ -14,6 +14,7 @@ import {Linking} from 'react-native';
 import {getStream} from '../lib/getStream';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
+import {Dropdown} from 'react-native-element-dropdown';
 
 const SeasonList = ({
   LinkList,
@@ -26,31 +27,40 @@ const SeasonList = ({
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [acTitle, setAcTitle] = useState<string>('');
-  const [actEp, setActEp] = useState<string>('');
+
   const [episodeList, setEpisodeList] = useState<EpisodeLink[]>([]);
   const [episodeLoading, setEpisodeLoading] = useState<boolean>(false);
   const [vlcLoading, setVlcLoading] = useState<boolean>(false);
+
+  const [ActiveSeason, setActiveSeason] = useState<{
+    title: string;
+    quality: string;
+    episodesLink: string;
+    movieLinks: string;
+  }>(MmmkvCache.getMap(`ActiveSeason${title}`) || LinkList[0]);
+
   useEffect(() => {
     const fetchList = async () => {
-      if (!actEp) return;
+      if (!ActiveSeason?.episodesLink) {
+        return;
+      }
       setEpisodeLoading(true);
-      const cacheEpisodes = await MmmkvCache.getItem(actEp);
+      const cacheEpisodes = await MmmkvCache.getItem(ActiveSeason.episodesLink);
       if (cacheEpisodes) {
         setEpisodeList(JSON.parse(cacheEpisodes as string));
         console.log('cache', JSON.parse(cacheEpisodes as string));
         setEpisodeLoading(false);
         return;
       }
-      const episodes = await getEpisodeLinks(actEp);
+      const episodes = await getEpisodeLinks(ActiveSeason.episodesLink);
       if (episodes.length === 0) return;
-      MmmkvCache.setItem(actEp, JSON.stringify(episodes));
+      MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
       // console.log(episodes);
       setEpisodeList(episodes);
       setEpisodeLoading(false);
     };
     fetchList();
-  }, [actEp]);
+  }, [ActiveSeason]);
 
   type playHandlerProps = {
     link: string;
@@ -65,7 +75,7 @@ const SeasonList = ({
       setVlcLoading(true);
       console.log(downloaded);
       const stream = await getStream(link, type);
-      Linking.openURL('vlc://' + stream[0]);
+      Linking.openURL('vlc://' + stream[0].link);
       setVlcLoading(false);
       return;
     }
@@ -77,12 +87,126 @@ const SeasonList = ({
       poster: poster,
     });
   };
+  // console.log('LinkList', LinkList);
 
   return (
     <View>
-      <Text className="text-white text-lg font-semibold mb-2">Streams</Text>
+      <Dropdown
+        selectedTextStyle={{color: 'tomato', overflow: 'hidden', height: 23}}
+        labelField={'title'}
+        valueField={LinkList[0]?.movieLinks ? 'movieLinks' : 'episodesLink'}
+        // excludeItems={LinkList.filter(item =>
+        //   (MMKV.getArray('ExcludedQualities') || [])?.includes(item.quality),
+        // )}
+        onChange={item => {
+          setActiveSeason(item);
+          MmmkvCache.setMap(`ActiveSeason${title}`, item);
+        }}
+        value={ActiveSeason}
+        data={LinkList}
+        style={{overflow: 'hidden'}}
+        containerStyle={{borderColor: 'black'}}
+        renderItem={item => {
+          return (
+            <View className="p-2 bg-black text-white flex-row justify-start gap-2 items-center">
+              <Text className=" text-white">{item.title}</Text>
+            </View>
+          );
+        }}
+      />
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
-        {LinkList.map((link, i) => (
+        {ActiveSeason?.movieLinks && (
+          <View className="w-full justify-center items-center p-2 gap-2 flex-row">
+            <View className="flex-row w-full justify-between gap-2 items-center">
+              <TouchableOpacity
+                className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
+                onPress={() =>
+                  playHandler({
+                    link: ActiveSeason.movieLinks,
+                    type: 'movie',
+                    title: title,
+                    file:
+                      ActiveSeason.title
+                        .replaceAll(' ', '_')
+                        .replaceAll('/', '') + '.mkv',
+                  })
+                }>
+                <Ionicons name="play-circle" size={28} color="tomato" />
+                <Text className="text-white">Play</Text>
+              </TouchableOpacity>
+              <Downloader
+                link={ActiveSeason.movieLinks}
+                type="movie"
+                fileName={ActiveSeason.title.replaceAll(' ', '_') + '.mkv'}
+              />
+            </View>
+          </View>
+        )}
+        {
+          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
+            {!episodeLoading &&
+              episodeList?.length > 0 &&
+              ActiveSeason?.episodesLink &&
+              episodeList?.map((episode, i) => (
+                <View
+                  key={episode.link + i}
+                  className="w-full justify-center items-center gap-2 flex-row">
+                  <View className="flex-row w-full justify-between gap-2 items-center">
+                    <TouchableOpacity
+                      className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
+                      onPress={() =>
+                        playHandler({
+                          link: episode.link,
+                          type: 'series',
+                          title: title + ' ' + episode.title,
+                          file:
+                            ActiveSeason.title
+                              .replaceAll(' ', '_')
+                              .replaceAll('/', '') +
+                            episode.title.replaceAll(' ', '_') +
+                            '.mkv',
+                        })
+                      }>
+                      <Ionicons name="play-circle" size={28} color="tomato" />
+                      <Text className="text-white">{episode.title}</Text>
+                    </TouchableOpacity>
+                    <Downloader
+                      link={episode.link}
+                      type="series"
+                      fileName={
+                        ActiveSeason.title
+                          .replaceAll(' ', '_')
+                          .replaceAll('/', '') +
+                        episode.title.replaceAll(' ', '_') +
+                        '.mkv'
+                      }
+                    />
+                  </View>
+                </View>
+              ))}
+            {episodeLoading && (
+              <MotiView
+                animate={{backgroundColor: '#0000'}}
+                delay={0}
+                //@ts-ignore
+                transition={{
+                  type: 'timing',
+                }}
+                style={{
+                  width: '100%',
+                  padding: 10,
+                  alignItems: 'flex-start',
+                  gap: 20,
+                }}>
+                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+              </MotiView>
+            )}
+          </View>
+        }
+        {/* {LinkList.map((link, i) => (
           <View
             className="bg-quaternary min-w-full p-2 rounded-md"
             key={link.title + i}>
@@ -136,31 +260,18 @@ const SeasonList = ({
                       <View className="flex-row w-full justify-between gap-2 items-center">
                         <TouchableOpacity
                           className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
-                          onPress={
-                            () =>
-                              playHandler({
-                                link: episode.link,
-                                type: 'series',
-                                title: title + ' ' + episode.title,
-                                file:
-                                  link.title
-                                    .replaceAll(' ', '_')
-                                    .replaceAll('/', '') +
-                                  episode.title.replaceAll(' ', '_') +
-                                  '.mkv',
-                              })
-                            // navigation.navigate('Player', {
-                            //   link: episode.link,
-                            //   type: 'series',
-                            //   title: title,
-                            //   file:
-                            //     link.title
-                            //       .replaceAll(' ', '_')
-                            //       .replaceAll('/', '') +
-                            //     episode.title.replaceAll(' ', '_') +
-                            //     '.mkv',
-                            //   poster: poster,
-                            // })
+                          onPress={() =>
+                            playHandler({
+                              link: episode.link,
+                              type: 'series',
+                              title: title + ' ' + episode.title,
+                              file:
+                                link.title
+                                  .replaceAll(' ', '_')
+                                  .replaceAll('/', '') +
+                                episode.title.replaceAll(' ', '_') +
+                                '.mkv',
+                            })
                           }>
                           <Ionicons
                             name="play-circle"
@@ -241,10 +352,10 @@ const SeasonList = ({
               )}
             </View>
           </View>
-        ))}
+        ))} */}
         {LinkList.length === 0 && (
           <Text className="text-white text-lg font-semibold min-h-20">
-            No Streams Available
+            No streams in preferred quality found
           </Text>
         )}
       </View>
@@ -267,6 +378,9 @@ const SeasonList = ({
             }}>
             <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
           </MotiView>
+          <Text className="text-white text-lg font-semibold mt-2">
+            Opening in VLC
+          </Text>
         </View>
       )}
     </View>

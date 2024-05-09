@@ -91,7 +91,7 @@ const DownloadComponent = ({
       isAllowedOverMetered: true,
       isAllowedOverRoaming: true,
       id: jobId,
-      url: url[url.length - 1],
+      url: url[url.length - 1].link,
       destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}`,
       metadata: {},
       isNotificationVisible: true,
