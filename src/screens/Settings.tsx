@@ -20,6 +20,10 @@ const Settings = () => {
   const [UseCustomUrl, setUseCustomUrl] = useState(
     MMKV.getBool('UseCustomUrl') || false,
   );
+  const [ExcludedQualities, setExcludedQualities] = useState(
+    MMKV.getArray('ExcludedQualities') || ['480p', '720p'],
+  );
+
   const onChange = async (text: string) => {
     if (text.endsWith('/')) {
       text = text.slice(0, -1);
@@ -27,6 +31,7 @@ const Settings = () => {
     MMKV.setString('baseUrl', text);
     setBaseUrl(text);
   };
+  console.log(ExcludedQualities);
 
   return (
     <View className="w-full h-full bg-black p-4">
@@ -63,8 +68,8 @@ const Settings = () => {
         <Switch
           thumbColor={OpenVlc ? 'tomato' : 'gray'}
           value={OpenVlc}
-          onValueChange={async val => {
-            await MMKV.setBool('vlc', val);
+          onValueChange={val => {
+            MMKV.setBool('vlc', val);
             setOpenVlc(val);
             if (val) {
               Alert.alert(
@@ -76,6 +81,38 @@ const Settings = () => {
             }
           }}
         />
+      </View>
+      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+        <Text className="text-white font-semibold">Excluded qualities</Text>
+        <View className="flex flex-row flex-wrap">
+          {['480p', '720p', '1080p'].map((quality, index) => (
+            <TouchableOpacity
+              key={index}
+              className={`bg-secondary p-2 rounded-md m-1 ${
+                ExcludedQualities.includes(quality) ? 'bg-primary' : ''
+              }`}
+              onPress={() => {
+                if (ExcludedQualities.includes(quality)) {
+                  setExcludedQualities(prev => prev.filter(q => q !== quality));
+                  MMKV.setArray(
+                    'ExcludedQualities',
+                    ExcludedQualities.filter(q => q !== quality),
+                  );
+                } else {
+                  setExcludedQualities(prev => [...prev, quality]);
+                  MMKV.setArray('ExcludedQualities', [
+                    ...ExcludedQualities,
+                    quality,
+                  ]);
+                }
+                console.log(ExcludedQualities);
+              }}>
+              <Text className="text-white text-xs rounded-md px-1">
+                {quality}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
