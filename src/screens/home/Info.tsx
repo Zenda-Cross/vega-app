@@ -32,28 +32,31 @@ export default function Info({route}: Props): React.JSX.Element {
       setInfo(undefined);
       setInfoLoading(true);
       // cache
-      const cacheDataRes = (await MmmkvCache.getItem(route.params.link)) || '';
+      const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
       if (cacheDataRes) {
         const cacheData = JSON.parse(cacheDataRes as string);
-        const cahceMeta = await MmmkvCache.getItem(cacheData.imdbId);
+        const cahceMeta = MmmkvCache.getString(cacheData.imdbId);
         if (cahceMeta) {
           const cacheMeta = JSON.parse(cahceMeta as string);
           setMeta(cacheMeta);
         }
+        // console.log('cache', cacheData);
         setInfo(cacheData);
         setInfoLoading(false);
       }
       const data = await getInfo(route.params.link);
       if (data.linkList?.length === 0) {
+        setInfoLoading(false);
         return;
       }
       setInfo(data);
+      MmmkvCache.setString(route.params.link, JSON.stringify(data));
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
         );
         setMeta(metaRes.data.meta);
-        MmmkvCache.setItem(data.imdbId, JSON.stringify(metaRes.data.meta));
+        MmmkvCache.setString(data.imdbId, JSON.stringify(metaRes.data.meta));
       } catch (e) {
         console.log(e);
         setMeta(undefined);
