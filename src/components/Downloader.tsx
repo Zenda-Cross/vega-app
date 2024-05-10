@@ -42,7 +42,7 @@ const DownloadComponent = ({
       }
     };
     checkIfDownloaded();
-  }, []);
+  }, [fileName]);
 
   const downloadFile = async () => {
     setIsDownloading(true);
