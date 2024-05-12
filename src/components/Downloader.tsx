@@ -8,7 +8,9 @@ import {
   checkForExistingDownloads,
 } from '@kesha-antonov/react-native-background-downloader';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 import {getStream} from '../lib/getStream';
+import {MotiView} from 'moti';
 
 const DownloadComponent = ({
   link,
@@ -19,7 +21,6 @@ const DownloadComponent = ({
   fileName: string;
   type: string;
 }) => {
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
@@ -111,9 +112,9 @@ const DownloadComponent = ({
       })
       .error(({error, errorCode}) => {
         console.log('Download canceled due to error: ', {error, errorCode});
-        Alert.alert('Download Canceled', 'failed to download');
         setIsDownloading(false);
         task.stop();
+        Alert.alert('Download Canceled', 'failed to download');
       });
 
     return () => {
@@ -135,30 +136,32 @@ const DownloadComponent = ({
   return (
     <View className="flex-row items-center mt-1 justify-between rounded-full bg-gray-800 p-1">
       {alreadyDownloaded ? (
-        <TouchableOpacity onPress={() => setDeleteModal(true)}>
-          <MaterialIcons name="file-download-done" size={27} color="white" />
+        <TouchableOpacity onPress={() => setDeleteModal(true)} className="mx-1">
+          <MaterialIcons name="file-download-done" size={27} color="#c1c4c9" />
         </TouchableOpacity>
       ) : isDownloading ? (
-        <TouchableOpacity onPress={() => console.log('Cancel download')}>
+        <MotiView
+          onPress={() => console.log('Cancel download')}
+          // animate opacity to opacity while downloding
+          from={{opacity: 1}}
+          animate={{opacity: 0.5}}
+          //@ts-ignore
+          transition={{type: 'timing', duration: 500, loop: true}}>
           <MaterialIcons name="downloading" size={27} color="tomato" />
-        </TouchableOpacity>
+        </MotiView>
       ) : (
-        <TouchableOpacity onPress={downloadFile}>
-          <MaterialIcons
-            name="download-for-offline"
-            size={27}
-            color="#c1c4c9"
-          />
+        <TouchableOpacity onPress={downloadFile} className="mx-2">
+          <Octicons name="download" size={25} color="#c1c4c9" />
         </TouchableOpacity>
       )}
       {deleteModal && (
         <Modal animationType="fade" visible={deleteModal} transparent={true}>
           <View className="flex-1 bg-black/50 justify-center items-center p-4">
             <View className="bg-quaternary p-3 w-80 rounded-md justify-center items-center">
-              <Text className="text-lg font-semibold my-3">
+              <Text className="text-lg font-semibold my-3 text-white">
                 Are you sure you want to delete this file?
               </Text>
-              <Text className="text-xs text-center">{fileName}</Text>
+              <Text className="text-xs text-center text-white">{fileName}</Text>
               <View className="flex-row items-center justify-evenly w-full my-5">
                 <Button
                   color={'tomato'}
