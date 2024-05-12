@@ -34,10 +34,10 @@ export default function Info({route}: Props): React.JSX.Element {
       // cache
       const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
       if (cacheDataRes) {
-        const cacheData = JSON.parse(cacheDataRes as string);
+        const cacheData = await JSON.parse(cacheDataRes as string);
         const cahceMeta = MmmkvCache.getString(cacheData.imdbId);
         if (cahceMeta) {
-          const cacheMeta = JSON.parse(cahceMeta as string);
+          const cacheMeta = await JSON.parse(cahceMeta as string);
           setMeta(cacheMeta);
         }
         // console.log('cache', cacheData);
