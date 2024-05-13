@@ -1,4 +1,11 @@
-import {Image, Text, View, RefreshControl, ScrollView} from 'react-native';
+import {
+  Image,
+  Text,
+  View,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../App';
@@ -26,6 +33,13 @@ export default function Info({route}: Props): React.JSX.Element {
       (item: any) => item.link === route.params.link,
     ),
   );
+  const [backgroundColor, setBackgroundColor] = useState('transparent');
+
+  const handleScroll = (event: any) => {
+    setBackgroundColor(
+      event.nativeEvent.contentOffset.y > 0 ? 'black' : 'transparent',
+    );
+  };
   useEffect(() => {
     const fetchInfo = async () => {
       setMeta(undefined);
@@ -49,18 +63,18 @@ export default function Info({route}: Props): React.JSX.Element {
         setInfoLoading(false);
         return;
       }
-      setInfo(data);
-      MmmkvCache.setString(route.params.link, JSON.stringify(data));
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
         );
-        setMeta(metaRes.data.meta);
+        setMeta(metaRes?.data?.meta);
         MmmkvCache.setString(data.imdbId, JSON.stringify(metaRes.data.meta));
       } catch (e) {
-        console.log(e);
+        console.log('meta error', e);
         setMeta(undefined);
       }
+      setInfo(data);
+      MmmkvCache.setString(route.params.link, JSON.stringify(data));
       setInfoLoading(false);
       // console.log(info?.linkList);
     };
@@ -98,22 +112,30 @@ export default function Info({route}: Props): React.JSX.Element {
       //@ts-ignore
       transition={{type: 'timing'}}
       className="h-full w-full">
+      <StatusBar
+        showHideTransition={'fade'}
+        animated={true}
+        translucent={true}
+        backgroundColor={backgroundColor}
+      />
       <ScrollView
-      // refreshControl={
-      //   <RefreshControl
-      //     colors={['tomato']}
-      //     tintColor="tomato"
-      //     progressBackgroundColor={'black'}
-      //     refreshing={refreshing}
-      //     onRefresh={() => {
-      //       setRefreshing(true);
-      //       setTimeout(() => setRefreshing(false), 1000);
-      //     }}
-      //   />
-      // }
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        // refreshControl={
+        //   <RefreshControl
+        //     colors={['tomato']}
+        //     tintColor="tomato"
+        //     progressBackgroundColor={'black'}
+        //     refreshing={refreshing}
+        //     onRefresh={() => {
+        //       setRefreshing(true);
+        //       setTimeout(() => setRefreshing(false), 1000);
+        //     }}
+        //   />
+        // }
       >
         <OrientationLocker orientation={PORTRAIT} />
-        <View className="relative w-full h-[230px]">
+        <View className="relative w-full h-[256px]">
           <View className="absolute w-full h-full">
             <Skeleton
               show={infoLoading}
@@ -128,7 +150,7 @@ export default function Info({route}: Props): React.JSX.Element {
                       info?.image ||
                       'https://via.placeholder.com',
                   }}
-                  className=" h-56 w-full"
+                  className=" h-64 w-full"
                 />
               }
             </Skeleton>
@@ -140,11 +162,12 @@ export default function Info({route}: Props): React.JSX.Element {
           <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
             {meta?.logo ? (
               <Image
+                onError={() => setMeta({...meta, logo: undefined})}
                 source={{uri: meta?.logo}}
                 style={{width: 200, height: 100, resizeMode: 'contain'}}
               />
             ) : (
-              <Text className="text-white text-xl font-semibold w-3/4 truncate">
+              <Text className="text-white text-xl mb-3 font-semibold w-3/4 truncate">
                 {info?.title}
               </Text>
             )}
@@ -183,8 +206,26 @@ export default function Info({route}: Props): React.JSX.Element {
             <View className="mb-2 w-full flex-row items-baseline gap-2">
               <Text className="text-white text- font-semibold">Awards:</Text>
               <Text className="text-white text-xs bg-tertiary">
-                {meta?.awards}
+                {meta?.awards?.length > 50
+                  ? meta?.awards.slice(0, 50) + '...'
+                  : meta?.awards}
               </Text>
+            </View>
+          )}
+          {meta?.cast?.length! > 0 && (
+            <View className="mb-2 w-full flex-row items-start gap-2">
+              <Text className="text-white text-lg font-semibold py-1">
+                Cast
+              </Text>
+              <View className="flex-row gap-2 flex-wrap">
+                {meta?.cast?.slice(0, 5).map((actor: string) => (
+                  <Text
+                    key={actor}
+                    className="text-white text-xs bg-tertiary p-1 rounded-md">
+                    {actor}
+                  </Text>
+                ))}
+              </View>
             </View>
           )}
           {/* synopsis */}
@@ -220,22 +261,6 @@ export default function Info({route}: Props): React.JSX.Element {
             </Text>
           </Skeleton>
           {/* cast */}
-          {meta?.cast?.length! > 0 && (
-            <View className="mb-2 w-full flex-row items-start gap-2">
-              <Text className="text-white text-lg font-semibold py-1">
-                Cast
-              </Text>
-              <View className="flex-row gap-2 flex-wrap">
-                {meta?.cast?.slice(0, 5).map((actor: string) => (
-                  <Text
-                    key={actor}
-                    className="text-white text-xs bg-tertiary p-1 rounded-md">
-                    {actor}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          )}
         </View>
         <View className="p-4">
           {infoLoading ? (
@@ -257,15 +282,27 @@ export default function Info({route}: Props): React.JSX.Element {
           ) : (
             <SeasonList
               LinkList={
-                info?.linkList?.filter(
-                  item =>
-                    (MMKV.getArray('ExcludedQualities') || [])?.includes(
-                      item.quality,
-                    ) === false,
-                ) || []
+                info?.linkList
+                  ? info?.linkList?.filter(
+                      item =>
+                        (MMKV.getArray('ExcludedQualities') || [])?.includes(
+                          item.quality,
+                        ) === false,
+                    )?.length! > 0
+                    ? info?.linkList?.filter(
+                        item =>
+                          (MMKV.getArray('ExcludedQualities') || [])?.includes(
+                            item.quality,
+                          ) === false,
+                      )
+                    : info?.linkList
+                  : []
               }
               poster={meta?.logo?.replace('medium', 'large') || ''}
-              title={meta?.name || ''}
+              metaTitle={
+                meta?.name.replaceAll(/[^a-zA-Z0-9]/g, '_') ||
+                info?.title.replaceAll(/[^a-zA-Z0-9]/g, '_')
+              }
             />
           )}
         </View>
