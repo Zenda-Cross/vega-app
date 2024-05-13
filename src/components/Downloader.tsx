@@ -35,11 +35,22 @@ const DownloadComponent = ({
       // check if download is already in progress
       const tasks = await checkForExistingDownloads();
       // console.log('Tasks:', tasks);
-      const task = tasks.find(task => task.id === fileName);
+      const task = tasks.find(item => item.id === fileName);
       if (task?.state === 'DOWNLOADING') {
         setIsDownloading(true);
+        const timer = setInterval(async () => {
+          const fileExists = await ifExists(fileName);
+          if (fileExists) {
+            console.log('Download complete');
+            clearInterval(timer);
+            setIsDownloading(false);
+            setAlreadyDownloaded(true);
+            clearInterval(timer);
+          }
+        }, 1000);
       } else {
         task?.stop();
+        setIsDownloading(false);
       }
     };
     checkIfDownloaded();
@@ -106,10 +117,9 @@ const DownloadComponent = ({
       })
       .done(({bytesDownloaded, bytesTotal}) => {
         console.log('Download is done!', {bytesDownloaded, bytesTotal});
-
-        completeHandler(jobId);
         setIsDownloading(false);
         setAlreadyDownloaded(true);
+        completeHandler(jobId);
       })
       .error(({error, errorCode}) => {
         console.log('Download canceled due to error: ', {error, errorCode});
