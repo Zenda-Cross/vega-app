@@ -86,6 +86,7 @@ const DownloadComponent = ({
     // }
 
     const jobId = fileName;
+    console.log('Downloading:', fileName);
     const url = await getStream(link, type);
 
     let task = download({
@@ -134,7 +135,7 @@ const DownloadComponent = ({
   };
 
   return (
-    <View className="flex-row items-center mt-1 justify-between rounded-full bg-gray-800 p-1">
+    <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
       {alreadyDownloaded ? (
         <TouchableOpacity onPress={() => setDeleteModal(true)} className="mx-1">
           <MaterialIcons name="file-download-done" size={27} color="#c1c4c9" />
