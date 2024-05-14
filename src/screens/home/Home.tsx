@@ -1,6 +1,11 @@
-import {SafeAreaView, ScrollView, RefreshControl} from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  RefreshControl,
+  StatusBar,
+} from 'react-native';
 import Slider from '../../components/Slider';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
@@ -10,9 +15,17 @@ import {MmmkvCache} from '../../App';
 import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 
 const Home = () => {
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [homeData, setHomeData] = React.useState<HomePageData[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [homeData, setHomeData] = useState<HomePageData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [backgroundColor, setBackgroundColor] = useState('transparent');
+
+  // change status bar color
+  const handleScroll = (event: any) => {
+    setBackgroundColor(
+      event.nativeEvent.contentOffset.y > 0 ? 'black' : 'transparent',
+    );
+  };
 
   const deleteDownload = async () => {
     const tasks = await checkForExistingDownloads();
@@ -51,8 +64,15 @@ const Home = () => {
   }, [refreshing]);
   return (
     <SafeAreaView className="bg-black h-full w-full">
+      <StatusBar
+        showHideTransition={'fade'}
+        animated={true}
+        translucent={true}
+        backgroundColor={backgroundColor}
+      />
       <OrientationLocker orientation={PORTRAIT} />
       <ScrollView
+        onScroll={handleScroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

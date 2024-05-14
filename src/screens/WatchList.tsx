@@ -1,4 +1,4 @@
-import {View, Text, ScrollView} from 'react-native';
+import {View, Text, ScrollView, StatusBar} from 'react-native';
 import React, {useState} from 'react';
 import {MMKV} from '../App';
 import {useNavigation} from '@react-navigation/native';
@@ -15,7 +15,9 @@ const Library = () => {
     <ScrollView
       className="h-full w-full bg-black p-2"
       contentContainerStyle={{alignItems: 'center', justifyContent: 'center'}}>
-      <Text className="text-primary text-2xl font-semibold">Watch List</Text>
+      <Text className="text-primary text-2xl font-semibold mt-7">
+        Watch List
+      </Text>
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
           {library.map((item: any, index: number) => (

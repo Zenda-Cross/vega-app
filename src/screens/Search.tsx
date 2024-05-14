@@ -1,4 +1,4 @@
-import {View, Text, ScrollView} from 'react-native';
+import {View, Text, ScrollView, StatusBar} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -13,7 +13,7 @@ const Search = () => {
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   return (
     <View className="h-full w-full bg-black p-4 items-center">
-      <View className="flex flex-row gap-1 items-center">
+      <View className="flex flex-row gap-1 items-center mt-7">
         <TextInput
           autoFocus={true}
           onSubmitEditing={e => {
@@ -22,8 +22,8 @@ const Search = () => {
               title: 'Search Results',
             });
           }}
-          placeholder="Search"
-          className="bg-gray-800 p-2 rounded-md w-[90%] text-white"
+          placeholder="Search..."
+          className="bg-gray-800 p-2 rounded-md w-[90%] placeholder-white text-white"
         />
         <Ionicons name="search" size={25} color="white" />
       </View>

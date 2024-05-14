@@ -19,11 +19,11 @@ import {Dropdown} from 'react-native-element-dropdown';
 const SeasonList = ({
   LinkList,
   poster,
-  title,
+  metaTitle,
 }: {
   LinkList: Link[];
   poster: string;
-  title: string;
+  metaTitle: string;
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -32,12 +32,9 @@ const SeasonList = ({
   const [episodeLoading, setEpisodeLoading] = useState<boolean>(false);
   const [vlcLoading, setVlcLoading] = useState<boolean>(false);
 
-  const [ActiveSeason, setActiveSeason] = useState<{
-    title: string;
-    quality: string;
-    episodesLink: string;
-    movieLinks: string;
-  }>(MmmkvCache.getMap(`ActiveSeason${title}`) || LinkList[0]);
+  const [ActiveSeason, setActiveSeason] = useState<Link>(
+    MmmkvCache.getMap(`ActiveSeason${metaTitle}`) || LinkList[0],
+  );
 
   useEffect(() => {
     const fetchList = async () => {
@@ -100,7 +97,7 @@ const SeasonList = ({
         // )}
         onChange={item => {
           setActiveSeason(item);
-          MmmkvCache.setMap(`ActiveSeason${title}`, item);
+          MmmkvCache.setMap(`ActiveSeason${metaTitle}`, item);
         }}
         value={ActiveSeason}
         data={LinkList}
@@ -124,11 +121,12 @@ const SeasonList = ({
                   playHandler({
                     link: ActiveSeason.movieLinks,
                     type: 'movie',
-                    title: title,
+                    title: metaTitle,
                     file:
-                      ActiveSeason.title
-                        .replaceAll(' ', '_')
-                        .replaceAll('/', '') + '.mkv',
+                      (metaTitle + ActiveSeason.quality).replaceAll(
+                        /[^a-zA-Z0-9]/g,
+                        '_',
+                      ) + '.mkv',
                   })
                 }>
                 <Ionicons name="play-circle" size={28} color="tomato" />
@@ -137,7 +135,12 @@ const SeasonList = ({
               <Downloader
                 link={ActiveSeason.movieLinks}
                 type="movie"
-                fileName={ActiveSeason.title.replaceAll(' ', '_') + '.mkv'}
+                fileName={
+                  (metaTitle + ActiveSeason.quality).replaceAll(
+                    /[^a-zA-Z0-9]/g,
+                    '_',
+                  ) + '.mkv'
+                }
               />
             </View>
           </View>
@@ -158,13 +161,13 @@ const SeasonList = ({
                         playHandler({
                           link: episode.link,
                           type: 'series',
-                          title: title + ' ' + episode.title,
+                          title: metaTitle + ' ' + episode.title,
                           file:
-                            ActiveSeason.title
-                              .replaceAll(' ', '_')
-                              .replaceAll('/', '') +
-                            episode.title.replaceAll(' ', '_') +
-                            '.mkv',
+                            (
+                              metaTitle +
+                              ActiveSeason.title +
+                              episode.title
+                            ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv',
                         })
                       }>
                       <Ionicons name="play-circle" size={28} color="tomato" />
@@ -174,11 +177,11 @@ const SeasonList = ({
                       link={episode.link}
                       type="series"
                       fileName={
-                        ActiveSeason.title
-                          .replaceAll(' ', '_')
-                          .replaceAll('/', '') +
-                        episode.title.replaceAll(' ', '_') +
-                        '.mkv'
+                        (
+                          metaTitle +
+                          ActiveSeason.title +
+                          episode.title
+                        ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv'
                       }
                     />
                   </View>
@@ -208,7 +211,7 @@ const SeasonList = ({
         }
         {LinkList.length === 0 && (
           <Text className="text-white text-lg font-semibold min-h-20">
-            No streams in preferred quality found
+            No streams found
           </Text>
         )}
       </View>
