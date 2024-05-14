@@ -6,6 +6,7 @@ import {
   // TouchableOpacity,
   Alert,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import React from 'react';
 import {MMKV} from '../App';
@@ -36,7 +37,7 @@ const Settings = () => {
 
   return (
     <View className="w-full h-full bg-black p-4">
-      <Text className="text-2xl font-bold text-white">Settings</Text>
+      <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
       {/* use custom base URL */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">use custom base URL</Text>
