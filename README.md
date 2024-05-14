@@ -3,8 +3,9 @@
 # Vega-App
 React native Android app for steaming depends on a single source(stupid).
 
-## Screenshoots
-![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/99420590/be5a5d84-9867-4868-be0e-41895a1b2aec)
+## screenshot
+![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/143804558/8b7ff105-3310-4485-b9f3-fdc24d128964)
+
 
 # Download
 Download- https://github.com/Zenda-Cross/vega-app/releases
