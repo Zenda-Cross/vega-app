@@ -1,4 +1,9 @@
+![vega-high-resolution-logo-transparent](https://github.com/Zenda-Cross/vega-app/assets/143804558/b2eb446f-8e7f-4800-81e1-3320c82f33de)
+
 # Vega-App
+React native Android app for steaming depends on a single source(stupid).
+
+## Screenshoots
 ![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/99420590/be5a5d84-9867-4868-be0e-41895a1b2aec)
 
 # Download
