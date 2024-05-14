@@ -132,7 +132,7 @@ export const getInfo = async (link: string): Promise<Info> => {
   } catch (error) {
     console.log('getInfo error');
     // console.error(error);
-    ToastAndroid.show('No Network', ToastAndroid.SHORT);
+    ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',
       synopsis: '',

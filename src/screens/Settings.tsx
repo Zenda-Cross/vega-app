@@ -3,16 +3,18 @@ import {
   Text,
   TextInput,
   Switch,
-  // TouchableOpacity,
   Alert,
+  Linking,
   TouchableOpacity,
-  StatusBar,
+  TouchableNativeFeedback,
+  ToastAndroid,
 } from 'react-native';
 import React from 'react';
 import {MMKV} from '../App';
 import {useState} from 'react';
 import {MmmkvCache} from '../App';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import pkg from '../../package.json';
 
 const Settings = () => {
   const [BaseUrl, setBaseUrl] = useState(
@@ -25,7 +27,9 @@ const Settings = () => {
   const [ExcludedQualities, setExcludedQualities] = useState(
     MMKV.getArray('ExcludedQualities') || [],
   );
+  const [updateLoading, setUpdateLoading] = useState(false);
 
+  // handle base url change
   const onChange = async (text: string) => {
     if (text.endsWith('/')) {
       text = text.slice(0, -1);
@@ -33,7 +37,34 @@ const Settings = () => {
     MMKV.setString('baseUrl', text);
     setBaseUrl(text);
   };
-  console.log(ExcludedQualities);
+
+  // handle check for update
+  const checkForUpdate = async () => {
+    setUpdateLoading(true);
+    ToastAndroid.show('Checking for update', ToastAndroid.SHORT);
+    try {
+      const res = await fetch(
+        'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
+      );
+      const data = await res.json();
+      if (data.tag_name.replace('v', '') !== pkg.version) {
+        ToastAndroid.show('New update available', ToastAndroid.SHORT);
+        const url = data.html_url;
+        Alert.alert('Update', data.body, [
+          {text: 'Cancel'},
+          {text: 'Update', onPress: () => Linking.openURL(url)},
+        ]);
+        console.log('version', data.tag_name.replace('v', ''), pkg.version);
+      } else {
+        ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
+        console.log('version', data.tag_name.replace('v', ''), pkg.version);
+      }
+    } catch (error) {
+      ToastAndroid.show('Failed to check for update', ToastAndroid.SHORT);
+      console.log('Update error', error);
+    }
+    setUpdateLoading(false);
+  };
 
   return (
     <View className="w-full h-full bg-black p-4">
@@ -63,6 +94,7 @@ const Settings = () => {
           />
         </View>
       )}
+      {/* open in vlc */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">
           Open video in VLC player
@@ -84,6 +116,7 @@ const Settings = () => {
           }}
         />
       </View>
+      {/* Excluded qualities */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Excluded qualities</Text>
         <View className="flex flex-row flex-wrap">
@@ -120,6 +153,7 @@ const Settings = () => {
           ))}
         </View>
       </View>
+      {/* clear cache */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
         <TouchableOpacity
@@ -134,6 +168,18 @@ const Settings = () => {
           <Text className="text-white rounded-md px-2">Clear</Text>
         </TouchableOpacity>
       </View>
+      {/* version */}
+      <TouchableNativeFeedback
+        onPress={checkForUpdate}
+        disabled={updateLoading}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold my-2">
+            Check for Updates
+          </Text>
+          <Text className="text-white font-semibold my-2">{pkg.version}</Text>
+        </View>
+      </TouchableNativeFeedback>
     </View>
   );
 };
