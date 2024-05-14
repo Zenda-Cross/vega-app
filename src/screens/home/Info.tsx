@@ -299,10 +299,7 @@ export default function Info({route}: Props): React.JSX.Element {
                   : []
               }
               poster={meta?.logo?.replace('medium', 'large') || ''}
-              metaTitle={
-                meta?.name.replaceAll(/[^a-zA-Z0-9]/g, '_') ||
-                info?.title.replaceAll(/[^a-zA-Z0-9]/g, '_')
-              }
+              metaTitle={meta?.name || info?.title}
             />
           )}
         </View>
