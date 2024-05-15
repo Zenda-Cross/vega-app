@@ -77,6 +77,7 @@ export const getPosts = async (
 export interface HomePageData {
   title: string;
   Posts: Post[];
+  filter: string;
 }
 export const getHomePageData = async (): Promise<HomePageData[]> => {
   const homeData: HomePageData[] = [];
@@ -85,6 +86,7 @@ export const getHomePageData = async (): Promise<HomePageData[]> => {
     homeData.push({
       title: item.title,
       Posts: data,
+      filter: item.filter,
     });
   }
   return homeData;

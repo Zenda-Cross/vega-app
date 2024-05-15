@@ -28,6 +28,7 @@ const Search = () => {
         <Ionicons name="search" size={25} color="white" />
       </View>
       <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexDirection: 'row',
           justifyContent: 'space-around',
