@@ -41,7 +41,6 @@ const Settings = () => {
   // handle check for update
   const checkForUpdate = async () => {
     setUpdateLoading(true);
-    ToastAndroid.show('Checking for update', ToastAndroid.SHORT);
     try {
       const res = await fetch(
         'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
@@ -177,7 +176,7 @@ const Settings = () => {
           <Text className="text-white font-semibold my-2">
             Check for Updates
           </Text>
-          <Text className="text-white font-semibold my-2">{pkg.version}</Text>
+          <Text className="text-white font-semibold my-2">v{pkg.version}</Text>
         </View>
       </TouchableNativeFeedback>
     </View>
