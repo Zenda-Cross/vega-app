@@ -12,7 +12,7 @@ export async function getStream(link: string, type: string) {
     console.log('dotlink', link);
     if (type === 'movie') {
       const dotlinkRes = await axios(
-        `https://cors.smashystream.workers.dev/?destination=${link}`,
+        `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${link}`,
         {headers},
       );
       const dotlinkText = dotlinkRes.data;
@@ -22,7 +22,7 @@ export async function getStream(link: string, type: string) {
       link = vlink[1];
     }
     const vLinkRes = await axios(
-      `https://cors.smashystream.workers.dev/?destination=${link}`,
+      `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${link}`,
       {headers},
     );
     const vLinkText = vLinkRes.data;
@@ -32,7 +32,7 @@ export async function getStream(link: string, type: string) {
     ];
     // console.log(vLinkRedirect[1]);
     const getTokenRes = await axios(
-      `https://cors.smashystream.workers.dev/?destination=${vLinkRedirect[1]}`,
+      `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${vLinkRedirect[1]}`,
       {headers},
     );
 

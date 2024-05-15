@@ -103,6 +103,7 @@ const Home = () => {
                   key={index}
                   title={item.title}
                   posts={item.Posts}
+                  filter={item.filter}
                 />
               ))}
         </View>
