@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../App';
 import {ToastAndroid} from 'react-native';
 
 export interface Info {
@@ -132,6 +132,7 @@ export const getInfo = async (link: string): Promise<Info> => {
   } catch (error) {
     console.log('getInfo error');
     // console.error(error);
+    MmmkvCache.removeItem('CacheBaseUrl');
     ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',

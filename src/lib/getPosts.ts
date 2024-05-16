@@ -59,6 +59,7 @@ export const getPosts = async (
           link: $(element)?.find('a')?.attr('href')?.replace(baseUrl, '') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
+            $(element).find('a').find('img').attr('data-src') ||
             $(element).find('a').find('img').attr('src') ||
             '',
         };
@@ -69,6 +70,7 @@ export const getPosts = async (
     return posts;
   } catch (error) {
     console.log('getPosts error: ');
+    MmmkvCache.removeItem('CacheBaseUrl');
     // console.error(error);
     return [];
   }
