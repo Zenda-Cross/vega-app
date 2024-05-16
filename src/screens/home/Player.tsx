@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../../App';
+import {MMKV, MmmkvCache, RootStackParamList} from '../../App';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import {getStream, Stream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';
@@ -63,6 +63,13 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
     fetchStream();
   }, [route.params.link]);
+
+  const watchedDuration = MmmkvCache.getString(route.params.link)
+    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
+    : 0;
+  // console.log('watchedDuration', watchedDuration);
+
+  let timer: NodeJS.Timeout;
   return (
     <View
       from={{opacity: 0}}
@@ -73,7 +80,23 @@ const Player = ({route}: Props): React.JSX.Element => {
       className="bg-black h-full w-full p-4 relative">
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
-        source={{uri: selectedStream?.link}}
+        source={{
+          uri: selectedStream?.link,
+          startPosition: watchedDuration * 1000,
+        }}
+        onProgress={e => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            MmmkvCache.setString(
+              route.params.link,
+              JSON.stringify({
+                position: e.currentTime,
+                duration: e.seekableDuration,
+              }),
+            );
+            // console.log('watchedDuration', e.currentTime);
+          }, 1000);
+        }}
         videoRef={playerRef}
         poster={route.params.poster}
         title={route.params.title}
@@ -93,9 +116,10 @@ const Player = ({route}: Props): React.JSX.Element => {
           console.log('PlayerError', e);
           setSelectedStream(stream?.[1]);
           ToastAndroid.show(
-            'could not play video try downloading',
+            'Video could not be played, Trying next server',
             ToastAndroid.SHORT,
           );
+          setShowControls(true);
         }}
         resizeMode={ResizeMode.NONE}
         //@ts-ignore

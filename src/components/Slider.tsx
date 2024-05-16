@@ -11,17 +11,27 @@ export default function Slider({
   isLoading,
   title,
   posts,
+  filter,
 }: {
   isLoading: boolean;
   title: string;
   posts: Post[];
+  filter: string;
 }): JSX.Element {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
   return (
     <View className="gap-3 mt-7">
-      <Text className="text-2xl text-primary font-semibold">{title}</Text>
+      <View className="flex flex-row items-center justify-between px-4">
+        <Text className="text-2xl text-primary font-semibold">{title}</Text>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('ScrollList', {title: title, filter: filter})
+          }>
+          <Text className="text-white text-sm">more</Text>
+        </TouchableOpacity>
+      </View>
       {isLoading ? (
         <MotiView
           animate={{backgroundColor: 'black'}}
@@ -53,7 +63,11 @@ export default function Slider({
                 onPress={() => navigation.navigate('Info', {link: item.link})}>
                 <Image
                   className="rounded-md"
-                  source={{uri: item.image}}
+                  source={{
+                    uri:
+                      item?.image ||
+                      'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=img',
+                  }}
                   style={{width: 100, height: 150}}
                 />
               </TouchableOpacity>
