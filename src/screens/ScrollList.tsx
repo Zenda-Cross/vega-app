@@ -43,7 +43,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <View className="h-full w-full bg-black items-center p-4">
-      <View className="w-full px-4 font-semibold mt-2">
+      <View className="w-full px-4 font-semibold mt-4">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
         </Text>
@@ -81,10 +81,11 @@ const ScrollList = ({route}: Props): React.ReactElement => {
             ) : null
           }
           data={posts}
+          numColumns={3}
           contentContainerStyle={{
             width: 'auto',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
+            // flexDirection: 'row',
+            // flexWrap: 'wrap',
             alignItems: 'baseline',
             justifyContent: 'flex-start',
           }}
@@ -95,7 +96,11 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                 onPress={() => navigation.navigate('Info', {link: item.link})}>
                 <Image
                   className="rounded-md"
-                  source={{uri: item.image}}
+                  source={{
+                    uri:
+                      item.image ||
+                      'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Img',
+                  }}
                   style={{width: 100, height: 150}}
                 />
               </TouchableOpacity>

@@ -152,6 +152,9 @@ const DownloadComponent = ({
         </TouchableOpacity>
       ) : isDownloading ? (
         <MotiView
+          style={{
+            marginHorizontal: 4,
+          }}
           onPress={() => console.log('Cancel download')}
           // animate opacity to opacity while downloding
           from={{opacity: 1}}

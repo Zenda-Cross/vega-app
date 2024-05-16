@@ -84,7 +84,17 @@ const SeasonList = ({
       poster: poster,
     });
   };
-  // console.log('LinkList', LinkList);
+
+  const isCompleted = (link: string) => {
+    const watchProgress = JSON.parse(MmmkvCache.getString(link) || '{}');
+    const percentage =
+      (watchProgress?.position / watchProgress?.duration) * 100;
+    if (percentage > 85) {
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   return (
     <View>
@@ -153,10 +163,14 @@ const SeasonList = ({
               episodeList?.map((episode, i) => (
                 <View
                   key={episode.link + i}
-                  className="w-full justify-center items-center gap-2 flex-row">
+                  className={`w-full justify-center items-center gap-2 flex-row
+                  ${isCompleted(episode.link) ? 'opacity-60' : ''}
+                  `}>
                   <View className="flex-row w-full justify-between gap-2 items-center">
                     <TouchableOpacity
-                      className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
+                      className={
+                        'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
+                      }
                       onPress={() =>
                         playHandler({
                           link: episode.link,
