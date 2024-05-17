@@ -8,6 +8,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
+import useContentStore from '../lib/zustand/contentStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -19,11 +20,12 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
+  const {contentType} = useContentStore(state => state);
+
   useEffect(() => {
     const fetchPosts = async () => {
       setIsLoading(true);
-      const newPosts = await getPosts(filter, page);
-      console.log(newPosts);
+      const newPosts = await getPosts(filter, page, contentType);
       if (newPosts.length === 0) {
         setIsEnd(true);
         setIsLoading(false);

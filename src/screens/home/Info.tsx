@@ -21,6 +21,7 @@ import {MMKV} from '../../App';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {MmmkvCache} from '../../App';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import useContentStore from '../../lib/zustand/contentStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route}: Props): React.JSX.Element {
@@ -34,6 +35,7 @@ export default function Info({route}: Props): React.JSX.Element {
     ),
   );
   const [backgroundColor, setBackgroundColor] = useState('transparent');
+  const {contentType} = useContentStore(state => state);
 
   const handleScroll = (event: any) => {
     setBackgroundColor(
@@ -58,7 +60,7 @@ export default function Info({route}: Props): React.JSX.Element {
         setInfo(cacheData);
         setInfoLoading(false);
       }
-      const data = await getInfo(route.params.link);
+      const data = await getInfo(route.params.link, contentType);
       if (data.linkList?.length === 0) {
         setInfoLoading(false);
         return;
@@ -81,6 +83,7 @@ export default function Info({route}: Props): React.JSX.Element {
     fetchInfo();
   }, [refreshing, route.params.link]);
 
+  // add to library
   const addLibrary = () => {
     ReactNativeHapticFeedback.trigger('effectClick', {
       enableVibrateFallback: true,
@@ -91,11 +94,13 @@ export default function Info({route}: Props): React.JSX.Element {
       title: meta?.name || info?.title,
       poster: meta?.poster || info?.image,
       link: route.params.link,
+      contentType: contentType,
     });
     MMKV.setArray('library', library);
     setInLibrary(true);
   };
 
+  // remove from library
   const removeLibrary = () => {
     ReactNativeHapticFeedback.trigger('effectClick', {
       enableVibrateFallback: true,

@@ -15,6 +15,7 @@ import {useState} from 'react';
 import {MmmkvCache} from '../App';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import pkg from '../../package.json';
+import useContentStore from '../lib/zustand/contentStore';
 
 const Settings = () => {
   const [BaseUrl, setBaseUrl] = useState(
@@ -28,6 +29,8 @@ const Settings = () => {
     MMKV.getArray('ExcludedQualities') || [],
   );
   const [updateLoading, setUpdateLoading] = useState(false);
+
+  const {contentType, setContentType} = useContentStore(state => state);
 
   // handle base url change
   const onChange = async (text: string) => {
@@ -68,6 +71,7 @@ const Settings = () => {
   return (
     <View className="w-full h-full bg-black p-4">
       <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
+
       {/* use custom base URL */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">use custom base URL</Text>
@@ -80,8 +84,8 @@ const Settings = () => {
           }}
         />
       </View>
-      {/* Base URL */}
 
+      {/* Base URL */}
       {UseCustomUrl && (
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold">Base Url</Text>
@@ -93,6 +97,7 @@ const Settings = () => {
           />
         </View>
       )}
+
       {/* open in vlc */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">
@@ -115,6 +120,7 @@ const Settings = () => {
           }}
         />
       </View>
+
       {/* Excluded qualities */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Excluded qualities</Text>
@@ -152,6 +158,7 @@ const Settings = () => {
           ))}
         </View>
       </View>
+
       {/* clear cache */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
@@ -167,6 +174,27 @@ const Settings = () => {
           <Text className="text-white rounded-md px-2">Clear</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Content type */}
+      {!UseCustomUrl && (
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold">Content type</Text>
+          <TouchableOpacity
+            className="bg-primary/70 p-2 rounded-md"
+            onPress={() => {
+              ReactNativeHapticFeedback.trigger('virtualKey', {
+                enableVibrateFallback: true,
+                ignoreAndroidSystemSettings: false,
+              });
+              setContentType(contentType === 'global' ? 'indian' : 'global');
+            }}>
+            <Text className="text-white rounded-md px-2 capitalize">
+              {contentType}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* version */}
       <TouchableNativeFeedback
         onPress={checkForUpdate}
