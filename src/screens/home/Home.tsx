@@ -3,6 +3,8 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useState} from 'react';
@@ -13,12 +15,15 @@ import {getHomePageData, HomePageData} from '../../lib/getPosts';
 import {homeList} from '../../lib/constants';
 import {MmmkvCache} from '../../App';
 import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
+import useContentStore from '../../lib/zustand/contentStore';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
+
+  const {contentType} = useContentStore(state => state);
 
   // change status bar color
   const handleScroll = (event: any) => {
@@ -39,20 +44,20 @@ const Home = () => {
     let ignore = false;
     const fetchHomeData = async () => {
       setLoading(true);
-      const cache = (await MmmkvCache.getItem('homeData')) || '';
+      const cache = (await MmmkvCache.getItem('homeData' + contentType)) || '';
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
         setLoading(false);
         setHomeData(data);
       }
-      const data = await getHomePageData();
+      const data = await getHomePageData(contentType);
       if (data[1].Posts.length === 0) {
         return;
       }
       setLoading(false);
       setHomeData(data);
-      MmmkvCache.setItem('homeData', JSON.stringify(data));
+      MmmkvCache.setItem('homeData' + contentType, JSON.stringify(data));
     };
     if (!ignore) {
       fetchHomeData();
@@ -61,7 +66,7 @@ const Home = () => {
     return () => {
       ignore = true;
     };
-  }, [refreshing]);
+  }, [refreshing, contentType]);
   return (
     <SafeAreaView className="bg-black h-full w-full">
       <StatusBar
@@ -95,6 +100,7 @@ const Home = () => {
                   key={index}
                   title={item.title}
                   posts={[]}
+                  filter={item.filter}
                 />
               ))
             : homeData.map((item, index) => (
