@@ -35,7 +35,8 @@
     "react-native-screens": "^3.31.1",
     "react-native-svg": "14.1.0",
     "react-native-vector-icons": "^10.0.3",
-    "react-native-video": "^6.0.0-alpha.11"
+    "react-native-video": "^6.0.0-alpha.11",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
