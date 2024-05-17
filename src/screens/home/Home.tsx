@@ -3,8 +3,6 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
-  TouchableOpacity,
-  Text,
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useState} from 'react';

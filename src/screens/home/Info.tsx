@@ -61,19 +61,21 @@ export default function Info({route}: Props): React.JSX.Element {
         setInfoLoading(false);
       }
       const data = await getInfo(route.params.link, contentType);
-      if (data.linkList?.length === 0) {
-        setInfoLoading(false);
-        return;
-      }
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
         );
-        setMeta(metaRes?.data?.meta);
-        MmmkvCache.setString(data.imdbId, JSON.stringify(metaRes.data.meta));
+        if (metaRes?.data?.meta?.background) {
+          setMeta(metaRes?.data?.meta);
+          MmmkvCache.setString(data.imdbId, JSON.stringify(metaRes.data.meta));
+        }
       } catch (e) {
         console.log('meta error', e);
         setMeta(undefined);
+      }
+      if (data.linkList?.length === 0) {
+        setInfoLoading(false);
+        return;
       }
       setInfo(data);
       MmmkvCache.setString(route.params.link, JSON.stringify(data));
