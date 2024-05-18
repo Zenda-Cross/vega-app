@@ -202,7 +202,7 @@ const DownloadComponent = ({
       {deleteModal && (
         <Modal animationType="fade" visible={deleteModal} transparent={true}>
           <View className="flex-1 bg-black/10 justify-center items-center p-4">
-            <View className="bg-quaternary p-3 w-80 rounded-md justify-center items-center">
+            <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
               <Text className="text-lg font-semibold my-3 text-white">
                 Are you sure you want to delete this file?
               </Text>
@@ -227,7 +227,7 @@ const DownloadComponent = ({
       {downloadModal && (
         <Modal animationType="fade" visible={downloadModal} transparent={true}>
           <View className="flex-1 bg-black/10 justify-center items-center p-4">
-            <View className="bg-quaternary p-3 w-full rounded-md justify-center items-center">
+            <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
               <Text className="text-lg font-semibold my-3 text-white">
                 Select a server to download
               </Text>
