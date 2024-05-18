@@ -12,7 +12,7 @@ export const headers = {
   'sec-ch-ua-platform': '"Windows"',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
-  Referer: MMKV.getString('baseUrl') || 'https://vegamovies.cash/',
+  Referer: MMKV.getString('baseUrl') || 'https://vegamovies.yt/',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
   'Upgrade-Insecure-Requests': '1',
