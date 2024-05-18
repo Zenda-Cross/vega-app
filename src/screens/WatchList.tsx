@@ -6,11 +6,14 @@ import {HomeStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
+import useContentStore from '../lib/zustand/contentStore';
 
 const Library = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [library, setLibrary] = useState(MMKV.getArray('library') || []);
+  const {contentType} = useContentStore(state => state);
+
   return (
     <ScrollView
       className="h-full w-full bg-black p-2"
@@ -20,23 +23,34 @@ const Library = () => {
       </Text>
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
-          {library.map((item: any, index: number) => (
-            <View className="flex flex-col m-" key={item.link + index}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Info', {link: item.link})}>
-                <Image
-                  className="rounded-md"
-                  source={{uri: item.poster}}
-                  style={{width: 100, height: 150}}
-                />
-              </TouchableOpacity>
-              <Text className="text-white text-center truncate w-24 text-xs">
-                {item?.title?.length > 24
-                  ? item.title.slice(0, 24) + '...'
-                  : item.title}
-              </Text>
-            </View>
-          ))}
+          {library.map((item: any, index: number) => {
+            console.log(item.contentType, contentType);
+            if (item.contentType === 'indian' && contentType === 'global') {
+              return;
+            }
+            if (item.contentType !== 'indian' && contentType === 'indian') {
+              return;
+            }
+            return (
+              <View className="flex flex-col m-" key={item.link + index}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('Info', {link: item.link})
+                  }>
+                  <Image
+                    className="rounded-md"
+                    source={{uri: item.poster}}
+                    style={{width: 100, height: 150}}
+                  />
+                </TouchableOpacity>
+                <Text className="text-white text-center truncate w-24 text-xs">
+                  {item?.title?.length > 24
+                    ? item.title.slice(0, 24) + '...'
+                    : item.title}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </View>
       {library.length === 0 && (

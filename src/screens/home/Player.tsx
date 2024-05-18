@@ -22,6 +22,7 @@ import {
   SelectedTextTrack,
   ResizeMode,
 } from 'react-native-video';
+import {MotiView} from 'moti';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -43,6 +44,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'disabled'},
   );
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  const playbacks = [1, 1.25, 1.5, 1.75, 2];
 
   const navigation = useNavigation();
   useEffect(() => {
@@ -71,13 +75,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   let timer: NodeJS.Timeout;
   return (
-    <View
-      from={{opacity: 0}}
-      animate={{opacity: 1}}
-      //@ts-ignore
-      transition={{type: 'timing', duration: 1000}}
-      exit={{opacity: 0}}
-      className="bg-black h-full w-full p-4 relative">
+    <View className="bg-black h-full w-full p-4 relative">
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
         source={{
@@ -98,6 +96,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           }, 1000);
         }}
         videoRef={playerRef}
+        rate={playbackRate}
         poster={route.params.poster}
         title={route.params.title}
         navigator={navigation}
@@ -134,9 +133,17 @@ const Player = ({route}: Props): React.JSX.Element => {
           setTextTracks(e.textTracks);
         }}
       />
-      {showControls && (
+
+      {/* // settings button */}
+      <MotiView
+        from={{translateY: 0}}
+        animate={{translateY: showControls ? 0 : -200}}
+        transition={{type: 'timing', duration: 260}}
+        className="absolute top-8 right-5">
         <TouchableOpacity
-          className="absolute top-5 right-5"
+          // className={`absolute top-8 right-5 ${
+          //   showControls ? 'translate-y-0' : '-translate-y-20'
+          // }`}
           onPress={() => {
             setShowSettings(!showSettings);
             playerRef?.current?.pause();
@@ -145,10 +152,29 @@ const Player = ({route}: Props): React.JSX.Element => {
             name="settings"
             size={30}
             color="white"
-            style={{opacity: 0.7}}
+            style={{opacity: 0.5}}
           />
         </TouchableOpacity>
-      )}
+      </MotiView>
+
+      {/* // playback speed button */}
+      <MotiView
+        from={{translateY: 0}}
+        animate={{translateY: showControls ? 0 : -200}}
+        transition={{type: 'timing', duration: 260}}
+        className="absolute top-9 left-24">
+        <TouchableOpacity
+          onPress={() => {
+            const index = playbacks.indexOf(playbackRate);
+            setPlaybackRate(
+              index === playbacks.length - 1
+                ? playbacks[0]
+                : playbacks[index + 1],
+            );
+          }}>
+          <Text className="text-white/60 text-lg">{playbackRate}x</Text>
+        </TouchableOpacity>
+      </MotiView>
       {
         // settings
         showSettings && (
@@ -168,7 +194,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className={`text-lg ${
                       activeTab === 'audio'
                         ? 'font-bold text-primary'
-                        : 'font-normal'
+                        : 'font-normal text-white'
                     }`}>
                     Audio
                   </Text>
@@ -178,7 +204,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className={`text-lg ${
                       activeTab === 'subtitle'
                         ? 'font-bold text-primary'
-                        : 'font-normal'
+                        : 'font-normal text-white'
                     }`}>
                     Subtitle
                   </Text>

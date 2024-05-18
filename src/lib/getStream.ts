@@ -11,30 +11,21 @@ export async function getStream(link: string, type: string) {
   try {
     console.log('dotlink', link);
     if (type === 'movie') {
-      const dotlinkRes = await axios(
-        `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${link}`,
-        {headers},
-      );
+      const dotlinkRes = await axios(`${link}`, {headers});
       const dotlinkText = dotlinkRes.data;
       // console.log('dotlinkText', dotlinkText);
       const vlink = dotlinkText.match(/<a\s+href="([^"]*cloud\.[^"]*)"/i) || [];
       // console.log('vLink', vlink[1]);
       link = vlink[1];
     }
-    const vLinkRes = await axios(
-      `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${link}`,
-      {headers},
-    );
+    const vLinkRes = await axios(`${link}`, {headers});
     const vLinkText = vLinkRes.data;
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [
       '',
       '',
     ];
     // console.log(vLinkRedirect[1]);
-    const getTokenRes = await axios(
-      `https://dev--silver-alpaca-ee97ba.netlify.app/?destination=${vLinkRedirect[1]}`,
-      {headers},
-    );
+    const getTokenRes = await axios(`${vLinkRedirect[1]}`, {headers});
 
     const getTokenText = getTokenRes.data;
     const getToken = getTokenText.match(/[\?&]r=([^&;]*)/);
@@ -54,7 +45,7 @@ export async function getStream(link: string, type: string) {
       const itm = $(element);
       const link = itm.attr('href') || '';
       if (link?.includes('.dev')) {
-        streamLinks.push({server: 'cloudfareWorker', link: link});
+        streamLinks.push({server: 'Cf Worker', link: link});
       }
       if (link?.includes('pixeldrain')) {
         streamLinks.push({server: 'pixeldrain', link: link});
@@ -63,7 +54,7 @@ export async function getStream(link: string, type: string) {
         streamLinks.push({server: 'hubcloud', link: link});
       }
       if (link?.includes('cloudflarestorage')) {
-        streamLinks.push({server: 'cloudflareStorage', link: link});
+        streamLinks.push({server: 'CfStorage', link: link});
       }
     });
 

@@ -8,9 +8,11 @@ import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
+import useContentStore from '../lib/zustand/contentStore';
 
 function Hero() {
   const [post, setPost] = useState<any>();
+  const {contentType} = useContentStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   useEffect(() => {
@@ -48,6 +50,7 @@ function Hero() {
         </Text>
         <TouchableOpacity
           className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
+          disabled={contentType === 'indian'} // until real catalog is available
           onPress={() => {
             navigation.navigate('ScrollList', {
               filter: post?.imdb_id,
