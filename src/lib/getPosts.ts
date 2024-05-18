@@ -3,6 +3,7 @@ import axios from 'axios';
 import {headers} from './header';
 import {MMKV, MmmkvCache} from '../App';
 import {homeList} from './constants';
+import {Content} from './zustand/contentStore';
 
 export interface Post {
   title: string;
@@ -13,6 +14,7 @@ export interface Post {
 export const getPosts = async (
   filter: string,
   page: number,
+  contentType: Content['contentType'],
 ): Promise<Post[]> => {
   try {
     let baseUrl = '';
@@ -20,21 +22,24 @@ export const getPosts = async (
       baseUrl = MMKV.getString('baseUrl');
     } else {
       if (
-        MmmkvCache.getString('CacheBaseUrl') &&
-        MmmkvCache.getInt('baseUrlTime') &&
+        MmmkvCache.getString('CacheBaseUrl' + contentType) &&
+        MmmkvCache.getInt('baseUrlTime' + contentType) &&
         // 30 minutes
-        Date.now() - MmmkvCache.getInt('baseUrlTime') < 1800000
+        Date.now() - MmmkvCache.getInt('baseUrlTime' + contentType) < 1800000
       ) {
-        baseUrl = MmmkvCache.getString('CacheBaseUrl');
+        baseUrl = MmmkvCache.getString('CacheBaseUrl' + contentType);
         console.log('baseUrl from cache', baseUrl);
       } else {
         const baseUrlRes = await axios.get(
           'https://himanshu8443.github.io/providers/modflix.json',
         );
-        baseUrl = baseUrlRes.data.Vega.url;
+        baseUrl =
+          contentType === 'global'
+            ? baseUrlRes.data.Vega.url
+            : baseUrlRes.data.lux.url;
         MMKV.setString('baseUrl', baseUrl);
-        MmmkvCache.setString('CacheBaseUrl', baseUrl);
-        MmmkvCache.setInt('baseUrlTime', Date.now());
+        MmmkvCache.setString('CacheBaseUrl' + contentType, baseUrl);
+        MmmkvCache.setInt('baseUrlTime' + contentType, Date.now());
       }
     }
     const url = filter.includes('category')
@@ -59,6 +64,7 @@ export const getPosts = async (
           link: $(element)?.find('a')?.attr('href')?.replace(baseUrl, '') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
+            $(element).find('a').find('img').attr('data-src') ||
             $(element).find('a').find('img').attr('src') ||
             '',
         };
@@ -69,6 +75,7 @@ export const getPosts = async (
     return posts;
   } catch (error) {
     console.log('getPosts error: ');
+    MmmkvCache.removeItem('CacheBaseUrl');
     // console.error(error);
     return [];
   }
@@ -79,10 +86,12 @@ export interface HomePageData {
   Posts: Post[];
   filter: string;
 }
-export const getHomePageData = async (): Promise<HomePageData[]> => {
+export const getHomePageData = async (
+  contentType: Content['contentType'],
+): Promise<HomePageData[]> => {
   const homeData: HomePageData[] = [];
   for (const item of homeList) {
-    const data = await getPosts(item.filter, 1);
+    const data = await getPosts(item.filter, 1, contentType);
     homeData.push({
       title: item.title,
       Posts: data,
