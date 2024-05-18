@@ -178,7 +178,7 @@ const Settings = () => {
       {/* Content type */}
       {!UseCustomUrl && (
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold">Content type</Text>
+          <Text className="text-white font-semibold">Preferred content</Text>
           <TouchableOpacity
             className="bg-primary/70 p-2 rounded-md"
             onPress={() => {
@@ -189,7 +189,7 @@ const Settings = () => {
               setContentType(contentType === 'global' ? 'indian' : 'global');
             }}>
             <Text className="text-white rounded-md px-2 capitalize">
-              {contentType}
+              {contentType === 'global' ? 'Global' : 'Bollywood'}
             </Text>
           </TouchableOpacity>
         </View>
