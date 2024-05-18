@@ -1,8 +1,9 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../App';
 import {ToastAndroid} from 'react-native';
+import {Content} from './zustand/contentStore';
 
 export interface Info {
   title: string;
@@ -20,7 +21,10 @@ export interface Link {
   episodesLink: string;
 }
 
-export const getInfo = async (link: string): Promise<Info> => {
+export const getInfo = async (
+  link: string,
+  contentType: Content['contentType'],
+): Promise<Info> => {
   try {
     let baseUrl = '';
     if (MMKV.getBool('UseCustomUrl')) {
@@ -29,7 +33,10 @@ export const getInfo = async (link: string): Promise<Info> => {
       const baseUrlRes = await axios.get(
         'https://himanshu8443.github.io/providers/modflix.json',
       );
-      baseUrl = baseUrlRes.data.Vega.url;
+      baseUrl =
+        contentType === 'global'
+          ? baseUrlRes.data.Vega.url
+          : baseUrlRes.data.lux.url;
     }
     const url = `${baseUrl}/${link}`;
     console.log('url', url);
@@ -94,7 +101,7 @@ export const getInfo = async (link: string): Promise<Info> => {
       const vcloudLinks = element
         ?.next()
         .find(
-          ".btn-outline[style='background:linear-gradient(135deg,#ed0b0b,#f2d152); color: white;']",
+          ".btn-outline[style='background:linear-gradient(135deg,#ed0b0b,#f2d152); color: white;'],.btn-outline[style='background:linear-gradient(135deg,#ed0b0b,#f2d152); color: #fdf8f2;']",
         )
         ?.parent()
         ?.attr('href');
@@ -132,6 +139,7 @@ export const getInfo = async (link: string): Promise<Info> => {
   } catch (error) {
     console.log('getInfo error');
     // console.error(error);
+    MmmkvCache.removeItem('CacheBaseUrl');
     ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',
