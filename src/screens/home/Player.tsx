@@ -194,7 +194,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className={`text-lg ${
                       activeTab === 'audio'
                         ? 'font-bold text-primary'
-                        : 'font-normal'
+                        : 'font-normal text-white'
                     }`}>
                     Audio
                   </Text>
@@ -204,7 +204,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className={`text-lg ${
                       activeTab === 'subtitle'
                         ? 'font-bold text-primary'
-                        : 'font-normal'
+                        : 'font-normal text-white'
                     }`}>
                     Subtitle
                   </Text>
