@@ -18,9 +18,7 @@ import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';
 
 const Settings = () => {
-  const [BaseUrl, setBaseUrl] = useState(
-    MMKV.getString('baseUrl') || 'https://vegamovies.cash',
-  );
+  const [BaseUrl, setBaseUrl] = useState(MMKV.getString('baseUrl') || '');
   const [OpenVlc, setOpenVlc] = useState(MMKV.getBool('vlc') || false);
   const [UseCustomUrl, setUseCustomUrl] = useState(
     MMKV.getBool('UseCustomUrl') || false,
