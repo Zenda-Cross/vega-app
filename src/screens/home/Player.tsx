@@ -61,9 +61,11 @@ const Player = ({route}: Props): React.JSX.Element => {
         }
       }
       const data = await getStream(route.params.link, route.params.type);
-      setStream(data);
-      setSelectedStream(data[0]);
-      // console.log('st', data);
+      // remove filepress server and hubcloud server
+      setStream(
+        data.filter(e => e.server !== 'filepress' && e.server !== 'hubcloud'),
+      );
+      setSelectedStream(data.filter(item => item.server !== 'filepress')[0]);
     };
     fetchStream();
   }, [route.params.link]);
@@ -317,27 +319,25 @@ const Player = ({route}: Props): React.JSX.Element => {
               {/* video */}
               {activeTab === 'video' && (
                 <ScrollView className="w-full p-3">
-                  {stream
-                    .filter(track => track.server !== 'hubcloud')
-                    .map((track, i) => (
-                      <TouchableOpacity
-                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
-                        key={i}
-                        onPress={() => {
-                          setSelectedStream(track);
-                          setShowSettings(false);
-                          playerRef?.current?.resume();
-                        }}>
-                        <Text
-                          className={`text-base font-semibold ${
-                            track.link === selectedStream.link
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
-                          {track.server}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                  {stream.map((track, i) => (
+                    <TouchableOpacity
+                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                      key={i}
+                      onPress={() => {
+                        setSelectedStream(track);
+                        setShowSettings(false);
+                        playerRef?.current?.resume();
+                      }}>
+                      <Text
+                        className={`text-base font-semibold ${
+                          track.link === selectedStream.link
+                            ? 'text-primary'
+                            : 'text-white'
+                        }`}>
+                        {track.server}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </ScrollView>
               )}
             </View>
