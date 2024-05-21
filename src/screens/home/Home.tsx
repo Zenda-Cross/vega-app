@@ -14,6 +14,7 @@ import {homeList} from '../../lib/constants';
 import {MmmkvCache} from '../../App';
 import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 import useContentStore from '../../lib/zustand/contentStore';
+import useHeroStore from '../../lib/zustand/herostore';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -22,6 +23,7 @@ const Home = () => {
   const [backgroundColor, setBackgroundColor] = useState('transparent');
 
   const {contentType} = useContentStore(state => state);
+  const {hero, setHero} = useHeroStore(state => state);
 
   // change status bar color
   const handleScroll = (event: any) => {
@@ -42,14 +44,25 @@ const Home = () => {
     let ignore = false;
     const fetchHomeData = async () => {
       setLoading(true);
+      setHero({link: '', image: '', title: ''});
       const cache = (await MmmkvCache.getItem('homeData' + contentType)) || '';
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
+        // pick random post form random category
+        const randomPost =
+          data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
+        setHero(randomPost);
+
         setLoading(false);
         setHomeData(data);
       }
       const data = await getHomePageData(contentType);
+      if (!cache && data.length > 0) {
+        const randomPost =
+          data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
+        setHero(randomPost);
+      }
       if (data[1].Posts.length === 0) {
         return;
       }

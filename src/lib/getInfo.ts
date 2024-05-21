@@ -140,7 +140,7 @@ export const getInfo = async (
     console.log('getInfo error');
     // console.error(error);
     MmmkvCache.removeItem('CacheBaseUrl');
-    ToastAndroid.show('No response', ToastAndroid.SHORT);
+    // ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',
       synopsis: '',
