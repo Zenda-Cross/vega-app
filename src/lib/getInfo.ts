@@ -55,8 +55,7 @@ export const getInfo = async (
       : 'movie';
     //   console.log(type);
     // title
-    const titleRegex =
-      type === 'series' ? /Series Name: (.+)/ : /Movie Name: (.+)/;
+    const titleRegex = /Name: (.+)/;
     const title = heading?.next('p')?.text()?.match(titleRegex)?.[1] || '';
     //   console.log(title);
 
