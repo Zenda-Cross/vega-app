@@ -69,6 +69,12 @@ const SeasonList = ({
     const openVlc = MMKV.getBool('vlc');
     const downloaded = await ifExists(file);
     if (openVlc && !downloaded) {
+      const vlcInstalled = await Linking.canOpenURL('vlc://');
+      if (!vlcInstalled) {
+        Linking.openURL('market://details?id=org.videolan.vlc');
+        ToastAndroid.show('VLC not installed', ToastAndroid.SHORT);
+        return;
+      }
       setVlcLoading(true);
       console.log(downloaded);
       const stream = await getStream(link, type);
@@ -257,7 +263,7 @@ const SeasonList = ({
             <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
           </MotiView>
           <Text className="text-white text-lg font-semibold mt-2">
-            Opening in VLC
+            Opening VLC
           </Text>
         </View>
       )}
