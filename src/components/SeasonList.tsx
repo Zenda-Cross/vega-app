@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, TouchableOpacity, ToastAndroid} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -69,10 +69,24 @@ const SeasonList = ({
     const openVlc = MMKV.getBool('vlc');
     const downloaded = await ifExists(file);
     if (openVlc && !downloaded) {
+      const vlcInstalled = await Linking.canOpenURL('vlc://');
+      if (!vlcInstalled) {
+        Linking.openURL('market://details?id=org.videolan.vlc');
+        ToastAndroid.show('VLC not installed', ToastAndroid.SHORT);
+        return;
+      }
       setVlcLoading(true);
       console.log(downloaded);
       const stream = await getStream(link, type);
-      Linking.openURL('vlc://' + stream[0].link);
+      const availableStream = stream.filter(
+        e => e.server !== 'filepress' && e.server !== 'hubcloud',
+      );
+      if (availableStream?.length === 0) {
+        ToastAndroid.show('No stream found', ToastAndroid.SHORT);
+        setVlcLoading(false);
+        return;
+      }
+      Linking.openURL('vlc://' + availableStream?.[0].link);
       setVlcLoading(false);
       return;
     }
@@ -249,7 +263,7 @@ const SeasonList = ({
             <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
           </MotiView>
           <Text className="text-white text-lg font-semibold mt-2">
-            Opening in VLC
+            Opening VLC
           </Text>
         </View>
       )}

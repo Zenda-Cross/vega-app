@@ -18,9 +18,7 @@ import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';
 
 const Settings = () => {
-  const [BaseUrl, setBaseUrl] = useState(
-    MMKV.getString('baseUrl') || 'https://vegamovies.cash',
-  );
+  const [BaseUrl, setBaseUrl] = useState(MMKV.getString('baseUrl') || '');
   const [OpenVlc, setOpenVlc] = useState(MMKV.getBool('vlc') || false);
   const [UseCustomUrl, setUseCustomUrl] = useState(
     MMKV.getBool('UseCustomUrl') || false,
@@ -106,16 +104,25 @@ const Settings = () => {
         <Switch
           thumbColor={OpenVlc ? 'tomato' : 'gray'}
           value={OpenVlc}
-          onValueChange={val => {
+          onValueChange={async val => {
             MMKV.setBool('vlc', val);
             setOpenVlc(val);
             if (val) {
-              Alert.alert(
-                'VLC player',
-                'Please make sure you have VLC player installed on your device',
-                [{text: 'OK'}],
-                {cancelable: false},
-              );
+              const res = await Linking.canOpenURL('vlc://');
+              if (!res) {
+                Alert.alert(
+                  'VLC not installed',
+                  'VLC player is not installed on your device',
+                  [
+                    {text: 'Cancel', onPress: () => setOpenVlc(false)},
+                    {
+                      text: 'Install',
+                      onPress: () =>
+                        Linking.openURL('market://details?id=org.videolan.vlc'),
+                    },
+                  ],
+                );
+              }
             }
           }}
         />
@@ -189,7 +196,7 @@ const Settings = () => {
               setContentType(contentType === 'global' ? 'indian' : 'global');
             }}>
             <Text className="text-white rounded-md px-2 capitalize">
-              {contentType === 'global' ? 'Global' : 'Bollywood'}
+              {contentType === 'global' ? 'Global' : 'Indian'}
             </Text>
           </TouchableOpacity>
         </View>
