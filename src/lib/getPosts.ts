@@ -15,6 +15,7 @@ export const getPosts = async (
   filter: string,
   page: number,
   contentType: Content['contentType'],
+  signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
     let baseUrl = '';
@@ -45,7 +46,7 @@ export const getPosts = async (
     const url = filter.includes('category')
       ? `${baseUrl}/${filter}/page/${page}/`
       : `${baseUrl}/page/${page}/?s=${filter}`;
-    const urlRes = await axios.get(url, {headers});
+    const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
     $('.blog-items')
@@ -88,10 +89,11 @@ export interface HomePageData {
 }
 export const getHomePageData = async (
   contentType: Content['contentType'],
+  signal: AbortSignal,
 ): Promise<HomePageData[]> => {
   const homeData: HomePageData[] = [];
   for (const item of homeList) {
-    const data = await getPosts(item.filter, 1, contentType);
+    const data = await getPosts(item.filter, 1, contentType, signal);
     homeData.push({
       title: item.title,
       Posts: data,

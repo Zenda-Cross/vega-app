@@ -273,7 +273,7 @@ export default function Info({route}: Props): React.JSX.Element {
           {infoLoading ? (
             <View className="gap-y-3 items-start mb-4 p-3">
               <Skeleton show={true} colorMode="dark" height={30} width={80} />
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <View
                   className="bg-tertiary py-1 rounded-md gap-3 mt-3"
                   key={i}>
