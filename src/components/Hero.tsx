@@ -24,7 +24,7 @@ function Hero() {
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
-      if (hero.link) {
+      if (hero?.link) {
         try {
           const info = await getInfo(hero.link, contentType);
           // console.warn('info', info);
@@ -94,7 +94,7 @@ function Hero() {
               </Text>
             </>
           )}
-          {hero.link && (
+          {hero?.link && (
             <TouchableOpacity
               className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
               // disabled={contentType === 'indian'}

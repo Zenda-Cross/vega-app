@@ -41,11 +41,12 @@ const Home = () => {
     }
   };
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
+    const signal = controller.signal;
     const fetchHomeData = async () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
-      const cache = (await MmmkvCache.getItem('homeData' + contentType)) || '';
+      const cache = MmmkvCache.getString('homeData' + contentType);
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
@@ -57,7 +58,7 @@ const Home = () => {
         setLoading(false);
         setHomeData(data);
       }
-      const data = await getHomePageData(contentType);
+      const data = await getHomePageData(contentType, signal);
       if (!cache && data.length > 0) {
         const randomPost =
           data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
@@ -68,14 +69,12 @@ const Home = () => {
       }
       setLoading(false);
       setHomeData(data);
-      MmmkvCache.setItem('homeData' + contentType, JSON.stringify(data));
+      MmmkvCache.setString('homeData' + contentType, JSON.stringify(data));
     };
-    if (!ignore) {
-      fetchHomeData();
-      deleteDownload();
-    }
+    fetchHomeData();
+    deleteDownload();
     return () => {
-      ignore = true;
+      controller.abort();
     };
   }, [refreshing, contentType]);
   return (
