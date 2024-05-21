@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, TouchableOpacity, ToastAndroid} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -72,7 +72,15 @@ const SeasonList = ({
       setVlcLoading(true);
       console.log(downloaded);
       const stream = await getStream(link, type);
-      Linking.openURL('vlc://' + stream[0].link);
+      const availableStream = stream.filter(
+        e => e.server !== 'filepress' && e.server !== 'hubcloud',
+      );
+      if (availableStream?.length === 0) {
+        ToastAndroid.show('No stream found', ToastAndroid.SHORT);
+        setVlcLoading(false);
+        return;
+      }
+      Linking.openURL('vlc://' + availableStream?.[0].link);
       setVlcLoading(false);
       return;
     }
