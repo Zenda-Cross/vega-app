@@ -9,58 +9,106 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
+import useHeroStore from '../lib/zustand/herostore';
+import {getInfo} from '../lib/getInfo';
+import {Skeleton} from 'moti/skeleton';
 
 function Hero() {
   const [post, setPost] = useState<any>();
+  const [loading, setLoading] = useState(true);
   const {contentType} = useContentStore(state => state);
+  const {hero} = useHeroStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+
   useEffect(() => {
     const fetchPosts = async () => {
-      const data = await axios(
-        'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
-      );
-      const list = data.data.metas?.slice(0, 5);
-      setPost(list[Math.floor(Math.random() * list.length)]);
+      setLoading(true);
+      if (hero.link) {
+        try {
+          const info = await getInfo(hero.link, contentType);
+          // console.warn('info', info);
+          const data = await axios(
+            `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
+          );
+          // console.log('streamiodata', data.data?.meta);
+          setPost(data.data?.meta);
+        } catch (error) {
+          console.log('hero fetch error', error);
+        }
+        setLoading(false);
+      }
+      // else {
+      //   const data = await axios(
+      //     'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
+      //   );
+      //   const list = data.data.metas?.slice(0, 5);
+      //   setPost(list[Math.floor(Math.random() * list.length)]);
+      // }
     };
     fetchPosts();
-  }, []);
+  }, [hero]);
 
   return (
     <View className="relative">
-      <Image
-        source={{
-          uri:
-            post?.background || post?.poster || 'https://via.placeholder.com',
-        }}
-        className="h-96 w-full"
-        style={{resizeMode: 'cover'}}
-      />
-      <View className="absolute bottom-0 w-full z-20 justify-center gap-3 flex items-center">
+      <Skeleton show={loading} colorMode="dark">
         <Image
-          source={{uri: post?.logo || 'https://via.placeholder.com'}}
-          style={{
-            width: 200,
-            height: 100,
-            resizeMode: 'contain',
+          source={{
+            uri:
+              post?.background || post?.poster || 'https://via.placeholder.com',
           }}
+          className="h-96 w-full"
+          style={{resizeMode: 'cover'}}
         />
-        <Text className="text-white text-lg font-bold">
-          {post?.genres?.slice(0, 3).map((genre: string) => '•' + genre)}
-        </Text>
-        <TouchableOpacity
-          className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
-          disabled={contentType === 'indian'} // until real catalog is available
-          onPress={() => {
-            navigation.navigate('ScrollList', {
-              filter: post?.imdb_id,
-              title: '',
-            });
-          }}>
-          <FontAwesome6 name="play" size={20} color="black" />
-          <Text className="text-black font-bold text-base">Watch</Text>
-        </TouchableOpacity>
-      </View>
+      </Skeleton>
+      {
+        <View className="absolute bottom-0 w-full z-20 justify-center gap-3 flex items-center">
+          {!loading && (
+            <>
+              {post?.logo ? (
+                <Image
+                  onError={() => {
+                    setPost((prev: any) => {
+                      return {
+                        ...prev,
+                        logo: '',
+                      };
+                    });
+                  }}
+                  source={{uri: post?.logo}}
+                  style={{
+                    width: 200,
+                    height: 100,
+                    resizeMode: 'contain',
+                  }}
+                />
+              ) : (
+                <Text className="text-white text-2xl font-bold">
+                  {post?.name}
+                </Text>
+              )}
+              <Text className="text-white text-lg font-bold text-center">
+                {post?.genres
+                  ?.slice(0, 3)
+                  .map((genre: string) => '  • ' + genre)}
+              </Text>
+            </>
+          )}
+          {hero.link && (
+            <TouchableOpacity
+              className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
+              // disabled={contentType === 'indian'}
+              onPress={() => {
+                navigation.navigate('Info', {
+                  link: hero.link,
+                });
+              }}>
+              <FontAwesome6 name="play" size={20} color="black" />
+              <Text className="text-black font-bold text-base">Watch</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      }
       <LinearGradient
         colors={['transparent', 'black']}
         className="absolute h-full w-full"

@@ -72,10 +72,7 @@ export async function getStream(link: string, type: string) {
     }
     const vLinkRes = await axios(`${link}`, {headers});
     const vLinkText = vLinkRes.data;
-    const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [
-      '',
-      '',
-    ];
+    const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
     // console.log(vLinkRedirect[1]);
     const getTokenRes = await axios(`${vLinkRedirect[1]}`, {headers});
 
