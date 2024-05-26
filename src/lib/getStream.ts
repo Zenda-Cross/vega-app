@@ -103,7 +103,7 @@ export async function getStream(link: string, type: string) {
       if (link?.includes('.dev')) {
         streamLinks.push({server: 'Cf Worker', link: link});
       }
-      if (link?.includes('pixeldrain')) {
+      if (link?.includes('pixel')) {
         streamLinks.push({server: 'pixeldrain', link: link});
       }
       if (link?.includes('hubcloud')) {
