@@ -25,8 +25,8 @@ export const getPosts = async (
       if (
         MmmkvCache.getString('CacheBaseUrl' + contentType) &&
         MmmkvCache.getInt('baseUrlTime' + contentType) &&
-        // 30 minutes
-        Date.now() - MmmkvCache.getInt('baseUrlTime' + contentType) < 1800000
+        // 2 minutes
+        Date.now() - MmmkvCache.getInt('baseUrlTime' + contentType) < 120000
       ) {
         baseUrl = MmmkvCache.getString('CacheBaseUrl' + contentType);
         console.log('baseUrl from cache', baseUrl);
@@ -69,6 +69,9 @@ export const getPosts = async (
             $(element).find('a').find('img').attr('src') ||
             '',
         };
+        if (post.image.startsWith('//')) {
+          post.image = 'https:' + post.image;
+        }
         posts.push(post);
       });
 
