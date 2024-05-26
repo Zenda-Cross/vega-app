@@ -49,11 +49,13 @@ export default function Info({route}: Props): React.JSX.Element {
       setInfoLoading(true);
       // cache
       const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
+      // console.log('cacheDataRes', cacheDataRes);
       if (cacheDataRes) {
         const cacheData = await JSON.parse(cacheDataRes as string);
-        const cahceMeta = MmmkvCache.getString(cacheData.imdbId);
-        if (cahceMeta) {
-          const cacheMeta = await JSON.parse(cahceMeta as string);
+        const cacheMetaRes = MmmkvCache.getString(cacheData.imdbId);
+        // console.log('cacheMetaRes', cacheMetaRes);
+        if (cacheMetaRes) {
+          const cacheMeta = await JSON.parse(cacheMetaRes as string);
           setMeta(cacheMeta);
         }
         // console.log('cache', cacheData);
@@ -65,13 +67,12 @@ export default function Info({route}: Props): React.JSX.Element {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
         );
-        if (metaRes?.data?.meta?.background) {
-          setMeta(metaRes?.data?.meta);
+        if (metaRes?.data?.meta) {
+          setMeta(metaRes?.data.meta);
           MmmkvCache.setString(data.imdbId, JSON.stringify(metaRes.data.meta));
         }
       } catch (e) {
         console.log('meta error', e);
-        setMeta(undefined);
       }
       if (data.linkList?.length === 0) {
         setInfoLoading(false);
