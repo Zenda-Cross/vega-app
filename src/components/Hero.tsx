@@ -12,6 +12,7 @@ import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {getInfo} from '../lib/getInfo';
 import {Skeleton} from 'moti/skeleton';
+import {MmmkvCache} from '../App';
 
 function Hero() {
   const [post, setPost] = useState<any>();
@@ -25,8 +26,15 @@ function Hero() {
     const fetchPosts = async () => {
       setLoading(true);
       if (hero?.link) {
+        const CacheInfo = MmmkvCache.getString(hero.link);
         try {
-          const info = await getInfo(hero.link, contentType);
+          let info = null;
+          if (CacheInfo) {
+            info = JSON.parse(CacheInfo);
+          } else {
+            info = await getInfo(hero.link, contentType);
+            MmmkvCache.setString(hero.link, JSON.stringify(info));
+          }
           // console.warn('info', info);
           const data = await axios(
             `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
