@@ -15,6 +15,7 @@ import {getStream} from '../lib/getStream';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
+import * as IntentLauncher from 'expo-intent-launcher';
 
 const SeasonList = ({
   LinkList,
@@ -86,7 +87,18 @@ const SeasonList = ({
         setVlcLoading(false);
         return;
       }
-      Linking.openURL('vlc://' + availableStream?.[0].link);
+      // Linking.openURL('vlc://' + availableStream?.[0].link);
+      try {
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: availableStream?.[0].link,
+          packageName: 'com.mxtech.videoplayer.ad',
+          className: 'com.mxtech.videoplayer.ad.ActivityScreen',
+        });
+      } catch (e) {
+        console.log(e);
+        ToastAndroid.show('Error opening VLC', ToastAndroid.SHORT);
+        setVlcLoading(false);
+      }
       setVlcLoading(false);
       return;
     }
