@@ -9,7 +9,7 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
-import {MmmkvCache, MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {Linking} from 'react-native';
 import {getStream} from '../lib/getStream';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -96,7 +96,7 @@ const SeasonList = ({
         });
       } catch (e) {
         console.log(e);
-        ToastAndroid.show('Error opening VLC', ToastAndroid.SHORT);
+        Linking.openURL('market://details?id=com.mxtech.videoplayer.ad');
         setVlcLoading(false);
       }
       setVlcLoading(false);

@@ -12,7 +12,7 @@ import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {getInfo} from '../lib/getInfo';
 import {Skeleton} from 'moti/skeleton';
-import {MmmkvCache} from '../App';
+import {MmmkvCache} from '../lib/Mmkv';
 
 function Hero() {
   const [post, setPost] = useState<any>();
