@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {MMKV, MmmkvCache, RootStackParamList} from '../../App';
+import {RootStackParamList} from '../../App';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import {getStream, Stream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';

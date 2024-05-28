@@ -13,11 +13,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
-import {MMKVLoader} from 'react-native-mmkv-storage';
-import {View} from 'moti';
-
-export const MMKV = new MMKVLoader().initialize();
-export const MmmkvCache = new MMKVLoader().withInstanceID('cache').initialize();
 
 export type HomeStackParamList = {
   Home: undefined;

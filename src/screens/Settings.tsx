@@ -10,9 +10,8 @@ import {
   ToastAndroid,
 } from 'react-native';
 import React from 'react';
-import {MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {useState} from 'react';
-import {MmmkvCache} from '../App';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';

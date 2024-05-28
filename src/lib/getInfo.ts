@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {ToastAndroid} from 'react-native';
 import {Content} from './zustand/contentStore';
 
