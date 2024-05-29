@@ -1,4 +1,4 @@
-import {MMKV} from '../App';
+import {MMKV} from '../lib/Mmkv';
 
 export const headers = {
   Accept:
