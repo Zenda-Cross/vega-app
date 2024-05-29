@@ -10,16 +10,35 @@ import {
   ToastAndroid,
 } from 'react-native';
 import React from 'react';
-import {MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {useState} from 'react';
-import {MmmkvCache} from '../App';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';
+import {Dropdown} from 'react-native-element-dropdown';
+import SharedGroupPreferences from 'react-native-shared-group-preferences';
+
+const players = [
+  {
+    label: 'None',
+    value: '',
+  },
+  {
+    label: 'VLC Player',
+    value: 'vlc',
+  },
+  {
+    label: 'MX Player',
+    value: 'mx',
+  },
+];
 
 const Settings = () => {
   const [BaseUrl, setBaseUrl] = useState(MMKV.getString('baseUrl') || '');
-  const [OpenVlc, setOpenVlc] = useState(MMKV.getBool('vlc') || false);
+  const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
+    players.find(player => player.value === MMKV.getString('externalPlayer')) ||
+      players[0],
+  );
   const [UseCustomUrl, setUseCustomUrl] = useState(
     MMKV.getBool('UseCustomUrl') || false,
   );
@@ -97,11 +116,97 @@ const Settings = () => {
       )}
 
       {/* open in vlc */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+      <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">
-          Open video in VLC player
+          Open video External player
         </Text>
-        <Switch
+        <View className="w-20">
+          <Dropdown
+            selectedTextStyle={{
+              color: 'white',
+              overflow: 'hidden',
+              height: 23,
+            }}
+            containerStyle={{
+              borderColor: 'black',
+              width: 100,
+              overflow: 'hidden',
+            }}
+            labelField={'label'}
+            valueField={'value'}
+            placeholder="Select"
+            value={OpenExternalPlayer}
+            data={players}
+            onChange={async player => {
+              if (player.value === 'vlc') {
+                try {
+                  await SharedGroupPreferences.isAppInstalledAndroid(
+                    'org.videolan.vlc',
+                  );
+                } catch (error) {
+                  Alert.alert(
+                    'VLC not installed',
+                    'VLC player is not installed on your device',
+                    [
+                      {
+                        text: 'Cancel',
+                        onPress: () => {
+                          // setOpenExternalPlayer('None');
+                          // MMKV.setString('externalPlayer', 'None');
+                        },
+                      },
+                      {
+                        text: 'Install',
+                        onPress: () =>
+                          Linking.openURL(
+                            'market://details?id=org.videolan.vlc',
+                          ),
+                      },
+                    ],
+                  );
+                }
+              } else if (player.value === 'mx') {
+                try {
+                  await SharedGroupPreferences.isAppInstalledAndroid(
+                    'com.mxtech.videoplayer.ad',
+                  );
+                } catch (error) {
+                  Alert.alert(
+                    'MX Player not installed',
+                    'MX player is not installed on your device',
+                    [
+                      {
+                        text: 'Cancel',
+                        onPress: () => {
+                          // setOpenExternalPlayer('None');
+                          // MMKV.setString('externalPlayer', 'None');
+                        },
+                      },
+                      {
+                        text: 'Install',
+                        onPress: () => {
+                          Linking.openURL(
+                            'market://details?id=com.mxtech.videoplayer.ad',
+                          );
+                        },
+                      },
+                    ],
+                  );
+                }
+              }
+              MMKV.setString('externalPlayer', player.value);
+              setOpenExternalPlayer(player.value);
+            }}
+            renderItem={item => {
+              return (
+                <View className="p-2 bg-black text-white w-48 flex-row justify-start gap-2 items-center">
+                  <Text className=" text-white">{item.label}</Text>
+                </View>
+              );
+            }}
+          />
+        </View>
+        {/* <Switch
           thumbColor={OpenVlc ? 'tomato' : 'gray'}
           value={OpenVlc}
           onValueChange={async val => {
@@ -125,7 +230,7 @@ const Settings = () => {
               }
             }
           }}
-        />
+        /> */}
       </View>
 
       {/* Excluded qualities */}

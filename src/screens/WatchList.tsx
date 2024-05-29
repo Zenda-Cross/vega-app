@@ -1,6 +1,6 @@
 import {View, Text, ScrollView, StatusBar} from 'react-native';
 import React, {useState} from 'react';
-import {MMKV} from '../App';
+import {MMKV} from '../lib/Mmkv';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';

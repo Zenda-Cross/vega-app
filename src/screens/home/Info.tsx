@@ -17,9 +17,8 @@ import SeasonList from '../../components/SeasonList';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
 import {MotiSafeAreaView} from 'moti';
-import {MMKV} from '../../App';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {MmmkvCache} from '../../App';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 
@@ -265,7 +264,7 @@ export default function Info({route}: Props): React.JSX.Element {
                   : meta?.description
                 : info?.synopsis?.length! > 180
                 ? info?.synopsis.slice(0, 148) + '...'
-                : info?.synopsis || ''}
+                : info?.synopsis || 'No synopsis available'}
             </Text>
           </Skeleton>
           {/* cast */}

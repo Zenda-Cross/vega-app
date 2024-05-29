@@ -7,13 +7,14 @@ import {
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {MMKV, MmmkvCache, RootStackParamList} from '../../App';
+import {RootStackParamList} from '../../App';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import {getStream, Stream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   VideoRef,
   AudioTrack,
@@ -114,12 +115,21 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableVolume={true}
         showHours={true}
         onError={e => {
+          const serverIndex = stream.indexOf(selectedStream);
           console.log('PlayerError', e);
-          setSelectedStream(stream?.[1]);
-          ToastAndroid.show(
-            'Video could not be played, Trying next server',
-            ToastAndroid.SHORT,
-          );
+          if (serverIndex < stream.length - 1) {
+            setSelectedStream(stream?.[serverIndex + 1]);
+            ToastAndroid.show(
+              'Video could not be played, Trying next server',
+              ToastAndroid.SHORT,
+            );
+          } else {
+            ToastAndroid.show(
+              'Video could not be played, try again later',
+              ToastAndroid.SHORT,
+            );
+            navigation.goBack();
+          }
           setShowControls(true);
         }}
         resizeMode={ResizeMode.NONE}

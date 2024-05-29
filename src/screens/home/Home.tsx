@@ -11,7 +11,7 @@ import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getPosts';
 import {homeList} from '../../lib/constants';
-import {MmmkvCache} from '../../App';
+import {MmmkvCache} from '../../lib/Mmkv';
 import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
