@@ -264,7 +264,7 @@ export default function Info({route}: Props): React.JSX.Element {
                   : meta?.description
                 : info?.synopsis?.length! > 180
                 ? info?.synopsis.slice(0, 148) + '...'
-                : info?.synopsis || ''}
+                : info?.synopsis || 'No synopsis available'}
             </Text>
           </Skeleton>
           {/* cast */}

@@ -115,12 +115,21 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableVolume={true}
         showHours={true}
         onError={e => {
+          const serverIndex = stream.indexOf(selectedStream);
           console.log('PlayerError', e);
-          setSelectedStream(stream?.[1]);
-          ToastAndroid.show(
-            'Video could not be played, Trying next server',
-            ToastAndroid.SHORT,
-          );
+          if (serverIndex < stream.length - 1) {
+            setSelectedStream(stream?.[serverIndex + 1]);
+            ToastAndroid.show(
+              'Video could not be played, Trying next server',
+              ToastAndroid.SHORT,
+            );
+          } else {
+            ToastAndroid.show(
+              'Video could not be played, try again later',
+              ToastAndroid.SHORT,
+            );
+            navigation.goBack();
+          }
           setShowControls(true);
         }}
         resizeMode={ResizeMode.NONE}

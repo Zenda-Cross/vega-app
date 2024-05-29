@@ -66,8 +66,11 @@ export const getInfo = async (
     //   console.log(synopsis);
 
     // image
-    const image =
+    let image =
       infoContainer?.find('img[data-lazy-src]')?.attr('data-lazy-src') || '';
+    if (image.startsWith('//')) {
+      image = 'https:' + image;
+    }
     // console.log(image);
 
     // console.log({title, synopsis, image, imdbId, type});
