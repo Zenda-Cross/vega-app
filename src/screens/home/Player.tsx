@@ -14,7 +14,7 @@ import {getStream, Stream} from '../../lib/getStream';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   VideoRef,
   AudioTrack,
