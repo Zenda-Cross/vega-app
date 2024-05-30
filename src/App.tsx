@@ -13,11 +13,13 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
+import WebView from './screens/WebView';
 
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string};
   ScrollList: {filter: string; title?: string};
+  Webview: {link: string};
 };
 
 export type RootStackParamList = {
@@ -54,6 +56,7 @@ const App = () => {
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
+        <HomeStack.Screen name="Webview" component={WebView} />
       </HomeStack.Navigator>
     );
   }
@@ -67,9 +70,9 @@ const App = () => {
           headerTintColor: 'tomato',
           headerStyle: {backgroundColor: '#171717'},
         }}>
-        <HomeStack.Screen name="Search" component={Search} />
-        <HomeStack.Screen name="ScrollList" component={ScrollList} />
-        <HomeStack.Screen name="Info" component={Info} />
+        <SearchStack.Screen name="Search" component={Search} />
+        <SearchStack.Screen name="ScrollList" component={ScrollList} />
+        <SearchStack.Screen name="Info" component={Info} />
       </SearchStack.Navigator>
     );
   }
