@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -38,6 +38,7 @@
     "react-native-shared-group-preferences": "^1.1.24",
     "react-native-svg": "15.2.0",
     "react-native-video": "^6.0.0-alpha.11",
+    "react-native-webview": "13.8.6",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

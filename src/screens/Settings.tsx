@@ -118,7 +118,7 @@ const Settings = () => {
       {/* open in vlc */}
       <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">
-          Open video External player
+          Open video in External player
         </Text>
         <View className="w-20">
           <Dropdown
