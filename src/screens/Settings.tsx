@@ -17,6 +17,7 @@ import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
+import {providersList} from '../lib/constants';
 
 const players = [
   {
@@ -47,7 +48,7 @@ const Settings = () => {
   );
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const {contentType, setContentType} = useContentStore(state => state);
+  const {provider, setProvider} = useContentStore(state => state);
 
   // handle base url change
   const onChange = async (text: string) => {
@@ -195,7 +196,7 @@ const Settings = () => {
                 }
               }
               MMKV.setString('externalPlayer', player.value);
-              setOpenExternalPlayer(player.value);
+              setOpenExternalPlayer(player);
             }}
             renderItem={item => {
               return (
@@ -290,20 +291,40 @@ const Settings = () => {
       {/* Content type */}
       {!UseCustomUrl && (
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold">Preferred content</Text>
-          <TouchableOpacity
-            className="bg-primary/70 p-2 rounded-md"
-            onPress={() => {
-              ReactNativeHapticFeedback.trigger('virtualKey', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
-              setContentType(contentType === 'global' ? 'indian' : 'global');
-            }}>
-            <Text className="text-white rounded-md px-2 capitalize">
-              {contentType === 'global' ? 'Global' : 'Indian'}
-            </Text>
-          </TouchableOpacity>
+          <Text className="text-white font-semibold">Change Provider</Text>
+          <View className="w-20">
+            <Dropdown
+              selectedTextStyle={{
+                color: 'white',
+                overflow: 'hidden',
+                height: 23,
+              }}
+              containerStyle={{
+                borderColor: 'black',
+                width: 100,
+                overflow: 'hidden',
+              }}
+              labelField={'name'}
+              valueField={'name'}
+              placeholder="Select"
+              value={provider}
+              data={providersList}
+              onChange={async provider => {
+                setProvider(provider);
+              }}
+              renderItem={item => {
+                return (
+                  <View className="p-2 bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4">
+                    <Text className=" text-white">
+                      {item.flag}
+                      &nbsp; &nbsp;
+                      {item.name}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+          </View>
         </View>
       )}
 

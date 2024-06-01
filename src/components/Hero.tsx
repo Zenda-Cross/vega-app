@@ -10,14 +10,14 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
-import {getInfo} from '../lib/getInfo';
 import {Skeleton} from 'moti/skeleton';
 import {MmmkvCache} from '../lib/Mmkv';
+import {manifest} from '../lib/Manifest';
 
 function Hero() {
   const [post, setPost] = useState<any>();
   const [loading, setLoading] = useState(true);
-  const {contentType} = useContentStore(state => state);
+  const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
@@ -32,7 +32,7 @@ function Hero() {
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
-            info = await getInfo(hero.link, contentType);
+            info = await manifest[provider.value].getInfo(hero.link, provider);
             MmmkvCache.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);

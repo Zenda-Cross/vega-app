@@ -19,7 +19,7 @@ const Webview = ({route, navigation}: Props) => {
             size={24}
             color="white"
             onPress={() => {
-              Linking.openURL(MMKV.getString('baseUrl') + route.params.link);
+              Linking.openURL(route.params.link);
             }}
           />
           <MaterialIcons
@@ -35,7 +35,7 @@ const Webview = ({route, navigation}: Props) => {
       <WebView
         // javaScriptCanOpenWindowsAutomatically={false}
         javaScriptEnabled={false}
-        source={{uri: MMKV.getString('baseUrl') + route.params.link}}
+        source={{uri: route.params.link}}
       />
     </SafeAreaView>
   );

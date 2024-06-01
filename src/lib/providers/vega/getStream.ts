@@ -2,12 +2,9 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {ToastAndroid} from 'react-native';
+import {Stream} from '../types';
 
-export interface Stream {
-  server: string;
-  link: string;
-}
-export async function getStream(link: string, type: string) {
+export async function vegaGetStream(link: string, type: string) {
   try {
     const streamLinks: Stream[] = [];
     console.log('dotlink', link);

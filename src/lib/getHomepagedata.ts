@@ -1,0 +1,35 @@
+import {Content} from './zustand/contentStore';
+import {manifest} from './Manifest';
+
+export interface Post {
+  title: string;
+  link: string;
+  image: string;
+}
+
+export interface HomePageData {
+  title: string;
+  Posts: Post[];
+  filter: string;
+}
+export const getHomePageData = async (
+  activeProvider: Content['provider'],
+  signal: AbortSignal,
+): Promise<HomePageData[]> => {
+  const homeData: HomePageData[] = [];
+  console.log('activeProvider', activeProvider);
+  for (const item of manifest[activeProvider.value].catalog) {
+    const data = await manifest[activeProvider.value].getPosts(
+      item.filter,
+      1,
+      activeProvider,
+      signal,
+    );
+    homeData.push({
+      title: item.title,
+      Posts: data,
+      filter: item.filter,
+    });
+  }
+  return homeData;
+};

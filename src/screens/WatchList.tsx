@@ -12,7 +12,7 @@ const Library = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [library, setLibrary] = useState(MMKV.getArray('library') || []);
-  const {contentType} = useContentStore(state => state);
+  const {provider} = useContentStore(state => state);
 
   return (
     <ScrollView
@@ -24,18 +24,14 @@ const Library = () => {
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
           {library.map((item: any, index: number) => {
-            console.log(item.contentType, contentType);
-            if (item.contentType === 'indian' && contentType === 'global') {
-              return;
-            }
-            if (item.contentType !== 'indian' && contentType === 'indian') {
-              return;
-            }
             return (
               <View className="flex flex-col m-" key={item.link + index}>
                 <TouchableOpacity
                   onPress={() =>
-                    navigation.navigate('Info', {link: item.link})
+                    navigation.navigate('Info', {
+                      link: item.link,
+                      provider: item.provider,
+                    })
                   }>
                   <Image
                     className="rounded-md"

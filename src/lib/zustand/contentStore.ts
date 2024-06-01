@@ -1,21 +1,21 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
 import {MMKVLoader} from 'react-native-mmkv-storage';
+import {ProvidersList, providersList} from '../constants';
 
 const storage = new MMKVLoader().initialize();
 
 export interface Content {
-  contentType: 'global' | 'indian';
-  setContentType: (type: Content['contentType']) => void;
+  provider: ProvidersList;
+  setProvider: (type: Content['provider']) => void;
 }
 
 const useContentStore = create<Content>()(
   persist(
     set => ({
-      contentType: 'global',
+      provider: providersList[0],
 
-      setContentType: (contentType: Content['contentType']) =>
-        set({contentType}),
+      setProvider: (provider: Content['provider']) => set({provider}),
     }),
     {
       name: 'content-storage',
