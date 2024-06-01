@@ -18,20 +18,25 @@ import {
 } from '@kesha-antonov/react-native-background-downloader';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
-import {getStream, Stream} from '../lib/getStream';
+import {Stream} from '../lib/providers/types';
 import {MotiView} from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Skeleton} from 'moti/skeleton';
+import useContentStore from '../lib/zustand/contentStore';
+import {manifest} from '../lib/Manifest';
 
 const DownloadComponent = ({
   link,
   fileName,
   type,
+  providerValue,
 }: {
   link: string;
   fileName: string;
   type: string;
+  providerValue: string;
 }) => {
+  const {provider} = useContentStore(state => state);
   const [isDownloading, setIsDownloading] = useState(false);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
@@ -171,7 +176,10 @@ const DownloadComponent = ({
     }
     const getServer = async () => {
       setServerLoading(true);
-      const url = await getStream(link, type);
+      const url = await manifest[providerValue || provider.value].getStream(
+        link,
+        type,
+      );
       setServerLoading(false);
       setServers(url);
     };
@@ -240,7 +248,7 @@ const DownloadComponent = ({
               </Text>
               <View className="flex-row items-center flex-wrap gap-1 justify-evenly w-full my-5">
                 {!serverLoading
-                  ? servers.map((server, index) => (
+                  ? servers?.map((server, index) => (
                       <TouchableOpacity
                         key={server.server + index}
                         onPress={() => {

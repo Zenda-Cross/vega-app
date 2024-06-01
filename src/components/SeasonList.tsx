@@ -1,33 +1,36 @@
 import {View, Text, TouchableOpacity, ToastAndroid} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {Link} from '../lib/getInfo';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {EpisodeLink, getEpisodeLinks} from '../lib/getEpisodesLink';
+import {EpisodeLink, Link} from '../lib/providers/types';
 import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
 import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {Linking} from 'react-native';
-import {getStream} from '../lib/getStream';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
 import * as IntentLauncher from 'expo-intent-launcher';
+import {manifest} from '../lib/Manifest';
+import useContentStore from '../lib/zustand/contentStore';
 
 const SeasonList = ({
   LinkList,
   poster,
   metaTitle,
+  providerValue,
 }: {
   LinkList: Link[];
   poster: string;
   metaTitle: string;
+  providerValue: string;
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // const {provider} = useContentStore(state => state);
 
   const [episodeList, setEpisodeList] = useState<EpisodeLink[]>([]);
   const [episodeLoading, setEpisodeLoading] = useState<boolean>(false);
@@ -46,11 +49,13 @@ const SeasonList = ({
       const cacheEpisodes = await MmmkvCache.getItem(ActiveSeason.episodesLink);
       if (cacheEpisodes) {
         setEpisodeList(JSON.parse(cacheEpisodes as string));
-        console.log('cache', JSON.parse(cacheEpisodes as string));
+        // console.log('cache', JSON.parse(cacheEpisodes as string));
         setEpisodeLoading(false);
         return;
       }
-      const episodes = await getEpisodeLinks(ActiveSeason.episodesLink);
+      const episodes = await manifest[providerValue].getEpisodeLinks(
+        ActiveSeason.episodesLink,
+      );
       if (episodes.length === 0) return;
       MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
       // console.log(episodes);
@@ -71,7 +76,7 @@ const SeasonList = ({
     const downloaded = await ifExists(file);
     if (externalPlayer && !downloaded) {
       setVlcLoading(true);
-      const stream = await getStream(link, type);
+      const stream = await manifest[providerValue].getStream(link, type);
       const availableStream = stream.filter(
         e => e.server !== 'filepress' && e.server !== 'hubcloud',
       );
@@ -118,6 +123,7 @@ const SeasonList = ({
       title: title,
       file: file,
       poster: poster,
+      providerValue: providerValue,
     });
   };
 
@@ -179,6 +185,7 @@ const SeasonList = ({
                 <Text className="text-white">Play</Text>
               </TouchableOpacity>
               <Downloader
+                providerValue={providerValue}
                 link={ActiveSeason.movieLinks}
                 type="movie"
                 fileName={
@@ -224,6 +231,7 @@ const SeasonList = ({
                       <Text className="text-white">{episode.title}</Text>
                     </TouchableOpacity>
                     <Downloader
+                      providerValue={providerValue}
                       link={episode.link}
                       type="series"
                       fileName={

@@ -14,10 +14,11 @@ import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
+import {useKeepAwake} from 'expo-keep-awake';
 
 export type HomeStackParamList = {
   Home: undefined;
-  Info: {link: string};
+  Info: {link: string; provider?: string};
   ScrollList: {filter: string; title?: string};
   Webview: {link: string};
 };
@@ -30,16 +31,18 @@ export type RootStackParamList = {
     title: string;
     poster: string;
     file?: string;
+    providerValue?: string;
   };
 };
 
 export type SearchStackParamList = {
   Search: undefined;
   ScrollList: {filter: string; title?: string};
-  Info: {link: string};
+  Info: {link: string; provider?: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
+  useKeepAwake();
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();

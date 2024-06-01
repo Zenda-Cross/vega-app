@@ -1,13 +1,9 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
+import {EpisodeLink} from '../types';
 
-export interface EpisodeLink {
-  title: string;
-  link: string;
-}
-
-export const getEpisodeLinks = async function (
+export const vegaGetEpisodeLinks = async function (
   url: string,
 ): Promise<EpisodeLink[]> {
   console.log('getEpisodeLinks', url);

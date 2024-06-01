@@ -9,12 +9,12 @@ import React, {useEffect, useState} from 'react';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
-import {getHomePageData, HomePageData} from '../../lib/getPosts';
-import {homeList} from '../../lib/constants';
+import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
 import {MmmkvCache} from '../../lib/Mmkv';
 import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
+import {manifest} from '../../lib/Manifest';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -22,7 +22,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
 
-  const {contentType} = useContentStore(state => state);
+  const {provider} = useContentStore(state => state);
   const {hero, setHero} = useHeroStore(state => state);
 
   // change status bar color
@@ -46,7 +46,7 @@ const Home = () => {
     const fetchHomeData = async () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
-      const cache = MmmkvCache.getString('homeData' + contentType);
+      const cache = MmmkvCache.getString('homeData' + provider.value);
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
@@ -58,7 +58,7 @@ const Home = () => {
         setLoading(false);
         setHomeData(data);
       }
-      const data = await getHomePageData(contentType, signal);
+      const data = await getHomePageData(provider, signal);
       if (!cache && data.length > 0) {
         const randomPost =
           data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
@@ -69,14 +69,14 @@ const Home = () => {
       }
       setLoading(false);
       setHomeData(data);
-      MmmkvCache.setString('homeData' + contentType, JSON.stringify(data));
+      MmmkvCache.setString('homeData' + provider.value, JSON.stringify(data));
     };
     fetchHomeData();
     deleteDownload();
     return () => {
       controller.abort();
     };
-  }, [refreshing, contentType]);
+  }, [refreshing, provider]);
   return (
     <SafeAreaView className="bg-black h-full w-full">
       <StatusBar
@@ -104,7 +104,7 @@ const Home = () => {
         <Hero />
         <View className="p-4">
           {loading
-            ? homeList.map((item, index) => (
+            ? manifest[provider.value].catalog.map((item, index) => (
                 <Slider
                   isLoading={loading}
                   key={index}

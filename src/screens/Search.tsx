@@ -7,8 +7,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import {TextInput} from 'react-native';
 import {genresList} from '../lib/constants';
 import {TouchableOpacity} from 'react-native';
+import {manifest} from '../lib/Manifest';
+import useContentStore from '../lib/zustand/contentStore';
 
 const Search = () => {
+  const {provider} = useContentStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   return (
@@ -18,7 +21,8 @@ const Search = () => {
           autoFocus={true}
           onSubmitEditing={e => {
             navigation.navigate('ScrollList', {
-              filter: e.nativeEvent.text,
+              filter:
+                manifest[provider.value].searchFilter + e.nativeEvent.text,
               title: 'Search Results',
             });
           }}
@@ -36,17 +40,17 @@ const Search = () => {
           gap: 5,
         }}
         className="w-full h-full mt-4 ">
-        {genresList.map((genre, index) => (
+        {manifest[provider.value].genres.map((genre, index) => (
           <TouchableOpacity
             key={genre.filter}
             onPress={() => {
               navigation.navigate('ScrollList', {
                 filter: genre.filter,
-                title: genre.name,
+                title: genre.title,
               });
             }}
             className="h-24 w-44 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
-            <Text className="text-white font-semibold ">{genre.name}</Text>
+            <Text className="text-white font-semibold ">{genre.title}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

@@ -1,6 +1,6 @@
 import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import type {Post} from '../lib/getPosts';
+import type {Post} from '../lib/providers/vega/getPosts';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';

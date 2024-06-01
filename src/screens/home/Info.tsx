@@ -2,8 +2,7 @@ import {Image, Text, View, ScrollView, StatusBar, Linking} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../App';
-import {getInfo} from '../../lib/getInfo';
-import type {Info} from '../../lib/getInfo';
+import type {Info} from '../../lib/providers/types';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
@@ -15,6 +14,7 @@ import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {manifest} from '../../lib/Manifest';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
@@ -28,7 +28,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     ),
   );
   const [backgroundColor, setBackgroundColor] = useState('transparent');
-  const {contentType} = useContentStore(state => state);
+  const {provider} = useContentStore(state => state);
 
   const handleScroll = (event: any) => {
     setBackgroundColor(
@@ -55,7 +55,9 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         setInfo(cacheData);
         setInfoLoading(false);
       }
-      const data = await getInfo(route.params.link, contentType);
+      const data = await manifest[
+        route.params.provider || provider.value
+      ].getInfo(route.params.link, provider);
       try {
         const metaRes = await axios.get(
           `https://v3-cinemeta.strem.io/meta/${data.type}/${data.imdbId}.json`,
@@ -90,7 +92,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       title: meta?.name || info?.title,
       poster: meta?.poster || info?.image,
       link: route.params.link,
-      contentType: contentType,
+      provider: provider.value,
     });
     MMKV.setArray('library', library);
     setInLibrary(true);
@@ -239,9 +241,15 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 name="web"
                 size={25}
                 color="rgb(156 163 175)"
-                onPress={() => {
+                onPress={async () => {
+                  const url =
+                    (await manifest[
+                      route.params.provider || provider.value
+                    ].getBaseURL(route.params.link || provider.value)) +
+                    route.params.link;
+                  console.log('url', url);
                   navigation.navigate('Webview', {
-                    link: route.params.link,
+                    link: url,
                   });
                 }}
               />
@@ -294,6 +302,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
             </View>
           ) : (
             <SeasonList
+              providerValue={route.params.provider || provider.value}
               LinkList={
                 info?.linkList
                   ? info?.linkList?.filter(
