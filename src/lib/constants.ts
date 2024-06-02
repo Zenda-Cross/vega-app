@@ -6,19 +6,19 @@ export interface ProvidersList {
 }
 export const providersList: ProvidersList[] = [
   {
-    name: 'Vega',
+    name: 'VegaMovies',
     value: 'vega',
     type: 'global',
     flag: '🌏',
   },
   {
-    name: 'Mod',
+    name: 'ModMovies',
     value: 'mod',
     type: 'global',
     flag: '🌏',
   },
   {
-    name: 'Lux',
+    name: 'LuxMovies',
     value: 'lux',
     type: 'india',
     flag: '🇮🇳',

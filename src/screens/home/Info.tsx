@@ -87,14 +87,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       enableVibrateFallback: true,
       ignoreAndroidSystemSettings: false,
     });
-    const library = MMKV.getArray('library') || [];
+    const library = MMKV.getArray('watchlist') || [];
     library.push({
       title: meta?.name || info?.title,
       poster: meta?.poster || info?.image,
       link: route.params.link,
       provider: provider.value,
     });
-    MMKV.setArray('library', library);
+    MMKV.setArray('watchlist', library);
     setInLibrary(true);
   };
 
@@ -104,7 +104,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       enableVibrateFallback: true,
       ignoreAndroidSystemSettings: false,
     });
-    const library = MMKV.getArray('library') || [];
+    const library = MMKV.getArray('watchlist') || [];
     const newLibrary = library.filter(item => item.link !== route.params.link);
     MMKV.setArray('library', newLibrary);
     setInLibrary(false);
@@ -233,8 +233,15 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           )}
           {/* synopsis */}
           <View className="mb-2 w-full flex-row items-center justify-between">
-            <Skeleton show={infoLoading} colorMode="dark" width={85}>
-              <Text className="text-white text-xl font-semibold">Synopsis</Text>
+            <Skeleton show={infoLoading} colorMode="dark" width={150}>
+              <View className="flex-row items-center gap-2">
+                <Text className="text-white text-xl font-semibold">
+                  Synopsis
+                </Text>
+                <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
+                  {route.params.provider || provider.value}
+                </Text>
+              </View>
             </Skeleton>
             <View className="flex-row items-center gap-4">
               <MaterialCommunityIcons

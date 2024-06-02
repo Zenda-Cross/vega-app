@@ -1,6 +1,6 @@
 export const catalogList = [
   {
-    title: 'New',
+    title: 'Latest',
     filter: '',
   },
   {
@@ -8,12 +8,12 @@ export const catalogList = [
     filter: '/netflix',
   },
   {
-    title: 'Amazon Prime',
-    filter: '/web-series/tv-shows-by-network/amazon-prime-video',
-  },
-  {
     title: 'Disney+',
     filter: '/disney-plus',
+  },
+  {
+    title: 'Amazon Prime',
+    filter: '/web-series/tv-shows-by-network/amazon-prime-video',
   },
 ];
 
