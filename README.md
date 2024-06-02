@@ -9,4 +9,27 @@ React native Android app for streaming.
 
 # Download
 Download- https://github.com/Zenda-Cross/vega-app/releases
+___
+
+## Build and Dev
+Install React Native setup if you haven't already [guide](https://reactnative.dev/docs/set-up-your-environment)
+
+1. clone
+```bash
+git clone https://github.com/Zenda-Cross/vega-app.git
+```
+```
+cd vega-app
+```
+2. Install
+```
+npm install
+```
+3. Open metro dev server
+Dev
+```
+npm run android
+```
+Build apk/aab
+https://reactnative.dev/docs/signed-apk-android
 
