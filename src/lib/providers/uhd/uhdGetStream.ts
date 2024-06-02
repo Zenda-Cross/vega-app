@@ -3,19 +3,12 @@ import FormData from 'form-data';
 import * as cheerio from 'cheerio';
 import {Stream} from '../types';
 import {headers} from './header';
-import {modGetEpisodeLinks} from './modGetEpisodesList';
 
-export const modGetStream = async (
+export const uhdGetStream = async (
   url: string,
   type: string,
 ): Promise<Stream[]> => {
   try {
-    console.log('modGetStream', type, url);
-    if (type === 'movie') {
-      const servers = await modGetEpisodeLinks(url);
-      url = servers[0].link;
-    }
-
     const wpHttp = url.split('sid=')[1];
     var bodyFormData0 = new FormData();
     bodyFormData0.append('_wp_http', wpHttp);
@@ -60,47 +53,44 @@ export const modGetStream = async (
 
     const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)[1];
 
+    console.log('ddl', ddl);
     // console.log(ddl);
-    // console.log(ddl);
-    const servers: Stream[] = [];
     const driveLink = await isDriveLink(ddl);
-    const driveRes = await axios.get(driveLink, {headers});
-    const driveHtml = driveRes.data;
-    const $drive = cheerio.load(driveHtml);
-    const resumeBot = $drive('.btn.btn-light').attr('href') || '';
-    const resumeBotRes = await axios.get(resumeBot, {headers});
-    const resumeBotToken = resumeBotRes.data.match(
-      /formData\.append\('token', '([a-f0-9]+)'\)/,
-    )[1];
-    const resumeBotBody = new FormData();
-    resumeBotBody.append('token', resumeBotToken);
-    const resumeBotPath = resumeBotRes.data.match(
-      /fetch\('\/download\?id=([a-zA-Z0-9\/+]+)'/,
-    )[1];
-    const resumeBotBaseUrl = resumeBot.split('/download')[0];
-    // console.log(
-    //   'resumeBotPath',
-    //   resumeBotBaseUrl + '/download?id=' + resumeBotPath,
-    // );
-    // console.log('resumeBotBody', resumeBotToken);
+    const ServerLinks: Stream[] = [];
 
-    const resumeBotDownload = await fetch(
-      resumeBotBaseUrl + '/download?id=' + resumeBotPath,
-      {
-        method: 'POST',
-        body: resumeBotBody,
-        headers: {
-          Referer: resumeBot,
-          Cookie: 'PHPSESSID=7e9658ce7c805dab5bbcea9046f7f308',
-        },
-      },
-    );
-    const resumeBotDownloadData = await resumeBotDownload.json();
-    console.log('resumeBotDownloadData', resumeBotDownloadData.url);
-    servers.push({
-      server: 'CfWorker',
-      link: resumeBotDownloadData.url,
-    });
+    // const driveRes = await axios.get(driveLink, {headers});
+    // const driveHtml = driveRes.data;
+    // const $drive = cheerio.load(driveHtml);
+    // //instant link
+    // try {
+    //   const seed = $drive('.btn-danger').attr('href') || '';
+    //   const instantToken = seed.split('=')[1];
+    //   //   console.log('InstantToken', instantToken);
+    //   const InstantFromData = new FormData();
+    //   InstantFromData.append('keys', instantToken);
+    //   const videoSeedUrl = seed.split('/').slice(0, 3).join('/') + '/api';
+    //   //   console.log('videoSeedUrl', videoSeedUrl);
+    //   const instantLinkRes = await fetch(videoSeedUrl, {
+    //     method: 'POST',
+    //     body: InstantFromData,
+    //     headers: {
+    //       'x-token': videoSeedUrl,
+    //     },
+    //   });
+    //   const instantLinkData = await instantLinkRes.json();
+    //   //   console.log('instantLinkData', instantLinkData);
+    //   if (instantLinkData.error === false) {
+    //     const instantLink = instantLinkData.url;
+    //     ServerLinks.push({
+    //       server: 'Gdrive-Instant',
+    //       link: instantLink,
+    //     });
+    //   } else {
+    //     console.log('Instant link not found', instantLinkData);
+    //   }
+    // } catch (err) {
+    //   console.log('Instant link not found', err);
+    // }
 
     // CF workers type 1
     try {
@@ -112,7 +102,7 @@ export const modGetStream = async (
       cfWorkersStream.each((i, el) => {
         const link = $(el).attr('href');
         if (link) {
-          servers.push({
+          ServerLinks.push({
             server: 'Cf Worker 1.' + i,
             link: link,
           });
@@ -132,7 +122,7 @@ export const modGetStream = async (
       cfWorkersStream.each((i, el) => {
         const link = $(el).attr('href');
         if (link) {
-          servers.push({
+          ServerLinks.push({
             server: 'Cf Worker 2.' + i,
             link: link,
           });
@@ -141,7 +131,27 @@ export const modGetStream = async (
     } catch (err) {
       console.log('CF workers link not found', err);
     }
-    return servers;
+
+    // resume link
+    try {
+      const resumeDrive = driveLink.replace('/file', '/zfile');
+      //   console.log('resumeDrive', resumeDrive);
+      const resumeDriveRes = await axios.get(resumeDrive, {headers});
+      const resumeDriveHtml = resumeDriveRes.data;
+      const $resumeDrive = cheerio.load(resumeDriveHtml);
+      const resumeLink = $resumeDrive('.btn-success').attr('href');
+      //   console.log('resumeLink', resumeLink);
+      if (resumeLink) {
+        ServerLinks.push({
+          server: 'Cf Worker',
+          link: resumeLink,
+        });
+      }
+    } catch (err) {
+      console.log('Resume link not found');
+    }
+    console.log('ServerLinks', ServerLinks);
+    return ServerLinks;
   } catch (err) {
     console.log('getStream error', err);
     return [];

@@ -26,6 +26,10 @@ export interface Link {
   quality: string;
   movieLinks: string;
   episodesLink: string;
+  directLinks?: {
+    title: string;
+    link: string;
+  }[];
 }
 
 // getEpisodeLinks

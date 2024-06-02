@@ -67,11 +67,15 @@ const Player = ({route}: Props): React.JSX.Element => {
       const data = await manifest[
         route.params.providerValue || provider.value
       ].getStream(route.params.link, route.params.type);
-      // remove filepress server and hubcloud server
-      setStream(
-        data.filter(e => e.server !== 'filepress' && e.server !== 'hubcloud'),
+      const filteredData = data.filter(
+        stream =>
+          !manifest[
+            route.params.providerValue || provider.value
+          ].nonStreamableServer?.includes(stream.server),
       );
-      setSelectedStream(data.filter(item => item.server !== 'filepress')[0]);
+      // remove filepress server and hubcloud server
+      setStream(filteredData);
+      setSelectedStream(filteredData[0]);
     };
     fetchStream();
   }, [route.params.link]);

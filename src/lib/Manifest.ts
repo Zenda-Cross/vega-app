@@ -13,12 +13,18 @@ import {modGetEpisodeLinks} from './providers/mod/modGetEpisodesList';
 import {modGetStream} from './providers/mod/modGetStream';
 import {vegaGetBaseurl} from './providers/vega/vegaGetBaseurl';
 import {modGetBaseurl} from './providers/mod/modGetBaseurl';
+import {uhdCatalogList} from './providers/uhd/uhCtatalog';
+import {uhdGetPosts} from './providers/uhd/uhdGetPosts';
+import getUhdInfo from './providers/uhd/getUhdInfo';
+import {uhdGetBaseurl} from './providers/uhd/uhdGetBaseurl';
+import {uhdGetStream} from './providers/uhd/uhdGetStream';
 
 interface Manifest {
   [key: string]: {
     searchFilter?: string;
     catalog: Catalog[];
     genres: Catalog[];
+    nonStreamableServer?: string[];
     getBaseURL: (providerValue: string) => Promise<string>;
     getStream: (link: string, type: string) => Promise<Stream[]>;
     getPosts: (
@@ -36,6 +42,7 @@ export const manifest: Manifest = {
     searchFilter: 'search',
     catalog: homeList,
     genres: genresList,
+    nonStreamableServer: ['filepress', 'hubcloud'],
     getBaseURL: vegaGetBaseurl,
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
@@ -46,6 +53,7 @@ export const manifest: Manifest = {
     searchFilter: 'search',
     catalog: homeList,
     genres: genresList,
+    nonStreamableServer: ['filepress', 'hubcloud'],
     getBaseURL: vegaGetBaseurl,
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
@@ -56,10 +64,22 @@ export const manifest: Manifest = {
     searchFilter: 'search',
     catalog: catalogList,
     genres: modGenresList,
+    nonStreamableServer: ['Gdrive-Instant'],
     getBaseURL: modGetBaseurl,
     getPosts: modGetPosts,
     getEpisodeLinks: modGetEpisodeLinks,
     getInfo: modGetInfo,
     getStream: modGetStream,
+  },
+  uhd: {
+    searchFilter: 'search',
+    catalog: uhdCatalogList,
+    genres: [],
+    nonStreamableServer: ['Gdrive-Instant'],
+    getBaseURL: uhdGetBaseurl,
+    getStream: uhdGetStream,
+    getPosts: uhdGetPosts,
+    getEpisodeLinks: vegaGetEpisodeLinks,
+    getInfo: getUhdInfo,
   },
 };

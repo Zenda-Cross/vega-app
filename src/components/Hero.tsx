@@ -13,6 +13,7 @@ import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
 import {MmmkvCache} from '../lib/Mmkv';
 import {manifest} from '../lib/Manifest';
+import {Info} from '../lib/providers/types';
 
 function Hero() {
   const [post, setPost] = useState<any>();
@@ -28,7 +29,7 @@ function Hero() {
       if (hero?.link) {
         const CacheInfo = MmmkvCache.getString(hero.link);
         try {
-          let info = null;
+          let info: Info;
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
@@ -36,11 +37,15 @@ function Hero() {
             MmmkvCache.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);
-          const data = await axios(
-            `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
-          );
-          // console.log('streamiodata', data.data?.meta);
-          setPost(data.data?.meta);
+          if (info.imdbId) {
+            const data = await axios(
+              `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
+            );
+            // console.log('streamiodata', data.data?.meta);
+            setPost(data.data?.meta);
+          } else {
+            setPost(info);
+          }
         } catch (error) {
           console.log('hero fetch error', error);
         }
@@ -63,7 +68,10 @@ function Hero() {
         <Image
           source={{
             uri:
-              post?.background || post?.poster || 'https://via.placeholder.com',
+              post?.background ||
+              post?.poster ||
+              post?.image ||
+              'https://via.placeholder.com',
           }}
           className="h-96 w-full"
           style={{resizeMode: 'cover'}}
@@ -91,8 +99,8 @@ function Hero() {
                   }}
                 />
               ) : (
-                <Text className="text-white text-2xl font-bold">
-                  {post?.name}
+                <Text className="text-white text-2xl font-bold text-center">
+                  {post?.name || post?.title}
                 </Text>
               )}
               <Text className="text-white text-lg font-bold text-center">
@@ -105,7 +113,6 @@ function Hero() {
           {hero?.link && (
             <TouchableOpacity
               className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
-              // disabled={contentType === 'indian'}
               onPress={() => {
                 navigation.navigate('Info', {
                   link: hero.link,

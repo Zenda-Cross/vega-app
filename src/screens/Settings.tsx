@@ -111,7 +111,7 @@ const Settings = () => {
                 backgroundColor: 'black',
               }}
               labelField={'name'}
-              valueField={'name'}
+              valueField={'value'}
               placeholder="Select"
               value={provider}
               data={providersList}

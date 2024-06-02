@@ -18,6 +18,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'UHDMovies',
+    value: 'uhd',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'LuxMovies',
     value: 'lux',
     type: 'india',

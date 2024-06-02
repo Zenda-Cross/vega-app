@@ -14,7 +14,6 @@ import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
-import {useKeepAwake} from 'expo-keep-awake';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -42,7 +41,6 @@ export type SearchStackParamList = {
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
-  useKeepAwake();
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
