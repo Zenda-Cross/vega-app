@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {ToastAndroid} from 'react-native';
 import {Content} from './zustand/contentStore';
 
@@ -66,8 +66,11 @@ export const getInfo = async (
     //   console.log(synopsis);
 
     // image
-    const image =
+    let image =
       infoContainer?.find('img[data-lazy-src]')?.attr('data-lazy-src') || '';
+    if (image.startsWith('//')) {
+      image = 'https:' + image;
+    }
     // console.log(image);
 
     // console.log({title, synopsis, image, imdbId, type});

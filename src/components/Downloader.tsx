@@ -16,8 +16,8 @@ import {
   completeHandler,
   checkForExistingDownloads,
 } from '@kesha-antonov/react-native-background-downloader';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Octicons from 'react-native-vector-icons/Octicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Octicons from '@expo/vector-icons/Octicons';
 import {getStream, Stream} from '../lib/getStream';
 import {MotiView} from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';

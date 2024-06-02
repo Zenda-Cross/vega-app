@@ -1,11 +1,4 @@
-import {
-  Image,
-  Text,
-  View,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import {Image, Text, View, ScrollView, StatusBar, Linking} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../App';
@@ -17,14 +10,14 @@ import SeasonList from '../../components/SeasonList';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
 import {MotiSafeAreaView} from 'moti';
-import {MMKV} from '../../App';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {MmmkvCache} from '../../App';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
-export default function Info({route}: Props): React.JSX.Element {
+export default function Info({route, navigation}: Props): React.JSX.Element {
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
@@ -241,21 +234,33 @@ export default function Info({route}: Props): React.JSX.Element {
             <Skeleton show={infoLoading} colorMode="dark" width={85}>
               <Text className="text-white text-xl font-semibold">Synopsis</Text>
             </Skeleton>
-            {inLibrary ? (
-              <Ionicons
-                name="bookmark"
-                size={30}
-                color="tomato"
-                onPress={() => removeLibrary()}
+            <View className="flex-row items-center gap-4">
+              <MaterialCommunityIcons
+                name="web"
+                size={25}
+                color="rgb(156 163 175)"
+                onPress={() => {
+                  navigation.navigate('Webview', {
+                    link: route.params.link,
+                  });
+                }}
               />
-            ) : (
-              <Ionicons
-                name="bookmark-outline"
-                size={30}
-                color="tomato"
-                onPress={() => addLibrary()}
-              />
-            )}
+              {inLibrary ? (
+                <Ionicons
+                  name="bookmark"
+                  size={30}
+                  color="tomato"
+                  onPress={() => removeLibrary()}
+                />
+              ) : (
+                <Ionicons
+                  name="bookmark-outline"
+                  size={30}
+                  color="tomato"
+                  onPress={() => addLibrary()}
+                />
+              )}
+            </View>
           </View>
           <Skeleton show={infoLoading} colorMode="dark" height={50}>
             <Text className="text-white text-xs">
@@ -265,7 +270,7 @@ export default function Info({route}: Props): React.JSX.Element {
                   : meta?.description
                 : info?.synopsis?.length! > 180
                 ? info?.synopsis.slice(0, 148) + '...'
-                : info?.synopsis || ''}
+                : info?.synopsis || 'No synopsis available'}
             </Text>
           </Skeleton>
           {/* cast */}

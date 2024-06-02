@@ -3,18 +3,19 @@ import React, {useEffect, useState} from 'react';
 import {Link} from '../lib/getInfo';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {EpisodeLink, getEpisodeLinks} from '../lib/getEpisodesLink';
 import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
-import {MmmkvCache, MMKV} from '../App';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {Linking} from 'react-native';
 import {getStream} from '../lib/getStream';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
+import * as IntentLauncher from 'expo-intent-launcher';
 
 const SeasonList = ({
   LinkList,
@@ -66,29 +67,50 @@ const SeasonList = ({
     file: string;
   };
   const playHandler = async ({link, type, title, file}: playHandlerProps) => {
-    const openVlc = MMKV.getBool('vlc');
+    const externalPlayer = MMKV.getString('externalPlayer');
     const downloaded = await ifExists(file);
-    if (openVlc && !downloaded) {
-      const vlcInstalled = await Linking.canOpenURL('vlc://');
-      if (!vlcInstalled) {
-        Linking.openURL('market://details?id=org.videolan.vlc');
-        ToastAndroid.show('VLC not installed', ToastAndroid.SHORT);
-        return;
-      }
+    if (externalPlayer && !downloaded) {
       setVlcLoading(true);
-      console.log(downloaded);
       const stream = await getStream(link, type);
       const availableStream = stream.filter(
         e => e.server !== 'filepress' && e.server !== 'hubcloud',
       );
-      if (availableStream?.length === 0) {
-        ToastAndroid.show('No stream found', ToastAndroid.SHORT);
+      // vlc player
+      if (externalPlayer === 'vlc') {
+        const vlcInstalled = await Linking.canOpenURL('vlc://');
+        if (!vlcInstalled) {
+          Linking.openURL('market://details?id=org.videolan.vlc');
+          ToastAndroid.show('VLC not installed', ToastAndroid.SHORT);
+          setVlcLoading(false);
+          return;
+        }
+        console.log(downloaded);
+        if (availableStream?.length === 0) {
+          ToastAndroid.show('No stream found', ToastAndroid.SHORT);
+          setVlcLoading(false);
+          return;
+        }
+        Linking.openURL('vlc://' + availableStream?.[0].link);
+        setVlcLoading(false);
+        return;
+      } else if (externalPlayer === 'mx') {
+        try {
+          await IntentLauncher.startActivityAsync(
+            'android.intent.action.VIEW',
+            {
+              data: availableStream?.[0].link,
+              packageName: 'com.mxtech.videoplayer.ad',
+              className: 'com.mxtech.videoplayer.ad.ActivityScreen',
+            },
+          );
+        } catch (e) {
+          console.log(e);
+          Linking.openURL('market://details?id=com.mxtech.videoplayer.ad');
+          setVlcLoading(false);
+        }
         setVlcLoading(false);
         return;
       }
-      Linking.openURL('vlc://' + availableStream?.[0].link);
-      setVlcLoading(false);
-      return;
     }
     navigation.navigate('Player', {
       link: link,
@@ -263,7 +285,7 @@ const SeasonList = ({
             <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
           </MotiView>
           <Text className="text-white text-lg font-semibold mt-2">
-            Opening VLC
+            Opening in External Player
           </Text>
         </View>
       )}
