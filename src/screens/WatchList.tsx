@@ -1,4 +1,4 @@
-import {View, Text, ScrollView, StatusBar} from 'react-native';
+import {View, Text, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import {MMKV} from '../lib/Mmkv';
 import {useNavigation} from '@react-navigation/native';
@@ -11,7 +11,7 @@ import useContentStore from '../lib/zustand/contentStore';
 const Library = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const [library, setLibrary] = useState(MMKV.getArray('library') || []);
+  const [library, setLibrary] = useState(MMKV.getArray('watchlist') || []);
   const {provider} = useContentStore(state => state);
 
   return (
