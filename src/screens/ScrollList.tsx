@@ -103,7 +103,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           renderItem={({item}) => (
             <View className="flex flex-col m-3">
               <TouchableOpacity
-                onPress={() => navigation.navigate('Info', {link: item.link})}>
+                onPress={() =>
+                  navigation.navigate('Info', {
+                    link: item.link,
+                    provider: provider?.value,
+                    poster: item?.image,
+                  })
+                }>
                 <Image
                   className="rounded-md"
                   source={{

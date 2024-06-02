@@ -2,17 +2,15 @@ import {View, Text, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import {MMKV} from '../lib/Mmkv';
 import {useNavigation} from '@react-navigation/native';
-import {HomeStackParamList} from '../App';
+import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
-import useContentStore from '../lib/zustand/contentStore';
 
 const Library = () => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+    useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const [library, setLibrary] = useState(MMKV.getArray('watchlist') || []);
-  const {provider} = useContentStore(state => state);
 
   return (
     <ScrollView
