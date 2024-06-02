@@ -17,7 +17,7 @@ import WebView from './screens/WebView';
 
 export type HomeStackParamList = {
   Home: undefined;
-  Info: {link: string; provider?: string};
+  Info: {link: string; provider?: string; poster?: string};
   ScrollList: {filter: string; title?: string};
   Webview: {link: string};
 };
@@ -37,13 +37,19 @@ export type RootStackParamList = {
 export type SearchStackParamList = {
   Search: undefined;
   ScrollList: {filter: string; title?: string};
-  Info: {link: string; provider?: string};
+  Info: {link: string; provider?: string; poster?: string};
+};
+
+export type WatchListStackParamList = {
+  WatchList: undefined;
+  Info: {link: string; provider?: string; poster?: string};
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+  const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
 
   function HomeStackScreen() {
     return (
@@ -75,6 +81,21 @@ const App = () => {
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
       </SearchStack.Navigator>
+    );
+  }
+
+  function WatchListStackScreen() {
+    return (
+      <WatchListStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          headerBlurEffect: 'light',
+          headerTintColor: 'tomato',
+          headerStyle: {backgroundColor: '#171717'},
+        }}>
+        <WatchListStack.Screen name="WatchList" component={WatchList} />
+        <WatchListStack.Screen name="Info" component={Info} />
+      </WatchListStack.Navigator>
     );
   }
 
@@ -117,7 +138,7 @@ const App = () => {
         />
         <Tab.Screen
           name="Watch List"
-          component={WatchList}
+          component={WatchListStackScreen}
           options={{
             unmountOnBlur: true,
             tabBarIcon: ({focused, color, size}) =>

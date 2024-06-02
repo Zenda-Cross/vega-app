@@ -23,7 +23,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [infoLoading, setInfoLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [inLibrary, setInLibrary] = useState(
-    MMKV.getArray('library')?.some(
+    MMKV.getArray('watchlist')?.some(
       (item: any) => item.link === route.params.link,
     ),
   );
@@ -90,7 +90,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     const library = MMKV.getArray('watchlist') || [];
     library.push({
       title: meta?.name || info?.title,
-      poster: meta?.poster || info?.image,
+      poster: meta?.poster || route.params.poster || info?.image,
       link: route.params.link,
       provider: provider.value,
     });
@@ -106,7 +106,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     });
     const library = MMKV.getArray('watchlist') || [];
     const newLibrary = library.filter(item => item.link !== route.params.link);
-    MMKV.setArray('library', newLibrary);
+    MMKV.setArray('watchlist', newLibrary);
     setInLibrary(false);
   };
   return (
