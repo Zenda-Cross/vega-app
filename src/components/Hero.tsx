@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import {Text} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
@@ -12,7 +12,7 @@ import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {getInfo} from '../lib/getInfo';
 import {Skeleton} from 'moti/skeleton';
-import {MmmkvCache} from '../App';
+import {MmmkvCache} from '../lib/Mmkv';
 
 function Hero() {
   const [post, setPost] = useState<any>();

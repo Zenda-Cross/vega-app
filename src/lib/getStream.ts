@@ -99,11 +99,16 @@ export async function getStream(link: string, type: string) {
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
     linkClass.each((index, element) => {
       const itm = $(element);
-      const link = itm.attr('href') || '';
+      let link = itm.attr('href') || '';
       if (link?.includes('.dev')) {
         streamLinks.push({server: 'Cf Worker', link: link});
       }
       if (link?.includes('pixel')) {
+        if (!link?.includes('api')) {
+          const token = link.split('/').pop();
+          const baseUrl = link.split('/').slice(0, -2).join('/');
+          link = `${baseUrl}/api/file/${token}?download`;
+        }
         streamLinks.push({server: 'pixeldrain', link: link});
       }
       if (link?.includes('hubcloud')) {

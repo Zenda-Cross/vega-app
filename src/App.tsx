@@ -9,20 +9,17 @@ import ScrollList from './screens/ScrollList';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
-import {MMKVLoader} from 'react-native-mmkv-storage';
-import {View} from 'moti';
-
-export const MMKV = new MMKVLoader().initialize();
-export const MmmkvCache = new MMKVLoader().withInstanceID('cache').initialize();
+import WebView from './screens/WebView';
 
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string};
   ScrollList: {filter: string; title?: string};
+  Webview: {link: string};
 };
 
 export type RootStackParamList = {
@@ -59,6 +56,7 @@ const App = () => {
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
         <HomeStack.Screen name="ScrollList" component={ScrollList} />
+        <HomeStack.Screen name="Webview" component={WebView} />
       </HomeStack.Navigator>
     );
   }
@@ -72,9 +70,9 @@ const App = () => {
           headerTintColor: 'tomato',
           headerStyle: {backgroundColor: '#171717'},
         }}>
-        <HomeStack.Screen name="Search" component={Search} />
-        <HomeStack.Screen name="ScrollList" component={ScrollList} />
-        <HomeStack.Screen name="Info" component={Info} />
+        <SearchStack.Screen name="Search" component={Search} />
+        <SearchStack.Screen name="ScrollList" component={ScrollList} />
+        <SearchStack.Screen name="Info" component={Info} />
       </SearchStack.Navigator>
     );
   }
