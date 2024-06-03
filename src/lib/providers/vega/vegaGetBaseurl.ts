@@ -1,5 +1,4 @@
 import axios from 'axios';
-import {Content} from '../../zustand/contentStore';
 
 export const vegaGetBaseurl = async (
   providerValue: string,
