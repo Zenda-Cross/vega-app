@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import {Post} from '../getPosts';
+import {Post} from '../providers/vega/getPosts';
 
 export interface Hero {
   hero: Post;

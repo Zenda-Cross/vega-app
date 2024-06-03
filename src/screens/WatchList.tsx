@@ -1,18 +1,16 @@
-import {View, Text, ScrollView, StatusBar} from 'react-native';
+import {View, Text, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import {MMKV} from '../lib/Mmkv';
 import {useNavigation} from '@react-navigation/native';
-import {HomeStackParamList} from '../App';
+import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
-import useContentStore from '../lib/zustand/contentStore';
 
 const Library = () => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const [library, setLibrary] = useState(MMKV.getArray('library') || []);
-  const {contentType} = useContentStore(state => state);
+    useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
+  const [library, setLibrary] = useState(MMKV.getArray('watchlist') || []);
 
   return (
     <ScrollView
@@ -24,18 +22,14 @@ const Library = () => {
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
           {library.map((item: any, index: number) => {
-            console.log(item.contentType, contentType);
-            if (item.contentType === 'indian' && contentType === 'global') {
-              return;
-            }
-            if (item.contentType !== 'indian' && contentType === 'indian') {
-              return;
-            }
             return (
               <View className="flex flex-col m-" key={item.link + index}>
                 <TouchableOpacity
                   onPress={() =>
-                    navigation.navigate('Info', {link: item.link})
+                    navigation.navigate('Info', {
+                      link: item.link,
+                      provider: item.provider,
+                    })
                   }>
                   <Image
                     className="rounded-md"

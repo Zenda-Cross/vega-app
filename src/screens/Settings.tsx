@@ -17,6 +17,7 @@ import pkg from '../../package.json';
 import useContentStore from '../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
+import {providersList} from '../lib/constants';
 
 const players = [
   {
@@ -47,7 +48,7 @@ const Settings = () => {
   );
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const {contentType, setContentType} = useContentStore(state => state);
+  const {provider, setProvider} = useContentStore(state => state);
 
   // handle base url change
   const onChange = async (text: string) => {
@@ -89,8 +90,55 @@ const Settings = () => {
     <View className="w-full h-full bg-black p-4">
       <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
 
+      {/* Content type */}
+      {
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-primary font-bold text-lg">
+            Choose Provider
+          </Text>
+          <View className="w-40">
+            <Dropdown
+              selectedTextStyle={{
+                color: 'white',
+                overflow: 'hidden',
+                height: 23,
+              }}
+              containerStyle={{
+                borderColor: 'black',
+                width: 150,
+                overflow: 'hidden',
+                padding: 2,
+                backgroundColor: 'black',
+              }}
+              labelField={'name'}
+              valueField={'value'}
+              placeholder="Select"
+              value={provider}
+              data={providersList}
+              onChange={async provider => {
+                setProvider(provider);
+              }}
+              renderItem={item => {
+                return (
+                  <View
+                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-3 ${
+                      provider.value === item.value ? 'bg-quaternary' : ''
+                    }`}>
+                    <Text className=" text-white mb-2">
+                      {item.flag}
+                      &nbsp; &nbsp;
+                      {item.name}
+                    </Text>
+                  </View>
+                );
+              }}
+            />
+          </View>
+        </View>
+      }
+
       {/* use custom base URL */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+      {/* <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">use custom base URL</Text>
         <Switch
           thumbColor={UseCustomUrl ? 'tomato' : 'gray'}
@@ -100,7 +148,7 @@ const Settings = () => {
             setUseCustomUrl(val);
           }}
         />
-      </View>
+      </View> */}
 
       {/* Base URL */}
       {UseCustomUrl && (
@@ -195,7 +243,7 @@ const Settings = () => {
                 }
               }
               MMKV.setString('externalPlayer', player.value);
-              setOpenExternalPlayer(player.value);
+              setOpenExternalPlayer(player);
             }}
             renderItem={item => {
               return (
@@ -286,26 +334,6 @@ const Settings = () => {
           <Text className="text-white rounded-md px-2">Clear</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Content type */}
-      {!UseCustomUrl && (
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold">Preferred content</Text>
-          <TouchableOpacity
-            className="bg-primary/70 p-2 rounded-md"
-            onPress={() => {
-              ReactNativeHapticFeedback.trigger('virtualKey', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
-              setContentType(contentType === 'global' ? 'indian' : 'global');
-            }}>
-            <Text className="text-white rounded-md px-2 capitalize">
-              {contentType === 'global' ? 'Global' : 'Indian'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* version */}
       <TouchableNativeFeedback
