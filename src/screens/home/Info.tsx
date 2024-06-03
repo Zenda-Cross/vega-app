@@ -252,7 +252,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                   const url =
                     (await manifest[
                       route.params.provider || provider.value
-                    ].getBaseURL(route.params.link || provider.value)) +
+                    ].getBaseURL(route.params.provider || provider.value)) +
                     route.params.link;
                   console.log('url', url);
                   navigation.navigate('Webview', {
