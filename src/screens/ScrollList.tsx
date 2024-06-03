@@ -2,13 +2,14 @@ import {View, Text, TouchableOpacity, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList, SearchStackParamList} from '../App';
-import {getPosts, Post} from '../lib/getPosts';
+import {Post} from '../lib/providers/types';
 import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
+import {manifest} from '../lib/Manifest';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -20,12 +21,19 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
-  const {contentType} = useContentStore(state => state);
+  const {provider} = useContentStore(state => state);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
     const fetchPosts = async () => {
       setIsLoading(true);
-      const newPosts = await getPosts(filter, page, contentType);
+      const newPosts = await manifest[provider.value].getPosts(
+        filter,
+        page,
+        provider,
+        signal,
+      );
       if (newPosts.length === 0) {
         setIsEnd(true);
         setIsLoading(false);
@@ -95,7 +103,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           renderItem={({item}) => (
             <View className="flex flex-col m-3">
               <TouchableOpacity
-                onPress={() => navigation.navigate('Info', {link: item.link})}>
+                onPress={() =>
+                  navigation.navigate('Info', {
+                    link: item.link,
+                    provider: provider?.value,
+                    poster: item?.image,
+                  })
+                }>
                 <Image
                   className="rounded-md"
                   source={{

@@ -1,20 +1,14 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../lib/Mmkv';
-import {homeList} from './constants';
-import {Content} from './zustand/contentStore';
+import {MMKV, MmmkvCache} from '../../Mmkv';
+import {Content} from '../../zustand/contentStore';
+import {Post} from '../types';
 
-export interface Post {
-  title: string;
-  link: string;
-  image: string;
-}
-
-export const getPosts = async (
+export const vegaGetPosts = async (
   filter: string,
   page: number,
-  contentType: Content['contentType'],
+  provider: Content['provider'],
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
@@ -23,29 +17,29 @@ export const getPosts = async (
       baseUrl = MMKV.getString('baseUrl');
     } else {
       if (
-        MmmkvCache.getString('CacheBaseUrl' + contentType) &&
-        MmmkvCache.getInt('baseUrlTime' + contentType) &&
+        MmmkvCache.getString('CacheBaseUrl' + provider.value) &&
+        MmmkvCache.getInt('baseUrlTime' + provider.value) &&
         // 2 minutes
-        Date.now() - MmmkvCache.getInt('baseUrlTime' + contentType) < 120000
+        Date.now() - MmmkvCache.getInt('baseUrlTime' + provider.value) < 120000
       ) {
-        baseUrl = MmmkvCache.getString('CacheBaseUrl' + contentType);
+        baseUrl = MmmkvCache.getString('CacheBaseUrl' + provider.value);
         console.log('baseUrl from cache', baseUrl);
       } else {
         const baseUrlRes = await axios.get(
           'https://himanshu8443.github.io/providers/modflix.json',
         );
         baseUrl =
-          contentType === 'global'
+          provider.value === 'vega'
             ? baseUrlRes.data.Vega.url
             : baseUrlRes.data.lux.url;
         MMKV.setString('baseUrl', baseUrl);
-        MmmkvCache.setString('CacheBaseUrl' + contentType, baseUrl);
-        MmmkvCache.setInt('baseUrlTime' + contentType, Date.now());
+        MmmkvCache.setString('CacheBaseUrl' + provider.value, baseUrl);
+        MmmkvCache.setInt('baseUrlTime' + provider.value, Date.now());
       }
     }
-    const url = filter.includes('category')
-      ? `${baseUrl}/${filter}/page/${page}/`
-      : `${baseUrl}/page/${page}/?s=${filter}`;
+    const url = filter.includes('search')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('search', '')}`
+      : `${baseUrl}/${filter}/page/${page}/`;
     const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
@@ -83,25 +77,4 @@ export const getPosts = async (
     // console.error(error);
     return [];
   }
-};
-
-export interface HomePageData {
-  title: string;
-  Posts: Post[];
-  filter: string;
-}
-export const getHomePageData = async (
-  contentType: Content['contentType'],
-  signal: AbortSignal,
-): Promise<HomePageData[]> => {
-  const homeData: HomePageData[] = [];
-  for (const item of homeList) {
-    const data = await getPosts(item.filter, 1, contentType, signal);
-    homeData.push({
-      title: item.title,
-      Posts: data,
-      filter: item.filter,
-    });
-  }
-  return homeData;
 };

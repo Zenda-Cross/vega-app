@@ -1,29 +1,13 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../lib/Mmkv';
-import {ToastAndroid} from 'react-native';
-import {Content} from './zustand/contentStore';
+import {MMKV, MmmkvCache} from '../../Mmkv';
+import {Content} from '../../zustand/contentStore';
+import {Info, Link} from '../types';
 
-export interface Info {
-  title: string;
-  image: string;
-  synopsis: string;
-  imdbId: string;
-  type: string;
-  linkList?: Link[];
-}
-
-export interface Link {
-  title: string;
-  quality: string;
-  movieLinks: string;
-  episodesLink: string;
-}
-
-export const getInfo = async (
+export const vegaGetInfo = async (
   link: string,
-  contentType: Content['contentType'],
+  provider: Content['provider'],
 ): Promise<Info> => {
   try {
     let baseUrl = '';
@@ -34,7 +18,7 @@ export const getInfo = async (
         'https://himanshu8443.github.io/providers/modflix.json',
       );
       baseUrl =
-        contentType === 'global'
+        provider.value === 'vega'
           ? baseUrlRes.data.Vega.url
           : baseUrlRes.data.lux.url;
     }

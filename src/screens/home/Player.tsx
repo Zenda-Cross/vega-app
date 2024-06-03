@@ -8,9 +8,9 @@ import {
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
-import {getStream, Stream} from '../../lib/getStream';
+import {Stream} from '../../lib/providers/types';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
@@ -24,10 +24,13 @@ import {
   ResizeMode,
 } from 'react-native-video';
 import {MotiView} from 'moti';
+import {manifest} from '../../lib/Manifest';
+import useContentStore from '../../lib/zustand/contentStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 const Player = ({route}: Props): React.JSX.Element => {
+  const {provider} = useContentStore();
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
   const [selectedStream, setSelectedStream] = useState<Stream>(stream[0]);
@@ -61,12 +64,18 @@ const Player = ({route}: Props): React.JSX.Element => {
           return;
         }
       }
-      const data = await getStream(route.params.link, route.params.type);
-      // remove filepress server and hubcloud server
-      setStream(
-        data.filter(e => e.server !== 'filepress' && e.server !== 'hubcloud'),
+      const data = await manifest[
+        route.params.providerValue || provider.value
+      ].getStream(route.params.link, route.params.type);
+      const filteredData = data.filter(
+        stream =>
+          !manifest[
+            route.params.providerValue || provider.value
+          ].nonStreamableServer?.includes(stream.server),
       );
-      setSelectedStream(data.filter(item => item.server !== 'filepress')[0]);
+      // remove filepress server and hubcloud server
+      setStream(filteredData);
+      setSelectedStream(filteredData[0]);
     };
     fetchStream();
   }, [route.params.link]);
@@ -150,6 +159,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       <MotiView
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : -200}}
+        //@ts-ignore
         transition={{type: 'timing', duration: 260}}
         className="absolute top-8 right-5">
         <TouchableOpacity
@@ -173,6 +183,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       <MotiView
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : -200}}
+        //@ts-ignore
         transition={{type: 'timing', duration: 260}}
         className="absolute top-9 left-24">
         <TouchableOpacity

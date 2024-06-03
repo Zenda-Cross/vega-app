@@ -1,11 +1,12 @@
 import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import type {Post} from '../lib/getPosts';
+import type {Post} from '../lib/providers/vega/getPosts';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
 import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
+import useContentStore from '../lib/zustand/contentStore';
 
 export default function Slider({
   isLoading,
@@ -18,6 +19,7 @@ export default function Slider({
   posts: Post[];
   filter: string;
 }): JSX.Element {
+  const {provider} = useContentStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
@@ -60,7 +62,13 @@ export default function Slider({
           renderItem={({item}) => (
             <View className="flex flex-col mx-2">
               <TouchableOpacity
-                onPress={() => navigation.navigate('Info', {link: item.link})}>
+                onPress={() =>
+                  navigation.navigate('Info', {
+                    link: item.link,
+                    provider: provider?.value,
+                    poster: item?.image,
+                  })
+                }>
                 <Image
                   className="rounded-md"
                   source={{
