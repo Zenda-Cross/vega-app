@@ -92,7 +92,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       title: meta?.name || info?.title,
       poster: meta?.poster || route.params.poster || info?.image,
       link: route.params.link,
-      provider: provider.value,
+      provider: route.params.provider || provider.value,
     });
     MMKV.setArray('watchlist', library);
     setInLibrary(true);
@@ -249,14 +249,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 size={25}
                 color="rgb(156 163 175)"
                 onPress={async () => {
-                  const url =
-                    (await manifest[
-                      route.params.provider || provider.value
-                    ].getBaseURL(route.params.provider || provider.value)) +
-                    route.params.link;
-                  console.log('url', url);
                   navigation.navigate('Webview', {
-                    link: url,
+                    link: route.params.link,
                   });
                 }}
               />

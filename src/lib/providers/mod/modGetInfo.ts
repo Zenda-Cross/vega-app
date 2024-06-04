@@ -2,12 +2,10 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Info, Link} from '../types';
-import {modGetBaseurl} from './modGetBaseurl';
 
 export const modGetInfo = async function (link: string): Promise<Info> {
   try {
-    const baseUrl = await modGetBaseurl();
-    const url = baseUrl + link;
+    const url = link;
     const res = await axios.get(url, {headers});
     const data = res.data;
     const $ = cheerio.load(data);
