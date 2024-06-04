@@ -19,6 +19,7 @@
     "cheerio": "^1.0.0-rc.12",
     "expo": "^51.0.0",
     "expo-intent-launcher": "~11.0.1",
+    "expo-system-ui": "~3.0.4",
     "moti": "^0.28.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",

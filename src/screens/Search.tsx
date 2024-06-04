@@ -20,10 +20,9 @@ const Search = () => {
         <TextInput
           autoFocus={true}
           onSubmitEditing={e => {
-            navigation.navigate('ScrollList', {
+            navigation.navigate('SearchResults', {
               filter:
                 manifest[provider.value].searchFilter + e.nativeEvent.text,
-              title: 'Search Results',
             });
           }}
           placeholder="Search..."
@@ -49,7 +48,7 @@ const Search = () => {
                 title: genre.title,
               });
             }}
-            className="h-24 w-44 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
+            className="h-24 w-40 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
             <Text className="text-white font-semibold ">{genre.title}</Text>
           </TouchableOpacity>
         ))}

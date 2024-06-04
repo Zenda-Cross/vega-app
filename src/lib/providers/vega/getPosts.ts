@@ -56,7 +56,7 @@ export const vegaGetPosts = async (
             $(element)?.find('a')?.attr('title')?.replace('Download', '') ||
             '',
 
-          link: $(element)?.find('a')?.attr('href')?.replace(baseUrl, '') || '',
+          link: $(element)?.find('a')?.attr('href') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
             $(element).find('a').find('img').attr('data-src') ||

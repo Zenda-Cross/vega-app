@@ -31,8 +31,8 @@ export const uhdGetPosts = async (
         if (title && link && image) {
           uhdCatalog.push({
             title: title.replace('Download', '').trim(),
-            link: link.replace(baseUrl, ''),
-            image,
+            link: link,
+            image: image,
           });
         }
       });

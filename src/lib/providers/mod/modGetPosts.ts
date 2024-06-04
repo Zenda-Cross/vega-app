@@ -12,7 +12,7 @@ export const modGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = await modGetBaseurl(provider);
+    const baseUrl = await modGetBaseurl(provider.value);
     const url = filter.includes('search')
       ? `${baseUrl}/search/${filter.replace('search', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
@@ -29,7 +29,7 @@ export const modGetPosts = async function (
         if (title && link && image) {
           catalog.push({
             title: title.replace('Download', '').trim(),
-            link: link.replace(baseUrl, ''),
+            link: link,
             image: image,
           });
         }
