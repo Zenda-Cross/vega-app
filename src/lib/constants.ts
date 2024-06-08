@@ -12,6 +12,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'MoviesDrive',
+    value: 'drive',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'ModMovies',
     value: 'mod',
     type: 'global',
@@ -20,6 +26,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'UHDMovies',
     value: 'uhd',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
+    name: 'TokyoInsider',
+    value: 'tokyoInsider',
     type: 'global',
     flag: '🌏',
   },
