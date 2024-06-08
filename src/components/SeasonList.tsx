@@ -329,7 +329,7 @@ const SeasonList = ({
             {ActiveSeason?.directLinks &&
               ActiveSeason?.directLinks?.map((link, i) => (
                 <View
-                  key={link.link + i}
+                  key={link.link + link.title + i}
                   className={`w-full justify-center items-center gap-2 flex-row
                   ${
                     isCompleted(link.link) || stickyMenu.link === link.link

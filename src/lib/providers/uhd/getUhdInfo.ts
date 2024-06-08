@@ -79,7 +79,9 @@ export default async function getUhdInfo(link: string): Promise<Info> {
     });
     // console.log(episodes);
     return {
-      title: title.replace('Download', '').trim(),
+      title: title.match(/^Download\s+([^(\[]+)/i)
+        ? title?.match(/^Download\s+([^(\[]+)/i)?.[1] || ''
+        : title.replace('Download', '') || '',
       image,
       imdbId: '',
       synopsis: '',

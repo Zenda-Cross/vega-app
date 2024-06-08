@@ -18,12 +18,22 @@ import {uhdGetPosts} from './providers/uhd/uhdGetPosts';
 import getUhdInfo from './providers/uhd/getUhdInfo';
 import {uhdGetBaseurl} from './providers/uhd/uhdGetBaseurl';
 import {uhdGetStream} from './providers/uhd/uhdGetStream';
+import {tokyoGetPosts} from './providers/tokyoInsider/tokyoGetPosts';
+import {tokyoCatalogList} from './providers/tokyoInsider/catalog';
+import {tokyoGetInfo} from './providers/tokyoInsider/tokyoGetInfo';
+import {tokyoGetStream} from './providers/tokyoInsider/tokyoGetStream';
+import {driveCatalog} from './providers/drive/catalog';
+import {driveGetPosts} from './providers/drive/driveGetPosts';
+import {driveGetInfo} from './providers/drive/driveGetInfo';
+import {driveGetEpisodeLinks} from './providers/drive/driveGetEpisodesList';
+import {driveGetStream} from './providers/drive/driveGetStream';
 
 interface Manifest {
   [key: string]: {
     searchFilter?: string;
     catalog: Catalog[];
     genres: Catalog[];
+    blurImage?: boolean;
     nonStreamableServer?: string[];
     getBaseURL: (providerValue: string) => Promise<string>;
     getStream: (link: string, type: string) => Promise<Stream[]>;
@@ -50,7 +60,6 @@ export const manifest: Manifest = {
     getInfo: vegaGetInfo,
   },
   lux: {
-    searchFilter: 'search',
     catalog: homeList,
     genres: genresList,
     nonStreamableServer: ['filepress', 'hubcloud'],
@@ -61,7 +70,6 @@ export const manifest: Manifest = {
     getInfo: vegaGetInfo,
   },
   mod: {
-    searchFilter: 'search',
     catalog: catalogList,
     genres: modGenresList,
     nonStreamableServer: ['Gdrive-Instant'],
@@ -72,14 +80,35 @@ export const manifest: Manifest = {
     getStream: modGetStream,
   },
   uhd: {
-    searchFilter: 'search',
     catalog: uhdCatalogList,
     genres: [],
+    blurImage: true,
     nonStreamableServer: ['Gdrive-Instant'],
     getBaseURL: uhdGetBaseurl,
     getStream: uhdGetStream,
     getPosts: uhdGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: getUhdInfo,
+  },
+  tokyoInsider: {
+    catalog: tokyoCatalogList,
+    genres: [],
+    searchFilter: 'query',
+    blurImage: true,
+    getBaseURL: vegaGetBaseurl,
+    getStream: tokyoGetStream,
+    getPosts: tokyoGetPosts,
+    getEpisodeLinks: vegaGetEpisodeLinks,
+    getInfo: tokyoGetInfo,
+  },
+  drive: {
+    catalog: driveCatalog,
+    genres: [],
+    nonStreamableServer: ['hubcloud'],
+    getBaseURL: async () => '',
+    getStream: driveGetStream,
+    getPosts: driveGetPosts,
+    getEpisodeLinks: driveGetEpisodeLinks,
+    getInfo: driveGetInfo,
   },
 };

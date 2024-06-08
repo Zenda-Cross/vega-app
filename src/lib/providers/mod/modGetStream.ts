@@ -98,7 +98,7 @@ export const modGetStream = async (
     const resumeBotDownloadData = await resumeBotDownload.json();
     console.log('resumeBotDownloadData', resumeBotDownloadData.url);
     servers.push({
-      server: 'CfWorker',
+      server: 'ResumeBot',
       link: resumeBotDownloadData.url,
     });
 
@@ -140,6 +140,39 @@ export const modGetStream = async (
       });
     } catch (err) {
       console.log('CF workers link not found', err);
+    }
+
+    // gdrive
+
+    //instant link
+    try {
+      const seed = $drive('.btn-danger').attr('href') || '';
+      const instantToken = seed.split('=')[1];
+      //   console.log('InstantToken', instantToken);
+      const InstantFromData = new FormData();
+      InstantFromData.append('keys', instantToken);
+      const videoSeedUrl = seed.split('/').slice(0, 3).join('/') + '/api';
+      //   console.log('videoSeedUrl', videoSeedUrl);
+      const instantLinkRes = await fetch(videoSeedUrl, {
+        method: 'POST',
+        body: InstantFromData,
+        headers: {
+          'x-token': videoSeedUrl,
+        },
+      });
+      const instantLinkData = await instantLinkRes.json();
+      //   console.log('instantLinkData', instantLinkData);
+      if (instantLinkData.error === false) {
+        const instantLink = instantLinkData.url;
+        servers.push({
+          server: 'Gdrive-Instant',
+          link: instantLink,
+        });
+      } else {
+        console.log('Instant link not found', instantLinkData);
+      }
+    } catch (err) {
+      console.log('Instant link not found', err);
     }
     return servers;
   } catch (err) {
