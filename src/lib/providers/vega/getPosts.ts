@@ -37,8 +37,8 @@ export const vegaGetPosts = async (
         MmmkvCache.setInt('baseUrlTime' + provider.value, Date.now());
       }
     }
-    const url = filter.includes('search')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('search', '')}`
+    const url = filter.includes('query')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
       : `${baseUrl}/${filter}/page/${page}/`;
     const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);
@@ -56,7 +56,7 @@ export const vegaGetPosts = async (
             $(element)?.find('a')?.attr('title')?.replace('Download', '') ||
             '',
 
-          link: $(element)?.find('a')?.attr('href')?.replace(baseUrl, '') || '',
+          link: $(element)?.find('a')?.attr('href') || '',
           image:
             $(element).find('a').find('img').attr('data-lazy-src') ||
             $(element).find('a').find('img').attr('data-src') ||

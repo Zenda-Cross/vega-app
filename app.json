@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "vega",
+    "slug": "vega",
+    "version": "2.0.2",
+    "sdkVersion": "51.0.0",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}
