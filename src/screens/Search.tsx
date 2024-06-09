@@ -1,11 +1,10 @@
-import {View, Text, ScrollView, StatusBar} from 'react-native';
+import {View, Text, ScrollView} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {TextInput} from 'react-native';
-import {genresList} from '../lib/constants';
 import {TouchableOpacity} from 'react-native';
 import {manifest} from '../lib/Manifest';
 import useContentStore from '../lib/zustand/contentStore';
@@ -21,10 +20,10 @@ const Search = () => {
           autoFocus={true}
           onSubmitEditing={e => {
             navigation.navigate('SearchResults', {
-              filter:
-                manifest[provider.value].searchFilter + e.nativeEvent.text,
+              filter: 'query' + e.nativeEvent.text,
             });
           }}
+          placeholderTextColor={'white'}
           placeholder="Search..."
           className="bg-gray-800 p-2 rounded-md w-[90%] placeholder-white text-white"
         />

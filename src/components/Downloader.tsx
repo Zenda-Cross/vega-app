@@ -24,6 +24,7 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Skeleton} from 'moti/skeleton';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
+import * as IntentLauncher from 'expo-intent-launcher';
 
 const DownloadComponent = ({
   link,
@@ -43,6 +44,7 @@ const DownloadComponent = ({
   );
   const [deleteModal, setDeleteModal] = useState(false);
   const [downloadModal, setDownloadModal] = useState(false);
+  const [longPressModal, setLongPressModal] = useState(false);
   const [servers, setServers] = useState<Stream[]>([]);
   const [serverLoading, setServerLoading] = useState(false);
 
@@ -171,9 +173,10 @@ const DownloadComponent = ({
 
   // choose server
   useEffect(() => {
-    if (!downloadModal) {
+    if (!downloadModal && !longPressModal) {
       return;
     }
+
     const getServer = async () => {
       setServerLoading(true);
       const url = await manifest[providerValue || provider.value].getStream(
@@ -184,13 +187,25 @@ const DownloadComponent = ({
       setServers(url);
     };
     getServer();
-  }, [downloadModal]);
+  }, [downloadModal, longPressModal]);
+
+  // on holdPress external downloader
+  const longPressDownload = async (link: string) => {
+    try {
+      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: link,
+        type: 'application/octet-stream',
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
       {alreadyDownloaded ? (
         <TouchableOpacity onPress={() => setDeleteModal(true)} className="mx-1">
-          <MaterialIcons name="file-download-done" size={27} color="#c1c4c9" />
+          <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
         </TouchableOpacity>
       ) : isDownloading ? (
         <MotiView
@@ -210,11 +225,19 @@ const DownloadComponent = ({
           onPress={() => {
             setDownloadModal(true);
           }}
+          onLongPress={() => {
+            ReactNativeHapticFeedback.trigger('effectHeavyClick', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
+            setLongPressModal(true);
+          }}
           className="mx-2">
           <Octicons name="download" size={25} color="#c1c4c9" />
         </TouchableOpacity>
       )}
-      {deleteModal && (
+      {/* delete modal */}
+      {
         <Modal animationType="fade" visible={deleteModal} transparent={true}>
           <View className="flex-1 bg-black/10 justify-center items-center p-4">
             <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
@@ -237,9 +260,9 @@ const DownloadComponent = ({
             </View>
           </View>
         </Modal>
-      )}
+      }
       {/* download modal */}
-      {downloadModal && (
+      {
         <Modal animationType="fade" visible={downloadModal} transparent={true}>
           <View className="flex-1 bg-black/10 justify-center items-center p-4">
             <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
@@ -305,7 +328,50 @@ const DownloadComponent = ({
             </View>
           </View>
         </Modal>
-      )}
+      }
+      {/* long press modal */}
+      {
+        <Modal animationType="fade" visible={longPressModal} transparent={true}>
+          <View className="flex-1 bg-black/10 justify-center items-center p-4">
+            <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
+              <Text className="text-lg font-semibold my-3 text-white">
+                Select a server to open
+              </Text>
+              <View className="flex-row items-center flex-wrap gap-1 justify-evenly w-full my-5">
+                {!serverLoading
+                  ? servers?.map((server, index) => (
+                      <TouchableOpacity
+                        key={server.server + index}
+                        onPress={() => {
+                          setLongPressModal(false);
+                          longPressDownload(server.link);
+                        }}
+                        className="bg-primary p-2 rounded-md m-1">
+                        <Text className="text-white text-xs rounded-md capitalize px-1">
+                          {server.server}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  : Array.from({length: 3}).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        show={true}
+                        colorMode="dark"
+                        height={30}
+                        width={90}
+                      />
+                    ))}
+              </View>
+              {/* close modal */}
+              <TouchableOpacity
+                onPress={() => setLongPressModal(false)}
+                className="absolute top-2 right-2">
+                <MaterialIcons name="close" size={20} color="#c1c4c9" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      }
     </View>
   );
 };

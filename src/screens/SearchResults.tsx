@@ -13,25 +13,49 @@ import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {SearchPageData} from '../lib/getSearchResults';
-import {getSearchResults} from '../lib/getSearchResults';
+import {manifest} from '../lib/Manifest';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
 const SearchResults = ({route}: Props): React.ReactElement => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const trueLoading = providersList.map(item => {
+    return {name: item.name, value: item.value, isLoading: true};
+  });
+  const [loading, setLoading] = useState(trueLoading);
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
-    const fetchHomeData = async () => {
-      setLoading(true);
-      const data = await getSearchResults(route.params.filter, signal);
-      setSearchData(data);
-      setLoading(false);
+    const getSearchResults = async () => {
+      for (const item of providersList) {
+        const data = await manifest[item.value].getPosts(
+          route.params.filter,
+          1,
+          item,
+          signal,
+        );
+        setSearchData(prev => [
+          ...prev,
+          {
+            title: item.name,
+            Posts: data,
+            filter: route.params.filter,
+            providerValue: item.value,
+          },
+        ]);
+        setLoading(prev => {
+          return prev.map(i => {
+            if (i.value === item.value) {
+              return {name: i.name, value: i.value, isLoading: false};
+            }
+            return i;
+          });
+        });
+      }
     };
-    fetchHomeData();
+    getSearchResults();
     return () => {
       controller.abort();
     };
@@ -58,27 +82,21 @@ const SearchResults = ({route}: Props): React.ReactElement => {
           Search Results
         </Text>
         <View className="px-4">
-          {loading
-            ? providersList.map((item, index) => (
-                <Slider
-                  isLoading={loading}
-                  key={index}
-                  title={item.name}
-                  posts={[]}
-                  filter={item.value}
-                  providerValue={item.value}
-                />
-              ))
-            : searchData.map((item, index) => (
-                <Slider
-                  isLoading={loading}
-                  key={index}
-                  title={item.title}
-                  posts={item.Posts}
-                  filter={item.filter}
-                  providerValue={item.providerValue}
-                />
-              ))}
+          {providersList.map((item, index) => (
+            <Slider
+              isLoading={
+                loading?.find(i => i.value === item.value)?.isLoading || false
+              }
+              key={index}
+              title={item.name}
+              posts={
+                searchData?.find(i => i.providerValue === item.value)?.Posts ||
+                []
+              }
+              filter={route.params.filter}
+              providerValue={item.value}
+            />
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>

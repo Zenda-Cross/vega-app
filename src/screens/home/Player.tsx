@@ -74,6 +74,15 @@ const Player = ({route}: Props): React.JSX.Element => {
           ].nonStreamableServer?.includes(stream.server),
       );
       // remove filepress server and hubcloud server
+      if (filteredData.length === 0) {
+        ToastAndroid.show(
+          'Video could not be played, try again later',
+          ToastAndroid.SHORT,
+        );
+        navigation.goBack();
+      } else {
+        ToastAndroid.show('Stream found, loading...', ToastAndroid.SHORT);
+      }
       setStream(filteredData);
       setSelectedStream(filteredData[0]);
     };
@@ -113,7 +122,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         title={route.params.title}
         navigator={navigation}
         seekColor="tomato"
-        subtitleStyle={{fontSize: 20}}
+        subtitleStyle={{fontSize: 20, opacity: 0.8}}
         showDuration={true}
         toggleResizeModeOnFullscreen={true}
         fullscreen={true}
