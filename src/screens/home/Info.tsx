@@ -15,6 +15,7 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {manifest} from '../../lib/Manifest';
+import {BlurView} from 'expo-blur';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
@@ -153,11 +154,26 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       info?.image ||
                       'https://via.placeholder.com',
                   }}
-                  className=" h-64 w-full"
+                  className=" h-[256] w-full"
                 />
               }
             </Skeleton>
           </View>
+          {manifest[route.params.provider || provider.value].blurImage && (
+            <BlurView
+              intensity={100}
+              tint="dark"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 256,
+                width: '100%',
+              }}
+            />
+          )}
           <LinearGradient
             colors={['transparent', 'black']}
             className="absolute h-full w-full"
@@ -233,7 +249,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           )}
           {/* synopsis */}
           <View className="mb-2 w-full flex-row items-center justify-between">
-            <Skeleton show={infoLoading} colorMode="dark" width={150}>
+            <Skeleton show={infoLoading} colorMode="dark" width={180}>
               <View className="flex-row items-center gap-2">
                 <Text className="text-white text-xl font-semibold">
                   Synopsis
