@@ -1,28 +1,11 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../../Mmkv';
-import {Content} from '../../zustand/contentStore';
 import {Info, Link} from '../types';
 
-export const vegaGetInfo = async (
-  link: string,
-  provider: Content['provider'],
-): Promise<Info> => {
+export const vegaGetInfo = async (link: string): Promise<Info> => {
   try {
-    let baseUrl = '';
-    if (MMKV.getBool('UseCustomUrl')) {
-      baseUrl = MMKV.getString('baseUrl') || '';
-    } else {
-      const baseUrlRes = await axios.get(
-        'https://himanshu8443.github.io/providers/modflix.json',
-      );
-      baseUrl =
-        provider.value === 'vega'
-          ? baseUrlRes.data.Vega.url
-          : baseUrlRes.data.lux.url;
-    }
-    const url = `${baseUrl}/${link}`;
+    const url = link;
     console.log('url', url);
     const response = await axios.get(url, {headers});
     const $ = cheerio.load(response.data);
@@ -125,7 +108,6 @@ export const vegaGetInfo = async (
   } catch (error) {
     console.log('getInfo error');
     // console.error(error);
-    MmmkvCache.removeItem('CacheBaseUrl');
     // ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',

@@ -52,7 +52,9 @@ const Home = () => {
         const data = JSON.parse(cache as string);
         // pick random post form random category
         const randomPost =
-          data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
+          data[data?.length - 1].Posts[
+            Math.floor(Math.random() * data[data?.length - 1].Posts.length)
+          ];
         setHero(randomPost);
 
         setLoading(false);
@@ -61,10 +63,12 @@ const Home = () => {
       const data = await getHomePageData(provider, signal);
       if (!cache && data.length > 0) {
         const randomPost =
-          data[3].Posts[Math.floor(Math.random() * data[3].Posts.length)];
+          data[data?.length - 1].Posts[
+            Math.floor(Math.random() * data[data?.length - 1].Posts.length)
+          ];
         setHero(randomPost);
       }
-      if (data[1].Posts.length === 0) {
+      if (data[0].Posts.length === 0) {
         return;
       }
       setLoading(false);

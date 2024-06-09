@@ -13,8 +13,8 @@ export const uhdGetPosts = async (
 ): Promise<Post[]> => {
   try {
     const baseUrl = await uhdGetBaseurl();
-    const url = filter.includes('search')
-      ? `${baseUrl}/search/${filter.replace('search', '')}/page/${page}/`
+    const url = filter.includes('query')
+      ? `${baseUrl}/search/${filter.replace('query', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const html = res.data;
@@ -31,8 +31,8 @@ export const uhdGetPosts = async (
         if (title && link && image) {
           uhdCatalog.push({
             title: title.replace('Download', '').trim(),
-            link: link.replace(baseUrl, ''),
-            image,
+            link: link,
+            image: image,
           });
         }
       });

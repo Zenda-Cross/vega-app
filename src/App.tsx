@@ -14,11 +14,13 @@ import Entypo from '@expo/vector-icons/Entypo';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
+import SearchResults from './screens/SearchResults';
+import * as SystemUI from 'expo-system-ui';
 
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string; provider?: string; poster?: string};
-  ScrollList: {filter: string; title?: string};
+  ScrollList: {filter: string; title?: string; providerValue?: string};
   Webview: {link: string};
 };
 
@@ -36,8 +38,9 @@ export type RootStackParamList = {
 
 export type SearchStackParamList = {
   Search: undefined;
-  ScrollList: {filter: string; title?: string};
+  ScrollList: {filter: string; title?: string; providerValue?: string};
   Info: {link: string; provider?: string; poster?: string};
+  SearchResults: {filter: string};
 };
 
 export type WatchListStackParamList = {
@@ -50,6 +53,8 @@ const App = () => {
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
+
+  SystemUI.setBackgroundColorAsync('black');
 
   function HomeStackScreen() {
     return (
@@ -80,6 +85,7 @@ const App = () => {
         <SearchStack.Screen name="Search" component={Search} />
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
+        <SearchStack.Screen name="SearchResults" component={SearchResults} />
       </SearchStack.Navigator>
     );
   }

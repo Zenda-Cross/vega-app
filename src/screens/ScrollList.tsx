@@ -28,12 +28,9 @@ const ScrollList = ({route}: Props): React.ReactElement => {
     const signal = controller.signal;
     const fetchPosts = async () => {
       setIsLoading(true);
-      const newPosts = await manifest[provider.value].getPosts(
-        filter,
-        page,
-        provider,
-        signal,
-      );
+      const newPosts = await manifest[
+        route.params.providerValue || provider.value
+      ].getPosts(filter, page, provider, signal);
       if (newPosts.length === 0) {
         setIsEnd(true);
         setIsLoading(false);
@@ -106,7 +103,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                 onPress={() =>
                   navigation.navigate('Info', {
                     link: item.link,
-                    provider: provider?.value,
+                    provider: route.params.providerValue || provider.value,
                     poster: item?.image,
                   })
                 }>

@@ -58,39 +58,58 @@ export const uhdGetStream = async (
     const driveLink = await isDriveLink(ddl);
     const ServerLinks: Stream[] = [];
 
-    // const driveRes = await axios.get(driveLink, {headers});
-    // const driveHtml = driveRes.data;
-    // const $drive = cheerio.load(driveHtml);
-    // //instant link
-    // try {
-    //   const seed = $drive('.btn-danger').attr('href') || '';
-    //   const instantToken = seed.split('=')[1];
-    //   //   console.log('InstantToken', instantToken);
-    //   const InstantFromData = new FormData();
-    //   InstantFromData.append('keys', instantToken);
-    //   const videoSeedUrl = seed.split('/').slice(0, 3).join('/') + '/api';
-    //   //   console.log('videoSeedUrl', videoSeedUrl);
-    //   const instantLinkRes = await fetch(videoSeedUrl, {
-    //     method: 'POST',
-    //     body: InstantFromData,
-    //     headers: {
-    //       'x-token': videoSeedUrl,
-    //     },
-    //   });
-    //   const instantLinkData = await instantLinkRes.json();
-    //   //   console.log('instantLinkData', instantLinkData);
-    //   if (instantLinkData.error === false) {
-    //     const instantLink = instantLinkData.url;
-    //     ServerLinks.push({
-    //       server: 'Gdrive-Instant',
-    //       link: instantLink,
-    //     });
-    //   } else {
-    //     console.log('Instant link not found', instantLinkData);
-    //   }
-    // } catch (err) {
-    //   console.log('Instant link not found', err);
-    // }
+    const driveRes = await axios.get(driveLink, {headers});
+    const driveHtml = driveRes.data;
+    const $drive = cheerio.load(driveHtml);
+    //instant link
+    try {
+      const seed = $drive('.btn-danger').attr('href') || '';
+      const instantToken = seed.split('=')[1];
+      //   console.log('InstantToken', instantToken);
+      const InstantFromData = new FormData();
+      InstantFromData.append('keys', instantToken);
+      const videoSeedUrl = seed.split('/').slice(0, 3).join('/') + '/api';
+      //   console.log('videoSeedUrl', videoSeedUrl);
+      const instantLinkRes = await fetch(videoSeedUrl, {
+        method: 'POST',
+        body: InstantFromData,
+        headers: {
+          'x-token': videoSeedUrl,
+        },
+      });
+      const instantLinkData = await instantLinkRes.json();
+      //   console.log('instantLinkData', instantLinkData);
+      if (instantLinkData.error === false) {
+        const instantLink = instantLinkData.url;
+        ServerLinks.push({
+          server: 'Gdrive-Instant',
+          link: instantLink,
+        });
+      } else {
+        console.log('Instant link not found', instantLinkData);
+      }
+    } catch (err) {
+      console.log('Instant link not found', err);
+    }
+
+    // resume link
+    try {
+      const resumeDrive = driveLink.replace('/file', '/zfile');
+      //   console.log('resumeDrive', resumeDrive);
+      const resumeDriveRes = await axios.get(resumeDrive, {headers});
+      const resumeDriveHtml = resumeDriveRes.data;
+      const $resumeDrive = cheerio.load(resumeDriveHtml);
+      const resumeLink = $resumeDrive('.btn-success').attr('href');
+      //   console.log('resumeLink', resumeLink);
+      if (resumeLink) {
+        ServerLinks.push({
+          server: 'ResumeCloud',
+          link: resumeLink,
+        });
+      }
+    } catch (err) {
+      console.log('Resume link not found');
+    }
 
     // CF workers type 1
     try {
@@ -132,24 +151,6 @@ export const uhdGetStream = async (
       console.log('CF workers link not found', err);
     }
 
-    // resume link
-    try {
-      const resumeDrive = driveLink.replace('/file', '/zfile');
-      //   console.log('resumeDrive', resumeDrive);
-      const resumeDriveRes = await axios.get(resumeDrive, {headers});
-      const resumeDriveHtml = resumeDriveRes.data;
-      const $resumeDrive = cheerio.load(resumeDriveHtml);
-      const resumeLink = $resumeDrive('.btn-success').attr('href');
-      //   console.log('resumeLink', resumeLink);
-      if (resumeLink) {
-        ServerLinks.push({
-          server: 'Cf Worker',
-          link: resumeLink,
-        });
-      }
-    } catch (err) {
-      console.log('Resume link not found');
-    }
     console.log('ServerLinks', ServerLinks);
     return ServerLinks;
   } catch (err) {

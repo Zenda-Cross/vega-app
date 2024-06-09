@@ -1,6 +1,6 @@
 import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import type {Post} from '../lib/providers/vega/getPosts';
+import type {Post} from '../lib/providers/types';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
@@ -13,11 +13,13 @@ export default function Slider({
   title,
   posts,
   filter,
+  providerValue,
 }: {
   isLoading: boolean;
   title: string;
   posts: Post[];
   filter: string;
+  providerValue?: string;
 }): JSX.Element {
   const {provider} = useContentStore(state => state);
   const navigation =
@@ -29,7 +31,11 @@ export default function Slider({
         <Text className="text-2xl text-primary font-semibold">{title}</Text>
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate('ScrollList', {title: title, filter: filter})
+            navigation.navigate('ScrollList', {
+              title: title,
+              filter: filter,
+              providerValue: providerValue,
+            })
           }>
           <Text className="text-white text-sm">more</Text>
         </TouchableOpacity>
@@ -65,7 +71,7 @@ export default function Slider({
                 onPress={() =>
                   navigation.navigate('Info', {
                     link: item.link,
-                    provider: provider?.value,
+                    provider: providerValue || provider?.value,
                     poster: item?.image,
                   })
                 }>
@@ -88,6 +94,9 @@ export default function Slider({
           )}
           keyExtractor={item => item.link}
         />
+      )}
+      {!isLoading && posts.length === 0 && (
+        <Text className="text-white text-center">No data</Text>
       )}
     </View>
   );
