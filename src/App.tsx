@@ -16,6 +16,7 @@ import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -172,18 +173,31 @@ const App = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
-          headerStyle: {backgroundColor: '#171717'},
+    <SafeAreaProvider>
+      <NavigationContainer
+        theme={{
+          dark: true,
+          colors: {
+            background: 'black',
+            card: 'black',
+            primary: 'tomato',
+            text: 'white',
+            border: 'black',
+            notification: 'tomato',
+          },
         }}>
-        <Stack.Screen name="TabStack" component={TabStack} />
-        <Stack.Screen name="Player" component={Player} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            headerBlurEffect: 'light',
+            headerTintColor: 'tomato',
+            headerStyle: {backgroundColor: '#171717'},
+          }}>
+          <Stack.Screen name="TabStack" component={TabStack} />
+          <Stack.Screen name="Player" component={Player} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 
