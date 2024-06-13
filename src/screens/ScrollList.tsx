@@ -50,7 +50,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <View className="h-full w-full bg-black items-center p-4">
-      <View className="w-full px-4 font-semibold mt-4">
+      <View className="w-full px-4 font-semibold mt-5">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
         </Text>
