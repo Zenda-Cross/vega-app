@@ -29,6 +29,7 @@ import {manifest} from '../../lib/Manifest';
 import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import GoogleCast from 'react-native-google-cast';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -82,6 +83,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         },
       });
     }
+    playerRef?.current?.pause();
+    GoogleCast.showExpandedControls();
 
     return () => {
       remoteMediaClient?.stop();
@@ -154,35 +157,6 @@ const Player = ({route}: Props): React.JSX.Element => {
             );
             // console.log('watchedDuration', e.currentTime);
           }, 1000);
-          if (remoteMediaClient) {
-            remoteMediaClient.seek({
-              position: e.currentTime,
-              resumeState: 'play',
-            });
-          }
-        }}
-        onPause={() => {
-          if (remoteMediaClient) {
-            remoteMediaClient.pause();
-          }
-        }}
-        onPlay={() => {
-          if (remoteMediaClient) {
-            remoteMediaClient.play();
-          }
-        }}
-        onSeek={e => {
-          if (remoteMediaClient) {
-            remoteMediaClient.seek({
-              position: e.currentTime,
-              resumeState: 'play',
-            });
-          }
-        }}
-        onEnd={() => {
-          if (remoteMediaClient) {
-            remoteMediaClient.stop();
-          }
         }}
         videoRef={playerRef}
         rate={playbackRate}
