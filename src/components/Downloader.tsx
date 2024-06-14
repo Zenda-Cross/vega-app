@@ -241,21 +241,24 @@ const DownloadComponent = ({
         <Modal animationType="fade" visible={deleteModal} transparent={true}>
           <View className="flex-1 bg-black/10 justify-center items-center p-4">
             <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
-              <Text className="text-lg font-semibold my-3 text-white">
-                Are you sure you want to delete this file?
+              <Text className="text-2xl font-semibold my-3 text-white">
+                Confirm to delete
               </Text>
-              <Text className="text-xs text-center text-white">{fileName}</Text>
               <View className="flex-row items-center justify-evenly w-full my-5">
-                <Button
-                  color={'tomato'}
-                  title="Yes"
-                  onPress={() => deleteDownload()}
-                />
-                <Button
-                  color={'tomato'}
-                  title="No"
+                <TouchableOpacity
+                  onPress={deleteDownload}
+                  className="bg-primary p-2 rounded-md m-1 px-3">
+                  <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
+                    Yes
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   onPress={() => setDeleteModal(false)}
-                />
+                  className="bg-primary p-2 px-4 rounded-md m-1">
+                  <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
+                    No
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
