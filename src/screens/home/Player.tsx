@@ -4,6 +4,7 @@ import {
   ToastAndroid,
   TouchableOpacity,
   View,
+  StatusBar,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -26,6 +27,9 @@ import {
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
 import useContentStore from '../../lib/zustand/contentStore';
+import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import GoogleCast from 'react-native-google-cast';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -48,11 +52,45 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'disabled'},
   );
-  const [playbackRate, setPlaybackRate] = useState(1);
 
+  const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [1, 1.25, 1.5, 1.75, 2];
+  const watchedDuration = MmmkvCache.getString(route.params.link)
+    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
+    : 0;
 
   const navigation = useNavigation();
+  const remoteMediaClient = useRemoteMediaClient();
+
+  useEffect(() => {
+    if (remoteMediaClient) {
+      remoteMediaClient.loadMedia({
+        startTime: watchedDuration,
+        playbackRate: playbackRate,
+        autoplay: true,
+        mediaInfo: {
+          contentUrl: selectedStream.link,
+          contentType: 'video/x-matroska',
+          metadata: {
+            title: route.params.title,
+            type: 'movie',
+            images: [
+              {
+                url: route.params.poster,
+              },
+            ],
+          },
+        },
+      });
+    }
+    playerRef?.current?.pause();
+    GoogleCast.showExpandedControls();
+
+    return () => {
+      remoteMediaClient?.stop();
+    };
+  }, [remoteMediaClient, selectedStream]);
+
   useEffect(() => {
     const fetchStream = async () => {
       // check if downloaded
@@ -76,12 +114,12 @@ const Player = ({route}: Props): React.JSX.Element => {
       // remove filepress server and hubcloud server
       if (filteredData.length === 0) {
         ToastAndroid.show(
-          'Video could not be played, try again later',
+          'No stream found, try again later',
           ToastAndroid.SHORT,
         );
         navigation.goBack();
       } else {
-        ToastAndroid.show('Stream found, loading...', ToastAndroid.SHORT);
+        ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
       setStream(filteredData);
       setSelectedStream(filteredData[0]);
@@ -89,14 +127,18 @@ const Player = ({route}: Props): React.JSX.Element => {
     fetchStream();
   }, [route.params.link]);
 
-  const watchedDuration = MmmkvCache.getString(route.params.link)
-    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
-    : 0;
-  // console.log('watchedDuration', watchedDuration);
-
   let timer: NodeJS.Timeout;
+
   return (
-    <View className="bg-black h-full w-full p-4 relative">
+    <SafeAreaView
+      edges={{
+        right: 'off',
+        top: 'off',
+        left: 'off',
+        bottom: 'off',
+      }}
+      className="bg-black flex-1 relative">
+      <StatusBar translucent={true} hidden={true} />
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
         source={{
@@ -122,7 +164,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         title={route.params.title}
         navigator={navigation}
         seekColor="tomato"
-        subtitleStyle={{fontSize: 20, opacity: 0.8}}
         showDuration={true}
         toggleResizeModeOnFullscreen={true}
         fullscreen={true}
@@ -162,7 +203,20 @@ const Player = ({route}: Props): React.JSX.Element => {
         onTextTracks={e => {
           setTextTracks(e.textTracks);
         }}
+        style={{flex: 1}}
       />
+
+      {/* // cast button */}
+      <MotiView
+        from={{translateY: 0}}
+        animate={{translateY: showControls ? 0 : -300}}
+        //@ts-ignore
+        transition={{type: 'timing', duration: 260}}
+        className="absolute top-5 right-20">
+        <CastButton
+          style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
+        />
+      </MotiView>
 
       {/* // settings button */}
       <MotiView
@@ -170,14 +224,14 @@ const Player = ({route}: Props): React.JSX.Element => {
         animate={{translateY: showControls ? 0 : -200}}
         //@ts-ignore
         transition={{type: 'timing', duration: 260}}
-        className="absolute top-8 right-5">
+        className="absolute top-6 right-5">
         <TouchableOpacity
           // className={`absolute top-8 right-5 ${
           //   showControls ? 'translate-y-0' : '-translate-y-20'
           // }`}
           onPress={() => {
             setShowSettings(!showSettings);
-            playerRef?.current?.pause();
+            // playerRef?.current?.pause();
           }}>
           <MaterialIcons
             name="settings"
@@ -191,10 +245,10 @@ const Player = ({route}: Props): React.JSX.Element => {
       {/* // playback speed button */}
       <MotiView
         from={{translateY: 0}}
-        animate={{translateY: showControls ? 0 : -200}}
+        animate={{translateY: showControls ? 0 : -100}}
         //@ts-ignore
         transition={{type: 'timing', duration: 260}}
-        className="absolute top-9 left-24">
+        className="absolute top-5 left-24">
         <TouchableOpacity
           onPress={() => {
             const index = playbacks.indexOf(playbackRate);
@@ -204,7 +258,9 @@ const Player = ({route}: Props): React.JSX.Element => {
                 : playbacks[index + 1],
             );
           }}>
-          <Text className="text-white/60 text-lg">{playbackRate}x</Text>
+          <Text className="text-white/60 text-xl font-bold">
+            {playbackRate}x
+          </Text>
         </TouchableOpacity>
       </MotiView>
       {
@@ -214,7 +270,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             className="absolute top-0 left-0 w-full h-full bg-black/50 justify-center items-center"
             onTouchEnd={() => {
               setShowSettings(false);
-              playerRef?.current?.resume();
+              // playerRef?.current?.resume();
             }}>
             <View
               className="bg-quaternary p-3 w-96 max-h-72 rounded-md justify-center items-center"
@@ -267,7 +323,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                           value: track.language,
                         });
                         setShowSettings(false);
-                        playerRef?.current?.resume();
+                        // playerRef?.current?.resume();
                       }}>
                       <Text
                         className={`text-base font-semibold ${
@@ -299,7 +355,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     onPress={() => {
                       setSelectedTextTrack({type: 'disabled'});
                       setShowSettings(false);
-                      playerRef?.current?.resume();
+                      // playerRef?.current?.resume();
                     }}>
                     <Text className="text-base font-semibold text-white">
                       Disabled
@@ -322,7 +378,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                               value: track.index,
                             });
                         setShowSettings(false);
-                        playerRef?.current?.resume();
+                        // playerRef?.current?.resume();
                       }}>
                       <Text
                         className={`text-base font-semibold ${
@@ -356,7 +412,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       onPress={() => {
                         setSelectedStream(track);
                         setShowSettings(false);
-                        playerRef?.current?.resume();
+                        // playerRef?.current?.resume();
                       }}>
                       <Text
                         className={`text-base font-semibold ${
@@ -374,7 +430,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           </View>
         )
       }
-    </View>
+    </SafeAreaView>
   );
 };
 

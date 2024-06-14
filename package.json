@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.0.5",
+  "version": "2.0.7",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -28,6 +28,7 @@
     "react-native-element-dropdown": "^2.12.0",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.16.1",
+    "react-native-google-cast": "^4.8.0",
     "react-native-haptic-feedback": "^2.2.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-media-console": "^2.2.0",
