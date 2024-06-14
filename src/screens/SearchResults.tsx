@@ -62,7 +62,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   }, [refreshing]);
   return (
     <SafeAreaView className="bg-black h-full w-full">
-      <StatusBar translucent={false} backgroundColor="black" />
+      {/* <StatusBar translucent={false} backgroundColor="black" /> */}
       <OrientationLocker orientation={PORTRAIT} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -78,9 +78,9 @@ const SearchResults = ({route}: Props): React.ReactElement => {
             }}
           />
         }>
-        <Text className="text-white text-2xl font-semibold px-4 mt-3 ">
+        {/* <Text className="text-white text-2xl font-semibold px-4 mt-3 ">
           Search Results
-        </Text>
+        </Text> */}
         <View className="px-4">
           {providersList.map((item, index) => (
             <Slider
