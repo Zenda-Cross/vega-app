@@ -51,9 +51,12 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'disabled'},
   );
-  const [playbackRate, setPlaybackRate] = useState(1);
 
+  const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [1, 1.25, 1.5, 1.75, 2];
+  const watchedDuration = MmmkvCache.getString(route.params.link)
+    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
+    : 0;
 
   const navigation = useNavigation();
   const remoteMediaClient = useRemoteMediaClient();
@@ -61,6 +64,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   useEffect(() => {
     if (remoteMediaClient) {
       remoteMediaClient.loadMedia({
+        startTime: watchedDuration,
+        playbackRate: playbackRate,
+        autoplay: true,
         mediaInfo: {
           contentUrl: selectedStream.link,
           contentType: 'video/x-matroska',
@@ -76,6 +82,10 @@ const Player = ({route}: Props): React.JSX.Element => {
         },
       });
     }
+
+    return () => {
+      remoteMediaClient?.stop();
+    };
   }, [remoteMediaClient, selectedStream]);
 
   useEffect(() => {
@@ -114,11 +124,6 @@ const Player = ({route}: Props): React.JSX.Element => {
     fetchStream();
   }, [route.params.link]);
 
-  const watchedDuration = MmmkvCache.getString(route.params.link)
-    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
-    : 0;
-  // console.log('watchedDuration', watchedDuration);
-
   let timer: NodeJS.Timeout;
 
   return (
@@ -149,6 +154,35 @@ const Player = ({route}: Props): React.JSX.Element => {
             );
             // console.log('watchedDuration', e.currentTime);
           }, 1000);
+          if (remoteMediaClient) {
+            remoteMediaClient.seek({
+              position: e.currentTime,
+              resumeState: 'play',
+            });
+          }
+        }}
+        onPause={() => {
+          if (remoteMediaClient) {
+            remoteMediaClient.pause();
+          }
+        }}
+        onPlay={() => {
+          if (remoteMediaClient) {
+            remoteMediaClient.play();
+          }
+        }}
+        onSeek={e => {
+          if (remoteMediaClient) {
+            remoteMediaClient.seek({
+              position: e.currentTime,
+              resumeState: 'play',
+            });
+          }
+        }}
+        onEnd={() => {
+          if (remoteMediaClient) {
+            remoteMediaClient.stop();
+          }
         }}
         videoRef={playerRef}
         rate={playbackRate}
