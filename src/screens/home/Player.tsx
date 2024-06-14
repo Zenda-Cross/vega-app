@@ -82,10 +82,9 @@ const Player = ({route}: Props): React.JSX.Element => {
           },
         },
       });
+      playerRef?.current?.pause();
+      GoogleCast.showExpandedControls();
     }
-    playerRef?.current?.pause();
-    GoogleCast.showExpandedControls();
-
     return () => {
       remoteMediaClient?.stop();
     };
