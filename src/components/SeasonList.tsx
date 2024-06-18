@@ -218,11 +218,10 @@ const SeasonList = ({
                     link: ActiveSeason.movieLinks,
                     type: 'movie',
                     title: metaTitle,
-                    file:
-                      (metaTitle + ActiveSeason.quality).replaceAll(
-                        /[^a-zA-Z0-9]/g,
-                        '_',
-                      ) + '.mkv',
+                    file: (metaTitle + ActiveSeason.quality).replaceAll(
+                      /[^a-zA-Z0-9]/g,
+                      '_',
+                    ),
                   })
                 }
                 onLongPress={() =>
@@ -235,12 +234,10 @@ const SeasonList = ({
                 providerValue={providerValue}
                 link={ActiveSeason.movieLinks}
                 type="movie"
-                fileName={
-                  (metaTitle + ActiveSeason.quality).replaceAll(
-                    /[^a-zA-Z0-9]/g,
-                    '_',
-                  ) + '.mkv'
-                }
+                fileName={(metaTitle + ActiveSeason.quality).replaceAll(
+                  /[^a-zA-Z0-9]/g,
+                  '_',
+                )}
               />
             </View>
           </View>
@@ -272,12 +269,11 @@ const SeasonList = ({
                           link: episode.link,
                           type: 'series',
                           title: metaTitle + ' ' + episode.title,
-                          file:
-                            (
-                              metaTitle +
-                              ActiveSeason.title +
-                              episode.title
-                            ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv',
+                          file: (
+                            metaTitle +
+                            ActiveSeason.title +
+                            episode.title
+                          ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
                         })
                       }
                       onLongPress={() =>
@@ -290,13 +286,11 @@ const SeasonList = ({
                       providerValue={providerValue}
                       link={episode.link}
                       type="series"
-                      fileName={
-                        (
-                          metaTitle +
-                          ActiveSeason.title +
-                          episode.title
-                        ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv'
-                      }
+                      fileName={(
+                        metaTitle +
+                        ActiveSeason.title +
+                        episode.title
+                      ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
                     />
                   </View>
                 </View>
@@ -347,12 +341,11 @@ const SeasonList = ({
                           link: link.link,
                           type: 'series',
                           title: metaTitle + ' ' + link.title,
-                          file:
-                            (
-                              metaTitle +
-                              ActiveSeason.title +
-                              link.title
-                            ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv',
+                          file: (
+                            metaTitle +
+                            ActiveSeason.title +
+                            link.title
+                          ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
                         })
                       }
                       onLongPress={() =>
@@ -370,13 +363,11 @@ const SeasonList = ({
                       providerValue={providerValue}
                       link={link.link}
                       type="series"
-                      fileName={
-                        (
-                          metaTitle +
-                          ActiveSeason.title +
-                          link.title
-                        ).replaceAll(/[^a-zA-Z0-9]/g, '_') + '.mkv'
-                      }
+                      fileName={(
+                        metaTitle +
+                        ActiveSeason.title +
+                        link.title
+                      ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
                     />
                   </View>
                 </View>

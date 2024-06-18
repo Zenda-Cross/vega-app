@@ -1,7 +1,6 @@
 import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {
   View,
-  Button,
   Text,
   TouchableOpacity,
   Alert,
@@ -77,7 +76,7 @@ const DownloadComponent = ({
     checkIfDownloaded();
   }, [fileName]);
 
-  const downloadFile = async (url: string) => {
+  const downloadFile = async (url: string, type: string) => {
     setIsDownloading(true);
 
     if (await ifExists(fileName)) {
@@ -131,7 +130,7 @@ const DownloadComponent = ({
       // },
       id: jobId,
       url: url,
-      destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}`,
+      destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`,
       metadata: {},
       isNotificationVisible: true,
     })
@@ -162,10 +161,22 @@ const DownloadComponent = ({
 
   // handle download deletion
   const deleteDownload = async () => {
+    const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
     try {
-      await RNFS.unlink(`${RNFS.DownloadDirectoryPath}/vega/${fileName}`);
-      setAlreadyDownloaded(false);
-      setDeleteModal(false);
+      const files = await RNFS.readDir(downloadDir);
+      // Find a file with the given name (without extension)
+      const file = files.find(file => {
+        const nameWithoutExtension = file.name
+          .split('.')
+          .slice(0, -1)
+          .join('.');
+        return nameWithoutExtension === fileName;
+      });
+      if (file) {
+        await RNFS.unlink(file.path);
+        setAlreadyDownloaded(false);
+        setDeleteModal(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -279,7 +290,7 @@ const DownloadComponent = ({
                         key={server.server + index}
                         onPress={() => {
                           setDownloadModal(false);
-                          downloadFile(server.link);
+                          downloadFile(server.link, server.type);
                         }}
                         onLongPress={() => {
                           ReactNativeHapticFeedback.trigger(
