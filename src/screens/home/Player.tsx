@@ -11,7 +11,6 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
-import {Stream} from '../../lib/providers/types';
 import VideoPlayer from 'react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
@@ -22,6 +21,8 @@ import {
   TextTrack,
   SelectedAudioTrack,
   SelectedTextTrack,
+  TextTrackType,
+  SelectedVideoTrack,
   ResizeMode,
 } from 'react-native-video';
 import {MotiView} from 'moti';
@@ -30,8 +31,17 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
+import {playerHeaders} from '../../lib/playerHeaders';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
+type Stream = {
+  server: string;
+  link: string;
+  subtitles?: {
+    lang: string;
+    url: string;
+  }[];
+};
 
 const Player = ({route}: Props): React.JSX.Element => {
   const {provider} = useContentStore();
@@ -42,21 +52,27 @@ const Player = ({route}: Props): React.JSX.Element => {
   // controls
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeTab, setActiveTab] = useState<'audio' | 'subtitle' | 'video'>(
-    'audio',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'audio' | 'subtitle' | 'server' | 'quality'
+  >('audio');
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [selectedAudioTrack, setSelectedAudioTrack] =
     useState<SelectedAudioTrack>({type: 'index', value: '0'});
   const [textTracks, setTextTracks] = useState<TextTrack[]>([]);
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
-    {type: 'disabled'},
+    {type: 'language', value: 'off'},
   );
+
+  const [videoTracks, setVideoTracks] = useState<any>([]);
+  const [selectedVideoTrack, setSelectedVideoTrack] =
+    useState<SelectedVideoTrack>({
+      type: 'auto',
+    });
 
   const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [1, 1.25, 1.5, 1.75, 2];
-  const watchedDuration = MmmkvCache.getString(route.params.link)
-    ? JSON.parse(MmmkvCache.getString(route.params.link) as string).position
+  const watchedDuration = MmmkvCache.getString(route?.params?.link)
+    ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
     : 0;
 
   const navigation = useNavigation();
@@ -141,9 +157,17 @@ const Player = ({route}: Props): React.JSX.Element => {
       <OrientationLocker orientation={LANDSCAPE} />
       <VideoPlayer
         source={{
-          uri: selectedStream?.link,
+          uri: selectedStream?.link || '',
           startPosition: watchedDuration * 1000,
+          headers: playerHeaders,
+          shouldCache: true,
         }}
+        textTracks={selectedStream?.subtitles?.map(sub => ({
+          type: TextTrackType.VTT,
+          title: sub.lang,
+          language: sub.lang.slice(0, 2) as any,
+          uri: sub.url,
+        }))}
         onProgress={e => {
           clearTimeout(timer);
           timer = setTimeout(() => {
@@ -201,7 +225,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedTextTrack={selectedTextTrack}
         onTextTracks={e => {
           setTextTracks(e.textTracks);
+          console.log('textTracks', e.textTracks);
         }}
+        onVideoTracks={e => {
+          console.log('videoTracks', e.videoTracks);
+          setVideoTracks(e.videoTracks);
+        }}
+        selectedVideoTrack={selectedVideoTrack}
         style={{flex: 1}}
       />
 
@@ -296,14 +326,26 @@ const Player = ({route}: Props): React.JSX.Element => {
                     Subtitle
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('video')}>
+                {videoTracks.length > 0 && (
+                  <TouchableOpacity onPress={() => setActiveTab('quality')}>
+                    <Text
+                      className={`text-lg ${
+                        activeTab === 'quality'
+                          ? 'font-bold text-primary'
+                          : 'font-normal text-white'
+                      }`}>
+                      Quality
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setActiveTab('server')}>
                   <Text
                     className={`text-lg ${
-                      activeTab === 'video'
+                      activeTab === 'server'
                         ? 'font-bold text-primary'
                         : 'font-normal text-white'
                     }`}>
-                    Video
+                    Server
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -311,7 +353,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
               {/* audio */}
               {activeTab === 'audio' && (
-                <ScrollView className="w-full p-3">
+                <ScrollView className="w-full p-1">
                   {audioTracks.map((track, i) => (
                     <TouchableOpacity
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
@@ -348,16 +390,16 @@ const Player = ({route}: Props): React.JSX.Element => {
               )}
               {/* subtitle */}
               {activeTab === 'subtitle' && (
-                <ScrollView className="w-full p-3">
+                <ScrollView className="w-full p-1">
                   <TouchableOpacity
                     className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
                     onPress={() => {
-                      setSelectedTextTrack({type: 'disabled'});
+                      setSelectedTextTrack({type: 'language', value: 'off'});
                       setShowSettings(false);
                       // playerRef?.current?.resume();
                     }}>
                     <Text className="text-base font-semibold text-white">
-                      Disabled
+                      Disable
                     </Text>
                   </TouchableOpacity>
                   {textTracks.map((track, i) => (
@@ -367,15 +409,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                       }
                       key={i}
                       onPress={() => {
-                        track.index === 0
-                          ? setSelectedTextTrack({
-                              type: 'language',
-                              value: track.language,
-                            })
-                          : setSelectedTextTrack({
-                              type: 'index',
-                              value: track.index,
-                            });
+                        setSelectedTextTrack({
+                          type: 'index',
+                          value: track.index,
+                        });
                         setShowSettings(false);
                         // playerRef?.current?.resume();
                       }}>
@@ -401,28 +438,57 @@ const Player = ({route}: Props): React.JSX.Element => {
                   ))}
                 </ScrollView>
               )}
-              {/* video */}
-              {activeTab === 'video' && (
-                <ScrollView className="w-full p-3">
-                  {stream.map((track, i) => (
-                    <TouchableOpacity
-                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
-                      key={i}
-                      onPress={() => {
-                        setSelectedStream(track);
-                        setShowSettings(false);
-                        // playerRef?.current?.resume();
-                      }}>
-                      <Text
-                        className={`text-base font-semibold ${
-                          track.link === selectedStream.link
-                            ? 'text-primary'
-                            : 'text-white'
-                        }`}>
-                        {track.server}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+              {/* server */}
+              {activeTab === 'server' && (
+                <ScrollView className="w-full p-1">
+                  {stream?.length > 0 &&
+                    stream?.map((track, i) => (
+                      <TouchableOpacity
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                        key={i}
+                        onPress={() => {
+                          setSelectedStream(track);
+                          setShowSettings(false);
+                          // playerRef?.current?.resume();
+                        }}>
+                        <Text
+                          className={`text-base font-semibold ${
+                            track.link === selectedStream.link
+                              ? 'text-primary'
+                              : 'text-white'
+                          }`}>
+                          {track.server}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                </ScrollView>
+              )}
+              {/* quality */}
+              {activeTab === 'quality' && (
+                <ScrollView className="w-full p-1">
+                  {videoTracks &&
+                    videoTracks.map((track: any, i) => (
+                      <TouchableOpacity
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                        key={i}
+                        onPress={() => {
+                          setSelectedVideoTrack({
+                            type: 'index',
+                            value: track.index,
+                          });
+                          setShowSettings(false);
+                          // playerRef?.current?.resume();
+                        }}>
+                        <Text
+                          className={`text-base font-semibold ${
+                            selectedVideoTrack.value === track.index
+                              ? 'text-primary'
+                              : 'text-white'
+                          }`}>
+                          {track.height + 'p bitrate-' + track.bitrate}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                 </ScrollView>
               )}
             </View>
