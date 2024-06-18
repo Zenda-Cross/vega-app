@@ -15,7 +15,11 @@ export const tokyoGetStream = async (link: string): Promise<Stream[]> => {
       const title = $(element).find('a').text() || '';
       const link = $(element).find('a').attr('href') || '';
       if (title && link.includes('media')) {
-        streamLinks.push({server: title, link});
+        streamLinks.push({
+          server: title,
+          link,
+          type: link.split('.').pop() || 'mkv',
+        });
       }
     });
     console.log('streamLinks', streamLinks);

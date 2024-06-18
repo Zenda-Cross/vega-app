@@ -2,7 +2,6 @@ import {
   View,
   Text,
   TextInput,
-  Switch,
   Alert,
   Linking,
   TouchableOpacity,
@@ -18,6 +17,8 @@ import useContentStore from '../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import {providersList} from '../lib/constants';
+import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
+import {Feather} from '@expo/vector-icons';
 
 const players = [
   {
@@ -280,6 +281,22 @@ const Settings = () => {
           }}
         /> */}
       </View>
+
+      {/* Subtitle Style  */}
+      <TouchableNativeFeedback
+        onPress={async () => {
+          ReactNativeHapticFeedback.trigger('virtualKey', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false,
+          });
+          await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
+        }}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold my-2">Subtitle Style</Text>
+          <Feather name="chevron-right" size={24} color="white" />
+        </View>
+      </TouchableNativeFeedback>
 
       {/* Excluded qualities */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
