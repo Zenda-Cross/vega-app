@@ -9,6 +9,11 @@ export interface Post {
 export interface Stream {
   server: string;
   link: string;
+  type: string;
+  subtitles?: {
+    lang: string;
+    url: string;
+  }[];
 }
 
 // getInfo

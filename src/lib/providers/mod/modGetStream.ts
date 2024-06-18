@@ -58,7 +58,8 @@ export const modGetStream = async (
 
     // console.log(downloadLink.data);
 
-    const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)[1];
+    const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)[1] || url;
+    console.log('ddl', url);
 
     // console.log(ddl);
     // console.log(ddl);
@@ -100,6 +101,7 @@ export const modGetStream = async (
     servers.push({
       server: 'ResumeBot',
       link: resumeBotDownloadData.url,
+      type: 'mkv',
     });
 
     // CF workers type 1
@@ -115,6 +117,7 @@ export const modGetStream = async (
           servers.push({
             server: 'Cf Worker 1.' + i,
             link: link,
+            type: 'mkv',
           });
         }
       });
@@ -135,6 +138,7 @@ export const modGetStream = async (
           servers.push({
             server: 'Cf Worker 2.' + i,
             link: link,
+            type: 'mkv',
           });
         }
       });
@@ -167,6 +171,7 @@ export const modGetStream = async (
         servers.push({
           server: 'Gdrive-Instant',
           link: instantLink,
+          type: 'mkv',
         });
       } else {
         console.log('Instant link not found', instantLinkData);

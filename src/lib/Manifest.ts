@@ -1,4 +1,3 @@
-// vega and lux
 import {vegaGetInfo} from './providers/vega/getInfo';
 import {vegaGetEpisodeLinks} from './providers/vega/getEpisodesLink';
 import {vegaGetPosts} from './providers/vega/getPosts';
@@ -11,12 +10,9 @@ import {catalogList, modGenresList} from './providers/mod/catalog';
 import {modGetInfo} from './providers/mod/modGetInfo';
 import {modGetEpisodeLinks} from './providers/mod/modGetEpisodesList';
 import {modGetStream} from './providers/mod/modGetStream';
-import {vegaGetBaseurl} from './providers/vega/vegaGetBaseurl';
-import {modGetBaseurl} from './providers/mod/modGetBaseurl';
 import {uhdCatalogList} from './providers/uhd/uhCtatalog';
 import {uhdGetPosts} from './providers/uhd/uhdGetPosts';
 import getUhdInfo from './providers/uhd/getUhdInfo';
-import {uhdGetBaseurl} from './providers/uhd/uhdGetBaseurl';
 import {uhdGetStream} from './providers/uhd/uhdGetStream';
 import {tokyoGetPosts} from './providers/tokyoInsider/tokyoGetPosts';
 import {tokyoCatalogList} from './providers/tokyoInsider/catalog';
@@ -27,6 +23,10 @@ import {driveGetPosts} from './providers/drive/driveGetPosts';
 import {driveGetInfo} from './providers/drive/driveGetInfo';
 import {driveGetEpisodeLinks} from './providers/drive/driveGetEpisodesList';
 import {driveGetStream} from './providers/drive/driveGetStream';
+import {multiCatalog} from './providers/multi/multiCatalog';
+import {multiGetPosts} from './providers/multi/multiPosts';
+import {multiGetInfo} from './providers/multi/multiGetInfo';
+import {multiGetStream} from './providers/multi/multiGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -35,7 +35,6 @@ interface Manifest {
     genres: Catalog[];
     blurImage?: boolean;
     nonStreamableServer?: string[];
-    getBaseURL: (providerValue: string) => Promise<string>;
     getStream: (link: string, type: string) => Promise<Stream[]>;
     getPosts: (
       filter: string,
@@ -53,7 +52,6 @@ export const manifest: Manifest = {
     catalog: homeList,
     genres: genresList,
     nonStreamableServer: ['filepress', 'hubcloud'],
-    getBaseURL: vegaGetBaseurl,
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -63,7 +61,6 @@ export const manifest: Manifest = {
     catalog: homeList,
     genres: genresList,
     nonStreamableServer: ['filepress', 'hubcloud'],
-    getBaseURL: vegaGetBaseurl,
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -73,7 +70,6 @@ export const manifest: Manifest = {
     catalog: catalogList,
     genres: modGenresList,
     nonStreamableServer: ['Gdrive-Instant'],
-    getBaseURL: modGetBaseurl,
     getPosts: modGetPosts,
     getEpisodeLinks: modGetEpisodeLinks,
     getInfo: modGetInfo,
@@ -84,7 +80,6 @@ export const manifest: Manifest = {
     genres: [],
     blurImage: true,
     nonStreamableServer: ['Gdrive-Instant'],
-    getBaseURL: uhdGetBaseurl,
     getStream: uhdGetStream,
     getPosts: uhdGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -95,7 +90,6 @@ export const manifest: Manifest = {
     genres: [],
     searchFilter: 'query',
     blurImage: true,
-    getBaseURL: vegaGetBaseurl,
     getStream: tokyoGetStream,
     getPosts: tokyoGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -105,10 +99,17 @@ export const manifest: Manifest = {
     catalog: driveCatalog,
     genres: [],
     nonStreamableServer: ['hubcloud'],
-    getBaseURL: async () => '',
     getStream: driveGetStream,
     getPosts: driveGetPosts,
     getEpisodeLinks: driveGetEpisodeLinks,
     getInfo: driveGetInfo,
+  },
+  multi: {
+    catalog: multiCatalog,
+    genres: [],
+    getPosts: multiGetPosts,
+    getInfo: multiGetInfo,
+    getStream: multiGetStream,
+    getEpisodeLinks: vegaGetEpisodeLinks,
   },
 };

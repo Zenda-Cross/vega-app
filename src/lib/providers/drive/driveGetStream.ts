@@ -36,7 +36,7 @@ export const driveGetStream = async (
       const itm = $(element);
       let link = itm.attr('href') || '';
       if (link?.includes('.dev')) {
-        streamLinks.push({server: 'Cf Worker', link: link});
+        streamLinks.push({server: 'Cf Worker', link: link, type: 'mkv'});
       }
       if (link?.includes('pixel')) {
         if (!link?.includes('api')) {
@@ -44,13 +44,13 @@ export const driveGetStream = async (
           const baseUrl = link.split('/').slice(0, -2).join('/');
           link = `${baseUrl}/api/file/${token}?download`;
         }
-        streamLinks.push({server: 'pixeldrain', link: link});
+        streamLinks.push({server: 'pixeldrain', link: link, type: 'mkv'});
       }
       if (link?.includes('hubcloud')) {
-        streamLinks.push({server: 'hubcloud', link: link});
+        streamLinks.push({server: 'hubcloud', link: link, type: 'mkv'});
       }
       if (link?.includes('cloudflarestorage')) {
-        streamLinks.push({server: 'CfStorage', link: link});
+        streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
     });
     console.log('streamLinks', streamLinks);
