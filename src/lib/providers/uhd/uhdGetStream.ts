@@ -84,6 +84,7 @@ export const uhdGetStream = async (
         ServerLinks.push({
           server: 'Gdrive-Instant',
           link: instantLink,
+          type: 'mkv',
         });
       } else {
         console.log('Instant link not found', instantLinkData);
@@ -105,6 +106,7 @@ export const uhdGetStream = async (
         ServerLinks.push({
           server: 'ResumeCloud',
           link: resumeLink,
+          type: 'mkv',
         });
       }
     } catch (err) {
@@ -124,6 +126,7 @@ export const uhdGetStream = async (
           ServerLinks.push({
             server: 'Cf Worker 1.' + i,
             link: link,
+            type: 'mkv',
           });
         }
       });
@@ -144,6 +147,7 @@ export const uhdGetStream = async (
           ServerLinks.push({
             server: 'Cf Worker 2.' + i,
             link: link,
+            type: 'mkv',
           });
         }
       });
