@@ -9,16 +9,18 @@ import {
   ToastAndroid,
 } from 'react-native';
 import React from 'react';
-import {MMKV, MmmkvCache} from '../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {useState} from 'react';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import pkg from '../../package.json';
-import useContentStore from '../lib/zustand/contentStore';
+import pkg from '../../../package.json';
+import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
-import {providersList} from '../lib/constants';
+import {providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {Feather} from '@expo/vector-icons';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SettingsStackParamList} from '../../App';
 
 const players = [
   {
@@ -35,7 +37,9 @@ const players = [
   },
 ];
 
-const Settings = () => {
+type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
+
+const Settings = ({navigation}: Props) => {
   const [BaseUrl, setBaseUrl] = useState(MMKV.getString('baseUrl') || '');
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     players.find(player => player.value === MMKV.getString('externalPlayer')) ||
@@ -294,6 +298,20 @@ const Settings = () => {
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold my-2">Subtitle Style</Text>
+          <Feather name="chevron-right" size={24} color="white" />
+        </View>
+      </TouchableNativeFeedback>
+
+      {/* disable providers in search */}
+      <TouchableNativeFeedback
+        onPress={async () => {
+          navigation.navigate('DisableProviders');
+        }}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold my-2">
+            Disable Providers in Search
+          </Text>
           <Feather name="chevron-right" size={24} color="white" />
         </View>
       </TouchableNativeFeedback>

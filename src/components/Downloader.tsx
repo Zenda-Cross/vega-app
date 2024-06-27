@@ -46,6 +46,7 @@ const DownloadComponent = ({
   const [longPressModal, setLongPressModal] = useState(false);
   const [servers, setServers] = useState<Stream[]>([]);
   const [serverLoading, setServerLoading] = useState(false);
+  const [reqController, setReqController] = useState(new AbortController());
 
   useLayoutEffect(() => {
     const checkIfDownloaded = async () => {
@@ -189,15 +190,22 @@ const DownloadComponent = ({
     }
 
     const getServer = async () => {
+      const controller = new AbortController();
       setServerLoading(true);
+      setReqController(controller);
       const url = await manifest[providerValue || provider.value].getStream(
         link,
         type,
+        controller.signal,
       );
       setServerLoading(false);
       setServers(url);
     };
     getServer();
+
+    return () => {
+      reqController.abort();
+    };
   }, [downloadModal, longPressModal]);
 
   // on holdPress external downloader
@@ -335,7 +343,10 @@ const DownloadComponent = ({
               </View>
               {/* close modal */}
               <TouchableOpacity
-                onPress={() => setDownloadModal(false)}
+                onPress={() => {
+                  setDownloadModal(false);
+                  reqController.abort();
+                }}
                 className="absolute top-2 right-2">
                 <MaterialIcons name="close" size={20} color="#c1c4c9" />
               </TouchableOpacity>

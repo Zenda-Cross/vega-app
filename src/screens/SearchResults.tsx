@@ -14,6 +14,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {SearchPageData} from '../lib/getSearchResults';
 import {manifest} from '../lib/Manifest';
+import {MMKV} from '../lib/Mmkv';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
@@ -23,13 +24,17 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   const trueLoading = providersList.map(item => {
     return {name: item.name, value: item.value, isLoading: true};
   });
+  const disabledProviders = MMKV.getArray('disabledProviders') || [];
+  const updatedProvidersList = providersList.filter(
+    provider => !disabledProviders.includes(provider.value),
+  );
   const [loading, setLoading] = useState(trueLoading);
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
     const getSearchResults = async () => {
-      for (const item of providersList) {
+      for (const item of updatedProvidersList) {
         const data = await manifest[item.value].getPosts(
           route.params.filter,
           1,
@@ -82,7 +87,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
           Search Results
         </Text> */}
         <View className="px-4">
-          {providersList.map((item, index) => (
+          {updatedProvidersList.map((item, index) => (
             <Slider
               isLoading={
                 loading?.find(i => i.value === item.value)?.isLoading || false

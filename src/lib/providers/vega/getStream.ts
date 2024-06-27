@@ -4,7 +4,45 @@ import {headers} from './header';
 import {ToastAndroid} from 'react-native';
 import {Stream} from '../types';
 
-export async function vegaGetStream(link: string, type: string) {
+const encode = function (value: string) {
+  return btoa(value.toString());
+};
+const decode = function (value: string) {
+  return atob(value.toString());
+};
+const pen = function (value: string) {
+  return value.replace(/[a-zA-Z]/g, function (_0x1a470e: any) {
+    return String.fromCharCode(
+      (_0x1a470e <= 'Z' ? 90 : 122) >=
+        (_0x1a470e = _0x1a470e.charCodeAt(0) + 13)
+        ? _0x1a470e
+        : _0x1a470e - 26,
+    );
+  });
+};
+
+const abortableTimeout = (ms, {signal} = {}) => {
+  return new Promise((resolve, reject) => {
+    if (signal && signal.aborted) {
+      return reject(new Error('Aborted'));
+    }
+
+    const timer = setTimeout(resolve, ms);
+
+    if (signal) {
+      signal.addEventListener('abort', () => {
+        clearTimeout(timer);
+        reject(new Error('Aborted'));
+      });
+    }
+  });
+};
+
+export async function vegaGetStream(
+  link: string,
+  type: string,
+  signal: AbortSignal,
+) {
   try {
     const streamLinks: Stream[] = [];
     console.log('dotlink', link);
@@ -68,6 +106,7 @@ export async function vegaGetStream(link: string, type: string) {
           streamLinks.push({
             server: 'filepress',
             link: filepressStreamLink.data?.data?.[0],
+            type: 'mkv',
           });
         }
       } catch (error) {
@@ -75,22 +114,62 @@ export async function vegaGetStream(link: string, type: string) {
         // console.error(error);
       }
     }
-    const vLinkRes = await axios(`${link}`, {headers});
+    const vLinkRes = await axios(`${link}`, {headers, signal});
     const vLinkText = vLinkRes.data;
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
     // console.log(vLinkRedirect[1]);
-    const getTokenRes = await axios(`${vLinkRedirect[1]}`, {headers});
+    const domains = vLinkText.match(/url\.replace\('([^']+)','([^']+)'\);/) || [
+      '',
+      '',
+    ];
+    // console.log(domains[2]);
+    const vLinkRedirectRes = await fetch(
+      vLinkRedirect[1].replace(domains[1], domains[2]),
+      {
+        headers: headers,
+        signal: signal,
+      },
+    );
+    const vLinkRedirectText = await vLinkRedirectRes.text();
 
-    const getTokenText = getTokenRes.data;
-    const getToken = getTokenText.match(/[\?&]r=([^&;]*)/);
-    // console.log(getToken?.[1]);
-    const blogLink = `https://bloggingvector.shop/re/${getToken?.[1]}?_=631252793`;
-    const blogRes = await axios(blogLink, {headers});
-    // console.log(blogRes.data);
-    // console.log('blogLink', blogLink);
-    const vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
-    // console.log('vcloudLink', vcloudLink[1]);
-    const vcloudRes = await axios(vcloudLink?.[1], {headers});
+    var regex = /ck\('_wp_http_\d+','([^']+)'/g;
+    var combinedString = '';
+
+    var match;
+    while ((match = regex.exec(vLinkRedirectText)) !== null) {
+      // console.log(match[1]);
+      combinedString += match[1];
+    }
+    // console.log(decode(combinedString));
+    const decodedString = decode(pen(decode(decode(combinedString))));
+    // console.log(decodedString);
+    const data = JSON.parse(decodedString);
+    console.log(data);
+    const token = encode(data?.data);
+    const blogLink = data?.wp_http1 + '?re=' + token;
+    // abort timeout on signal
+    let wait = abortableTimeout((Number(data?.total_time) + 2) * 1000, {
+      signal,
+    });
+    ToastAndroid.show(`Wait ${data?.total_time} Sec`, ToastAndroid.SHORT);
+
+    await wait;
+    console.log('blogLink', blogLink);
+    let vcloudLink = 'Invalid Request';
+    while (vcloudLink.includes('Invalid Request')) {
+      const blogRes = await axios(blogLink, {headers, signal});
+      if (blogRes.data.includes('Invalid Request')) {
+        console.log(blogRes.data);
+      } else {
+        vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
+        break;
+      }
+      console.log('vcloudLink', vcloudLink);
+    }
+    // const blogRes = await axios(blogLink, {headers});
+    // let vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
+    console.log('vcloudLink', vcloudLink?.[1]);
+    const vcloudRes = await axios(vcloudLink?.[1], {headers, signal});
     const $ = cheerio.load(vcloudRes.data);
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
@@ -118,10 +197,12 @@ export async function vegaGetStream(link: string, type: string) {
 
     console.log('streamLinks', streamLinks);
     return streamLinks;
-  } catch (error) {
-    console.log('getStream error: ');
-    // console.error(error);
-    ToastAndroid.show('Error getting stream links', ToastAndroid.SHORT);
+  } catch (error: any) {
+    console.log('getStream error: ', error);
+    if (error.includes('Aborted')) {
+    } else {
+      ToastAndroid.show('Error getting stream links', ToastAndroid.SHORT);
+    }
     return [];
   }
 }
