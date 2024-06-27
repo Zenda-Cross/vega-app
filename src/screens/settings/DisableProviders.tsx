@@ -14,7 +14,7 @@ const DisableProviders = () => {
         Disable Providers
       </Text>
       <Text className="text-xs text-white mt-2 ml-4">
-        Disable providers won't show in search results
+        Disabled providers won't show in search results
       </Text>
       <View className="mt-4 p-2">
         {providersList.map((provider, index) => (
