@@ -62,6 +62,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'language', value: 'off'},
   );
+  const [loading, setLoading] = useState(false);
 
   const [videoTracks, setVideoTracks] = useState<any>([]);
   const [selectedVideoTrack, setSelectedVideoTrack] =
@@ -107,7 +108,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   }, [remoteMediaClient, selectedStream]);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchStream = async () => {
+      setLoading(true);
       // check if downloaded
       if (route.params.file) {
         const exists = await ifExists(route.params.file);
@@ -119,7 +122,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
       const data = await manifest[
         route.params.providerValue || provider.value
-      ].getStream(route.params.link, route.params.type);
+      ].getStream(route.params.link, route.params.type, controller.signal);
       const filteredData = data.filter(
         stream =>
           !manifest[
@@ -138,8 +141,13 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
       setStream(filteredData);
       setSelectedStream(filteredData[0]);
+      setLoading(false);
     };
     fetchStream();
+
+    return () => {
+      controller.abort();
+    };
   }, [route.params.link]);
 
   let timer: NodeJS.Timeout;
@@ -236,16 +244,18 @@ const Player = ({route}: Props): React.JSX.Element => {
       />
 
       {/* // cast button */}
-      <MotiView
-        from={{translateY: 0}}
-        animate={{translateY: showControls ? 0 : -300}}
-        //@ts-ignore
-        transition={{type: 'timing', duration: 260}}
-        className="absolute top-5 right-20">
-        <CastButton
-          style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
-        />
-      </MotiView>
+      {loading === false && (
+        <MotiView
+          from={{translateY: 0}}
+          animate={{translateY: showControls ? 0 : -300}}
+          //@ts-ignore
+          transition={{type: 'timing', duration: 260}}
+          className="absolute top-5 right-20">
+          <CastButton
+            style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
+          />
+        </MotiView>
+      )}
 
       {/* // settings button */}
       <MotiView
@@ -294,7 +304,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       </MotiView>
       {
         // settings
-        showSettings && (
+        showSettings && loading === false && (
           <View
             className="absolute top-0 left-0 w-full h-full bg-black/50 justify-center items-center"
             onTouchEnd={() => {
