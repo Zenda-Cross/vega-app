@@ -18,15 +18,23 @@ import {tokyoGetPosts} from './providers/tokyoInsider/tokyoGetPosts';
 import {tokyoCatalogList} from './providers/tokyoInsider/catalog';
 import {tokyoGetInfo} from './providers/tokyoInsider/tokyoGetInfo';
 import {tokyoGetStream} from './providers/tokyoInsider/tokyoGetStream';
-import {driveCatalog} from './providers/drive/catalog';
+import {driveCatalog, driveGenresList} from './providers/drive/catalog';
 import {driveGetPosts} from './providers/drive/driveGetPosts';
 import {driveGetInfo} from './providers/drive/driveGetInfo';
 import {driveGetEpisodeLinks} from './providers/drive/driveGetEpisodesList';
 import {driveGetStream} from './providers/drive/driveGetStream';
-import {multiCatalog} from './providers/multi/multiCatalog';
+import {multiCatalog, multiGenresList} from './providers/multi/multiCatalog';
 import {multiGetPosts} from './providers/multi/multiPosts';
 import {multiGetInfo} from './providers/multi/multiGetInfo';
 import {multiGetStream} from './providers/multi/multiGetStream';
+import {
+  world4uCatalogList,
+  world4uGenresList,
+} from './providers/world4u/catalog';
+import {world4uGetPosts} from './providers/world4u/world4uGetPosts';
+import {world4uGetInfo} from './providers/world4u/world4uGetInfo';
+import {world4uGetEpisodeLinks} from './providers/world4u/world4uGetEpisodeLinks';
+import {world4uGetStream} from './providers/world4u/world4uGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -35,7 +43,11 @@ interface Manifest {
     genres: Catalog[];
     blurImage?: boolean;
     nonStreamableServer?: string[];
-    getStream: (link: string, type: string) => Promise<Stream[]>;
+    getStream: (
+      link: string,
+      type: string,
+      signal: AbortSignal,
+    ) => Promise<Stream[]>;
     getPosts: (
       filter: string,
       page: number,
@@ -97,7 +109,7 @@ export const manifest: Manifest = {
   },
   drive: {
     catalog: driveCatalog,
-    genres: [],
+    genres: driveGenresList,
     nonStreamableServer: ['hubcloud'],
     getStream: driveGetStream,
     getPosts: driveGetPosts,
@@ -106,10 +118,18 @@ export const manifest: Manifest = {
   },
   multi: {
     catalog: multiCatalog,
-    genres: [],
+    genres: multiGenresList,
     getPosts: multiGetPosts,
     getInfo: multiGetInfo,
     getStream: multiGetStream,
     getEpisodeLinks: vegaGetEpisodeLinks,
+  },
+  world4u: {
+    catalog: world4uCatalogList,
+    genres: world4uGenresList,
+    getStream: world4uGetStream,
+    getPosts: world4uGetPosts,
+    getInfo: world4uGetInfo,
+    getEpisodeLinks: world4uGetEpisodeLinks,
   },
 };
