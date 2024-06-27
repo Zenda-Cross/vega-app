@@ -1,5 +1,12 @@
 import {manifest} from './Manifest';
 import {providersList} from './constants';
+import {MMKV} from './Mmkv';
+
+const disabledProviders = MMKV.getArray('disabledProviders') || [];
+
+const updatedProvidersList = providersList.filter(
+  provider => !disabledProviders.includes(provider.value),
+);
 
 export interface Post {
   title: string;
@@ -18,7 +25,9 @@ export const getSearchResults = async (
   signal: AbortSignal,
 ): Promise<SearchPageData[]> => {
   const SearchData: SearchPageData[] = [];
-  for (const item of providersList) {
+  console.log('updatedProvidersList', updatedProvidersList, disabledProviders);
+
+  for (const item of updatedProvidersList) {
     const data = await manifest[item.value].getPosts(filter, 1, item, signal);
     SearchData.push({
       title: item.name,
