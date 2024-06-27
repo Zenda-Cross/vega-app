@@ -24,6 +24,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'World4uFree',
+    value: 'world4u',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'ModMovies',
     value: 'mod',
     type: 'global',

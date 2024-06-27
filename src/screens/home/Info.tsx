@@ -122,227 +122,231 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         translucent={true}
         backgroundColor={backgroundColor}
       />
-      <ScrollView
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        // refreshControl={
-        //   <RefreshControl
-        //     colors={['tomato']}
-        //     tintColor="tomato"
-        //     progressBackgroundColor={'black'}
-        //     refreshing={refreshing}
-        //     onRefresh={() => {
-        //       setRefreshing(true);
-        //       setTimeout(() => setRefreshing(false), 1000);
-        //     }}
-        //   />
-        // }
-      >
+      <View>
         <OrientationLocker orientation={PORTRAIT} />
-        <View className="relative w-full h-[256px]">
-          <View className="absolute w-full h-full">
-            <Skeleton
-              show={infoLoading}
-              colorMode="dark"
-              height={'100%'}
-              width={'100%'}>
-              {
-                <Image
-                  source={{
-                    uri:
-                      meta?.background ||
-                      info?.image ||
-                      'https://via.placeholder.com',
-                  }}
-                  className=" h-[256] w-full"
-                />
-              }
-            </Skeleton>
-          </View>
-          {manifest[route.params.provider || provider.value].blurImage && (
-            <BlurView
-              intensity={100}
-              tint="dark"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 256,
-                width: '100%',
-              }}
-            />
-          )}
-          <LinearGradient
-            colors={['transparent', 'black']}
-            className="absolute h-full w-full"
-          />
-          <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
-            {meta?.logo ? (
+        <View className="absolute w-full h-[256px]">
+          <Skeleton
+            show={infoLoading}
+            colorMode="dark"
+            height={'100%'}
+            width={'100%'}>
+            {
               <Image
-                onError={() => setMeta({...meta, logo: undefined})}
-                source={{uri: meta?.logo}}
-                style={{width: 200, height: 100, resizeMode: 'contain'}}
-              />
-            ) : (
-              <Text className="text-white text-xl mb-3 font-semibold w-3/4 truncate">
-                {info?.title}
-              </Text>
-            )}
-            {/* rating */}
-            {meta?.imdbRating && (
-              <Text className="text-white text-2xl font-semibold">
-                {meta?.imdbRating}
-                <Text className="text-white text-lg">/10</Text>
-              </Text>
-            )}
-          </View>
-        </View>
-        <View className="p-4">
-          <View className="flex-row gap-x-3 gap-y-1 flex-wrap items-center mb-4">
-            {/* badges */}
-            {meta?.year && (
-              <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
-                {meta?.year}
-              </Text>
-            )}
-            {meta?.runtime && (
-              <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
-                {meta?.runtime}
-              </Text>
-            )}
-            {meta?.genres?.slice(0, 3).map((genre: string) => (
-              <Text
-                key={genre}
-                className="text-white text-lg bg-tertiary px-1 rounded-md">
-                {genre}
-              </Text>
-            ))}
-          </View>
-          {/* Awards */}
-          {meta?.awards && (
-            <View className="mb-2 w-full flex-row items-baseline gap-2">
-              <Text className="text-white text- font-semibold">Awards:</Text>
-              <Text className="text-white text-xs bg-tertiary">
-                {meta?.awards?.length > 50
-                  ? meta?.awards.slice(0, 50) + '...'
-                  : meta?.awards}
-              </Text>
-            </View>
-          )}
-          {meta?.cast?.length! > 0 && (
-            <View className="mb-2 w-full flex-row items-start gap-2">
-              <Text className="text-white text-lg font-semibold py-1">
-                Cast
-              </Text>
-              <View className="flex-row gap-2 flex-wrap">
-                {meta?.cast?.slice(0, 5).map((actor: string) => (
-                  <Text
-                    key={actor}
-                    className="text-white text-xs bg-tertiary p-1 rounded-md">
-                    {actor}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          )}
-          {/* synopsis */}
-          <View className="mb-2 w-full flex-row items-center justify-between">
-            <Skeleton show={infoLoading} colorMode="dark" width={180}>
-              <View className="flex-row items-center gap-2">
-                <Text className="text-white text-xl font-semibold">
-                  Synopsis
-                </Text>
-                <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
-                  {route.params.provider || provider.value}
-                </Text>
-              </View>
-            </Skeleton>
-            <View className="flex-row items-center gap-4">
-              <MaterialCommunityIcons
-                name="web"
-                size={25}
-                color="rgb(156 163 175)"
-                onPress={async () => {
-                  navigation.navigate('Webview', {
-                    link: route.params.link,
-                  });
+                source={{
+                  uri:
+                    meta?.background ||
+                    info?.image ||
+                    'https://via.placeholder.com',
                 }}
+                className=" h-[256] w-full"
               />
-              {inLibrary ? (
-                <Ionicons
-                  name="bookmark"
-                  size={30}
-                  color="tomato"
-                  onPress={() => removeLibrary()}
+            }
+          </Skeleton>
+        </View>
+        {manifest[route.params.provider || provider.value].blurImage && (
+          <BlurView
+            intensity={100}
+            tint="dark"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 256,
+              width: '100%',
+            }}
+          />
+        )}
+        <ScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          // refreshControl={
+          //   <RefreshControl
+          //     colors={['tomato']}
+          //     tintColor="tomato"
+          //     progressBackgroundColor={'black'}
+          //     refreshing={refreshing}
+          //     onRefresh={() => {
+          //       setRefreshing(true);
+          //       setTimeout(() => setRefreshing(false), 1000);
+          //     }}
+          //   />
+          // }
+        >
+          <View className="relative w-full h-[256px]">
+            <LinearGradient
+              colors={['transparent', 'black']}
+              className="absolute h-full w-full"
+            />
+            <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
+              {meta?.logo ? (
+                <Image
+                  onError={() => setMeta({...meta, logo: undefined})}
+                  source={{uri: meta?.logo}}
+                  style={{width: 200, height: 100, resizeMode: 'contain'}}
                 />
               ) : (
-                <Ionicons
-                  name="bookmark-outline"
-                  size={30}
-                  color="tomato"
-                  onPress={() => addLibrary()}
-                />
+                <Text className="text-white text-xl mb-3 font-semibold w-3/4 truncate">
+                  {info?.title}
+                </Text>
+              )}
+              {/* rating */}
+              {meta?.imdbRating && (
+                <Text className="text-white text-2xl font-semibold">
+                  {meta?.imdbRating}
+                  <Text className="text-white text-lg">/10</Text>
+                </Text>
               )}
             </View>
           </View>
-          <Skeleton show={infoLoading} colorMode="dark" height={50}>
-            <Text className="text-white text-xs">
-              {meta?.description
-                ? meta?.description.length > 180
-                  ? meta?.description.slice(0, 180) + '...'
-                  : meta?.description
-                : info?.synopsis?.length! > 180
-                ? info?.synopsis.slice(0, 148) + '...'
-                : info?.synopsis || 'No synopsis available'}
-            </Text>
-          </Skeleton>
-          {/* cast */}
-        </View>
-        <View className="p-4">
-          {infoLoading ? (
-            <View className="gap-y-3 items-start mb-4 p-3">
-              <Skeleton show={true} colorMode="dark" height={30} width={80} />
-              {[...Array(1)].map((_, i) => (
-                <View
-                  className="bg-tertiary py-1 rounded-md gap-3 mt-3"
-                  key={i}>
-                  <Skeleton
-                    show={true}
-                    colorMode="dark"
-                    height={40}
-                    width={'100%'}
-                  />
-                </View>
+          <View className="p-4 bg-black">
+            <View className="flex-row gap-x-3 gap-y-1 flex-wrap items-center mb-4">
+              {/* badges */}
+              {meta?.year && (
+                <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
+                  {meta?.year}
+                </Text>
+              )}
+              {meta?.runtime && (
+                <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
+                  {meta?.runtime}
+                </Text>
+              )}
+              {meta?.genres?.slice(0, 3).map((genre: string) => (
+                <Text
+                  key={genre}
+                  className="text-white text-lg bg-tertiary px-1 rounded-md">
+                  {genre}
+                </Text>
               ))}
             </View>
-          ) : (
-            <SeasonList
-              providerValue={route.params.provider || provider.value}
-              LinkList={
-                info?.linkList
-                  ? info?.linkList?.filter(
-                      item =>
-                        (MMKV.getArray('ExcludedQualities') || [])?.includes(
-                          item.quality,
-                        ) === false,
-                    )?.length! > 0
+            {/* Awards */}
+            {meta?.awards && (
+              <View className="mb-2 w-full flex-row items-baseline gap-2">
+                <Text className="text-white text- font-semibold">Awards:</Text>
+                <Text className="text-white text-xs bg-tertiary">
+                  {meta?.awards?.length > 50
+                    ? meta?.awards.slice(0, 50) + '...'
+                    : meta?.awards}
+                </Text>
+              </View>
+            )}
+            {meta?.cast?.length! > 0 && (
+              <View className="mb-2 w-full flex-row items-start gap-2">
+                <Text className="text-white text-lg font-semibold py-1">
+                  Cast
+                </Text>
+                <View className="flex-row gap-2 flex-wrap">
+                  {meta?.cast?.slice(0, 5).map((actor: string) => (
+                    <Text
+                      key={actor}
+                      className="text-white text-xs bg-tertiary p-1 rounded-md">
+                      {actor}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+            {/* synopsis */}
+            <View className="mb-2 w-full flex-row items-center justify-between">
+              <Skeleton show={infoLoading} colorMode="dark" width={180}>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-white text-xl font-semibold">
+                    Synopsis
+                  </Text>
+                  <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
+                    {route.params.provider || provider.value}
+                  </Text>
+                </View>
+              </Skeleton>
+              <View className="flex-row items-center gap-4">
+                <MaterialCommunityIcons
+                  name="web"
+                  size={25}
+                  color="rgb(156 163 175)"
+                  onPress={async () => {
+                    navigation.navigate('Webview', {
+                      link: route.params.link,
+                    });
+                  }}
+                />
+                {inLibrary ? (
+                  <Ionicons
+                    name="bookmark"
+                    size={30}
+                    color="tomato"
+                    onPress={() => removeLibrary()}
+                  />
+                ) : (
+                  <Ionicons
+                    name="bookmark-outline"
+                    size={30}
+                    color="tomato"
+                    onPress={() => addLibrary()}
+                  />
+                )}
+              </View>
+            </View>
+            <Skeleton show={infoLoading} colorMode="dark" height={50}>
+              <Text className="text-white text-xs">
+                {meta?.description
+                  ? meta?.description.length > 180
+                    ? meta?.description.slice(0, 180) + '...'
+                    : meta?.description
+                  : info?.synopsis?.length! > 180
+                  ? info?.synopsis.slice(0, 148) + '...'
+                  : info?.synopsis || 'No synopsis available'}
+              </Text>
+            </Skeleton>
+            {/* cast */}
+          </View>
+          <View className="p-4 bg-black">
+            {infoLoading ? (
+              <View className="gap-y-3 items-start mb-4 p-3">
+                <Skeleton show={true} colorMode="dark" height={30} width={80} />
+                {[...Array(1)].map((_, i) => (
+                  <View
+                    className="bg-tertiary py-1 rounded-md gap-3 mt-3"
+                    key={i}>
+                    <Skeleton
+                      show={true}
+                      colorMode="dark"
+                      height={40}
+                      width={'100%'}
+                    />
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <SeasonList
+                providerValue={route.params.provider || provider.value}
+                LinkList={
+                  info?.linkList
                     ? info?.linkList?.filter(
                         item =>
                           (MMKV.getArray('ExcludedQualities') || [])?.includes(
                             item.quality,
                           ) === false,
-                      )
-                    : info?.linkList
-                  : []
-              }
-              poster={meta?.logo?.replace('medium', 'large') || ''}
-              metaTitle={meta?.name || info?.title}
-            />
-          )}
-        </View>
-      </ScrollView>
+                      )?.length! > 0
+                      ? info?.linkList?.filter(
+                          item =>
+                            (
+                              MMKV.getArray('ExcludedQualities') || []
+                            )?.includes(item.quality) === false,
+                        )
+                      : info?.linkList
+                    : []
+                }
+                poster={meta?.logo?.replace('medium', 'large') || ''}
+                metaTitle={meta?.name || info?.title}
+              />
+            )}
+          </View>
+        </ScrollView>
+      </View>
     </MotiSafeAreaView>
   );
 }

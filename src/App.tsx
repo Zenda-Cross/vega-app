@@ -2,7 +2,7 @@ import React from 'react';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
-import Settings from './screens/Settings';
+import Settings from './screens/settings/Settings';
 import WatchList from './screens/WatchList';
 import Search from './screens/Search';
 import ScrollList from './screens/ScrollList';
@@ -17,6 +17,7 @@ import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import DisableProviders from './screens/settings/DisableProviders';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -48,12 +49,18 @@ export type WatchListStackParamList = {
   WatchList: undefined;
   Info: {link: string; provider?: string; poster?: string};
 };
+
+export type SettingsStackParamList = {
+  Settings: undefined;
+  DisableProviders: undefined;
+};
 const Tab = createBottomTabNavigator();
 const App = () => {
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
+  const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -103,6 +110,24 @@ const App = () => {
         <WatchListStack.Screen name="WatchList" component={WatchList} />
         <WatchListStack.Screen name="Info" component={Info} />
       </WatchListStack.Navigator>
+    );
+  }
+
+  function SettingsStackScreen() {
+    return (
+      <SettingsStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          headerBlurEffect: 'light',
+          headerTintColor: 'tomato',
+          headerStyle: {backgroundColor: '#171717'},
+        }}>
+        <SettingsStack.Screen name="Settings" component={Settings} />
+        <SettingsStack.Screen
+          name="DisableProviders"
+          component={DisableProviders}
+        />
+      </SettingsStack.Navigator>
     );
   }
 
@@ -157,9 +182,10 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="Settings"
-          component={Settings}
+          name="SettingsStack"
+          component={SettingsStackScreen}
           options={{
+            title: 'Settings',
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
                 <Ionicons name="settings" color={color} size={size} />
