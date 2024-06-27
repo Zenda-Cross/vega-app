@@ -33,7 +33,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
 
   const handleScroll = (event: any) => {
     setBackgroundColor(
-      event.nativeEvent.contentOffset.y > 0 ? 'black' : 'transparent',
+      event.nativeEvent.contentOffset.y > 150 ? 'black' : 'transparent',
     );
   };
   useEffect(() => {
@@ -117,7 +117,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       transition={{type: 'timing'}}
       className="h-full w-full">
       <StatusBar
-        showHideTransition={'fade'}
+        showHideTransition={'slide'}
         animated={true}
         translucent={true}
         backgroundColor={backgroundColor}
