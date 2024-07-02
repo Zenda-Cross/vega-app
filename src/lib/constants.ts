@@ -30,6 +30,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'ExtraMovies',
+    value: 'extraMovies',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'ModMovies',
     value: 'mod',
     type: 'global',
