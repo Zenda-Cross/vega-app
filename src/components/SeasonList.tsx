@@ -281,7 +281,11 @@ const SeasonList = ({
                         onLongPressHandler(true, episode.link, 'series')
                       }>
                       <Ionicons name="play-circle" size={28} color="tomato" />
-                      <Text className="text-white">{episode.title}</Text>
+                      <Text className="text-white truncate">
+                        {episode.title.length > 30
+                          ? episode.title.slice(0, 30) + '...'
+                          : episode.title}
+                      </Text>
                     </TouchableOpacity>
                     <Downloader
                       providerValue={providerValue}
