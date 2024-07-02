@@ -117,6 +117,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         if (exists) {
           setStream([{server: 'downloaded', link: exists}]);
           setSelectedStream({server: 'downloaded', link: exists});
+          setLoading(false);
           return;
         }
       }
