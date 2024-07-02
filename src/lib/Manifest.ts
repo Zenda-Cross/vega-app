@@ -35,6 +35,14 @@ import {world4uGetPosts} from './providers/world4u/world4uGetPosts';
 import {world4uGetInfo} from './providers/world4u/world4uGetInfo';
 import {world4uGetEpisodeLinks} from './providers/world4u/world4uGetEpisodeLinks';
 import {world4uGetStream} from './providers/world4u/world4uGetStream';
+import {
+  ExtraCatalogList,
+  ExtraGenresList,
+} from './providers/extraMovies/extraCatalog';
+import {ExtraGetPosts} from './providers/extraMovies/extraGetPosts';
+import {extraGetInfo} from './providers/extraMovies/extraGetInfo';
+import {extraGetEpisodeLinks} from './providers/extraMovies/extraGetEpisodeLinks';
+import {extraGetStream} from './providers/extraMovies/extraGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -131,5 +139,13 @@ export const manifest: Manifest = {
     getPosts: world4uGetPosts,
     getInfo: world4uGetInfo,
     getEpisodeLinks: world4uGetEpisodeLinks,
+  },
+  extraMovies: {
+    catalog: ExtraCatalogList,
+    genres: ExtraGenresList,
+    getStream: extraGetStream,
+    getPosts: ExtraGetPosts,
+    getEpisodeLinks: extraGetEpisodeLinks,
+    getInfo: extraGetInfo,
   },
 };

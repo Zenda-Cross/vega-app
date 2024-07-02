@@ -18,7 +18,10 @@ export const driveGetInfo = async function (link: string): Promise<Info> {
     const imdbId = $('a:contains("IMDb")').attr('href')?.split('/')[4] || '';
     const title =
       $('.left-wrapper').find('strong:contains("Name")').next().text() ||
-      $('.left-wrapper').find('strong:contains("Name")').find('span').text();
+      $('.left-wrapper')
+        .find('strong:contains("Name"),h5:contains("Name")')
+        .find('span:first')
+        .text();
     const synopsis =
       $('.left-wrapper')
         .find(
@@ -29,8 +32,9 @@ export const driveGetInfo = async function (link: string): Promise<Info> {
       $('.ipc-html-content-inner-div').text() ||
       '';
     const image =
-      $('img.entered.lazyloaded').attr('src') ||
-      $('img.aligncenter').attr('src');
+      $('img.entered.lazyloaded,img.entered,img.litespeed-loaded').attr(
+        'src',
+      ) || $('img.aligncenter').attr('src');
 
     // Links
     const links: Link[] = [];
