@@ -11,7 +11,6 @@ import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
 import {MmmkvCache} from '../../lib/Mmkv';
-import {checkForExistingDownloads} from '@kesha-antonov/react-native-background-downloader';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {manifest} from '../../lib/Manifest';
@@ -32,14 +31,6 @@ const Home = () => {
     );
   };
 
-  const deleteDownload = async () => {
-    const tasks = await checkForExistingDownloads();
-    for (const task of tasks) {
-      if (task.state !== 'DOWNLOADING') {
-        task.stop();
-      }
-    }
-  };
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -47,9 +38,10 @@ const Home = () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
       const cache = MmmkvCache.getString('homeData' + provider.value);
-      // console.log('cache', cache);
+      console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
+        setHomeData(data);
         // pick random post form random category
         const randomPost =
           data[data?.length - 1].Posts[
@@ -58,7 +50,6 @@ const Home = () => {
         setHero(randomPost);
 
         setLoading(false);
-        setHomeData(data);
       }
       const data = await getHomePageData(provider, signal);
       if (!cache && data.length > 0) {
@@ -68,7 +59,7 @@ const Home = () => {
           ];
         setHero(randomPost);
       }
-      if (data[0].Posts.length === 0) {
+      if (data[data?.length - 1].Posts.length === 0) {
         return;
       }
       setLoading(false);
@@ -76,7 +67,6 @@ const Home = () => {
       MmmkvCache.setString('homeData' + provider.value, JSON.stringify(data));
     };
     fetchHomeData();
-    deleteDownload();
     return () => {
       controller.abort();
     };
