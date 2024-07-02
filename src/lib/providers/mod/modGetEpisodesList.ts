@@ -7,6 +7,9 @@ export const modGetEpisodeLinks = async function (
   url: string,
 ): Promise<EpisodeLink[]> {
   try {
+    if (url.includes('url=')) {
+      url = atob(url.split('url=')[1]);
+    }
     const res = await axios.get(url, {headers});
     const html = res.data;
     let $ = cheerio.load(html);
