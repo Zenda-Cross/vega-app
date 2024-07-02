@@ -123,53 +123,65 @@ export async function vegaGetStream(
       '',
     ];
     // console.log(domains[2]);
-    const vLinkRedirectRes = await fetch(
-      vLinkRedirect[1].replace(domains[1], domains[2]),
-      {
-        headers: headers,
-        signal: signal,
-      },
-    );
-    const vLinkRedirectText = await vLinkRedirectRes.text();
 
-    var regex = /ck\('_wp_http_\d+','([^']+)'/g;
-    var combinedString = '';
+    /////////////////////////////
+    // const vLinkRedirectRes = await fetch(
+    //   '
+    //     vLinkRedirect[1].replace(domains[1], domains[2]),
+    //   {
+    //     headers: headers,
+    //     signal: signal,
+    //   },
+    // );
+    // const vLinkRedirectText = await vLinkRedirectRes.text();
 
-    var match;
-    while ((match = regex.exec(vLinkRedirectText)) !== null) {
-      // console.log(match[1]);
-      combinedString += match[1];
-    }
-    // console.log(decode(combinedString));
-    const decodedString = decode(pen(decode(decode(combinedString))));
-    // console.log(decodedString);
-    const data = JSON.parse(decodedString);
-    console.log(data);
-    const token = encode(data?.data);
-    const blogLink = data?.wp_http1 + '?re=' + token;
-    // abort timeout on signal
-    let wait = abortableTimeout((Number(data?.total_time) + 2) * 1000, {
-      signal,
-    });
-    ToastAndroid.show(`Wait ${data?.total_time} Sec`, ToastAndroid.SHORT);
+    // var regex = /ck\('_wp_http_\d+','([^']+)'/g;
+    // var combinedString = '';
 
-    await wait;
-    console.log('blogLink', blogLink);
-    let vcloudLink = 'Invalid Request';
-    while (vcloudLink.includes('Invalid Request')) {
-      const blogRes = await axios(blogLink, {headers, signal});
-      if (blogRes.data.includes('Invalid Request')) {
-        console.log(blogRes.data);
-      } else {
-        vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
-        break;
-      }
-      console.log('vcloudLink', vcloudLink);
-    }
-    // const blogRes = await axios(blogLink, {headers});
-    // let vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
-    console.log('vcloudLink', vcloudLink?.[1]);
-    const vcloudRes = await axios(vcloudLink?.[1], {headers, signal});
+    // var match;
+    // while ((match = regex.exec(vLinkRedirectText)) !== null) {
+    //   // console.log(match[1]);
+    //   combinedString += match[1];
+    // }
+    // // console.log(decode(combinedString));
+    // const decodedString = decode(pen(decode(decode(combinedString))));
+    // // console.log(decodedString);
+    // const data = JSON.parse(decodedString);
+    // console.log(data);
+    // const token = encode(data?.data);
+    // const blogLink = data?.wp_http1 + '?re=' + token;
+    // // abort timeout on signal
+    // let wait = abortableTimeout((Number(data?.total_time) + 2) * 1000, {
+    //   signal,
+    // });
+    // ToastAndroid.show(`Wait ${data?.total_time} Sec`, ToastAndroid.SHORT);
+
+    // await wait;
+    // console.log('blogLink', blogLink);
+    // let vcloudLink = 'Invalid Request';
+    // while (vcloudLink.includes('Invalid Request')) {
+    //   const blogRes = await axios(blogLink, {headers, signal});
+    //   if (blogRes.data.includes('Invalid Request')) {
+    //     console.log(blogRes.data);
+    //   } else {
+    //     vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
+    //     break;
+    //   }
+    //   console.log('vcloudLink', vcloudLink);
+    // }
+
+    // console.log('vcloudLink', vcloudLink?.[1]);
+    /////////////////////////////
+
+    const vcloudLink = decode(vLinkRedirect[1].split('r=')[1]);
+    console.log('vcloudLink', vcloudLink);
+    /////////////////////////////
+    // const vcloudRes = await axios(
+    //   'vcloudLink?.[1],
+    //   {headers, signal},
+    // );
+    /////////////////////////////
+    const vcloudRes = await axios(vcloudLink, {headers, signal});
     const $ = cheerio.load(vcloudRes.data);
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');

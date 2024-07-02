@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import {ifExists} from '../lib/file/ifExists';
-import {
-  download,
-  completeHandler,
-  checkForExistingDownloads,
-} from '@kesha-antonov/react-native-background-downloader';
+// import {
+//   download,
+//   completeHandler,
+//   checkForExistingDownloads,
+// } from '@kesha-antonov/react-native-background-downloader';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import {Stream} from '../lib/providers/types';
@@ -24,20 +24,24 @@ import {Skeleton} from 'moti/skeleton';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
+import notifee from '@notifee/react-native';
+import {EventType} from '@notifee/react-native';
+import useDownloadsStore from '../lib/zustand/downloadsStore';
 
 const DownloadComponent = ({
   link,
   fileName,
   type,
   providerValue,
+  title,
 }: {
   link: string;
   fileName: string;
   type: string;
   providerValue: string;
+  title: string;
 }) => {
   const {provider} = useContentStore(state => state);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
   );
@@ -48,116 +52,206 @@ const DownloadComponent = ({
   const [serverLoading, setServerLoading] = useState(false);
   const [reqController, setReqController] = useState(new AbortController());
 
+  const {activeDownloads, removeActiveDownloads, setActiveDownloads} =
+    useDownloadsStore(state => state);
+
+  notifee.onBackgroundEvent(async ({type, detail}) => {
+    if (
+      type === EventType.ACTION_PRESS &&
+      detail.pressAction?.id === fileName
+    ) {
+      console.log('Cancel download');
+      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      setAlreadyDownloaded(false);
+      removeActiveDownloads(fileName);
+      try {
+        const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
+        const files = await RNFS.readDir(downloadDir);
+        // Find a file with the given name (without extension)
+        const file = files.find(file => {
+          const nameWithoutExtension = file.name
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          return nameWithoutExtension === detail.notification?.data?.fileName;
+        });
+        if (file) {
+          await RNFS.unlink(file.path);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  });
+  notifee.onForegroundEvent(async ({type, detail}) => {
+    if (
+      type === EventType.ACTION_PRESS &&
+      detail.pressAction?.id === fileName
+    ) {
+      console.log('Cancel download');
+      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      setAlreadyDownloaded(false);
+      removeActiveDownloads(fileName);
+      try {
+        const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
+        const files = await RNFS.readDir(downloadDir);
+        // Find a file with the given name (without extension)
+        const file = files.find(file => {
+          const nameWithoutExtension = file.name
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          return nameWithoutExtension === detail.notification?.data?.fileName;
+        });
+        if (file) {
+          await RNFS.unlink(file.path);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  });
+
+  // check if file already exists
   useLayoutEffect(() => {
     const checkIfDownloaded = async () => {
       const exists = await ifExists(fileName);
       setAlreadyDownloaded(exists);
-
-      // check if download is already in progress
-      const tasks = await checkForExistingDownloads();
-      // console.log('Tasks:', tasks);
-      const task = tasks.find(item => item.id === fileName);
-      if (task?.state === 'DOWNLOADING') {
-        setIsDownloading(true);
-        const timer = setInterval(async () => {
-          const fileExists = await ifExists(fileName);
-          if (fileExists) {
-            console.log('Download complete');
-            clearInterval(timer);
-            setIsDownloading(false);
-            setAlreadyDownloaded(true);
-            clearInterval(timer);
-          }
-        }, 1000);
-      } else {
-        task?.stop();
-        setIsDownloading(false);
-      }
     };
     checkIfDownloaded();
   }, [fileName]);
 
   const downloadFile = async (url: string, type: string) => {
-    setIsDownloading(true);
-
+    setActiveDownloads(fileName);
     if (await ifExists(fileName)) {
       console.log('File already exists');
-      setIsDownloading(false);
+      setAlreadyDownloaded(true);
+      removeActiveDownloads(fileName);
       return;
     }
-    // try {
-    //   // downloadFile and save it to download folder
-    //   if (!(await RNFS.exists(`${RNFS.DownloadDirectoryPath}/vega`))) {
-    //     await RNFS.mkdir(`${RNFS.DownloadDirectoryPath}/vega`);
-    //   }
-    //   const downloadDest = `${RNFS.DownloadDirectoryPath}/vega/${fileName}`;
-    //   const ret = RNFS.downloadFile({
-    //     fromUrl: url,
-    //     progressInterval: 1000,
-    //     backgroundTimeout: 1000 * 60 * 60,
-    //     progressDivider: 1,
-    //     toFile: downloadDest,
-    //     background: true,
-    //     begin: (res: any) => {
-    //       console.log('Download has started', res);
-    //     },
-    //     progress: (res: any) => {
-    //       const progress = res.bytesWritten / res.contentLength;
-    //       setDownloadProgress(progress * 100);
-    //       console.log('Download progress:', progress * 100);
-    //     },
-    //   });
-    //   ret.promise.then(res => {
-    //     console.log('Download complete', res);
-    //     setIsDownloading(false);
-    //   });
-    // } catch (error: any) {
-    //   console.error('Download error:', error);
-    //   setDownloadError(error.message);
-    //   setIsDownloading(false);
-    // }
-
-    const jobId = fileName;
-    console.log('Downloading:', fileName);
-
-    let task = download({
-      isAllowedOverMetered: true,
-      isAllowedOverRoaming: true,
-      // headers: {
-      //   Accept:
-      //     'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      //   'User-Agent':
-      //     '	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
-      // },
-      id: jobId,
-      url: url,
-      destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`,
-      metadata: {},
-      isNotificationVisible: true,
-    })
-      .begin(data => {
-        console.log(`Going to download ${data.expectedBytes} bytes!`);
-        console.log('Downloading:', data);
-      })
-      .progress(({bytesDownloaded, bytesTotal}) => {
-        console.log(`Downloaded: ${(bytesDownloaded / bytesTotal) * 100}%`);
-      })
-      .done(({bytesDownloaded, bytesTotal}) => {
-        console.log('Download is done!', {bytesDownloaded, bytesTotal});
-        setIsDownloading(false);
-        setAlreadyDownloaded(true);
-        completeHandler(jobId);
-      })
-      .error(({error, errorCode}) => {
-        console.log('Download canceled due to error: ', {error, errorCode});
-        setIsDownloading(false);
-        task.stop();
-        Alert.alert('Download Canceled', 'failed to download');
+    try {
+      // downloadFile and save it to download folder
+      if (!(await RNFS.exists(`${RNFS.DownloadDirectoryPath}/vega`))) {
+        await RNFS.mkdir(`${RNFS.DownloadDirectoryPath}/vega`);
+      }
+      await notifee.requestPermission();
+      // Create a channel (required for Android)
+      const channelId = await notifee.createChannel({
+        id: 'download',
+        name: 'Download Notifications',
       });
+      const downloadDest = `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`;
+      const ret = RNFS.downloadFile({
+        fromUrl: url,
+        progressInterval: 1000,
+        backgroundTimeout: 1000 * 60 * 60,
+        progressDivider: 1,
+        toFile: downloadDest,
+        background: true,
+        begin: (res: any) => {
+          console.log('Download has started', res);
+        },
+        progress: (res: any) => {
+          const progress = res.bytesWritten / res.contentLength;
+          const body =
+            res.contentLength < 1024 * 1024 * 1024
+              ? // less than 1GB?
 
-    return () => {
-      task.stop();
-    };
+                Math.round(res.bytesWritten / 1024 / 1024) +
+                ' / ' +
+                Math.round(res.contentLength / 1024 / 1024) +
+                ' MB'
+              : parseFloat((res.bytesWritten / 1024 / 1024 / 1024).toFixed(2)) +
+                ' / ' +
+                parseFloat(
+                  (res.contentLength / 1024 / 1024 / 1024).toFixed(2),
+                ) +
+                ' GB';
+          console.log('Download progress:', progress * 100);
+          notifee.displayNotification({
+            id: fileName,
+            title: title,
+            data: {jobId: ret.jobId, fileName},
+            body: body,
+            android: {
+              channelId,
+              color: '#FF6347',
+              onlyAlertOnce: true,
+              progress: {
+                max: 100,
+                current: progress * 100,
+                indeterminate: false,
+              },
+              pressAction: {
+                id: 'default',
+              },
+              actions: [
+                {
+                  title: 'Cancel',
+                  pressAction: {
+                    id: fileName,
+                  },
+                },
+              ],
+            },
+          });
+        },
+      });
+      ret.promise.then(res => {
+        console.log('Download complete', res);
+        setAlreadyDownloaded(true);
+        notifee.cancelNotification(fileName);
+        removeActiveDownloads(fileName);
+      });
+      ret.promise.catch(err => {
+        console.log('Download error:', err);
+        Alert.alert('Download failed', err.message || 'Failed to download');
+        removeActiveDownloads(fileName);
+        setAlreadyDownloaded(false);
+        notifee.cancelNotification(fileName);
+      });
+    } catch (error: any) {
+      console.error('Download error:', error);
+      Alert.alert('Download failed', 'Failed to download');
+      removeActiveDownloads(fileName);
+      setAlreadyDownloaded(false);
+    }
+
+    // const jobId = fileName;
+    // console.log('Downloading:', fileName);
+
+    // let task = download({
+    //   isAllowedOverMetered: true,
+    //   isAllowedOverRoaming: true,
+    //   id: jobId,
+    //   url: url,
+    //   destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`,
+    //   metadata: {},
+    //   isNotificationVisible: true,
+    // })
+    //   .begin(data => {
+    //     console.log(`Going to download ${data.expectedBytes} bytes!`);
+    //     console.log('Downloading:', data);
+    //   })
+    //   .progress(({bytesDownloaded, bytesTotal}) => {
+    //     console.log(`Downloaded: ${(bytesDownloaded / bytesTotal) * 100}%`);
+    //   })
+    //   .done(({bytesDownloaded, bytesTotal}) => {
+    //     console.log('Download is done!', {bytesDownloaded, bytesTotal});
+    //     setIsDownloading(false);
+    //     setAlreadyDownloaded(true);
+    //     completeHandler(jobId);
+    //   })
+    //   .error(({error, errorCode}) => {
+    //     console.log('Download canceled due to error: ', {error, errorCode});
+    //     setIsDownloading(false);
+    //     task.stop();
+    //     Alert.alert('Download Canceled', 'failed to download');
+    //   });
+
+    // return () => {
+    //   task.stop();
+    // };
   };
 
   // handle download deletion
@@ -188,24 +282,17 @@ const DownloadComponent = ({
     if (!downloadModal && !longPressModal) {
       return;
     }
-
     const getServer = async () => {
-      const controller = new AbortController();
       setServerLoading(true);
-      setReqController(controller);
       const url = await manifest[providerValue || provider.value].getStream(
         link,
         type,
-        controller.signal,
+        reqController.signal,
       );
       setServerLoading(false);
       setServers(url);
     };
     getServer();
-
-    return () => {
-      reqController.abort();
-    };
   }, [downloadModal, longPressModal]);
 
   // on holdPress external downloader
@@ -222,11 +309,7 @@ const DownloadComponent = ({
 
   return (
     <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
-      {alreadyDownloaded ? (
-        <TouchableOpacity onPress={() => setDeleteModal(true)} className="mx-1">
-          <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
-        </TouchableOpacity>
-      ) : isDownloading ? (
+      {activeDownloads.includes(fileName) ? (
         <MotiView
           style={{
             marginHorizontal: 4,
@@ -239,6 +322,10 @@ const DownloadComponent = ({
           transition={{type: 'timing', duration: 500, loop: true}}>
           <MaterialIcons name="downloading" size={27} color="tomato" />
         </MotiView>
+      ) : alreadyDownloaded ? (
+        <TouchableOpacity onPress={() => setDeleteModal(true)} className="mx-1">
+          <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity
           onPress={() => {

@@ -5,15 +5,15 @@ export const catalogList = [
   },
   {
     title: 'Netflix',
-    filter: '/netflix',
+    filter: '/ott/netflix',
   },
   {
     title: 'Disney+',
-    filter: '/disney-plus',
+    filter: '/ott/disney-plus',
   },
   {
     title: 'Amazon Prime',
-    filter: '/web-series/tv-shows-by-network/amazon-prime-video',
+    filter: '/ott/amazon-prime-video',
   },
 ];
 

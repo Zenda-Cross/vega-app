@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
@@ -18,6 +18,9 @@ import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import DisableProviders from './screens/settings/DisableProviders';
+import {Alert, Linking} from 'react-native';
+import pkg from '../package.json';
+import notifee from '@notifee/react-native';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -197,6 +200,28 @@ const App = () => {
       </Tab.Navigator>
     );
   }
+
+  useEffect(() => {
+    const checkForUpdate = async () => {
+      try {
+        const res = await fetch(
+          'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
+        );
+        const data = await res.json();
+        if (data.tag_name.replace('v', '') !== pkg.version) {
+          const url = data.html_url;
+          Alert.alert('Update', data.body, [
+            {text: 'Cancel'},
+            {text: 'Update', onPress: () => Linking.openURL(url)},
+          ]);
+          console.log('version', data.tag_name.replace('v', ''), pkg.version);
+        }
+      } catch (error) {
+        console.log('Update error', error);
+      }
+    };
+    checkForUpdate();
+  }, []);
 
   return (
     <SafeAreaProvider>
