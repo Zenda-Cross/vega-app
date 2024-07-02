@@ -11,7 +11,12 @@ export const ExtraGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://extramovies.ist';
+    const urlRes = await axios.get(
+      'https://himanshu8443.github.io/providers/modflix.json',
+    );
+    const dataRes = urlRes.data;
+    console.log(dataRes.extra.url);
+    const baseUrl = dataRes?.extra?.url;
     const url = filter.includes('query')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
       : `${baseUrl + filter}/page/${page}/`;
