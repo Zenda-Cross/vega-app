@@ -38,7 +38,7 @@ const Home = () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
       const cache = MmmkvCache.getString('homeData' + provider.value);
-      console.log('cache', cache);
+      // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
         setHomeData(data);
