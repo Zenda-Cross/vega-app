@@ -23,7 +23,7 @@ const Home = () => {
   const [backgroundColor, setBackgroundColor] = useState('transparent');
 
   const {provider} = useContentStore(state => state);
-  const {hero, setHero} = useHeroStore(state => state);
+  const {setHero} = useHeroStore(state => state);
 
   // change status bar color
   const handleScroll = (event: any) => {

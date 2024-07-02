@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@kesha-antonov/react-native-background-downloader": "^3.1.2",
+    "@notifee/react-native": "^7.8.2",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
