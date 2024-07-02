@@ -1940,11 +1940,6 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kesha-antonov/react-native-background-downloader@^3.1.2":
-  version "3.1.2"
-  resolved "https://registry.npmjs.org/@kesha-antonov/react-native-background-downloader/-/react-native-background-downloader-3.1.2.tgz"
-  integrity sha512-xBs1DyGOdGCSI7mfE7cT7V1Ecv6G99A4zh08o0q7/DXOqttX4tymiTQNuWQxW2dMe7clOHGjzeW1BLYwofSYNw==
-
 "@motionone/animation@^10.12.0":
   version "10.17.0"
   resolved "https://registry.npmjs.org/@motionone/animation/-/animation-10.17.0.tgz"
@@ -8222,7 +8217,7 @@ react-native-webview@13.8.6:
     escape-string-regexp "2.0.0"
     invariant "2.2.4"
 
-react-native@*, react-native@>=0.41.2, react-native@>=0.46.0, react-native@>=0.57.0, react-native@>=0.60.0, react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
+react-native@*, react-native@>=0.41.2, react-native@>=0.46.0, react-native@>=0.60.0, react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
   version "0.74.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.74.1.tgz"
   integrity sha512-0H2XpmghwOtfPpM2LKqHIN7gxy+7G/r1hwJHKLV6uoyXGC/gCojRtoo5NqyKrWpFC8cqyT6wTYCLuG7CxEKilg==

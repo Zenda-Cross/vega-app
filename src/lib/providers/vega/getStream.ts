@@ -126,7 +126,7 @@ export async function vegaGetStream(
 
     /////////////////////////////
     // const vLinkRedirectRes = await fetch(
-    //   '
+    //   'https://cors.smashystream.workers.dev/?destination=' +
     //     vLinkRedirect[1].replace(domains[1], domains[2]),
     //   {
     //     headers: headers,
@@ -177,7 +177,7 @@ export async function vegaGetStream(
     console.log('vcloudLink', vcloudLink);
     /////////////////////////////
     // const vcloudRes = await axios(
-    //   'vcloudLink?.[1],
+    //   'https://cors.smashystream.workers.dev/?destination=' + vcloudLink?.[1],
     //   {headers, signal},
     // );
     /////////////////////////////
