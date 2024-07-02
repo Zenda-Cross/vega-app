@@ -84,7 +84,7 @@ export default async function getUhdInfo(link: string): Promise<Info> {
         : title.replace('Download', '') || '',
       image,
       imdbId: '',
-      synopsis: '',
+      synopsis: title,
       type: '',
       linkList: episodes,
     };

@@ -114,7 +114,10 @@ export async function vegaGetStream(
         // console.error(error);
       }
     }
-    const vLinkRes = await axios(`${link}`, {headers, signal});
+    const vLinkRes = await axios(
+      `https://cors.smashystream.workers.dev/?destination=${link}`,
+      {headers, signal},
+    );
     const vLinkText = vLinkRes.data;
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
     // console.log(vLinkRedirect[1]);
@@ -124,7 +127,8 @@ export async function vegaGetStream(
     ];
     // console.log(domains[2]);
     const vLinkRedirectRes = await fetch(
-      vLinkRedirect[1].replace(domains[1], domains[2]),
+      'https://cors.smashystream.workers.dev/?destination=' +
+        vLinkRedirect[1].replace(domains[1], domains[2]),
       {
         headers: headers,
         signal: signal,
@@ -169,7 +173,10 @@ export async function vegaGetStream(
     // const blogRes = await axios(blogLink, {headers});
     // let vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
     console.log('vcloudLink', vcloudLink?.[1]);
-    const vcloudRes = await axios(vcloudLink?.[1], {headers, signal});
+    const vcloudRes = await axios(
+      'https://cors.smashystream.workers.dev/?destination=' + vcloudLink?.[1],
+      {headers, signal},
+    );
     const $ = cheerio.load(vcloudRes.data);
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');

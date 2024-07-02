@@ -233,6 +233,7 @@ const SeasonList = ({
               <Downloader
                 providerValue={providerValue}
                 link={ActiveSeason.movieLinks}
+                title={metaTitle}
                 type="movie"
                 fileName={(metaTitle + ActiveSeason.quality).replaceAll(
                   /[^a-zA-Z0-9]/g,
@@ -286,6 +287,7 @@ const SeasonList = ({
                       providerValue={providerValue}
                       link={episode.link}
                       type="series"
+                      title={metaTitle + ' ' + episode.title}
                       fileName={(
                         metaTitle +
                         ActiveSeason.title +
@@ -363,6 +365,7 @@ const SeasonList = ({
                       providerValue={providerValue}
                       link={link.link}
                       type="series"
+                      title={metaTitle + ' ' + link.title}
                       fileName={(
                         metaTitle +
                         ActiveSeason.title +
