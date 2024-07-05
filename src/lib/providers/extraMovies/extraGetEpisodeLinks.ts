@@ -7,7 +7,10 @@ export const extraGetEpisodeLinks = async function (
   url: string,
 ): Promise<EpisodeLink[]> {
   try {
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(
+      'https://cors.smashystream.workers.dev/?destination=' + url,
+      {headers},
+    );
     const html = res.data;
     let $ = cheerio.load(html);
     const episodeLinks: EpisodeLink[] = [];
