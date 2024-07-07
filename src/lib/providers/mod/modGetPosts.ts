@@ -27,8 +27,9 @@ export const modGetPosts = async function (
         const link = $(element).find('a').attr('href');
         const image =
           $(element).find('img').attr('data-src') ||
-          $(element).find('img').attr('src');
-        if (title && link && image) {
+          $(element).find('img').attr('src') ||
+          '';
+        if (title && link) {
           catalog.push({
             title: title.replace('Download', '').trim(),
             link: link,
