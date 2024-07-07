@@ -23,6 +23,7 @@ import {
   SelectedTextTrack,
   TextTrackType,
   SelectedVideoTrack,
+  SelectedVideoTrackType,
   ResizeMode,
 } from 'react-native-video';
 import {MotiView} from 'moti';
@@ -67,7 +68,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [videoTracks, setVideoTracks] = useState<any>([]);
   const [selectedVideoTrack, setSelectedVideoTrack] =
     useState<SelectedVideoTrack>({
-      type: 'auto',
+      type: SelectedVideoTrackType.AUTO,
     });
 
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -481,13 +482,13 @@ const Player = ({route}: Props): React.JSX.Element => {
               {activeTab === 'quality' && (
                 <ScrollView className="w-full p-1">
                   {videoTracks &&
-                    videoTracks.map((track: any, i) => (
+                    videoTracks.map((track: any, i: any) => (
                       <TouchableOpacity
                         className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
                         key={i}
                         onPress={() => {
                           setSelectedVideoTrack({
-                            type: 'index',
+                            type: SelectedVideoTrackType.INDEX,
                             value: track.index,
                           });
                           setShowSettings(false);
