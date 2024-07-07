@@ -69,10 +69,18 @@ function Hero() {
           source={{
             uri:
               post?.background ||
-              post?.poster ||
               post?.image ||
-              'https://via.placeholder.com',
+              post?.poster ||
+              'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Vega',
           }}
+          onError={() =>
+            setPost((prev: any) => {
+              return {
+                ...prev,
+                background: '',
+              };
+            })
+          }
           className="h-96 w-full"
           style={{resizeMode: 'cover'}}
         />

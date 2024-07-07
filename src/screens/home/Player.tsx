@@ -500,7 +500,11 @@ const Player = ({route}: Props): React.JSX.Element => {
                               ? 'text-primary'
                               : 'text-white'
                           }`}>
-                          {track.height + 'p bitrate-' + track.bitrate}
+                          {track.height +
+                            'p | Bitrate- ' +
+                            track.bitrate +
+                            ' | Codec- ' +
+                            track?.codecs}
                         </Text>
                       </TouchableOpacity>
                     ))}
