@@ -30,7 +30,7 @@ export const ExtraGetPosts = async function (
       .map((i, element) => {
         const title = $(element)
           .find('.gridshow-grid-post-thumbnail.gridshow-grid-post-block')
-          .find('a')
+          .find('img')
           .attr('title');
         const link = $(element)
           .find('.gridshow-grid-post-thumbnail.gridshow-grid-post-block')
@@ -48,7 +48,7 @@ export const ExtraGetPosts = async function (
           '';
         if (title && link) {
           catalog.push({
-            title: title.replace('Download', '').trim(),
+            title: title.replace('Download ', '').trim(),
             link: link,
             image: image,
           });

@@ -68,7 +68,6 @@ interface Manifest {
 }
 export const manifest: Manifest = {
   vega: {
-    searchFilter: 'search',
     catalog: homeList,
     genres: genresList,
     nonStreamableServer: ['filepress', 'hubcloud'],
@@ -108,7 +107,6 @@ export const manifest: Manifest = {
   tokyoInsider: {
     catalog: tokyoCatalogList,
     genres: [],
-    searchFilter: 'query',
     blurImage: true,
     getStream: tokyoGetStream,
     getPosts: tokyoGetPosts,
