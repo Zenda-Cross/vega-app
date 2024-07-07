@@ -15,13 +15,13 @@ export const multiGetPosts = async function (
       'https://himanshu8443.github.io/providers/modflix.json',
     );
     const dataRes = urlRes.data;
-    // console.log(dataRes.drive.url);
+    // console.log(dataRes);
     const baseUrl = dataRes?.multi?.url;
-    console.log(baseUrl);
+    // console.log(baseUrl);
     const url = filter.includes('query')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
-      : `${baseUrl + filter}/page/${page}/`;
-    // console.log(url);
+      : `${baseUrl + filter}page/${page}/`;
+    console.log('multiUrl', url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);

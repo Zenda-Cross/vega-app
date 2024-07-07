@@ -8,6 +8,9 @@ const encode = function (value: string) {
   return btoa(value.toString());
 };
 const decode = function (value: string) {
+  if (value === undefined) {
+    return '';
+  }
   return atob(value.toString());
 };
 const pen = function (value: string) {
@@ -173,7 +176,8 @@ export async function vegaGetStream(
     // console.log('vcloudLink', vcloudLink?.[1]);
     /////////////////////////////
 
-    const vcloudLink = decode(vLinkRedirect[1].split('r=')[1]);
+    const vcloudLink =
+      decode(vLinkRedirect[1]?.split('r=')?.[1]) || vLinkRedirect[1];
     console.log('vcloudLink', vcloudLink);
     /////////////////////////////
     // const vcloudRes = await axios(

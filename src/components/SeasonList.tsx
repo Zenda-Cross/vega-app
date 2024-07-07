@@ -44,7 +44,8 @@ const SeasonList = ({
   }>({active: false});
 
   const [ActiveSeason, setActiveSeason] = useState<Link>(
-    MmmkvCache.getMap(`ActiveSeason${metaTitle}`) || LinkList[0],
+    MmmkvCache.getMap(`ActiveSeason${metaTitle + providerValue}`) ||
+      LinkList[0],
   );
 
   useEffect(() => {
@@ -182,7 +183,7 @@ const SeasonList = ({
         }
         onChange={item => {
           setActiveSeason(item);
-          MmmkvCache.setMap(`ActiveSeason${metaTitle}`, item);
+          MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
         }}
         value={ActiveSeason}
         data={LinkList}
