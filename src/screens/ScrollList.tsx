@@ -10,6 +10,7 @@ import {Skeleton} from 'moti/skeleton';
 import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
+import {MaterialIcons} from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -22,6 +23,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
   const {provider} = useContentStore(state => state);
+  const [viewType, setViewType] = useState<number>(1);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -50,15 +52,22 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <View className="h-full w-full bg-black items-center p-4">
-      <View className="w-full px-4 font-semibold mt-5">
+      <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
         </Text>
+        <TouchableOpacity onPress={() => setViewType(viewType === 1 ? 2 : 1)}>
+          <MaterialIcons
+            name={viewType === 1 ? 'view-module' : 'view-list'}
+            size={27}
+            color="tomato"
+          />
+        </TouchableOpacity>
       </View>
       <View className="justify-center flex-row w-96 ">
         <FlatList
           ListFooterComponent={
-            isLoading ? (
+            isLoading && viewType === 1 ? (
               <MotiView
                 animate={{backgroundColor: 'black'}}
                 //@ts-ignore
@@ -88,7 +97,8 @@ const ScrollList = ({route}: Props): React.ReactElement => {
             ) : null
           }
           data={posts}
-          numColumns={3}
+          numColumns={viewType === 1 ? 3 : 1}
+          key={viewType}
           contentContainerStyle={{
             width: 'auto',
             // flexDirection: 'row',
@@ -98,31 +108,43 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           }}
           keyExtractor={(item, i) => item.title + i}
           renderItem={({item}) => (
-            <View className="flex flex-col m-3">
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('Info', {
-                    link: item.link,
-                    provider: route.params.providerValue || provider.value,
-                    poster: item?.image,
-                  })
+            <TouchableOpacity
+              className={
+                viewType === 1
+                  ? 'flex flex-col m-3'
+                  : 'flex-row m-3 items-center'
+              }
+              onPress={() =>
+                navigation.navigate('Info', {
+                  link: item.link,
+                  provider: route.params.providerValue || provider.value,
+                  poster: item?.image,
+                })
+              }>
+              <Image
+                className="rounded-md"
+                source={{
+                  uri:
+                    item.image ||
+                    'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Img',
+                }}
+                style={
+                  viewType === 1
+                    ? {width: 100, height: 150}
+                    : {width: 70, height: 100}
+                }
+              />
+              <Text
+                className={
+                  viewType === 1
+                    ? 'text-white text-center truncate w-24 text-xs'
+                    : 'text-white ml-3 truncate w-72 font-semibold text-base'
                 }>
-                <Image
-                  className="rounded-md"
-                  source={{
-                    uri:
-                      item.image ||
-                      'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Img',
-                  }}
-                  style={{width: 100, height: 150}}
-                />
-              </TouchableOpacity>
-              <Text className="text-white text-center truncate w-24 text-xs">
-                {item.title.length > 24
+                {item.title.length > 24 && viewType === 1
                   ? item.title.slice(0, 24) + '...'
                   : item.title}
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
           onEndReached={onEndReached}
         />

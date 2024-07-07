@@ -205,6 +205,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         isFullscreen={true}
         disableVolume={true}
         showHours={true}
+        bufferConfig={{backBufferDurationMs: 50000}}
         onError={e => {
           const serverIndex = stream.indexOf(selectedStream);
           console.log('PlayerError', e);
@@ -270,8 +271,10 @@ const Player = ({route}: Props): React.JSX.Element => {
           //   showControls ? 'translate-y-0' : '-translate-y-20'
           // }`}
           onPress={() => {
-            setShowSettings(!showSettings);
-            // playerRef?.current?.pause();
+            if (!loading) {
+              setShowSettings(!showSettings);
+              // playerRef?.current?.pause();
+            }
           }}>
           <MaterialIcons
             name="settings"
