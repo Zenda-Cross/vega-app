@@ -74,9 +74,9 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                 transition={{
                   type: 'timing',
                 }}
-                className="flex flex-row gap-2 flex-wrap justify-center items-center">
+                className="flex flex-row gap-2 flex-wrap justify-center items-center mb-16">
                 {[...Array(6)].map((_, i) => (
-                  <View className="mx-3 gap-1 flex" key={i}>
+                  <View className="mx-3 gap-1 flex mb-3" key={i}>
                     <Skeleton
                       key={i}
                       show={true}
@@ -94,7 +94,9 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                   </View>
                 ))}
               </MotiView>
-            ) : null
+            ) : (
+              <View className="h-16" />
+            )
           }
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
@@ -126,7 +128,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                 source={{
                   uri:
                     item.image ||
-                    'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Img',
+                    'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Vega',
                 }}
                 style={
                   viewType === 1
