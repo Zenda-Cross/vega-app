@@ -190,7 +190,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 />
               ) : (
                 <Text className="text-white text-xl mb-3 font-semibold w-3/4 truncate">
-                  {info?.title}
+                  {meta?.name || info?.title}
                 </Text>
               )}
               {/* rating */}
