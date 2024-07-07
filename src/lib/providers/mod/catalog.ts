@@ -8,8 +8,8 @@ export const catalogList = [
     filter: '/ott/netflix',
   },
   {
-    title: 'Disney+',
-    filter: '/ott/disney-plus',
+    title: 'HBO Max',
+    filter: '/ott/hbo-max',
   },
   {
     title: 'Amazon Prime',
