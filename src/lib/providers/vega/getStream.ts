@@ -185,8 +185,12 @@ export async function vegaGetStream(
     //   {headers, signal},
     // );
     /////////////////////////////
-    const vcloudRes = await axios(vcloudLink, {headers, signal});
-    const $ = cheerio.load(vcloudRes.data);
+    const vcloudRes = await fetch(vcloudLink, {
+      headers,
+      signal,
+      redirect: 'follow',
+    });
+    const $ = cheerio.load(await vcloudRes.text());
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
     for (const element of linkClass) {
