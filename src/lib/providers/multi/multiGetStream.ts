@@ -34,13 +34,13 @@ export const multiGetStream = async (
     });
     const playerData = await playerRes.json();
     console.log('playerData', playerData);
-    const ifameUrl = playerData?.embed_url.match(
-      /<iframe[^>]+src="([^"]+)"[^>]*>/i,
-    )[1];
+    const ifameUrl =
+      playerData?.embed_url?.match(/<iframe[^>]+src="([^"]+)"[^>]*>/i)?.[1] ||
+      playerData?.embed_url;
     console.log('ifameUrl', ifameUrl);
     const iframeRes = await axios.get(ifameUrl, {headers});
     const iframeData = iframeRes.data;
-    const streamUrl = iframeData.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)[1];
+    const streamUrl = iframeData?.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)?.[1];
     const subtitles: {
       lang: string;
       url: string;
