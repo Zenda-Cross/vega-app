@@ -70,7 +70,7 @@ export const manifest: Manifest = {
   vega: {
     catalog: homeList,
     genres: genresList,
-    nonStreamableServer: ['filepress', 'hubcloud'],
+    nonStreamableServer: ['filepress'],
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -79,7 +79,7 @@ export const manifest: Manifest = {
   lux: {
     catalog: homeList,
     genres: genresList,
-    nonStreamableServer: ['filepress', 'hubcloud'],
+    nonStreamableServer: ['filepress'],
     getStream: vegaGetStream,
     getPosts: vegaGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
@@ -116,7 +116,7 @@ export const manifest: Manifest = {
   drive: {
     catalog: driveCatalog,
     genres: driveGenresList,
-    nonStreamableServer: ['hubcloud'],
+    nonStreamableServer: [],
     getStream: driveGetStream,
     getPosts: driveGetPosts,
     getEpisodeLinks: driveGetEpisodeLinks,

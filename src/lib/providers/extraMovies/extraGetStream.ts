@@ -26,7 +26,7 @@ export const extraGetStream = async (
     const hubcloudData = hubcloudRes.data;
     const $$ = cheerio.load(hubcloudData);
     const linkClass = $$('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
-    linkClass.each((index, element) => {
+    for (const element of linkClass) {
       const itm = $(element);
       let link = itm.attr('href') || '';
       if (link?.includes('.dev')) {
@@ -41,12 +41,15 @@ export const extraGetStream = async (
         streamLinks.push({server: 'pixeldrain', link: link, type: 'mkv'});
       }
       if (link?.includes('hubcloud')) {
-        streamLinks.push({server: 'hubcloud', link: link, type: 'mkv'});
+        const newLinkRes = await axios.head(link, {headers});
+        const newLink =
+          newLinkRes.request?.responseURL?.split('link=')?.[1] || link;
+        streamLinks.push({server: 'hubcloud', link: newLink, type: 'mkv'});
       }
       if (link?.includes('cloudflarestorage')) {
         streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
-    });
+    }
     console.log('streamLinks', streamLinks);
     return streamLinks;
   } catch (err) {
