@@ -14,7 +14,7 @@ Download- https://github.com/Zenda-Cross/vega-app/releases
 ___
 
 ## Build and Dev
-Install React Native setup if you haven't already [guide](https://reactnative.dev/docs/set-up-your-environment)
+0. Install React Native setup if you haven't already [guide](https://reactnative.dev/docs/set-up-your-environment)
 
 1. clone
 ```bash
