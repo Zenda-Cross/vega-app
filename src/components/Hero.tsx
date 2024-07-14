@@ -71,7 +71,7 @@ function Hero() {
               post?.background ||
               post?.image ||
               post?.poster ||
-              'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Vega',
+              'https://placehold.jp/24/363636/ffffff/500x500.png?text=Vega',
           }}
           onError={() =>
             setPost((prev: any) => {

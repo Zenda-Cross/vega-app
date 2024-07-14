@@ -80,7 +80,7 @@ export default function Slider({
                   source={{
                     uri:
                       item?.image ||
-                      'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=img',
+                      'https://placehold.jp/24/363636/ffffff/100x150.png?text=img',
                   }}
                   style={{width: 100, height: 150}}
                 />
