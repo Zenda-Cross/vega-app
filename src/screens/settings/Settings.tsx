@@ -1,24 +1,22 @@
 import {
   View,
   Text,
-  TextInput,
   Alert,
   Linking,
   TouchableOpacity,
   TouchableNativeFeedback,
-  ToastAndroid,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {useState} from 'react';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import pkg from '../../../package.json';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import {providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {Feather} from '@expo/vector-icons';
+import {AntDesign} from '@expo/vector-icons';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SettingsStackParamList} from '../../App';
 
@@ -40,80 +38,43 @@ const players = [
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
-  const [BaseUrl, setBaseUrl] = useState(MMKV.getString('baseUrl') || '');
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     players.find(player => player.value === MMKV.getString('externalPlayer')) ||
       players[0],
   );
-  const [UseCustomUrl, setUseCustomUrl] = useState(
-    MMKV.getBool('UseCustomUrl') || false,
-  );
+
   const [ExcludedQualities, setExcludedQualities] = useState(
     MMKV.getArray('ExcludedQualities') || [],
   );
-  const [updateLoading, setUpdateLoading] = useState(false);
 
   const {provider, setProvider} = useContentStore(state => state);
-
-  // handle base url change
-  const onChange = async (text: string) => {
-    if (text.endsWith('/')) {
-      text = text.slice(0, -1);
-    }
-    MMKV.setString('baseUrl', text);
-    setBaseUrl(text);
-  };
-
-  // handle check for update
-  const checkForUpdate = async () => {
-    setUpdateLoading(true);
-    try {
-      const res = await fetch(
-        'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
-      );
-      const data = await res.json();
-      if (data.tag_name.replace('v', '') !== pkg.version) {
-        ToastAndroid.show('New update available', ToastAndroid.SHORT);
-        const url = data.html_url;
-        Alert.alert('Update', data.body, [
-          {text: 'Cancel'},
-          {text: 'Update', onPress: () => Linking.openURL(url)},
-        ]);
-        console.log('version', data.tag_name.replace('v', ''), pkg.version);
-      } else {
-        ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
-        console.log('version', data.tag_name.replace('v', ''), pkg.version);
-      }
-    } catch (error) {
-      ToastAndroid.show('Failed to check for update', ToastAndroid.SHORT);
-      console.log('Update error', error);
-    }
-    setUpdateLoading(false);
-  };
 
   return (
     <View className="w-full h-full bg-black p-4">
       <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
 
-      {/* Content type */}
+      {/* Content provider */}
       {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
           <Text className="text-primary font-bold text-lg">
-            Choose Provider
+            Change Provider
           </Text>
           <View className="w-40">
             <Dropdown
               selectedTextStyle={{
                 color: 'white',
                 overflow: 'hidden',
+                fontWeight: 'bold',
                 height: 23,
               }}
               containerStyle={{
-                borderColor: 'black',
-                width: 150,
+                borderColor: '#363636',
+                width: 160,
+                borderRadius: 5,
                 overflow: 'hidden',
                 padding: 2,
                 backgroundColor: 'black',
+                maxHeight: 450,
               }}
               labelField={'name'}
               valueField={'value'}
@@ -126,7 +87,7 @@ const Settings = ({navigation}: Props) => {
               renderItem={item => {
                 return (
                   <View
-                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-3 ${
+                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 ${
                       provider.value === item.value ? 'bg-quaternary' : ''
                     }`}>
                     <Text className=" text-white mb-2">
@@ -154,19 +115,6 @@ const Settings = ({navigation}: Props) => {
           }}
         />
       </View> */}
-
-      {/* Base URL */}
-      {UseCustomUrl && (
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold">Base Url</Text>
-          <TextInput
-            className="bg-secondary text-white p-1 px-2 rounded-md"
-            placeholder="example-https://vegamovies.cash"
-            value={BaseUrl}
-            onChangeText={onChange}
-          />
-        </View>
-      )}
 
       {/* open in vlc */}
       <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
@@ -324,7 +272,7 @@ const Settings = ({navigation}: Props) => {
             <TouchableOpacity
               key={index}
               className={`bg-secondary p-2 rounded-md m-1 ${
-                ExcludedQualities.includes(quality) ? 'bg-primary' : ''
+                ExcludedQualities.includes(quality) ? 'bg-[#343434]' : ''
               }`}
               onPress={() => {
                 ReactNativeHapticFeedback.trigger('effectTick', {
@@ -358,7 +306,7 @@ const Settings = ({navigation}: Props) => {
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
         <TouchableOpacity
-          className="bg-secondary p-2 rounded-md"
+          className="bg-[#343434] p-2 rounded-md"
           onPress={() => {
             ReactNativeHapticFeedback.trigger('virtualKey', {
               enableVibrateFallback: true,
@@ -369,19 +317,27 @@ const Settings = ({navigation}: Props) => {
           <Text className="text-white rounded-md px-2">Clear</Text>
         </TouchableOpacity>
       </View>
-
-      {/* version */}
+      {/* About */}
       <TouchableNativeFeedback
-        onPress={checkForUpdate}
-        disabled={updateLoading}
+        onPress={() => {
+          navigation.navigate('About');
+        }}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold my-2">
-            Check for Updates
-          </Text>
-          <Text className="text-white font-semibold my-2">v{pkg.version}</Text>
+          <Text className="text-white font-semibold my-2">About</Text>
+          <Feather name="chevron-right" size={24} color="white" />
         </View>
       </TouchableNativeFeedback>
+      <TouchableOpacity
+        className="flex-row items-center justify-center gap-4 mt-12"
+        onPress={() =>
+          Linking.openURL('https://github.com/Zenda-Cross/vega-app')
+        }>
+        <AntDesign name="github" size={22} color="white" />
+        <Text className="text-white text-xs font-semibold">
+          Github: Zenda-Cross/vega-app
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

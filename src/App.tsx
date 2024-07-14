@@ -20,7 +20,8 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import DisableProviders from './screens/settings/DisableProviders';
 import {Alert, Linking} from 'react-native';
 import pkg from '../package.json';
-import notifee from '@notifee/react-native';
+import About from './screens/settings/About';
+import {MMKV} from './lib/Mmkv';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -56,6 +57,7 @@ export type WatchListStackParamList = {
 export type SettingsStackParamList = {
   Settings: undefined;
   DisableProviders: undefined;
+  About: undefined;
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -130,6 +132,7 @@ const App = () => {
           name="DisableProviders"
           component={DisableProviders}
         />
+        <SettingsStack.Screen name="About" component={About} />
       </SettingsStack.Navigator>
     );
   }
@@ -220,7 +223,9 @@ const App = () => {
         console.log('Update error', error);
       }
     };
-    checkForUpdate();
+    if (MMKV.getBool('autoCheckUpdate') !== false) {
+      checkForUpdate();
+    }
   }, []);
 
   return (
