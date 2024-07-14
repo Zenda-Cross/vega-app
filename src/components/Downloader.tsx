@@ -284,13 +284,19 @@ const DownloadComponent = ({
     }
     const getServer = async () => {
       setServerLoading(true);
-      const url = await manifest[providerValue || provider.value].getStream(
+      const servers = await manifest[providerValue || provider.value].getStream(
         link,
         type,
         reqController.signal,
       );
+      const filteredServers = servers.filter(
+        server =>
+          !manifest[
+            providerValue || provider.value
+          ].nonDownloadableServer?.includes(server.server),
+      );
       setServerLoading(false);
-      setServers(url);
+      setServers(filteredServers);
     };
     getServer();
   }, [downloadModal, longPressModal]);
@@ -416,6 +422,11 @@ const DownloadComponent = ({
                         width={90}
                       />
                     ))}
+                {serverLoading === false && servers.length === 0 && (
+                  <Text className="text-red-500 text-center">
+                    No server available to download
+                  </Text>
+                )}
               </View>
               <View className="flex-row items-center gap-2 w-full">
                 <MaterialIcons
