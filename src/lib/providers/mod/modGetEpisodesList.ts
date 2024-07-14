@@ -53,11 +53,6 @@ export const modGetEpisodeLinks = async function (
     return episodeLinks;
   } catch (err) {
     console.error(err);
-    return [
-      {
-        title: 'Server 1',
-        link: url,
-      },
-    ];
+    return [];
   }
 };
