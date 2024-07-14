@@ -11,6 +11,7 @@ import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import {MaterialIcons} from '@expo/vector-icons';
+import {MMKV} from '../lib/Mmkv';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -23,7 +24,9 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
   const {provider} = useContentStore(state => state);
-  const [viewType, setViewType] = useState<number>(1);
+  const [viewType, setViewType] = useState<number>(
+    MMKV.getInt('viewType') || 1,
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,11 +59,15 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
         </Text>
-        <TouchableOpacity onPress={() => setViewType(viewType === 1 ? 2 : 1)}>
+        <TouchableOpacity
+          onPress={() => {
+            setViewType(viewType === 1 ? 2 : 1);
+            MMKV.setInt('viewType', viewType === 1 ? 2 : 1);
+          }}>
           <MaterialIcons
             name={viewType === 1 ? 'view-module' : 'view-list'}
             size={27}
-            color="tomato"
+            color="white"
           />
         </TouchableOpacity>
       </View>
@@ -128,7 +135,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                 source={{
                   uri:
                     item.image ||
-                    'https://placehold.jp/24/cccccc/ffffff/100x150.png?text=Vega',
+                    'https://placehold.jp/24/363636/ffffff/100x150.png?text=Vega',
                 }}
                 style={
                   viewType === 1
