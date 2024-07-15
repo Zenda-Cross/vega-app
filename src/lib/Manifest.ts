@@ -43,6 +43,10 @@ import {ExtraGetPosts} from './providers/extraMovies/extraGetPosts';
 import {extraGetInfo} from './providers/extraMovies/extraGetInfo';
 import {extraGetEpisodeLinks} from './providers/extraMovies/extraGetEpisodeLinks';
 import {extraGetStream} from './providers/extraMovies/extraGetStream';
+import {gogoCatalog, gogoGenresList} from './providers/gogo/gogoCatalog';
+import {gogoGetPosts} from './providers/gogo/gogoGetPosts';
+import {gogoGetInfo} from './providers/gogo/gogoGetInfo';
+import {gogoGetStream} from './providers/gogo/gogoGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -51,6 +55,7 @@ interface Manifest {
     genres: Catalog[];
     blurImage?: boolean;
     nonStreamableServer?: string[];
+    nonDownloadableServer?: string[];
     getStream: (
       link: string,
       type: string,
@@ -128,6 +133,7 @@ export const manifest: Manifest = {
     getPosts: multiGetPosts,
     getInfo: multiGetInfo,
     getStream: multiGetStream,
+    nonDownloadableServer: ['multi'],
     getEpisodeLinks: vegaGetEpisodeLinks,
   },
   world4u: {
@@ -145,5 +151,14 @@ export const manifest: Manifest = {
     getPosts: ExtraGetPosts,
     getEpisodeLinks: extraGetEpisodeLinks,
     getInfo: extraGetInfo,
+  },
+  gogo: {
+    catalog: gogoCatalog,
+    genres: gogoGenresList,
+    nonDownloadableServer: ['default', 'backup'],
+    getPosts: gogoGetPosts,
+    getEpisodeLinks: vegaGetEpisodeLinks,
+    getInfo: gogoGetInfo,
+    getStream: gogoGetStream,
   },
 };
