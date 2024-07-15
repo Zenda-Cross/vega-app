@@ -3,7 +3,7 @@
 # Vega-App
 Android app for streaming media.
 ### Features
-- Steam and Download AddFree.
+- Steam and Download Ad-Free.
 - Multiple sources.
 - Multi Audio and Subs (Hindi, English, etc.).
 - WatchList.
