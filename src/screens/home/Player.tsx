@@ -32,7 +32,7 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
-import {playerHeaders} from '../../lib/playerHeaders';
+import {Entypo} from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 type Stream = {
@@ -64,6 +64,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     {type: 'language', value: 'off'},
   );
   const [loading, setLoading] = useState(false);
+  const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
   const [videoTracks, setVideoTracks] = useState<any>([]);
   const [selectedVideoTrack, setSelectedVideoTrack] =
@@ -76,10 +77,12 @@ const Player = ({route}: Props): React.JSX.Element => {
   const watchedDuration = MmmkvCache.getString(route?.params?.link)
     ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
     : 0;
+  console.log('watchedDuration', watchedDuration);
 
   const navigation = useNavigation();
   const remoteMediaClient = useRemoteMediaClient();
 
+  // cast
   useEffect(() => {
     if (remoteMediaClient) {
       remoteMediaClient.loadMedia({
@@ -108,6 +111,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [remoteMediaClient, selectedStream]);
 
+  // get stream
   useEffect(() => {
     const controller = new AbortController();
     const fetchStream = async () => {
@@ -152,8 +156,6 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [route.params.link]);
 
-  let timer: NodeJS.Timeout;
-
   return (
     <SafeAreaView
       edges={{
@@ -168,8 +170,6 @@ const Player = ({route}: Props): React.JSX.Element => {
       <VideoPlayer
         source={{
           uri: selectedStream?.link || '',
-          startPosition: watchedDuration * 1000,
-          headers: playerHeaders,
           shouldCache: true,
         }}
         textTracks={selectedStream?.subtitles?.map(sub => ({
@@ -179,17 +179,17 @@ const Player = ({route}: Props): React.JSX.Element => {
           uri: sub.url,
         }))}
         onProgress={e => {
-          clearTimeout(timer);
-          timer = setTimeout(() => {
-            MmmkvCache.setString(
-              route.params.link,
-              JSON.stringify({
-                position: e.currentTime,
-                duration: e.seekableDuration,
-              }),
-            );
-            // console.log('watchedDuration', e.currentTime);
-          }, 1000);
+          MmmkvCache.setString(
+            route.params.link,
+            JSON.stringify({
+              position: e.currentTime,
+              duration: e.seekableDuration,
+            }),
+          );
+          // console.log('watchedDuration', e.currentTime);
+        }}
+        onLoad={() => {
+          playerRef?.current?.seek(watchedDuration);
         }}
         videoRef={playerRef}
         rate={playbackRate}
@@ -198,12 +198,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         navigator={navigation}
         seekColor="tomato"
         showDuration={true}
-        toggleResizeModeOnFullscreen={true}
+        toggleResizeModeOnFullscreen={false}
         fullscreen={true}
         onShowControls={() => setShowControls(true)}
         onHideControls={() => setShowControls(false)}
         rewindTime={10}
         isFullscreen={true}
+        disableFullscreen={true}
         disableVolume={true}
         showHours={true}
         bufferConfig={{backBufferDurationMs: 50000}}
@@ -225,7 +226,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           }
           setShowControls(true);
         }}
-        resizeMode={ResizeMode.NONE}
+        resizeMode={resizeMode}
         //@ts-ignore
         selectedAudioTrack={selectedAudioTrack}
         onAudioTracks={e => {
@@ -305,6 +306,29 @@ const Player = ({route}: Props): React.JSX.Element => {
           <Text className="text-white/60 text-xl font-bold">
             {playbackRate}x
           </Text>
+        </TouchableOpacity>
+      </MotiView>
+
+      {/* resize button */}
+      <MotiView
+        from={{translateY: 0}}
+        animate={{translateY: showControls ? 0 : 150}}
+        //@ts-ignore
+        transition={{type: 'timing', duration: 260}}
+        className="absolute bottom-11 right-6 opacity-60">
+        <TouchableOpacity
+          onPress={() => {
+            setResizeMode(
+              resizeMode === ResizeMode.NONE
+                ? ResizeMode.COVER
+                : ResizeMode.NONE,
+            );
+          }}>
+          {resizeMode === ResizeMode.NONE ? (
+            <Entypo name="resize-full-screen" size={26} color="white" />
+          ) : (
+            <Entypo name="resize-100" size={26} color="white" />
+          )}
         </TouchableOpacity>
       </MotiView>
       {
@@ -500,11 +524,18 @@ const Player = ({route}: Props): React.JSX.Element => {
                               ? 'text-primary'
                               : 'text-white'
                           }`}>
-                          {track.height +
-                            'p | Bitrate- ' +
+                          {track.height + 'p'}
+                        </Text>
+                        <Text
+                          className={`text-sm italic ${
+                            selectedVideoTrack.value === track.index
+                              ? 'text-primary'
+                              : 'text-white'
+                          }`}>
+                          {'Bitrate-' +
                             track.bitrate +
-                            ' | Codec- ' +
-                            track?.codecs}
+                            ' | Codec-' +
+                            (track?.codecs || 'unknown')}
                         </Text>
                       </TouchableOpacity>
                     ))}

@@ -23,6 +23,7 @@ export interface Info {
   synopsis: string;
   imdbId: string;
   type: string;
+  tags?: string[];
   linkList: Link[];
 }
 

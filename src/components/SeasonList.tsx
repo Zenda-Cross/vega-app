@@ -1,4 +1,11 @@
-import {View, Text, TouchableOpacity, ToastAndroid, Modal} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ToastAndroid,
+  Modal,
+  FlatList,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
@@ -24,11 +31,13 @@ const SeasonList = ({
   poster,
   metaTitle,
   providerValue,
+  refreshing,
 }: {
   LinkList: Link[];
   poster: string;
   metaTitle: string;
   providerValue: string;
+  refreshing?: boolean;
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -59,7 +68,6 @@ const SeasonList = ({
         setEpisodeList(JSON.parse(cacheEpisodes as string));
         // console.log('cache', JSON.parse(cacheEpisodes as string));
         setEpisodeLoading(false);
-        return;
       }
       const episodes = await manifest[providerValue].getEpisodeLinks(
         ActiveSeason.episodesLink,
@@ -71,7 +79,7 @@ const SeasonList = ({
       setEpisodeLoading(false);
     };
     fetchList();
-  }, [ActiveSeason]);
+  }, [ActiveSeason, refreshing]);
 
   type playHandlerProps = {
     link: string;
@@ -111,21 +119,33 @@ const SeasonList = ({
       try {
         await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
           data: availableStream?.[0].link,
-          packageName: 'com.mxtech.videoplayer.ad',
-          className: 'com.mxtech.videoplayer.ad.ActivityScreen',
+          packageName: 'com.mxtech.videoplayer.pro',
+          className: 'com.mxtech.videoplayer.pro.ActivityScreen',
         });
       } catch (e) {
         console.log(e);
+        // open pro version
         try {
-          await SharedGroupPreferences.isAppInstalledAndroid(
-            'com.mxtech.videoplayer.ad',
+          await IntentLauncher.startActivityAsync(
+            'android.intent.action.VIEW',
+            {
+              data: availableStream?.[0].link,
+              packageName: 'com.mxtech.videoplayer.ad',
+              className: 'com.mxtech.videoplayer.ad.ActivityScreen',
+            },
           );
-          ToastAndroid.show('Error in playing stream', ToastAndroid.SHORT);
-        } catch (err) {
-          Linking.openURL('market://details?id=com.mxtech.videoplayer.ad');
-          ToastAndroid.show('MX Player not installed', ToastAndroid.SHORT);
+        } catch (error) {
+          try {
+            await SharedGroupPreferences.isAppInstalledAndroid(
+              'com.mxtech.videoplayer.ad',
+            );
+            ToastAndroid.show('Error in playing stream', ToastAndroid.SHORT);
+          } catch (err) {
+            Linking.openURL('market://details?id=com.mxtech.videoplayer.ad');
+            ToastAndroid.show('MX Player not installed', ToastAndroid.SHORT);
+          }
+          setVlcLoading(false);
         }
-        setVlcLoading(false);
       }
       setVlcLoading(false);
       return;
@@ -172,7 +192,7 @@ const SeasonList = ({
   return (
     <View>
       <Dropdown
-        selectedTextStyle={{color: 'tomato', overflow: 'hidden', height: 23}}
+        selectedTextStyle={{color: 'tomato', overflow: 'hidden', height: 22}}
         labelField={'title'}
         valueField={
           LinkList[0]?.movieLinks
@@ -246,21 +266,155 @@ const SeasonList = ({
         )}
         {/* episodesLinks */}
         {
+          <FlatList
+            data={episodeList}
+            keyExtractor={(item, index) => item.link + index}
+            renderItem={({item, index}) => (
+              <View
+                key={item.link + index}
+                className={`w-full justify-center items-center gap-2 flex-row my-1
+              ${
+                isCompleted(item.link) || stickyMenu.link === item.link
+                  ? 'opacity-60'
+                  : ''
+              }
+              `}>
+                <View className="flex-row w-full justify-between gap-2 items-center">
+                  <TouchableOpacity
+                    className={
+                      'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
+                    }
+                    onPress={() =>
+                      playHandler({
+                        link: item.link,
+                        type: 'series',
+                        title: metaTitle + ' ' + item.title,
+                        file: (
+                          metaTitle +
+                          ActiveSeason.title +
+                          item.title
+                        ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
+                      })
+                    }
+                    onLongPress={() =>
+                      onLongPressHandler(true, item.link, 'series')
+                    }>
+                    <Ionicons name="play-circle" size={28} color="tomato" />
+                    <Text className="text-white">
+                      {item.title.length > 30
+                        ? item.title.slice(0, 30) + '...'
+                        : item.title}
+                    </Text>
+                  </TouchableOpacity>
+                  <Downloader
+                    providerValue={providerValue}
+                    link={item.link}
+                    type="series"
+                    title={metaTitle + ' ' + item.title}
+                    fileName={(
+                      metaTitle +
+                      ActiveSeason.title +
+                      item.title
+                    ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                  />
+                </View>
+              </View>
+            )}
+          />
+          // <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
+          //   {!episodeLoading &&
+          //     episodeList?.length > 0 &&
+          //     ActiveSeason?.episodesLink &&
+          //     episodeList?.map((episode, i) => (
+          //       <View
+          //         key={episode.link + i}
+          //         className={`w-full justify-center items-center gap-2 flex-row
+          //         ${
+          //           isCompleted(episode.link) ||
+          //           stickyMenu.link === episode.link
+          //             ? 'opacity-60'
+          //             : ''
+          //         }
+          //         `}>
+          //         <View className="flex-row w-full justify-between gap-2 items-center">
+          //           <TouchableOpacity
+          //             className={
+          //               'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
+          //             }
+          //             onPress={() =>
+          //               playHandler({
+          //                 link: episode.link,
+          //                 type: 'series',
+          //                 title: metaTitle + ' ' + episode.title,
+          //                 file: (
+          //                   metaTitle +
+          //                   ActiveSeason.title +
+          //                   episode.title
+          //                 ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
+          //               })
+          //             }
+          //             onLongPress={() =>
+          //               onLongPressHandler(true, episode.link, 'series')
+          //             }>
+          //             <Ionicons name="play-circle" size={28} color="tomato" />
+          //             <Text className="text-white truncate">
+          //               {episode.title.length > 30
+          //                 ? episode.title.slice(0, 30) + '...'
+          //                 : episode.title}
+          //             </Text>
+          //           </TouchableOpacity>
+          //           <Downloader
+          //             providerValue={providerValue}
+          //             link={episode.link}
+          //             type="series"
+          //             title={metaTitle + ' ' + episode.title}
+          //             fileName={(
+          //               metaTitle +
+          //               ActiveSeason.title +
+          //               episode.title
+          //             ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+          //           />
+          //         </View>
+          //       </View>
+          //     ))}
+          //   {episodeLoading && (
+          //     <MotiView
+          //       animate={{backgroundColor: '#0000'}}
+          //       delay={0}
+          //       //@ts-ignore
+          //       transition={{
+          //         type: 'timing',
+          //       }}
+          //       style={{
+          //         width: '100%',
+          //         padding: 10,
+          //         alignItems: 'flex-start',
+          //         gap: 20,
+          //       }}>
+          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+          //     </MotiView>
+          //   )}
+          // </View>
+        }
+        {/* directLinks */}
+        {
           <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
-            {!episodeLoading &&
-              episodeList?.length > 0 &&
-              ActiveSeason?.episodesLink &&
-              episodeList?.map((episode, i) => (
+            <FlatList
+              data={ActiveSeason?.directLinks}
+              keyExtractor={(item, index) => item.link + index}
+              renderItem={({item, index}) => (
                 <View
-                  key={episode.link + i}
-                  className={`w-full justify-center items-center gap-2 flex-row
-                  ${
-                    isCompleted(episode.link) ||
-                    stickyMenu.link === episode.link
-                      ? 'opacity-60'
-                      : ''
-                  }
-                  `}>
+                  key={item.link + index}
+                  className={`w-full justify-center items-center my-2 gap-2 flex-row
+                ${
+                  isCompleted(item.link) || stickyMenu.link === item.link
+                    ? 'opacity-60'
+                    : ''
+                }
+                `}>
                   <View className="flex-row w-full justify-between gap-2 items-center">
                     <TouchableOpacity
                       className={
@@ -268,66 +422,43 @@ const SeasonList = ({
                       }
                       onPress={() =>
                         playHandler({
-                          link: episode.link,
+                          link: item.link,
                           type: 'series',
-                          title: metaTitle + ' ' + episode.title,
+                          title: metaTitle + ' ' + item.title,
                           file: (
                             metaTitle +
                             ActiveSeason.title +
-                            episode.title
+                            item.title
                           ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
                         })
                       }
                       onLongPress={() =>
-                        onLongPressHandler(true, episode.link, 'series')
+                        onLongPressHandler(true, item.link, 'series')
                       }>
                       <Ionicons name="play-circle" size={28} color="tomato" />
-                      <Text className="text-white truncate">
-                        {episode.title.length > 30
-                          ? episode.title.slice(0, 30) + '...'
-                          : episode.title}
+                      <Text className="text-white">
+                        {ActiveSeason?.directLinks?.length &&
+                        ActiveSeason?.directLinks?.length > 1
+                          ? item.title
+                          : 'Play'}
                       </Text>
                     </TouchableOpacity>
                     <Downloader
                       providerValue={providerValue}
-                      link={episode.link}
+                      link={item.link}
                       type="series"
-                      title={metaTitle + ' ' + episode.title}
+                      title={metaTitle + ' ' + item.title}
                       fileName={(
                         metaTitle +
                         ActiveSeason.title +
-                        episode.title
+                        item.title
                       ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
                     />
                   </View>
                 </View>
-              ))}
-            {episodeLoading && (
-              <MotiView
-                animate={{backgroundColor: '#0000'}}
-                delay={0}
-                //@ts-ignore
-                transition={{
-                  type: 'timing',
-                }}
-                style={{
-                  width: '100%',
-                  padding: 10,
-                  alignItems: 'flex-start',
-                  gap: 20,
-                }}>
-                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-                <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-              </MotiView>
-            )}
-          </View>
-        }
-        {/* directLinks */}
-        {
-          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
-            {ActiveSeason?.directLinks &&
+              )}
+            />
+            {/* {ActiveSeason?.directLinks &&
               ActiveSeason?.directLinks?.map((link, i) => (
                 <View
                   key={link.link + link.title + i}
@@ -379,10 +510,30 @@ const SeasonList = ({
                     />
                   </View>
                 </View>
-              ))}
+              ))} */}
           </View>
         }
-        {LinkList.length === 0 && (
+        {episodeLoading && (
+          <MotiView
+            animate={{backgroundColor: '#0000'}}
+            delay={0}
+            //@ts-ignore
+            transition={{
+              type: 'timing',
+            }}
+            style={{
+              width: '100%',
+              padding: 10,
+              alignItems: 'flex-start',
+              gap: 20,
+            }}>
+            <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+            <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+            <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+            <Skeleton colorMode={'dark'} width={'85%'} height={48} />
+          </MotiView>
+        )}
+        {LinkList?.length === 0 && (
           <Text className="text-white text-lg font-semibold min-h-20">
             No streams found
           </Text>

@@ -222,9 +222,13 @@ export async function vegaGetStream(
     return streamLinks;
   } catch (error: any) {
     console.log('getStream error: ', error);
-    if (error.includes('Aborted')) {
+    if (error.message.includes('Aborted')) {
+      // ToastAndroid.show('Request Aborted', ToastAndroid.SHORT);
     } else {
-      ToastAndroid.show('Error getting stream links', ToastAndroid.SHORT);
+      ToastAndroid.show(
+        `Error getting stream links ${error.message}`,
+        ToastAndroid.SHORT,
+      );
     }
     return [];
   }
