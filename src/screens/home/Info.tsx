@@ -362,7 +362,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                           : info?.linkList
                         : []
                     }
-                    poster={meta?.logo?.replace('medium', 'large') || ''}
+                    poster={meta?.logo || ''}
                     metaTitle={meta?.name || info?.title}
                   />
                 )}
