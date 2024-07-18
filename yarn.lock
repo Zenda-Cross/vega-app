@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@8man/react-native-media-console@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4.tgz"
+  integrity sha512-TtFf5exAu8kkSfW2QTR2Oh4abuBrSlaslHa8tOGfbqMvxfGqqdA4+tK/7u8bMwPGpwbFtdVfSsnU2a9vPbzI9Q==
+
 "@aashutoshrathi/word-wrap@^1.2.3":
   version "1.2.6"
   resolved "https://registry.npmjs.org/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz"
@@ -8362,11 +8367,6 @@ react-native-linear-gradient@^2.8.3:
   version "2.8.3"
   resolved "https://registry.npmjs.org/react-native-linear-gradient/-/react-native-linear-gradient-2.8.3.tgz"
   integrity sha512-KflAXZcEg54PXkLyflaSZQ3PJp4uC4whM7nT/Uot9m0e/qxFV3p6uor1983D1YOBJbJN7rrWdqIjq0T42jOJyA==
-
-react-native-media-console@^2.2.4:
-  version "2.2.4"
-  resolved "https://registry.npmjs.org/react-native-media-console/-/react-native-media-console-2.2.4.tgz"
-  integrity sha512-CpOunVkGkMRg7DoGYlXfGITbSuqvCId7CFcWyDED3CjJ1CCym4dB670GiBNymH/Sh5p1AaW8kvHng7PZ7fYUBQ==
 
 react-native-mmkv-storage@^0.9.1:
   version "0.9.1"
