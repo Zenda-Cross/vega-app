@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@8man/react-native-media-console": "^2.2.4",
     "@notifee/react-native": "^7.8.2",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
@@ -33,7 +34,6 @@
     "react-native-google-cast": "^4.8.0",
     "react-native-haptic-feedback": "^2.2.0",
     "react-native-linear-gradient": "^2.8.3",
-    "react-native-media-console": "^2.2.4",
     "react-native-mmkv-storage": "^0.9.1",
     "react-native-orientation-locker": "^1.7.0",
     "react-native-permissions": "^4.1.5",

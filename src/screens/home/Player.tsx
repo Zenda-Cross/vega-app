@@ -11,7 +11,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
-import VideoPlayer from 'react-native-media-console';
+import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
