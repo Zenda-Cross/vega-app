@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -26,6 +26,7 @@
     "nativewind": "^2.0.11",
     "react": "18.2.0",
     "react-native": "0.74.1",
+    "react-native-bootsplash": "^5.5.3",
     "react-native-element-dropdown": "^2.12.0",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.16.1",
