@@ -22,6 +22,7 @@ import {Alert, Linking} from 'react-native';
 import pkg from '../package.json';
 import About from './screens/settings/About';
 import {MMKV} from './lib/Mmkv';
+import BootSplash from 'react-native-bootsplash';
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -231,6 +232,7 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <NavigationContainer
+        onReady={() => BootSplash.hide({fade: true})}
         theme={{
           dark: true,
           colors: {
