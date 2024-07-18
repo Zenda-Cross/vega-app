@@ -86,8 +86,8 @@ android {
         applicationId "com.vega"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 41
-        versionName "2.1.5"
+        versionCode 42
+        versionName "2.1.6"
     }
     signingConfigs {
         release {
