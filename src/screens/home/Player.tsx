@@ -11,7 +11,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
-import VideoPlayer from 'react-native-media-console';
+import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -25,6 +25,7 @@ import {
   SelectedVideoTrack,
   SelectedVideoTrackType,
   ResizeMode,
+  VideoTrack,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -66,7 +67,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
-  const [videoTracks, setVideoTracks] = useState<any>([]);
+  const [videoTracks, setVideoTracks] = useState<VideoTrack[]>([]);
   const [selectedVideoTrack, setSelectedVideoTrack] =
     useState<SelectedVideoTrack>({
       type: SelectedVideoTrackType.AUTO,
@@ -74,6 +75,34 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [1, 1.25, 1.5, 1.75, 2];
+  const settings:
+    | {
+        title: string;
+        icon: string;
+        value: 'audio' | 'subtitle' | 'server' | 'quality';
+      }[] = [
+    {
+      title: 'Audio',
+      icon: 'multitrack-audio',
+      value: 'audio',
+    },
+    {
+      title: 'Subtitle',
+      icon: 'subtitles',
+      value: 'subtitle',
+    },
+    {
+      title: 'Server',
+      icon: 'source',
+      value: 'server',
+    },
+    {
+      title: 'Quality',
+      icon: 'video-settings',
+      value: 'quality',
+    },
+  ];
+
   const watchedDuration = MmmkvCache.getString(route?.params?.link)
     ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
     : 0;
@@ -205,6 +234,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         rewindTime={10}
         isFullscreen={true}
         disableFullscreen={true}
+        posterResizeMode="center"
         disableVolume={true}
         showHours={true}
         bufferConfig={{backBufferDurationMs: 50000}}
@@ -333,80 +363,66 @@ const Player = ({route}: Props): React.JSX.Element => {
       </MotiView>
       {
         // settings
-        showSettings && loading === false && (
-          <View
-            className="absolute top-0 left-0 w-full h-full bg-black/50 justify-center items-center"
+        loading === false && (
+          <MotiView
+            from={{translateY: 0, opacity: 0}}
+            animate={{
+              translateY: showSettings ? 0 : 500,
+              opacity: showSettings ? 1 : 0,
+            }}
+            //@ts-ignore
+            transition={{type: 'timing', duration: 260}}
+            className="absolute opacity-0 top-0 left-0 w-full h-full bg-black/20 justify-end items-center"
             onTouchEnd={() => {
               setShowSettings(false);
               // playerRef?.current?.resume();
             }}>
             <View
-              className="bg-quaternary p-3 w-96 max-h-72 rounded-md justify-center items-center"
+              className="bg-black p-3 w-[600px] h-72 rounded-t-lg flex-row justify-start items-center"
               onTouchEnd={e => e.stopPropagation()}>
               {/* tab buttons */}
-              <View className="flex-row justify-evenly items-center w-full border-b pb-2 border-white/50">
-                <TouchableOpacity onPress={() => setActiveTab('audio')}>
-                  <Text
-                    className={`text-lg ${
-                      activeTab === 'audio'
-                        ? 'font-bold text-primary'
-                        : 'font-normal text-white'
-                    }`}>
-                    Audio
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('subtitle')}>
-                  <Text
-                    className={`text-lg ${
-                      activeTab === 'subtitle'
-                        ? 'font-bold text-primary'
-                        : 'font-normal text-white'
-                    }`}>
-                    Subtitle
-                  </Text>
-                </TouchableOpacity>
-                {videoTracks.length > 0 && (
-                  <TouchableOpacity onPress={() => setActiveTab('quality')}>
+              <View className="flex justify-evenly h-72 items-start border-r pb-2 border-white/10">
+                {settings.map((setting, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => setActiveTab(setting.value)}
+                    className="p-2 flex-row gap-2 items-center mr-4">
+                    <MaterialIcons
+                      name={setting.icon as any}
+                      size={24}
+                      color="white"
+                    />
                     <Text
-                      className={`text-lg ${
-                        activeTab === 'quality'
+                      className={`text-xl capitalize ${
+                        activeTab === setting.value
                           ? 'font-bold text-primary'
-                          : 'font-normal text-white'
+                          : 'font-bold text-white'
                       }`}>
-                      Quality
+                      {setting.title}
                     </Text>
                   </TouchableOpacity>
-                )}
-                <TouchableOpacity onPress={() => setActiveTab('server')}>
-                  <Text
-                    className={`text-lg ${
-                      activeTab === 'server'
-                        ? 'font-bold text-primary'
-                        : 'font-normal text-white'
-                    }`}>
-                    Server
-                  </Text>
-                </TouchableOpacity>
+                ))}
               </View>
               {/* activeTab */}
 
               {/* audio */}
               {activeTab === 'audio' && (
-                <ScrollView className="w-full p-1">
+                <ScrollView className="w-full h-full p-1 px-4">
                   {audioTracks.map((track, i) => (
                     <TouchableOpacity
-                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       key={i}
                       onPress={() => {
                         setSelectedAudioTrack({
                           type: 'language',
                           value: track.language,
                         });
-                        setShowSettings(false);
-                        // playerRef?.current?.resume();
+                        audioTracks.forEach(t => (t.selected = false));
+                        track.selected = true;
+                        // setShowSettings(false);
                       }}>
                       <Text
-                        className={`text-base font-semibold ${
+                        className={`text-lg font-semibold ${
                           track.selected ? 'text-primary' : 'text-white'
                         }`}>
                         {track.language}
@@ -423,18 +439,21 @@ const Player = ({route}: Props): React.JSX.Element => {
                         }`}>
                         {track.title}
                       </Text>
+                      {track.selected && (
+                        <MaterialIcons name="check" size={20} color="white" />
+                      )}
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
               )}
               {/* subtitle */}
               {activeTab === 'subtitle' && (
-                <ScrollView className="w-full p-1">
+                <ScrollView className="w-full h-full p-1 px-4">
                   <TouchableOpacity
-                    className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                    className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                     onPress={() => {
                       setSelectedTextTrack({type: 'language', value: 'off'});
-                      setShowSettings(false);
+                      // setShowSettings(false);
                       // playerRef?.current?.resume();
                     }}>
                     <Text className="text-base font-semibold text-white">
@@ -444,7 +463,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                   {textTracks.map((track, i) => (
                     <TouchableOpacity
                       className={
-                        'flex-row gap-3 items-center text-primary rounded-md my-1 overflow-hidden'
+                        'flex-row gap-3 items-center text-primary rounded-md my-1 overflow-hidden ml-2'
                       }
                       key={i}
                       onPress={() => {
@@ -452,17 +471,19 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: 'index',
                           value: track.index,
                         });
-                        setShowSettings(false);
+                        textTracks.forEach(t => (t.selected = false));
+                        track.selected = true;
+                        // setShowSettings(false);
                         // playerRef?.current?.resume();
                       }}>
                       <Text
-                        className={`text-base font-semibold ${
+                        className={`text-xl font-semibold ${
                           track.selected ? 'text-primary' : 'text-white'
                         }`}>
                         {track.language}
                       </Text>
                       <Text
-                        className={`text-base italic ${
+                        className={`text-sm italic ${
                           track.selected ? 'text-primary' : 'text-white'
                         }`}>
                         {track.type}
@@ -473,17 +494,20 @@ const Player = ({route}: Props): React.JSX.Element => {
                         }`}>
                         {track.title}
                       </Text>
+                      {track.selected && (
+                        <MaterialIcons name="check" size={20} color="white" />
+                      )}
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
               )}
               {/* server */}
               {activeTab === 'server' && (
-                <ScrollView className="w-full p-1">
+                <ScrollView className="w-full h-full p-1 px-4">
                   {stream?.length > 0 &&
                     stream?.map((track, i) => (
                       <TouchableOpacity
-                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                         key={i}
                         onPress={() => {
                           setSelectedStream(track);
@@ -491,35 +515,40 @@ const Player = ({route}: Props): React.JSX.Element => {
                           // playerRef?.current?.resume();
                         }}>
                         <Text
-                          className={`text-base font-semibold ${
+                          className={`text-lg capitalize font-semibold ${
                             track.link === selectedStream.link
                               ? 'text-primary'
                               : 'text-white'
                           }`}>
                           {track.server}
                         </Text>
+                        {track.link === selectedStream.link && (
+                          <MaterialIcons name="check" size={20} color="white" />
+                        )}
                       </TouchableOpacity>
                     ))}
                 </ScrollView>
               )}
               {/* quality */}
               {activeTab === 'quality' && (
-                <ScrollView className="w-full p-1">
+                <ScrollView className="w-full h-full p-1 px-4">
                   {videoTracks &&
                     videoTracks.map((track: any, i: any) => (
                       <TouchableOpacity
-                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden"
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                         key={i}
                         onPress={() => {
                           setSelectedVideoTrack({
                             type: SelectedVideoTrackType.INDEX,
                             value: track.index,
                           });
-                          setShowSettings(false);
+                          videoTracks.forEach(t => (t.selected = false));
+                          track.selected = true;
+                          // setShowSettings(false);
                           // playerRef?.current?.resume();
                         }}>
                         <Text
-                          className={`text-base font-semibold ${
+                          className={`text-lg font-semibold ${
                             selectedVideoTrack.value === track.index
                               ? 'text-primary'
                               : 'text-white'
@@ -537,12 +566,15 @@ const Player = ({route}: Props): React.JSX.Element => {
                             ' | Codec-' +
                             (track?.codecs || 'unknown')}
                         </Text>
+                        {selectedVideoTrack.value === track.index && (
+                          <MaterialIcons name="check" size={20} color="white" />
+                        )}
                       </TouchableOpacity>
                     ))}
                 </ScrollView>
               )}
             </View>
-          </View>
+          </MotiView>
         )
       }
     </SafeAreaView>
