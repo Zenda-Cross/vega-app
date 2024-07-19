@@ -133,7 +133,7 @@ export const manifest: Manifest = {
     getPosts: multiGetPosts,
     getInfo: multiGetInfo,
     getStream: multiGetStream,
-    nonDownloadableServer: ['multi'],
+    nonDownloadableServer: [],
     getEpisodeLinks: vegaGetEpisodeLinks,
   },
   world4u: {
@@ -155,7 +155,7 @@ export const manifest: Manifest = {
   gogo: {
     catalog: gogoCatalog,
     genres: gogoGenresList,
-    nonDownloadableServer: ['backup'],
+    nonDownloadableServer: [],
     getPosts: gogoGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: gogoGetInfo,
