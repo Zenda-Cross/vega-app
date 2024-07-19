@@ -2682,18 +2682,6 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@tanstack/query-core@5.45.0":
-  version "5.45.0"
-  resolved "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.45.0.tgz"
-  integrity sha512-RVfIZQmFUTdjhSAAblvueimfngYyfN6HlwaJUPK71PKd7yi43Vs1S/rdimmZedPWX/WGppcq/U1HOj7O7FwYxw==
-
-"@tanstack/react-query@^5.45.0":
-  version "5.45.0"
-  resolved "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.45.0.tgz"
-  integrity sha512-y272cKRJp1BvehrWG4ashOBuqBj1Qm2O6fgYJ9LYSHrLdsCXl74GbSVjUQTReUdHuRIl9cEOoyPa6HYag400lw==
-  dependencies:
-    "@tanstack/query-core" "5.45.0"
-
 "@types/babel__core@^7.1.14":
   version "7.20.5"
   resolved "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.20.5.tgz"
@@ -5100,6 +5088,11 @@ fetch-retry@^4.1.1:
   version "4.1.1"
   resolved "https://registry.npmjs.org/fetch-retry/-/fetch-retry-4.1.1.tgz"
   integrity sha512-e6eB7zN6UBSwGVwrbWVH+gdLnkW9WwHhmq2YDK1Sh30pzx1onRVGBvogTlUeWxwTa+L86NYdo4hFkh7O8ZjSnA==
+
+ffmpeg-kit-react-native@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.npmjs.org/ffmpeg-kit-react-native/-/ffmpeg-kit-react-native-6.0.2.tgz"
+  integrity sha512-r9uSmahq8TeyIb7fXf3ft+uUXyoeWRFa99+khjo0TAzWO9y0z9wU7eGnab9JLw1MmCB9v64o4yojNluJhVm9nQ==
 
 file-entry-cache@^6.0.1:
   version "6.0.1"
@@ -8501,7 +8494,7 @@ react-test-renderer@18.2.0:
     react-shallow-renderer "^16.15.0"
     scheduler "^0.23.0"
 
-react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", react@^18.0.0, react@^18.2.0, react@^18.3.1, react@>=16.13.1, react@>=16.8, "react@>=16.8 || ^17.0.0 || ^18.0.0", react@>=17.0.0, react@>=18.1.0, react@18.2.0:
+react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", react@^18.2.0, react@^18.3.1, react@>=16.13.1, react@>=16.8, "react@>=16.8 || ^17.0.0 || ^18.0.0", react@>=17.0.0, react@>=18.1.0, react@18.2.0:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react/-/react-18.2.0.tgz"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==

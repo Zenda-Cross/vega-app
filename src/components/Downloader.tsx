@@ -25,9 +25,9 @@ import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
 import notifee from '@notifee/react-native';
-import {EventType} from '@notifee/react-native';
+import {EventType, EventDetail} from '@notifee/react-native';
 import useDownloadsStore from '../lib/zustand/downloadsStore';
-
+import {hlsDownloader} from '../lib/hlsDownloader';
 const DownloadComponent = ({
   link,
   fileName,
@@ -50,12 +50,19 @@ const DownloadComponent = ({
   const [longPressModal, setLongPressModal] = useState(false);
   const [servers, setServers] = useState<Stream[]>([]);
   const [serverLoading, setServerLoading] = useState(false);
-  const [reqController, setReqController] = useState(new AbortController());
+
+  const reqController = new AbortController();
 
   const {activeDownloads, removeActiveDownloads, setActiveDownloads} =
     useDownloadsStore(state => state);
 
-  notifee.onBackgroundEvent(async ({type, detail}) => {
+  async function actionHandler({
+    type,
+    detail,
+  }: {
+    type: EventType;
+    detail: EventDetail;
+  }) {
     if (
       type === EventType.ACTION_PRESS &&
       detail.pressAction?.id === fileName
@@ -82,35 +89,9 @@ const DownloadComponent = ({
         console.log(error);
       }
     }
-  });
-  notifee.onForegroundEvent(async ({type, detail}) => {
-    if (
-      type === EventType.ACTION_PRESS &&
-      detail.pressAction?.id === fileName
-    ) {
-      console.log('Cancel download');
-      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
-      setAlreadyDownloaded(false);
-      removeActiveDownloads(fileName);
-      try {
-        const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
-        const files = await RNFS.readDir(downloadDir);
-        // Find a file with the given name (without extension)
-        const file = files.find(file => {
-          const nameWithoutExtension = file.name
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          return nameWithoutExtension === detail.notification?.data?.fileName;
-        });
-        if (file) {
-          await RNFS.unlink(file.path);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  });
+  }
+  notifee.onBackgroundEvent(actionHandler);
+  notifee.onForegroundEvent(actionHandler);
 
   // check if file already exists
   useLayoutEffect(() => {
@@ -121,7 +102,7 @@ const DownloadComponent = ({
     checkIfDownloaded();
   }, [fileName]);
 
-  const downloadFile = async (url: string, type: string) => {
+  const downloadFile = async (url: string, fileType: string) => {
     setActiveDownloads(fileName);
     if (await ifExists(fileName)) {
       console.log('File already exists');
@@ -134,13 +115,21 @@ const DownloadComponent = ({
       if (!(await RNFS.exists(`${RNFS.DownloadDirectoryPath}/vega`))) {
         await RNFS.mkdir(`${RNFS.DownloadDirectoryPath}/vega`);
       }
+      if (fileType === 'm3u8') {
+        hlsDownloader(
+          url,
+          `${RNFS.DownloadDirectoryPath}/vega/${fileName}.mp4`,
+        );
+        return;
+      }
+
       await notifee.requestPermission();
       // Create a channel (required for Android)
       const channelId = await notifee.createChannel({
         id: 'download',
         name: 'Download Notifications',
       });
-      const downloadDest = `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`;
+      const downloadDest = `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${fileType}`;
       const ret = RNFS.downloadFile({
         fromUrl: url,
         progressInterval: 1000,
