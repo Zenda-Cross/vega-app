@@ -155,7 +155,7 @@ export const manifest: Manifest = {
   gogo: {
     catalog: gogoCatalog,
     genres: gogoGenresList,
-    nonDownloadableServer: ['default', 'backup'],
+    nonDownloadableServer: ['backup'],
     getPosts: gogoGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: gogoGetInfo,
