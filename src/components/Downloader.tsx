@@ -201,11 +201,30 @@ const DownloadComponent = ({
         console.log('Download complete', res);
         setAlreadyDownloaded(true);
         notifee.cancelNotification(fileName);
+        notifee.displayNotification({
+          id: 'downloadComplete' + fileName,
+          title: title,
+          body: 'Download complete',
+          android: {
+            channelId,
+            color: '#FF6347',
+          },
+        });
         removeActiveDownloads(fileName);
       });
       ret.promise.catch(err => {
         console.log('Download error:', err);
         Alert.alert('Download failed', err.message || 'Failed to download');
+        notifee.cancelNotification(fileName);
+        notifee.displayNotification({
+          id: 'downloadFailed' + fileName,
+          title: title,
+          body: 'Download failed',
+          android: {
+            channelId,
+            color: '#FF6347',
+          },
+        });
         removeActiveDownloads(fileName);
         setAlreadyDownloaded(false);
         notifee.cancelNotification(fileName);
@@ -216,42 +235,6 @@ const DownloadComponent = ({
       removeActiveDownloads(fileName);
       setAlreadyDownloaded(false);
     }
-
-    // const jobId = fileName;
-    // console.log('Downloading:', fileName);
-
-    // let task = download({
-    //   isAllowedOverMetered: true,
-    //   isAllowedOverRoaming: true,
-    //   id: jobId,
-    //   url: url,
-    //   destination: `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${type}`,
-    //   metadata: {},
-    //   isNotificationVisible: true,
-    // })
-    //   .begin(data => {
-    //     console.log(`Going to download ${data.expectedBytes} bytes!`);
-    //     console.log('Downloading:', data);
-    //   })
-    //   .progress(({bytesDownloaded, bytesTotal}) => {
-    //     console.log(`Downloaded: ${(bytesDownloaded / bytesTotal) * 100}%`);
-    //   })
-    //   .done(({bytesDownloaded, bytesTotal}) => {
-    //     console.log('Download is done!', {bytesDownloaded, bytesTotal});
-    //     setIsDownloading(false);
-    //     setAlreadyDownloaded(true);
-    //     completeHandler(jobId);
-    //   })
-    //   .error(({error, errorCode}) => {
-    //     console.log('Download canceled due to error: ', {error, errorCode});
-    //     setIsDownloading(false);
-    //     task.stop();
-    //     Alert.alert('Download Canceled', 'failed to download');
-    //   });
-
-    // return () => {
-    //   task.stop();
-    // };
   };
 
   // handle download deletion
