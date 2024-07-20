@@ -61,7 +61,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -84,7 +84,7 @@ android {
     namespace "com.vega"
     defaultConfig {
         applicationId "com.vega"
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 42
         versionName "2.1.6"
@@ -122,7 +122,7 @@ android {
             reset()
             enable true
             universalApk true
-            // include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            include "armeabi-v7a", "arm64-v8a"
         }
     }
        // add the code from below line.
