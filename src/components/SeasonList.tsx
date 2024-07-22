@@ -310,7 +310,11 @@ const SeasonList = ({
                     providerValue={providerValue}
                     link={item.link}
                     type="series"
-                    title={metaTitle + ' ' + item.title}
+                    title={
+                      metaTitle.length > 30
+                        ? metaTitle.slice(0, 30) + '... ' + item.title
+                        : metaTitle + ' ' + item.title
+                    }
                     fileName={(
                       metaTitle +
                       ActiveSeason.title +
@@ -321,83 +325,6 @@ const SeasonList = ({
               </View>
             )}
           />
-          // <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
-          //   {!episodeLoading &&
-          //     episodeList?.length > 0 &&
-          //     ActiveSeason?.episodesLink &&
-          //     episodeList?.map((episode, i) => (
-          //       <View
-          //         key={episode.link + i}
-          //         className={`w-full justify-center items-center gap-2 flex-row
-          //         ${
-          //           isCompleted(episode.link) ||
-          //           stickyMenu.link === episode.link
-          //             ? 'opacity-60'
-          //             : ''
-          //         }
-          //         `}>
-          //         <View className="flex-row w-full justify-between gap-2 items-center">
-          //           <TouchableOpacity
-          //             className={
-          //               'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
-          //             }
-          //             onPress={() =>
-          //               playHandler({
-          //                 link: episode.link,
-          //                 type: 'series',
-          //                 title: metaTitle + ' ' + episode.title,
-          //                 file: (
-          //                   metaTitle +
-          //                   ActiveSeason.title +
-          //                   episode.title
-          //                 ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
-          //               })
-          //             }
-          //             onLongPress={() =>
-          //               onLongPressHandler(true, episode.link, 'series')
-          //             }>
-          //             <Ionicons name="play-circle" size={28} color="tomato" />
-          //             <Text className="text-white truncate">
-          //               {episode.title.length > 30
-          //                 ? episode.title.slice(0, 30) + '...'
-          //                 : episode.title}
-          //             </Text>
-          //           </TouchableOpacity>
-          //           <Downloader
-          //             providerValue={providerValue}
-          //             link={episode.link}
-          //             type="series"
-          //             title={metaTitle + ' ' + episode.title}
-          //             fileName={(
-          //               metaTitle +
-          //               ActiveSeason.title +
-          //               episode.title
-          //             ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
-          //           />
-          //         </View>
-          //       </View>
-          //     ))}
-          //   {episodeLoading && (
-          //     <MotiView
-          //       animate={{backgroundColor: '#0000'}}
-          //       delay={0}
-          //       //@ts-ignore
-          //       transition={{
-          //         type: 'timing',
-          //       }}
-          //       style={{
-          //         width: '100%',
-          //         padding: 10,
-          //         alignItems: 'flex-start',
-          //         gap: 20,
-          //       }}>
-          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-          //       <Skeleton colorMode={'dark'} width={'85%'} height={48} />
-          //     </MotiView>
-          //   )}
-          // </View>
         }
         {/* directLinks */}
         {
@@ -447,7 +374,11 @@ const SeasonList = ({
                       providerValue={providerValue}
                       link={item.link}
                       type="series"
-                      title={metaTitle + ' ' + item.title}
+                      title={
+                        metaTitle.length > 30
+                          ? metaTitle.slice(0, 30) + '... ' + item.title
+                          : metaTitle + ' ' + item.title
+                      }
                       fileName={(
                         metaTitle +
                         ActiveSeason.title +
@@ -458,59 +389,6 @@ const SeasonList = ({
                 </View>
               )}
             />
-            {/* {ActiveSeason?.directLinks &&
-              ActiveSeason?.directLinks?.map((link, i) => (
-                <View
-                  key={link.link + link.title + i}
-                  className={`w-full justify-center items-center gap-2 flex-row
-                  ${
-                    isCompleted(link.link) || stickyMenu.link === link.link
-                      ? 'opacity-60'
-                      : ''
-                  }
-                  `}>
-                  <View className="flex-row w-full justify-between gap-2 items-center">
-                    <TouchableOpacity
-                      className={
-                        'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
-                      }
-                      onPress={() =>
-                        playHandler({
-                          link: link.link,
-                          type: 'series',
-                          title: metaTitle + ' ' + link.title,
-                          file: (
-                            metaTitle +
-                            ActiveSeason.title +
-                            link.title
-                          ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
-                        })
-                      }
-                      onLongPress={() =>
-                        onLongPressHandler(true, link.link, 'series')
-                      }>
-                      <Ionicons name="play-circle" size={28} color="tomato" />
-                      <Text className="text-white">
-                        {ActiveSeason?.directLinks?.length &&
-                        ActiveSeason?.directLinks?.length > 1
-                          ? link.title
-                          : 'Play'}
-                      </Text>
-                    </TouchableOpacity>
-                    <Downloader
-                      providerValue={providerValue}
-                      link={link.link}
-                      type="series"
-                      title={metaTitle + ' ' + link.title}
-                      fileName={(
-                        metaTitle +
-                        ActiveSeason.title +
-                        link.title
-                      ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
-                    />
-                  </View>
-                </View>
-              ))} */}
           </View>
         }
         {episodeLoading && (
