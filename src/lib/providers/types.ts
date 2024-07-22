@@ -24,6 +24,8 @@ export interface Info {
   imdbId: string;
   type: string;
   tags?: string[];
+  cast?: string[];
+  rating?: string;
   linkList: Link[];
 }
 
