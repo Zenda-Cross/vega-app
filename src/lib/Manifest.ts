@@ -47,6 +47,13 @@ import {gogoCatalog, gogoGenresList} from './providers/gogo/gogoCatalog';
 import {gogoGetPosts} from './providers/gogo/gogoGetPosts';
 import {gogoGetInfo} from './providers/gogo/gogoGetInfo';
 import {gogoGetStream} from './providers/gogo/gogoGetStream';
+import {
+  flixhqCatalog,
+  flixhqGenresList,
+} from './providers/flixhq/flixhqCatalog';
+import {flixhqGetPosts} from './providers/flixhq/flixhqGetPosts';
+import {flixhqGetInfo} from './providers/flixhq/flixhqGetInfo';
+import {flixhqGetStream} from './providers/flixhq/flixhqGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -67,7 +74,7 @@ interface Manifest {
       provider: Content['provider'],
       signal: AbortSignal,
     ) => Promise<Post[]>;
-    getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
+    getEpisodeLinks?: (url: string) => Promise<EpisodeLink[]>;
     getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
   };
 }
@@ -134,7 +141,6 @@ export const manifest: Manifest = {
     getInfo: multiGetInfo,
     getStream: multiGetStream,
     nonDownloadableServer: [],
-    getEpisodeLinks: vegaGetEpisodeLinks,
   },
   world4u: {
     catalog: world4uCatalogList,
@@ -157,8 +163,14 @@ export const manifest: Manifest = {
     genres: gogoGenresList,
     nonDownloadableServer: [],
     getPosts: gogoGetPosts,
-    getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: gogoGetInfo,
     getStream: gogoGetStream,
+  },
+  flixhq: {
+    catalog: flixhqCatalog,
+    genres: flixhqGenresList,
+    getStream: flixhqGetStream,
+    getPosts: flixhqGetPosts,
+    getInfo: flixhqGetInfo,
   },
 };

@@ -48,6 +48,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'FlixHQ',
+    value: 'flixhq',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'GogoAnime',
     value: 'gogo',
     type: 'global',
