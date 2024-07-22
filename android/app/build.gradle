@@ -84,10 +84,10 @@ android {
     namespace "com.vega"
     defaultConfig {
         applicationId "com.vega"
-        minSdkVersion 24
+        minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 42
-        versionName "2.1.6"
+        versionCode 43
+        versionName "2.2.0"
     }
     signingConfigs {
         release {
