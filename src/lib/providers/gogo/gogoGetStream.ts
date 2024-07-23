@@ -8,7 +8,6 @@ export const gogoGetStream = async (id: string): Promise<Stream[]> => {
     const data = res.data;
     const streamLinks: Stream[] = [];
     data.sources.forEach((source: any) => {
-      if (source.quality !== 'default' && source.quality !== 'backup') return;
       streamLinks.push({
         server: source.quality,
         link: source.url,
