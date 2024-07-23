@@ -58,7 +58,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           setInfo(cacheData);
           setInfoLoading(false);
           const cacheMetaRes = MmmkvCache.getString(cacheData.imdbId);
-          // console.log('cacheMetaRes', cacheMetaRes);
           if (cacheMetaRes) {
             const cacheMeta = await JSON.parse(cacheMetaRes as string);
             setMeta(cacheMeta);
@@ -200,13 +199,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     </Text>
                   )}
                   {/* rating */}
-                  {meta?.imdbRating ||
-                    (info?.rating && (
-                      <Text className="text-white text-2xl font-semibold">
-                        {meta?.imdbRating || info?.rating}
-                        <Text className="text-white text-lg">/10</Text>
-                      </Text>
-                    ))}
+                  {(meta?.imdbRating || info?.rating) && (
+                    <Text className="text-white text-2xl font-semibold">
+                      {meta?.imdbRating || info?.rating}
+                      <Text className="text-white text-lg">/10</Text>
+                    </Text>
+                  )}
                 </View>
               </View>
               <View className="p-4 bg-black">
@@ -251,30 +249,29 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                   </View>
                 )}
                 {/* cast  */}
-                {meta?.cast?.length! > 0 ||
-                  (info?.cast?.length! > 0 && (
-                    <View className="mb-2 w-full flex-row items-start gap-2">
-                      <Text className="text-white text-lg font-semibold py-1">
-                        Cast
-                      </Text>
-                      <View className="flex-row gap-1 flex-wrap">
-                        {meta?.cast?.slice(0, 3).map((actor: string) => (
-                          <Text
-                            key={actor}
-                            className="text-white text-xs bg-tertiary p-1 rounded-md">
-                            {actor}
-                          </Text>
-                        ))}
-                        {info?.cast?.slice(0, 3).map((actor: string) => (
-                          <Text
-                            key={actor}
-                            className="text-white text-xs bg-tertiary p-1 rounded-md">
-                            {actor}
-                          </Text>
-                        ))}
-                      </View>
+                {(meta?.cast?.length! > 0 || info?.cast?.length! > 0) && (
+                  <View className="mb-2 w-full flex-row items-start gap-2">
+                    <Text className="text-white text-lg font-semibold py-1">
+                      Cast
+                    </Text>
+                    <View className="flex-row gap-1 flex-wrap">
+                      {meta?.cast?.slice(0, 3).map((actor: string) => (
+                        <Text
+                          key={actor}
+                          className="text-white text-xs bg-tertiary p-1 rounded-md">
+                          {actor}
+                        </Text>
+                      ))}
+                      {info?.cast?.slice(0, 3).map((actor: string) => (
+                        <Text
+                          key={actor}
+                          className="text-white text-xs bg-tertiary p-1 rounded-md">
+                          {actor}
+                        </Text>
+                      ))}
                     </View>
-                  ))}
+                  </View>
+                )}
                 {/* synopsis */}
                 <View className="mb-2 w-full flex-row items-center justify-between">
                   <Skeleton show={infoLoading} colorMode="dark" width={180}>
