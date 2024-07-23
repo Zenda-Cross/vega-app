@@ -132,8 +132,8 @@ export const downloadManager = async ({
       notifee.cancelNotification(fileName);
       notifee.displayNotification({
         id: 'downloadComplete' + fileName,
-        title: title,
-        body: 'Download complete',
+        title: 'Download complete',
+        body: title,
         android: {
           channelId,
           color: '#FF6347',
@@ -152,8 +152,8 @@ export const downloadManager = async ({
       notifee.cancelNotification(fileName);
       notifee.displayNotification({
         id: 'downloadFailed' + fileName,
-        title: title,
-        body: 'Download failed',
+        title: 'Download failed',
+        body: title,
         android: {
           channelId,
           color: '#FF6347',
