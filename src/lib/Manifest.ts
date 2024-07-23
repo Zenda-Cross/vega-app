@@ -54,6 +54,10 @@ import {
 import {flixhqGetPosts} from './providers/flixhq/flixhqGetPosts';
 import {flixhqGetInfo} from './providers/flixhq/flixhqGetInfo';
 import {flixhqGetStream} from './providers/flixhq/flixhqGetStream';
+import {dcCatalog, dcGenresList} from './providers/dramacool/dcCatalog';
+import {dcGetPosts} from './providers/dramacool/dcGetPosts';
+import {dcGetInfo} from './providers/dramacool/dcGetInfo';
+import {dcGetStream} from './providers/dramacool/dcGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -161,7 +165,8 @@ export const manifest: Manifest = {
   gogo: {
     catalog: gogoCatalog,
     genres: gogoGenresList,
-    nonDownloadableServer: [],
+    nonDownloadableServer: ['default', 'backup'],
+    nonStreamableServer: ['360p', '480p', '720p', '1080p'],
     getPosts: gogoGetPosts,
     getInfo: gogoGetInfo,
     getStream: gogoGetStream,
@@ -170,7 +175,25 @@ export const manifest: Manifest = {
     catalog: flixhqCatalog,
     genres: flixhqGenresList,
     getStream: flixhqGetStream,
+    nonDownloadableServer: ['upcloud-MultiQuality', 'vidcloud-MultiQuality'],
+    nonStreamableServer: [
+      'upcloud-1080',
+      'upcloud-720',
+      'upcloud-480',
+      'upcloud-360',
+      'vidcloud-1080',
+      'vidcloud-720',
+      'vidcloud-480',
+      'vidcloud-360',
+    ],
     getPosts: flixhqGetPosts,
     getInfo: flixhqGetInfo,
+  },
+  dramaCool: {
+    catalog: dcCatalog,
+    genres: dcGenresList,
+    getStream: dcGetStream,
+    getPosts: dcGetPosts,
+    getInfo: dcGetInfo,
   },
 };
