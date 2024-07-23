@@ -24,13 +24,15 @@ export const flixhqGetStream = async (id: string): Promise<Stream[]> => {
       const streamData = await streamRes.json();
 
       if (streamData?.sources?.length > 0) {
-        streamLinks.push({
-          server: server.name,
-          link: streamData?.sources[streamData?.sources?.length - 1]?.url,
-          type: streamData?.sources[streamData.sources.length - 1]?.isM3U8
-            ? 'm3u8'
-            : 'mp4',
-          subtitles: streamData.subtitles,
+        streamData.sources.forEach((source: any) => {
+          streamLinks.push({
+            server:
+              server?.name +
+              '-' +
+              source?.quality?.replace('auto', 'MultiQuality'),
+            link: source.url,
+            type: source.isM3U8 ? 'm3u8' : 'mp4',
+          });
         });
       }
     }
