@@ -1,22 +1,29 @@
 import {create} from 'zustand';
 
+interface Playload {
+  title: string;
+  url: string;
+  fileName: string;
+  fileType: string;
+}
+
 export interface Downloads {
-  activeDownloads: String[];
-  setActiveDownloads: (download: string) => void;
-  removeActiveDownloads: (download: string) => void;
+  activeDownloads: Playload[];
+  addActiveDownload: (playload: Playload) => void;
+  removeActiveDownload: (download: string) => void;
 }
 
 const useDownloadsStore = create<Downloads>(set => ({
   activeDownloads: [],
-  setActiveDownloads: (download: string) =>
+  addActiveDownload: (playload: Playload) =>
     set(state => ({
-      activeDownloads: state.activeDownloads.includes(download)
-        ? state.activeDownloads
-        : [...state.activeDownloads, download],
+      activeDownloads: [...state.activeDownloads, playload],
     })),
-  removeActiveDownloads: (download: string) =>
+  removeActiveDownload: (download: string) =>
     set(state => ({
-      activeDownloads: state.activeDownloads.filter(item => item !== download),
+      activeDownloads: state.activeDownloads.filter(
+        item => item.fileName !== download,
+      ),
     })),
 }));
 

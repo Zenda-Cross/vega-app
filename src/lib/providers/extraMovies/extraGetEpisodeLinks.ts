@@ -7,6 +7,8 @@ export const extraGetEpisodeLinks = async function (
   url: string,
 ): Promise<EpisodeLink[]> {
   try {
+    console.log('url', url);
+
     const res = await axios.get(url, {headers});
     const html = res.data;
     let $ = cheerio.load(html);
