@@ -47,6 +47,17 @@ import {gogoCatalog, gogoGenresList} from './providers/gogo/gogoCatalog';
 import {gogoGetPosts} from './providers/gogo/gogoGetPosts';
 import {gogoGetInfo} from './providers/gogo/gogoGetInfo';
 import {gogoGetStream} from './providers/gogo/gogoGetStream';
+import {
+  flixhqCatalog,
+  flixhqGenresList,
+} from './providers/flixhq/flixhqCatalog';
+import {flixhqGetPosts} from './providers/flixhq/flixhqGetPosts';
+import {flixhqGetInfo} from './providers/flixhq/flixhqGetInfo';
+import {flixhqGetStream} from './providers/flixhq/flixhqGetStream';
+import {dcCatalog, dcGenresList} from './providers/dramacool/dcCatalog';
+import {dcGetPosts} from './providers/dramacool/dcGetPosts';
+import {dcGetInfo} from './providers/dramacool/dcGetInfo';
+import {dcGetStream} from './providers/dramacool/dcGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -67,7 +78,7 @@ interface Manifest {
       provider: Content['provider'],
       signal: AbortSignal,
     ) => Promise<Post[]>;
-    getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
+    getEpisodeLinks?: (url: string) => Promise<EpisodeLink[]>;
     getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
   };
 }
@@ -133,8 +144,7 @@ export const manifest: Manifest = {
     getPosts: multiGetPosts,
     getInfo: multiGetInfo,
     getStream: multiGetStream,
-    nonDownloadableServer: ['multi'],
-    getEpisodeLinks: vegaGetEpisodeLinks,
+    nonDownloadableServer: [],
   },
   world4u: {
     catalog: world4uCatalogList,
@@ -156,9 +166,34 @@ export const manifest: Manifest = {
     catalog: gogoCatalog,
     genres: gogoGenresList,
     nonDownloadableServer: ['default', 'backup'],
+    nonStreamableServer: ['360p', '480p', '720p', '1080p'],
     getPosts: gogoGetPosts,
-    getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: gogoGetInfo,
     getStream: gogoGetStream,
+  },
+  flixhq: {
+    catalog: flixhqCatalog,
+    genres: flixhqGenresList,
+    getStream: flixhqGetStream,
+    nonDownloadableServer: ['upcloud-MultiQuality', 'vidcloud-MultiQuality'],
+    nonStreamableServer: [
+      'upcloud-1080',
+      'upcloud-720',
+      'upcloud-480',
+      'upcloud-360',
+      'vidcloud-1080',
+      'vidcloud-720',
+      'vidcloud-480',
+      'vidcloud-360',
+    ],
+    getPosts: flixhqGetPosts,
+    getInfo: flixhqGetInfo,
+  },
+  dramaCool: {
+    catalog: dcCatalog,
+    genres: dcGenresList,
+    getStream: dcGetStream,
+    getPosts: dcGetPosts,
+    getInfo: dcGetInfo,
   },
 };

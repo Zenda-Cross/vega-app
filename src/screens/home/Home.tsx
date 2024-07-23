@@ -14,12 +14,17 @@ import {MmmkvCache} from '../../lib/Mmkv';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {manifest} from '../../lib/Manifest';
+import notifee, {EventDetail, EventType} from '@notifee/react-native';
+import RNFS from 'react-native-fs';
+import useDownloadsStore from '../../lib/zustand/downloadsStore';
+import {FFmpegKit} from 'ffmpeg-kit-react-native';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
+  const downloadStore = useDownloadsStore(state => state);
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -71,6 +76,44 @@ const Home = () => {
       controller.abort();
     };
   }, [refreshing, provider]);
+
+  async function actionHandler({
+    type,
+    detail,
+  }: {
+    type: EventType;
+    detail: EventDetail;
+  }) {
+    if (
+      type === EventType.ACTION_PRESS &&
+      detail.pressAction?.id === detail.notification?.data?.fileName
+    ) {
+      console.log('Cancel download');
+      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+      // setAlreadyDownloaded(false);
+      downloadStore.removeActiveDownload(detail.notification?.data?.fileName!);
+      try {
+        const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
+        const files = await RNFS.readDir(downloadDir);
+        // Find a file with the given name (without extension)
+        const file = files.find(file => {
+          const nameWithoutExtension = file.name
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          return nameWithoutExtension === detail.notification?.data?.fileName;
+        });
+        if (file) {
+          await RNFS.unlink(file.path);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+  notifee.onBackgroundEvent(actionHandler);
+  notifee.onForegroundEvent(actionHandler);
   return (
     <SafeAreaView className="bg-black h-full w-full">
       <StatusBar

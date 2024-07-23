@@ -48,16 +48,28 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'FlixHQ',
+    value: 'flixhq',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
     name: 'GogoAnime',
     value: 'gogo',
     type: 'global',
-    flag: '🌏',
+    flag: '🇬🇧',
   },
   {
     name: 'TokyoInsider',
     value: 'tokyoInsider',
     type: 'global',
-    flag: '🌏',
+    flag: '🇬🇧',
+  },
+  {
+    name: 'DramaCool',
+    value: 'dramaCool',
+    type: 'global',
+    flag: '🇬🇧',
   },
   {
     name: 'LuxMovies',
