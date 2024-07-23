@@ -50,7 +50,7 @@ export const hlsDownloader = async ({
           await notifee.cancelNotification(fileName);
           await notifee.displayNotification({
             title: 'Download completed',
-            body: `Downloaded ${fileName}`,
+            body: `Downloaded ${title}`,
             android: {
               channelId,
             },
