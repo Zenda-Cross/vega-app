@@ -14,6 +14,8 @@ Note: Download Universal version if armeabi-v7a and arm64-v8a are not working fo
 
 [![Download Apk](https://custom-icon-badges.demolab.com/badge/-Download_Apk-blue?style=for-the-badge&logo=download&logoColor=white "Download Apk")](https://github.com/Zenda-Cross/vega-app/releases)
 
+### Join  Discord Community
+[![Discord](https://custom-icon-badges.demolab.com/badge/-Join_Discord-6567a5?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cr42m6maWy)
 
 ## Screenshots
 ![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/143804558/8b7ff105-3310-4485-b9f3-fdc24d128964)
