@@ -13,7 +13,8 @@ import {Feather} from '@expo/vector-icons';
 import {MMKV} from '../../lib/Mmkv';
 import RNFS from 'react-native-fs';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
-import * as IntentLauncher from 'expo-intent-launcher';
+import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
 
 async function handleAction({
   type,
@@ -27,13 +28,18 @@ async function handleAction({
     const res = await RNFS.exists(
       `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
     );
+    console.log('install', res);
     if (res) {
-      console.log('installing', detail.notification?.data?.name);
-      IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-        data: `file://${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
-        flags: 1,
-        type: 'application/vnd.android.package-archive',
-      });
+      const installPermission =
+        await RNApkInstaller.haveUnknownAppSourcesPermission();
+      console.log('installPermission', installPermission);
+      if (!installPermission) {
+        RNApkInstaller.showUnknownAppSourcesPermission();
+      }
+
+      RNApkInstaller.install(
+        `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
+      );
     }
   }
 }
@@ -45,7 +51,7 @@ const About = () => {
   const [autoDownload, setAutoDownload] = useState(
     MMKV.getBool('autoDownload') || false,
   );
-  const [autoCheckUpdate, setAutoCheckUpdate] = useState(
+  const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     MMKV.getBool('autoCheckUpdate') || true,
   );
 
@@ -59,11 +65,11 @@ const About = () => {
       name: 'Download Notifications',
     });
     try {
-      if (await RNFS.exists(`${RNFS.DownloadDirectoryPath}/v${name}`)) {
+      if (await RNFS.exists(`${RNFS.DownloadDirectoryPath}/${name}`)) {
         notifee.displayNotification({
           title: 'Download Complete',
           body: 'Tap to install',
-          data: {name},
+          data: {name: `${name}`},
           android: {
             channelId,
             pressAction: {
@@ -74,12 +80,12 @@ const About = () => {
         return;
       }
     } catch (error) {}
-    const {promise, jobId} = RNFS.downloadFile({
+    const {promise} = RNFS.downloadFile({
       fromUrl: url,
       background: true,
       progressInterval: 1000,
       progressDivider: 1,
-      toFile: `${RNFS.DownloadDirectoryPath}/v${name}`,
+      toFile: `${RNFS.DownloadDirectoryPath}/${name}`,
       begin: res => {
         console.log('begin', res.jobId, res.statusCode, res.headers);
       },
@@ -100,14 +106,13 @@ const About = () => {
         });
       },
     });
-    const Filename = 'v' + name;
     promise.then(async res => {
       if (res.statusCode === 200) {
         notifee.cancelNotification('downloadUpdate');
         notifee.displayNotification({
           title: 'Download Complete',
           body: 'Tap to install',
-          data: {Filename},
+          data: {name},
           android: {
             channelId,
             pressAction: {
@@ -136,8 +141,8 @@ const About = () => {
             onPress: () =>
               autoDownload
                 ? downloadUpdate(
-                    data.assets[0].browser_download_url,
-                    data.assets[0].name,
+                    data?.assets?.[2]?.browser_download_url,
+                    data.assets?.[2]?.name,
                   )
                 : Linking.openURL(data.html_url),
           },
@@ -164,7 +169,7 @@ const About = () => {
       </View>
 
       {/* Auto Download Updates*/}
-      {/* <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
+      <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold my-2">
           Auto Download Updates
         </Text>
@@ -176,7 +181,7 @@ const About = () => {
           }}
           thumbColor={autoDownload ? 'tomato' : 'gray'}
         />
-      </View> */}
+      </View>
 
       {/* Auto check for updates */}
       <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
@@ -197,16 +202,17 @@ const About = () => {
         onPress={checkForUpdate}
         disabled={updateLoading}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold my-2">
-            Check for Updates
-          </Text>
-          <Feather
-            name="chevron-right"
-            size={20}
-            color="white"
-            className="my-2"
-          />
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 py-3 rounded-md">
+          <View className="flex-row items-center gap-2">
+            <MaterialCommunityIcons
+              name="update"
+              size={24}
+              color="white"
+              className=""
+            />
+            <Text className="text-white font-semibold">Check for Updates</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color="white" />
         </View>
       </TouchableNativeFeedback>
     </View>

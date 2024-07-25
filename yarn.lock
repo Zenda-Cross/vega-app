@@ -1259,6 +1259,11 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@dominicvonk/react-native-apk-installer@^2.2.2":
+  version "2.2.2"
+  resolved "https://registry.npmjs.org/@dominicvonk/react-native-apk-installer/-/react-native-apk-installer-2.2.2.tgz"
+  integrity sha512-1JIqdVaER7P7tL//z2fEvbATcNPFgMzM88MncDZB6cr9CQl9RegbIwYiInlTDNkv+3lmAOvJ+LnCsvsYWyoX7w==
+
 "@egjs/hammerjs@^2.0.17":
   version "2.0.17"
   resolved "https://registry.npmjs.org/@egjs/hammerjs/-/hammerjs-2.0.17.tgz"
@@ -8429,7 +8434,7 @@ react-native-webview@13.8.6:
     escape-string-regexp "2.0.0"
     invariant "2.2.4"
 
-react-native@*, react-native@>=0.41.2, react-native@>=0.46.0, react-native@>=0.60.0, react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
+react-native@*, react-native@>=0.41.2, react-native@>=0.46.0, react-native@>=0.60.0, "react-native@>=0.60.0-rc.0 <1.0.x", react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
   version "0.74.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.74.1.tgz"
   integrity sha512-0H2XpmghwOtfPpM2LKqHIN7gxy+7G/r1hwJHKLV6uoyXGC/gCojRtoo5NqyKrWpFC8cqyT6wTYCLuG7CxEKilg==
