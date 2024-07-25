@@ -107,7 +107,7 @@ function Hero() {
                   }}
                 />
               ) : (
-                <Text className="text-white w-80 text-2xl font-bold text-center">
+                <Text className="text-white w-80 text-2xl capitalize font-bold text-center">
                   {post?.name || post?.title}
                 </Text>
               )}
@@ -115,6 +115,7 @@ function Hero() {
                 {post?.genres
                   ?.slice(0, 3)
                   .map((genre: string) => '  • ' + genre)}
+                {post?.tags?.slice(0, 3).map((tag: string) => '  • ' + tag)}
               </Text>
             </>
           )}
