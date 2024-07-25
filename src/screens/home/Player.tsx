@@ -299,9 +299,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         transition={{type: 'timing', duration: 260}}
         className="absolute top-6 right-5">
         <TouchableOpacity
-          // className={`absolute top-8 right-5 ${
-          //   showControls ? 'translate-y-0' : '-translate-y-20'
-          // }`}
           onPress={() => {
             if (!loading) {
               setShowSettings(!showSettings);
@@ -408,6 +405,13 @@ const Player = ({route}: Props): React.JSX.Element => {
               {/* audio */}
               {activeTab === 'audio' && (
                 <ScrollView className="w-full h-full p-1 px-4">
+                  {audioTracks.length === 0 && (
+                    <View className="flex justify-center items-center h-full">
+                      <Text className="text-white text-lg">
+                        Loading audio tracks...
+                      </Text>
+                    </View>
+                  )}
                   {audioTracks.map((track, i) => (
                     <TouchableOpacity
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"

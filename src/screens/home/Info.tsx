@@ -194,7 +194,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       style={{width: 200, height: 100, resizeMode: 'contain'}}
                     />
                   ) : (
-                    <Text className="text-white text-xl mb-3 capitalize font-semibold w-3/4 truncate">
+                    <Text className="text-white text-2xl mb-3 capitalize font-semibold w-3/4 truncate">
                       {meta?.name || info?.title}
                     </Text>
                   )}
