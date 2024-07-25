@@ -8,14 +8,16 @@ Android app for streaming media.
 - Multi Audio and Subs (Hindi, English, etc.).
 - WatchList.
 - External player and Downloader support.
+<br>
+
+[![Discord](https://custom-icon-badges.demolab.com/badge/-Join_Discord-6567a5?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cr42m6maWy)
+
 
 ## Download  ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Zenda-Cross/vega-app/total?link=https%3A%2F%2Fgithub.com%2FZenda-Cross%2Fvega-app%2Freleases)
 Note: Download Universal version if armeabi-v7a and arm64-v8a are not working for your device.
 
 [![Download Apk](https://custom-icon-badges.demolab.com/badge/-Download_Apk-blue?style=for-the-badge&logo=download&logoColor=white "Download Apk")](https://github.com/Zenda-Cross/vega-app/releases)
 
-### Join  Discord Community
-[![Discord](https://custom-icon-badges.demolab.com/badge/-Join_Discord-6567a5?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cr42m6maWy)
 
 ## Screenshots
 ![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/143804558/8b7ff105-3310-4485-b9f3-fdc24d128964)
