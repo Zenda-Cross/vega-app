@@ -1,27 +1,31 @@
 import axios from 'axios';
-import {Image, View} from 'moti';
+import {Image, MotiView, View} from 'moti';
 import React, {useEffect, useState} from 'react';
-import {Text} from 'react-native';
+import {Keyboard, Pressable, Text, TextInput} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../App';
+import {HomeStackParamList, SearchStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
 import {MmmkvCache} from '../lib/Mmkv';
 import {manifest} from '../lib/Manifest';
 import {Info} from '../lib/providers/types';
+import {Feather} from '@expo/vector-icons';
 
 function Hero() {
   const [post, setPost] = useState<any>();
   const [loading, setLoading] = useState(true);
+  const [searchActive, setSearchActive] = useState(false);
   const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const searchNavigation =
+    useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -62,8 +66,41 @@ function Hero() {
     fetchPosts();
   }, [hero]);
 
+  Keyboard.addListener('keyboardDidHide', () => {
+    setSearchActive(false);
+  });
   return (
     <View className="relative">
+      <View className="absolute w-full top-6 p-2 z-30 justify-center items-center">
+        {searchActive && (
+          <MotiView
+            from={{opacity: 0, scale: 0.5}}
+            animate={{opacity: 1, scale: 1}}
+            transition={{type: 'timing', duration: 300}}
+            className="w-full items-center justify-center">
+            <TextInput
+              onBlur={() => setSearchActive(false)}
+              autoFocus={true}
+              onSubmitEditing={e => {
+                searchNavigation.navigate('ScrollList', {
+                  providerValue: provider.value,
+                  filter: 'query' + e.nativeEvent.text,
+                  title: `${provider.name}`,
+                });
+              }}
+              placeholder={`Search in ${provider.name}`}
+              className="w-[95%] px-4 h-10 rounded-full border-white border"
+            />
+          </MotiView>
+        )}
+        {!searchActive && (
+          <Pressable
+            className="w-full items-end absolute right-3 top-1"
+            onPress={() => setSearchActive(true)}>
+            <Feather name="search" size={24} color="white" />
+          </Pressable>
+        )}
+      </View>
       <Skeleton show={loading} colorMode="dark">
         <Image
           source={{
