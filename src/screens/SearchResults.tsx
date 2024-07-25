@@ -1,10 +1,4 @@
-import {
-  SafeAreaView,
-  ScrollView,
-  RefreshControl,
-  Text,
-  StatusBar,
-} from 'react-native';
+import {SafeAreaView, ScrollView, RefreshControl} from 'react-native';
 import Slider from '../components/Slider';
 import React, {useEffect, useState} from 'react';
 import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
