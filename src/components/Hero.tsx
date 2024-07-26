@@ -95,7 +95,7 @@ function Hero() {
         )}
         {!searchActive && (
           <Pressable
-            className="w-full items-end absolute right-3 top-1"
+            className="w-full items-end absolute right-3 top-3"
             onPress={() => setSearchActive(true)}>
             <Feather name="search" size={24} color="white" />
           </Pressable>

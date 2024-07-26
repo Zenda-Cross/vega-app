@@ -52,6 +52,7 @@ export const hlsDownloader = async ({
             title: 'Download completed',
             body: `Downloaded ${title}`,
             android: {
+              smallIcon: 'ic_notification',
               channelId,
             },
           });
@@ -64,6 +65,7 @@ export const hlsDownloader = async ({
             title: 'Download failed',
             body: `Failed to download ${title}`,
             android: {
+              smallIcon: 'ic_notification',
               channelId,
             },
           });
@@ -87,6 +89,7 @@ export const hlsDownloader = async ({
             id: fileName,
             data: {fileName, jobId: log.getSessionId()},
             android: {
+              smallIcon: 'ic_notification',
               onlyAlertOnce: true,
               progress: {
                 max: 100,
@@ -115,6 +118,7 @@ export const hlsDownloader = async ({
       title: 'Download failed',
       body: `Failed to download ${fileName}`,
       android: {
+        smallIcon: 'ic_notification',
         channelId,
       },
     });
