@@ -103,6 +103,7 @@ export const downloadManager = async ({
           data: {jobId: ret.jobId, fileName},
           body: body,
           android: {
+            smallIcon: 'ic_notification',
             channelId,
             color: '#FF6347',
             onlyAlertOnce: true,
@@ -135,6 +136,7 @@ export const downloadManager = async ({
         title: 'Download complete',
         body: title,
         android: {
+          smallIcon: 'ic_notification',
           channelId,
           color: '#FF6347',
         },
@@ -155,6 +157,7 @@ export const downloadManager = async ({
         title: 'Download failed',
         body: title,
         android: {
+          smallIcon: 'ic_notification',
           channelId,
           color: '#FF6347',
         },
