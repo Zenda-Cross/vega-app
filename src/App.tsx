@@ -20,7 +20,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import DisableProviders from './screens/settings/DisableProviders';
 import {Alert, Linking} from 'react-native';
 import pkg from '../package.json';
-import About from './screens/settings/About';
+import About, {checkForUpdate} from './screens/settings/About';
 import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
 
@@ -206,26 +206,8 @@ const App = () => {
   }
 
   useEffect(() => {
-    const checkForUpdate = async () => {
-      try {
-        const res = await fetch(
-          'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
-        );
-        const data = await res.json();
-        if (data.tag_name.replace('v', '') !== pkg.version) {
-          const url = data.html_url;
-          Alert.alert('Update', data.body, [
-            {text: 'Cancel'},
-            {text: 'Update', onPress: () => Linking.openURL(url)},
-          ]);
-          console.log('version', data.tag_name.replace('v', ''), pkg.version);
-        }
-      } catch (error) {
-        console.log('Update error', error);
-      }
-    };
     if (MMKV.getBool('autoCheckUpdate') !== false) {
-      checkForUpdate();
+      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false);
     }
   }, []);
 
