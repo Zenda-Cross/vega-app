@@ -18,8 +18,6 @@ import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import DisableProviders from './screens/settings/DisableProviders';
-import {Alert, Linking} from 'react-native';
-import pkg from '../package.json';
 import About, {checkForUpdate} from './screens/settings/About';
 import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';

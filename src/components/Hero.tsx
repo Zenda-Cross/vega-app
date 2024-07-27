@@ -174,6 +174,12 @@ function Hero() {
         colors={['transparent', 'black']}
         className="absolute h-full w-full"
       />
+      {searchActive && (
+        <LinearGradient
+          colors={['black', 'transparent']}
+          className="absolute h-[40%] w-full"
+        />
+      )}
     </View>
   );
 }
