@@ -8421,10 +8421,10 @@ react-native-svg@15.2.0:
     css-select "^5.1.0"
     css-tree "^1.1.3"
 
-react-native-video@^6.3.0:
-  version "6.3.0"
-  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.3.0.tgz"
-  integrity sha512-lyLjWOdw/jgVpMSrprgKVwhT0KUlGzQRBVTDGyQSYDJ0I5ZkZKcmDE32rWCOyAtWhel+GtJjIyFqgT6xIXuxgg==
+react-native-video@^6.4.3:
+  version "6.4.3"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.4.3.tgz"
+  integrity sha512-KDuIz/JsD3mYT1Ma2oDBE3GIEHRO3a9GzMAEV8pKMtIh29j7X2DLr2L9oD4Kv94ggYag/+RuZpOtftxnDHDoXA==
 
 react-native-webview@13.8.6:
   version "13.8.6"
