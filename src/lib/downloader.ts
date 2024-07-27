@@ -12,6 +12,7 @@ export const downloadManager = async ({
   fileType,
   downloadStore,
   setAlreadyDownloaded,
+  setDownloadId,
 }: {
   title: string;
   url: string;
@@ -19,6 +20,7 @@ export const downloadManager = async ({
   fileType: string;
   downloadStore: Downloads;
   setAlreadyDownloaded: (value: boolean) => void;
+  setDownloadId: (value: number) => void;
 }) => {
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;
@@ -67,6 +69,7 @@ export const downloadManager = async ({
         fileName,
         title,
         setAlreadyDownloaded,
+        setDownloadId: setDownloadId,
       });
       console.log('Downloading HLS');
       return;
@@ -81,6 +84,7 @@ export const downloadManager = async ({
       background: true,
       begin: (res: any) => {
         console.log('Download has started', res);
+        setDownloadId(ret.jobId);
       },
       progress: (res: any) => {
         const progress = res.bytesWritten / res.contentLength;
@@ -172,6 +176,7 @@ export const downloadManager = async ({
       //   setAlreadyDownloaded,
       // });
     });
+    return ret.jobId;
   } catch (error: any) {
     console.error('Download error:', error);
     Alert.alert('Download failed', 'Failed to download');
