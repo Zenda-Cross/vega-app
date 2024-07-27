@@ -117,17 +117,16 @@ export async function vegaGetStream(
         // console.error(error);
       }
     }
-    const vLinkRes = await axios(`${link}`, {headers, signal});
-    const vLinkText = vLinkRes.data;
-    const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
+
     // console.log(vLinkRedirect[1]);
-    const domains = vLinkText.match(/url\.replace\('([^']+)','([^']+)'\);/) || [
-      '',
-      '',
-    ];
+
     // console.log(domains[2]);
 
     /////////////////////////////
+    // const domains = vLinkText.match(/url\.replace\('([^']+)','([^']+)'\);/) || [
+    //   '',
+    //   '',
+    // ];
     // const vLinkRedirectRes = await fetch(
     //   '
     //     vLinkRedirect[1].replace(domains[1], domains[2]),
@@ -176,15 +175,41 @@ export async function vegaGetStream(
     // console.log('vcloudLink', vcloudLink?.[1]);
     /////////////////////////////
 
-    const vcloudLink =
-      decode(vLinkRedirect[1]?.split('r=')?.[1]) || vLinkRedirect[1];
-    console.log('vcloudLink', vcloudLink);
     /////////////////////////////
     // const vcloudRes = await axios(
     //   'vcloudLink?.[1],
     //   {headers, signal},
     // );
     /////////////////////////////
+
+    return await hubcloudExtracter(link, streamLinks, signal);
+  } catch (error: any) {
+    console.log('getStream error: ', error);
+    if (error.message.includes('Aborted')) {
+      // ToastAndroid.show('Request Aborted', ToastAndroid.SHORT);
+    } else {
+      ToastAndroid.show(
+        `Error getting stream links ${error.message}`,
+        ToastAndroid.SHORT,
+      );
+    }
+    return [];
+  }
+}
+
+export async function hubcloudExtracter(
+  link: string,
+  streamLinks: Stream[],
+  signal: AbortSignal,
+) {
+  try {
+    const vLinkRes = await axios(`${link}`, {headers, signal});
+    const vLinkText = vLinkRes.data;
+    const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
+    const vcloudLink =
+      decode(vLinkRedirect[1]?.split('r=')?.[1]) || vLinkRedirect[1];
+    console.log('vcloudLink', vcloudLink);
+
     const vcloudRes = await fetch(vcloudLink, {
       headers,
       signal,
@@ -217,19 +242,9 @@ export async function vegaGetStream(
         streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
     }
-
-    console.log('streamLinks', streamLinks);
     return streamLinks;
-  } catch (error: any) {
-    console.log('getStream error: ', error);
-    if (error.message.includes('Aborted')) {
-      // ToastAndroid.show('Request Aborted', ToastAndroid.SHORT);
-    } else {
-      ToastAndroid.show(
-        `Error getting stream links ${error.message}`,
-        ToastAndroid.SHORT,
-      );
-    }
+  } catch (error) {
+    console.log('hubcloudExtracter error: ', error);
     return [];
   }
 }

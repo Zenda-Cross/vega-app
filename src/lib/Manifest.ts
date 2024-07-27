@@ -58,6 +58,13 @@ import {dcCatalog, dcGenresList} from './providers/dramacool/dcCatalog';
 import {dcGetPosts} from './providers/dramacool/dcGetPosts';
 import {dcGetInfo} from './providers/dramacool/dcGetInfo';
 import {dcGetStream} from './providers/dramacool/dcGetStream';
+import {
+  hdhub4uCatalog,
+  hdhub4uGenresList,
+} from './providers/hdhub4u/hdhubCatalog';
+import {hdhubGetPosts} from './providers/hdhub4u/hdhubGetPosts';
+import {hdhub4uGetInfo} from './providers/hdhub4u/hdhubGetInfo';
+import {hdhub4uGetStream} from './providers/hdhub4u/hdhub4uGetSteam';
 
 interface Manifest {
   [key: string]: {
@@ -195,5 +202,12 @@ export const manifest: Manifest = {
     getStream: dcGetStream,
     getPosts: dcGetPosts,
     getInfo: dcGetInfo,
+  },
+  hdhub4u: {
+    catalog: hdhub4uCatalog,
+    genres: hdhub4uGenresList,
+    getStream: hdhub4uGetStream,
+    getPosts: hdhubGetPosts,
+    getInfo: hdhub4uGetInfo,
   },
 };
