@@ -171,6 +171,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           ToastAndroid.SHORT,
         );
         navigation.goBack();
+        playerRef?.current?.dismissFullscreenPlayer();
       } else {
         ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
@@ -204,6 +205,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       className="bg-black flex-1 relative">
       <StatusBar translucent={true} hidden={true} />
       <OrientationLocker orientation={LANDSCAPE} />
+      {/* // video player */}
       <VideoPlayer
         source={{
           uri: selectedStream?.link || '',
