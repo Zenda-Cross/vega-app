@@ -185,6 +185,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [route.params.link]);
 
+  // exit fullscreen on back
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      playerRef?.current?.dismissFullscreenPlayer();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <SafeAreaView
       edges={{
@@ -222,19 +230,25 @@ const Player = ({route}: Props): React.JSX.Element => {
         }}
         videoRef={playerRef}
         rate={playbackRate}
-        poster={route.params.poster}
+        poster={{
+          source: {
+            uri: route.params.poster,
+          },
+          resizeMode: 'center',
+        }}
         title={route.params.title}
         navigator={navigation}
         seekColor="tomato"
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
         fullscreen={true}
+        fullscreenOrientation="landscape"
+        fullscreenAutorotate={true}
         onShowControls={() => setShowControls(true)}
         onHideControls={() => setShowControls(false)}
         rewindTime={10}
         isFullscreen={true}
         disableFullscreen={true}
-        posterResizeMode="center"
         disableVolume={true}
         showHours={true}
         bufferConfig={{backBufferDurationMs: 50000}}

@@ -20,7 +20,7 @@ export const ifExists = async (fileName: string) => {
       return false;
     }
   } catch (error) {
-    console.error('Error reading directory:', error);
+    console.log('Error reading directory:', error);
     return false;
   }
 };
