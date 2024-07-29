@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList, SearchStackParamList} from '../App';
@@ -7,11 +7,12 @@ import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Skeleton} from 'moti/skeleton';
-import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import {MaterialIcons} from '@expo/vector-icons';
 import {MMKV} from '../lib/Mmkv';
+import {FlashList} from '@shopify/flash-list';
+import SkeletonLoader from '../components/Skeleton';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -32,6 +33,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
     const controller = new AbortController();
     const signal = controller.signal;
     const fetchPosts = async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsLoading(true);
       const newPosts = await manifest[
         route.params.providerValue || provider.value
@@ -72,35 +74,20 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         </TouchableOpacity>
       </View>
       <View className="justify-center flex-row w-96 ">
-        <FlatList
+        <FlashList
+          estimatedItemSize={300}
           ListFooterComponent={
             isLoading && viewType === 1 ? (
-              <MotiView
-                animate={{backgroundColor: 'black'}}
-                //@ts-ignore
-                transition={{
-                  type: 'timing',
-                }}
-                className="flex flex-row gap-2 flex-wrap justify-center items-center mb-16">
+              <View className="flex flex-row gap-1 flex-wrap justify-center items-center mb-16">
                 {[...Array(6)].map((_, i) => (
-                  <View className="mx-3 gap-1 flex mb-3" key={i}>
-                    <Skeleton
-                      key={i}
-                      show={true}
-                      colorMode="dark"
-                      height={150}
-                      width={100}
-                    />
-                    <View className="h-1" />
-                    <Skeleton
-                      show={true}
-                      colorMode="dark"
-                      height={10}
-                      width={100}
-                    />
+                  <View
+                    className="mx-3 gap-0 flex mb-3 justify-center items-center"
+                    key={i}>
+                    <SkeletonLoader height={150} width={100} />
+                    <SkeletonLoader height={12} width={97} />
                   </View>
                 ))}
-              </MotiView>
+              </View>
             ) : (
               <View className="h-16" />
             )
@@ -108,13 +95,12 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
           key={viewType}
-          contentContainerStyle={{
-            width: 'auto',
-            // flexDirection: 'row',
-            // flexWrap: 'wrap',
-            alignItems: 'baseline',
-            justifyContent: 'flex-start',
-          }}
+          contentContainerStyle={
+            {
+              // flexDirection: 'row',
+              // flexWrap: 'wrap',
+            }
+          }
           keyExtractor={(item, i) => item.title + i}
           renderItem={({item}) => (
             <TouchableOpacity

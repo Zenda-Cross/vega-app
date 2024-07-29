@@ -6,7 +6,6 @@ import {
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useState} from 'react';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
@@ -122,7 +121,6 @@ const Home = () => {
         translucent={true}
         backgroundColor={backgroundColor}
       />
-      <OrientationLocker orientation={PORTRAIT} />
       <ScrollView
         onScroll={handleScroll}
         showsVerticalScrollIndicator={false}
