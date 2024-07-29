@@ -24,14 +24,14 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
-    name: 'HdHub4u',
-    value: 'hdhub4u',
+    name: 'World4uFree',
+    value: 'world4u',
     type: 'global',
     flag: '🌏',
   },
   {
-    name: 'World4uFree',
-    value: 'world4u',
+    name: 'KatMoviesHd',
+    value: 'katmovies',
     type: 'global',
     flag: '🌏',
   },
@@ -50,6 +50,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'UHDMovies',
     value: 'uhd',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
+    name: 'HdHub4u',
+    value: 'hdhub4u',
     type: 'global',
     flag: '🌏',
   },
