@@ -1,12 +1,13 @@
-import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
+import {Image, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import type {Post} from '../lib/providers/types';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
 import {Skeleton} from 'moti/skeleton';
-import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
+import {FlashList} from '@shopify/flash-list';
+import SkeletonLoader from './Skeleton';
 
 export default function Slider({
   isLoading,
@@ -27,7 +28,7 @@ export default function Slider({
 
   return (
     <View className="gap-3 mt-7">
-      <View className="flex flex-row items-center justify-between px-4">
+      <View className="flex flex-row items-center justify-between px-2">
         <Text className="text-2xl text-primary font-semibold">{title}</Text>
         <TouchableOpacity
           onPress={() =>
@@ -41,30 +42,23 @@ export default function Slider({
         </TouchableOpacity>
       </View>
       {isLoading ? (
-        <MotiView
-          animate={{backgroundColor: 'black'}}
-          //@ts-ignore
-          transition={{type: 'timing', delay: 0}}
-          className="flex flex-row gap-2 overflow-hidden">
-          {[...Array(4)].map((_, i) => (
-            <View className="mx-1 gap-1 flex" key={i}>
-              <Skeleton
-                key={i}
-                show={true}
-                colorMode="dark"
-                height={150}
-                width={100}
-              />
-              <View className="h-2" />
-              <Skeleton show={true} colorMode="dark" height={10} width={100} />
+        <View className="flex flex-row gap-2 overflow-hidden">
+          {Array.from({length: 5}).map((_, index) => (
+            <View
+              className="mx-3 gap-0 flex mb-3 justify-center items-center"
+              key={index}>
+              <SkeletonLoader height={150} width={100} />
+              <SkeletonLoader height={12} width={97} />
             </View>
           ))}
-        </MotiView>
+        </View>
       ) : (
-        <FlatList
+        <FlashList
+          estimatedItemSize={posts.length || 1}
           showsHorizontalScrollIndicator={false}
           data={posts}
           horizontal
+          contentContainerStyle={{paddingHorizontal: 3, paddingTop: 7}}
           renderItem={({item}) => (
             <View className="flex flex-col mx-2">
               <TouchableOpacity
@@ -80,14 +74,14 @@ export default function Slider({
                   source={{
                     uri:
                       item?.image ||
-                      'https://placehold.jp/24/363636/ffffff/100x150.png?text=img',
+                      'https://placehold.jp/24/363636/ffffff/100x150.png?text=vega',
                   }}
                   style={{width: 100, height: 150}}
                 />
               </TouchableOpacity>
               <Text className="text-white text-center truncate w-24 text-xs">
                 {item.title.length > 24
-                  ? item.title.slice(0, 24) + '...'
+                  ? `${item.title.slice(0, 24)}...`
                   : item.title}
               </Text>
             </View>
@@ -96,7 +90,7 @@ export default function Slider({
         />
       )}
       {!isLoading && posts.length === 0 && (
-        <Text className="text-white text-center">No data</Text>
+        <Text className="text-white text-center">No content found</Text>
       )}
     </View>
   );

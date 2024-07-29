@@ -1,16 +1,21 @@
 import {SafeAreaView, ScrollView, RefreshControl} from 'react-native';
 import Slider from '../components/Slider';
 import React, {useEffect, useState} from 'react';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {View} from 'moti';
 import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
-import {SearchPageData} from '../lib/getSearchResults';
 import {manifest} from '../lib/Manifest';
 import {MMKV} from '../lib/Mmkv';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
+
+interface SearchPageData {
+  title: string;
+  Posts: any[];
+  filter: string;
+  providerValue: string;
+}
 
 const SearchResults = ({route}: Props): React.ReactElement => {
   const [refreshing, setRefreshing] = useState(false);
@@ -62,7 +67,6 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   return (
     <SafeAreaView className="bg-black h-full w-full">
       {/* <StatusBar translucent={false} backgroundColor="black" /> */}
-      <OrientationLocker orientation={PORTRAIT} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={

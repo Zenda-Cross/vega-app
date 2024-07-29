@@ -13,9 +13,7 @@ import type {Info} from '../../lib/providers/types';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
-import {MotiSafeAreaView} from 'moti';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -51,6 +49,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         setInfo(undefined);
         setInfoLoading(true);
         // cache
+        await new Promise(resolve => setTimeout(resolve, 1000));
         const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
         // console.log('cacheDataRes', cacheDataRes);
         if (cacheDataRes) {
@@ -128,11 +127,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     setInLibrary(false);
   };
   return (
-    <MotiSafeAreaView
-      animate={{backgroundColor: 'black'}}
-      //@ts-ignore
-      transition={{type: 'timing'}}
-      className="h-full w-full">
+    <View className="h-full w-full">
       <StatusBar
         showHideTransition={'slide'}
         animated={true}
@@ -140,7 +135,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         backgroundColor={backgroundColor}
       />
       <View>
-        <OrientationLocker orientation={PORTRAIT} />
         <View className="absolute w-full h-[256px]">
           <Skeleton
             show={infoLoading}
@@ -393,6 +387,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           }
         />
       </View>
-    </MotiSafeAreaView>
+    </View>
   );
 }
