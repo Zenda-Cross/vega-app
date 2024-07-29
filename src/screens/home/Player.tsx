@@ -234,7 +234,9 @@ const Player = ({route}: Props): React.JSX.Element => {
         rate={playbackRate}
         poster={{
           source: {
-            uri: route.params.poster,
+            uri:
+              route?.params?.poster ||
+              'https://placehold.co/600x400/000000/000000/png',
           },
           resizeMode: 'center',
         }}
