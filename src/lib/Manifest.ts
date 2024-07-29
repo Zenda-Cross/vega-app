@@ -65,6 +65,11 @@ import {
 import {hdhubGetPosts} from './providers/hdhub4u/hdhubGetPosts';
 import {hdhub4uGetInfo} from './providers/hdhub4u/hdhubGetInfo';
 import {hdhub4uGetStream} from './providers/hdhub4u/hdhub4uGetSteam';
+import {katCatalog, katGenresList} from './providers/katmovies/katCatalog';
+import {katGetPosts} from './providers/katmovies/katGetPosts';
+import {katGetInfo} from './providers/katmovies/katGetInfo';
+import {katEpisodeLinks} from './providers/katmovies/katGetEpsodes';
+import {katGetStream} from './providers/katmovies/katGetSteam';
 
 interface Manifest {
   [key: string]: {
@@ -209,5 +214,13 @@ export const manifest: Manifest = {
     getStream: hdhub4uGetStream,
     getPosts: hdhubGetPosts,
     getInfo: hdhub4uGetInfo,
+  },
+  katmovies: {
+    catalog: katCatalog,
+    genres: katGenresList,
+    getStream: katGetStream,
+    getPosts: katGetPosts,
+    getInfo: katGetInfo,
+    getEpisodeLinks: katEpisodeLinks,
   },
 };
