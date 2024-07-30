@@ -48,11 +48,7 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
     list.each((index, element: any) => {
       element = $(element);
       // title
-      const title =
-        element
-          ?.text()
-          .match(/^(?:\[?[^\[\{]+)(?=\{[^\}]+\}|\[[^\]]+\]|$)/)?.[0] +
-          (element?.text().match(/\d+p\b/)?.[0] || '') || '';
+      const title = element?.text() || '';
 
       const quality = element?.text().match(/\d+p\b/)?.[0] || '';
       // console.log(title);
