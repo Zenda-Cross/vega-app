@@ -29,12 +29,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: '🌏',
   },
-  {
-    name: 'KatMoviesHd',
-    value: 'katmovies',
-    type: 'global',
-    flag: '🌏',
-  },
+  // {
+  //   name: 'KatMoviesHd',
+  //   value: 'katmovies',
+  //   type: 'global',
+  //   flag: '🌏',
+  // },
   {
     name: 'ExtraMovies',
     value: 'extraMovies',
