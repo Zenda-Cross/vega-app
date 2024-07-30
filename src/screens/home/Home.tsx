@@ -63,7 +63,11 @@ const Home = () => {
           ];
         setHero(randomPost);
       }
-      if (data[data?.length - 1].Posts.length === 0) {
+
+      if (
+        data[data?.length - 1].Posts.length === 0 ||
+        data[0].Posts.length === 0
+      ) {
         return;
       }
       setLoading(false);

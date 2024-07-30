@@ -63,20 +63,27 @@ const SeasonList = ({
         return;
       }
       setEpisodeLoading(true);
-      const cacheEpisodes = await MmmkvCache.getItem(ActiveSeason.episodesLink);
-      if (cacheEpisodes) {
-        setEpisodeList(JSON.parse(cacheEpisodes as string));
-        // console.log('cache', JSON.parse(cacheEpisodes as string));
+      try {
+        const cacheEpisodes = await MmmkvCache.getItem(
+          ActiveSeason.episodesLink,
+        );
+        if (cacheEpisodes) {
+          setEpisodeList(JSON.parse(cacheEpisodes as string));
+          // console.log('cache', JSON.parse(cacheEpisodes as string));
+          setEpisodeLoading(false);
+        }
+        const episodes = await manifest[providerValue].getEpisodeLinks(
+          ActiveSeason.episodesLink,
+        );
+        if (episodes.length === 0) return;
+        MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
+        // console.log(episodes);
+        setEpisodeList(episodes);
+        setEpisodeLoading(false);
+      } catch (e) {
+        console.log(e);
         setEpisodeLoading(false);
       }
-      const episodes = await manifest[providerValue].getEpisodeLinks(
-        ActiveSeason.episodesLink,
-      );
-      if (episodes.length === 0) return;
-      MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
-      // console.log(episodes);
-      setEpisodeList(episodes);
-      setEpisodeLoading(false);
     };
     fetchList();
   }, [ActiveSeason, refreshing]);
