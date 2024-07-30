@@ -15,10 +15,9 @@ import {Dropdown} from 'react-native-element-dropdown';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import {providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
-import {Feather} from '@expo/vector-icons';
-import {AntDesign} from '@expo/vector-icons';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SettingsStackParamList} from '../../App';
+import {MaterialCommunityIcons, AntDesign, Feather} from '@expo/vector-icons';
 
 const players = [
   {
@@ -103,24 +102,14 @@ const Settings = ({navigation}: Props) => {
         </View>
       }
 
-      {/* use custom base URL */}
-      {/* <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">use custom base URL</Text>
-        <Switch
-          thumbColor={UseCustomUrl ? 'tomato' : 'gray'}
-          value={UseCustomUrl}
-          onValueChange={val => {
-            MMKV.setBool('UseCustomUrl', val);
-            setUseCustomUrl(val);
-          }}
-        />
-      </View> */}
-
       {/* open in vlc */}
       <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">
-          Open video in External player
-        </Text>
+        <View className="flex-row items-center gap-1">
+          <MaterialCommunityIcons name="motion-play" size={18} color="white" />
+          <Text className="text-white font-semibold">
+            Open in External player
+          </Text>
+        </View>
         <View className="w-20">
           <Dropdown
             selectedTextStyle={{
@@ -245,7 +234,10 @@ const Settings = ({navigation}: Props) => {
         }}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold my-2">Subtitle Style</Text>
+          <View className="flex-row justify-center items-center gap-1 my-1">
+            <MaterialCommunityIcons name="subtitles" size={18} color="white" />
+            <Text className="text-white font-semibold">Subtitle Style</Text>
+          </View>
           <Feather name="chevron-right" size={24} color="white" />
         </View>
       </TouchableNativeFeedback>
@@ -306,7 +298,7 @@ const Settings = ({navigation}: Props) => {
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <Text className="text-white font-semibold">Clear Cache</Text>
         <TouchableOpacity
-          className="bg-[#343434] p-2 rounded-md"
+          className="bg-[#343434] w-12 items-center p-2 rounded-md"
           onPress={() => {
             ReactNativeHapticFeedback.trigger('virtualKey', {
               enableVibrateFallback: true,
@@ -314,9 +306,14 @@ const Settings = ({navigation}: Props) => {
             });
             MmmkvCache.clearStore();
           }}>
-          <Text className="text-white rounded-md px-2">Clear</Text>
+          <MaterialCommunityIcons
+            name="delete-outline"
+            size={24}
+            color="white"
+          />
         </TouchableOpacity>
       </View>
+
       {/* About */}
       <TouchableNativeFeedback
         onPress={() => {
@@ -324,7 +321,10 @@ const Settings = ({navigation}: Props) => {
         }}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold my-2">About</Text>
+          <View className="flex-row justify-center items-center gap-1 my-1">
+            <Feather name="info" size={15} color="white" />
+            <Text className="text-white font-semibold">About</Text>
+          </View>
           <Feather name="chevron-right" size={24} color="white" />
         </View>
       </TouchableNativeFeedback>

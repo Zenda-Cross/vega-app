@@ -29,6 +29,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: '🌏',
   },
+  // {
+  //   name: 'KatMoviesHd',
+  //   value: 'katmovies',
+  //   type: 'global',
+  //   flag: '🌏',
+  // },
   {
     name: 'ExtraMovies',
     value: 'extraMovies',
@@ -44,6 +50,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'UHDMovies',
     value: 'uhd',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
+    name: 'HdHub4u',
+    value: 'hdhub4u',
     type: 'global',
     flag: '🌏',
   },

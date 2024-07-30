@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@8man/react-native-media-console": "^2.2.4",
+    "@dominicvonk/react-native-apk-installer": "^2.2.2",
     "@notifee/react-native": "^7.8.2",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
+    "@shopify/flash-list": "^1.7.0",
     "axios": "^1.6.8",
     "babel-plugin-module-resolver": "^5.0.2",
     "cheerio": "^1.0.0-rc.12",
@@ -42,7 +44,7 @@
     "react-native-screens": "^3.31.1",
     "react-native-shared-group-preferences": "^1.1.24",
     "react-native-svg": "15.2.0",
-    "react-native-video": "^6.3.0",
+    "react-native-video": "^6.4.3",
     "react-native-webview": "13.8.6",
     "zustand": "^4.5.2"
   },

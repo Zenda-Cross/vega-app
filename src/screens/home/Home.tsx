@@ -6,7 +6,6 @@ import {
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useState} from 'react';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
@@ -64,7 +63,11 @@ const Home = () => {
           ];
         setHero(randomPost);
       }
-      if (data[data?.length - 1].Posts.length === 0) {
+
+      if (
+        data[data?.length - 1].Posts.length === 0 ||
+        data[0].Posts.length === 0
+      ) {
         return;
       }
       setLoading(false);
@@ -122,7 +125,6 @@ const Home = () => {
         translucent={true}
         backgroundColor={backgroundColor}
       />
-      <OrientationLocker orientation={PORTRAIT} />
       <ScrollView
         onScroll={handleScroll}
         showsVerticalScrollIndicator={false}

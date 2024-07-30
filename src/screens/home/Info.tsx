@@ -13,9 +13,7 @@ import type {Info} from '../../lib/providers/types';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 import {Skeleton} from 'moti/skeleton';
-import {MotiSafeAreaView} from 'moti';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -51,6 +49,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         setInfo(undefined);
         setInfoLoading(true);
         // cache
+        await new Promise(resolve => setTimeout(resolve, 200));
         const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
         // console.log('cacheDataRes', cacheDataRes);
         if (cacheDataRes) {
@@ -67,7 +66,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         const data = await manifest[
           route.params.provider || provider.value
         ].getInfo(route.params.link, provider);
-        if (!data.title && !data.imdbId) {
+
+        if (data.linkList?.length === 0) {
           setInfoLoading(false);
           return;
         }
@@ -128,11 +128,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     setInLibrary(false);
   };
   return (
-    <MotiSafeAreaView
-      animate={{backgroundColor: 'black'}}
-      //@ts-ignore
-      transition={{type: 'timing'}}
-      className="h-full w-full">
+    <View className="h-full w-full">
       <StatusBar
         showHideTransition={'slide'}
         animated={true}
@@ -140,7 +136,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         backgroundColor={backgroundColor}
       />
       <View>
-        <OrientationLocker orientation={PORTRAIT} />
         <View className="absolute w-full h-[256px]">
           <Skeleton
             show={infoLoading}
@@ -194,7 +189,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       style={{width: 200, height: 100, resizeMode: 'contain'}}
                     />
                   ) : (
-                    <Text className="text-white text-xl mb-3 capitalize font-semibold w-3/4 truncate">
+                    <Text className="text-white text-2xl mb-3 capitalize font-semibold w-3/4 truncate">
                       {meta?.name || info?.title}
                     </Text>
                   )}
@@ -393,6 +388,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           }
         />
       </View>
-    </MotiSafeAreaView>
+    </View>
   );
 }

@@ -11,14 +11,19 @@ export const dcGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://asianc.sh';
+    const urlRes = await axios.get(
+      'https://consumet8.vercel.app/movies/dramacool/info?id=drama-detail/shogun',
+    );
+    const resData = urlRes.data.episodes[0].url;
+    const baseUrl = resData.split('/').slice(0, 3).join('/');
+    console.log('dcBaseUrl', baseUrl);
     const url = filter.includes('query')
       ? `${baseUrl}/search?type=movies&keyword=${filter.replace(
           'query',
           '',
         )}&page=${page}`
       : `${baseUrl + filter}?page=${page}`;
-    console.log('dcUrrl', url);
+    // console.log('dcUrrl', url);
 
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
