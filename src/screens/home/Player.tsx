@@ -171,6 +171,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           ToastAndroid.SHORT,
         );
         navigation.goBack();
+        playerRef?.current?.dismissFullscreenPlayer();
       } else {
         ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
@@ -185,6 +186,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [route.params.link]);
 
+  // exit fullscreen on back
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      playerRef?.current?.dismissFullscreenPlayer();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <SafeAreaView
       edges={{
@@ -196,6 +205,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       className="bg-black flex-1 relative">
       <StatusBar translucent={true} hidden={true} />
       <OrientationLocker orientation={LANDSCAPE} />
+      {/* // video player */}
       <VideoPlayer
         source={{
           uri: selectedStream?.link || '',
@@ -222,19 +232,27 @@ const Player = ({route}: Props): React.JSX.Element => {
         }}
         videoRef={playerRef}
         rate={playbackRate}
-        poster={route.params.poster}
+        poster={{
+          source: {
+            uri:
+              route?.params?.poster ||
+              'https://placehold.co/600x400/000000/000000/png',
+          },
+          resizeMode: 'center',
+        }}
         title={route.params.title}
         navigator={navigation}
         seekColor="tomato"
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
         fullscreen={true}
+        fullscreenOrientation="landscape"
+        fullscreenAutorotate={true}
         onShowControls={() => setShowControls(true)}
         onHideControls={() => setShowControls(false)}
         rewindTime={10}
         isFullscreen={true}
         disableFullscreen={true}
-        posterResizeMode="center"
         disableVolume={true}
         showHours={true}
         bufferConfig={{backBufferDurationMs: 50000}}
@@ -299,9 +317,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         transition={{type: 'timing', duration: 260}}
         className="absolute top-6 right-5">
         <TouchableOpacity
-          // className={`absolute top-8 right-5 ${
-          //   showControls ? 'translate-y-0' : '-translate-y-20'
-          // }`}
           onPress={() => {
             if (!loading) {
               setShowSettings(!showSettings);
@@ -408,6 +423,13 @@ const Player = ({route}: Props): React.JSX.Element => {
               {/* audio */}
               {activeTab === 'audio' && (
                 <ScrollView className="w-full h-full p-1 px-4">
+                  {audioTracks.length === 0 && (
+                    <View className="flex justify-center items-center h-full">
+                      <Text className="text-white text-lg">
+                        Loading audio tracks...
+                      </Text>
+                    </View>
+                  )}
                   {audioTracks.map((track, i) => (
                     <TouchableOpacity
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"

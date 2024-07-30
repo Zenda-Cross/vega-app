@@ -18,6 +18,7 @@ export const hlsDownloader = async ({
   title,
   downloadStore,
   setAlreadyDownloaded,
+  setDownloadId,
 }: {
   videoUrl: string;
   path: string;
@@ -25,6 +26,7 @@ export const hlsDownloader = async ({
   title: string;
   downloadStore: Downloads;
   setAlreadyDownloaded: (value: boolean) => void;
+  setDownloadId: (value: number) => void;
 }) => {
   const command = `-i ${videoUrl} -c copy -bsf:a aac_adtstoasc -f mp4 ${path}`;
   const channelId = await notifee.createChannel({
@@ -52,6 +54,8 @@ export const hlsDownloader = async ({
             title: 'Download completed',
             body: `Downloaded ${title}`,
             android: {
+              color: '#FF6347',
+              smallIcon: 'ic_notification',
               channelId,
             },
           });
@@ -64,6 +68,8 @@ export const hlsDownloader = async ({
             title: 'Download failed',
             body: `Failed to download ${title}`,
             android: {
+              color: '#FF6347',
+              smallIcon: 'ic_notification',
               channelId,
             },
           });
@@ -80,13 +86,14 @@ export const hlsDownloader = async ({
             parseFloat(currentTime[1].split(':')[2]);
           const progress = (currentTimeInSeconds / duration) * 100;
           console.log('Progress: ', currentTimeInSeconds, duration, progress);
-
+          setDownloadId(log.getSessionId());
           await notifee.displayNotification({
             title: title,
             body: `Downloaded ${progress.toFixed(2)}%`,
             id: fileName,
             data: {fileName, jobId: log.getSessionId()},
             android: {
+              smallIcon: 'ic_notification',
               onlyAlertOnce: true,
               progress: {
                 max: 100,
@@ -115,6 +122,8 @@ export const hlsDownloader = async ({
       title: 'Download failed',
       body: `Failed to download ${fileName}`,
       android: {
+        color: '#FF6347',
+        smallIcon: 'ic_notification',
         channelId,
       },
     });

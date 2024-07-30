@@ -32,6 +32,7 @@ export const flixhqGetStream = async (id: string): Promise<Stream[]> => {
               source?.quality?.replace('auto', 'MultiQuality'),
             link: source.url,
             type: source.isM3U8 ? 'm3u8' : 'mp4',
+            subtitles: streamData.subtitles,
           });
         });
       }

@@ -16,13 +16,14 @@ import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
 import DisableProviders from './screens/settings/DisableProviders';
-import {Alert, Linking} from 'react-native';
-import pkg from '../package.json';
-import About from './screens/settings/About';
+import About, {checkForUpdate} from './screens/settings/About';
 import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
+import {enableFreeze, enableScreens} from 'react-native-screens';
+
+enableScreens(true);
+enableFreeze(true);
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -75,9 +76,9 @@ const App = () => {
       <HomeStack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios',
+          animationDuration: 200,
+          freezeOnBlur: true,
         }}>
         <HomeStack.Screen name="Home" component={Home} />
         <HomeStack.Screen name="Info" component={Info} />
@@ -92,9 +93,9 @@ const App = () => {
       <SearchStack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios',
+          animationDuration: 200,
+          freezeOnBlur: true,
         }}>
         <SearchStack.Screen name="Search" component={Search} />
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
@@ -109,9 +110,9 @@ const App = () => {
       <WatchListStack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios',
+          animationDuration: 200,
+          freezeOnBlur: true,
         }}>
         <WatchListStack.Screen name="WatchList" component={WatchList} />
         <WatchListStack.Screen name="Info" component={Info} />
@@ -124,9 +125,9 @@ const App = () => {
       <SettingsStack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios',
+          animationDuration: 200,
+          freezeOnBlur: true,
         }}>
         <SettingsStack.Screen name="Settings" component={Settings} />
         <SettingsStack.Screen
@@ -206,56 +207,42 @@ const App = () => {
   }
 
   useEffect(() => {
-    const checkForUpdate = async () => {
-      try {
-        const res = await fetch(
-          'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
-        );
-        const data = await res.json();
-        if (data.tag_name.replace('v', '') !== pkg.version) {
-          const url = data.html_url;
-          Alert.alert('Update', data.body, [
-            {text: 'Cancel'},
-            {text: 'Update', onPress: () => Linking.openURL(url)},
-          ]);
-          console.log('version', data.tag_name.replace('v', ''), pkg.version);
-        }
-      } catch (error) {
-        console.log('Update error', error);
-      }
-    };
     if (MMKV.getBool('autoCheckUpdate') !== false) {
-      checkForUpdate();
+      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false);
     }
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer
-        onReady={() => BootSplash.hide({fade: true})}
-        theme={{
-          dark: true,
-          colors: {
-            background: 'black',
-            card: 'black',
-            primary: 'tomato',
-            text: 'white',
-            border: 'black',
-            notification: 'tomato',
-          },
+    <NavigationContainer
+      onReady={() => BootSplash.hide({fade: true})}
+      theme={{
+        dark: true,
+        colors: {
+          background: 'black',
+          card: 'black',
+          primary: 'tomato',
+          text: 'white',
+          border: 'black',
+          notification: 'tomato',
+        },
+      }}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          headerBlurEffect: 'light',
+          headerTintColor: 'tomato',
+          headerStyle: {backgroundColor: '#171717'},
         }}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            headerBlurEffect: 'light',
-            headerTintColor: 'tomato',
-            headerStyle: {backgroundColor: '#171717'},
-          }}>
-          <Stack.Screen name="TabStack" component={TabStack} />
-          <Stack.Screen name="Player" component={Player} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+        <Stack.Screen name="TabStack" component={TabStack} />
+        <Stack.Screen
+          options={{
+            orientation: 'landscape',
+          }}
+          name="Player"
+          component={Player}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
