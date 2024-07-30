@@ -49,7 +49,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         setInfo(undefined);
         setInfoLoading(true);
         // cache
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 200));
         const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
         // console.log('cacheDataRes', cacheDataRes);
         if (cacheDataRes) {
@@ -66,7 +66,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         const data = await manifest[
           route.params.provider || provider.value
         ].getInfo(route.params.link, provider);
-        if (!data.title && !data.imdbId) {
+
+        if (data.linkList?.length === 0) {
           setInfoLoading(false);
           return;
         }

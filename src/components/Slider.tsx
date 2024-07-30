@@ -54,7 +54,7 @@ export default function Slider({
         </View>
       ) : (
         <FlashList
-          estimatedItemSize={posts.length || 1}
+          estimatedItemSize={30}
           showsHorizontalScrollIndicator={false}
           data={posts}
           horizontal
@@ -86,11 +86,17 @@ export default function Slider({
               </Text>
             </View>
           )}
+          ListFooterComponent={
+            !isLoading && posts.length === 0 ? (
+              <View className="flex flex-row w-96 h-16 justify-center items-center">
+                <Text className="text-whiter text-center">
+                  No content found
+                </Text>
+              </View>
+            ) : null
+          }
           keyExtractor={item => item.link}
         />
-      )}
-      {!isLoading && posts.length === 0 && (
-        <Text className="text-white text-center">No content found</Text>
       )}
     </View>
   );

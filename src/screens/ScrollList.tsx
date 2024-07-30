@@ -146,7 +146,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         {!isLoading && posts.length === 0 ? (
           <View className="w-full h-full flex items-center justify-center">
             <Text className="text-white text-center font-semibold text-lg">
-              Not Found
+              Not Content Found
             </Text>
           </View>
         ) : null}
