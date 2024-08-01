@@ -92,6 +92,7 @@ const downloadUpdate = async (url: string, name: string) => {
 export const checkForUpdate = async (
   setUpdateLoading: React.Dispatch<React.SetStateAction<boolean>>,
   autoDownload: boolean,
+  showToast: boolean = true,
 ) => {
   setUpdateLoading(true);
   try {
@@ -116,7 +117,7 @@ export const checkForUpdate = async (
       ]);
       console.log('version', data.tag_name.replace('v', ''), pkg.version);
     } else {
-      ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
+      showToast && ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
       console.log('version', data.tag_name.replace('v', ''), pkg.version);
     }
   } catch (error) {
