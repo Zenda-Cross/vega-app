@@ -16,7 +16,7 @@ import {modGetEpisodeLinks} from './providers/mod/modGetEpisodesList';
 import {modGetStream} from './providers/mod/modGetStream';
 
 /// uhd
-import {uhdCatalogList} from './providers/uhd/uhCtatalog';
+import {uhdCatalogList, uhdGenresList} from './providers/uhd/uhCtatalog';
 import {uhdGetPosts} from './providers/uhd/uhdGetPosts';
 import getUhdInfo from './providers/uhd/getUhdInfo';
 import {uhdGetStream} from './providers/uhd/uhdGetStream';
@@ -150,7 +150,7 @@ export const manifest: Manifest = {
   },
   uhd: {
     catalog: uhdCatalogList,
-    genres: [],
+    genres: uhdGenresList,
     blurImage: true,
     nonStreamableServer: ['Gdrive-Instant'],
     getStream: uhdGetStream,
