@@ -208,7 +208,7 @@ const App = () => {
 
   useEffect(() => {
     if (MMKV.getBool('autoCheckUpdate') !== false) {
-      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false);
+      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false, false);
     }
   }, []);
 
