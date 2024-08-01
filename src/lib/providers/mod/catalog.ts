@@ -19,6 +19,22 @@ export const catalogList = [
 
 export const modGenresList = [
   {
+    title: 'Apple TV+',
+    filter: '/ott/apple-tv',
+  },
+  {
+    title: 'Disney+',
+    filter: '/ott/disney-plus',
+  },
+  {
+    title: 'Hulu',
+    filter: '/ott/hulu',
+  },
+  {
+    title: 'Crunchyroll',
+    filter: '/ott/crunchyroll',
+  },
+  {
     title: 'Action',
     filter: '/movies-by-genre/action/',
   },
