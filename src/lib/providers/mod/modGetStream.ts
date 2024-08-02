@@ -74,42 +74,46 @@ export const modGetStream = async (
     const driveRes = await axios.get(driveLink, {headers});
     const driveHtml = driveRes.data;
     const $drive = cheerio.load(driveHtml);
-    const resumeBot = $drive('.btn.btn-light').attr('href') || '';
-    const resumeBotRes = await axios.get(resumeBot, {headers});
-    const resumeBotToken = resumeBotRes.data.match(
-      /formData\.append\('token', '([a-f0-9]+)'\)/,
-    )[1];
-    const resumeBotBody = new FormData();
-    resumeBotBody.append('token', resumeBotToken);
-    const resumeBotPath = resumeBotRes.data.match(
-      /fetch\('\/download\?id=([a-zA-Z0-9\/+]+)'/,
-    )[1];
-    const resumeBotBaseUrl = resumeBot.split('/download')[0];
-    // console.log(
-    //   'resumeBotPath',
-    //   resumeBotBaseUrl + '/download?id=' + resumeBotPath,
-    // );
-    // console.log('resumeBotBody', resumeBotToken);
 
-    const resumeBotDownload = await fetch(
-      resumeBotBaseUrl + '/download?id=' + resumeBotPath,
-      {
-        method: 'POST',
-        body: resumeBotBody,
-        headers: {
-          Referer: resumeBot,
-          Cookie: 'PHPSESSID=7e9658ce7c805dab5bbcea9046f7f308',
+    try {
+      const resumeBot = $drive('.btn.btn-light').attr('href') || '';
+      const resumeBotRes = await axios.get(resumeBot, {headers});
+      const resumeBotToken = resumeBotRes.data.match(
+        /formData\.append\('token', '([a-f0-9]+)'\)/,
+      )[1];
+      const resumeBotBody = new FormData();
+      resumeBotBody.append('token', resumeBotToken);
+      const resumeBotPath = resumeBotRes.data.match(
+        /fetch\('\/download\?id=([a-zA-Z0-9\/+]+)'/,
+      )[1];
+      const resumeBotBaseUrl = resumeBot.split('/download')[0];
+      // console.log(
+      //   'resumeBotPath',
+      //   resumeBotBaseUrl + '/download?id=' + resumeBotPath,
+      // );
+      // console.log('resumeBotBody', resumeBotToken);
+
+      const resumeBotDownload = await fetch(
+        resumeBotBaseUrl + '/download?id=' + resumeBotPath,
+        {
+          method: 'POST',
+          body: resumeBotBody,
+          headers: {
+            Referer: resumeBot,
+            Cookie: 'PHPSESSID=7e9658ce7c805dab5bbcea9046f7f308',
+          },
         },
-      },
-    );
-    const resumeBotDownloadData = await resumeBotDownload.json();
-    console.log('resumeBotDownloadData', resumeBotDownloadData.url);
-    servers.push({
-      server: 'ResumeBot',
-      link: resumeBotDownloadData.url,
-      type: 'mkv',
-    });
-
+      );
+      const resumeBotDownloadData = await resumeBotDownload.json();
+      console.log('resumeBotDownloadData', resumeBotDownloadData.url);
+      servers.push({
+        server: 'ResumeBot',
+        link: resumeBotDownloadData.url,
+        type: 'mkv',
+      });
+    } catch (err) {
+      console.log('ResumeBot link not found', err);
+    }
     // CF workers type 1
     try {
       const cfWorkersLink = driveLink.replace('/file', '/wfile') + '?type=1';
@@ -199,7 +203,7 @@ const isDriveLink = async (ddl: string) => {
       /window\.location\.replace\("([^"]+)"\)/,
     )[1];
     const mainUrl = ddl.split('/')[2];
-    console.log(`https://${mainUrl}${path}`);
+    console.log(`driveUrl = https://${mainUrl}${path}`);
     return `https://${mainUrl}${path}`;
   } else {
     return ddl;

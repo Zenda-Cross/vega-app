@@ -12,10 +12,11 @@ export const dcGetPosts = async function (
 ): Promise<Post[]> {
   try {
     const urlRes = await axios.get(
-      'https://consumet8.vercel.app/movies/dramacool/info?id=drama-detail/shogun',
+      'https://himanshu8443.github.io/providers/modflix.json',
     );
-    const resData = urlRes.data.episodes[0].url;
-    const baseUrl = resData.split('/').slice(0, 3).join('/');
+    const dataRes = urlRes.data;
+    // console.log(dataRes.hdhub.url);
+    const baseUrl = dataRes?.dc?.url;
     console.log('dcBaseUrl', baseUrl);
     const url = filter.includes('query')
       ? `${baseUrl}/search?type=movies&keyword=${filter.replace(
