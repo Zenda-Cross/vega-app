@@ -34,30 +34,69 @@ export const multiGetStream = async (
     });
     const playerData = await playerRes.json();
     console.log('playerData', playerData);
-    const ifameUrl =
+    let ifameUrl =
       playerData?.embed_url?.match(/<iframe[^>]+src="([^"]+)"[^>]*>/i)?.[1] ||
       playerData?.embed_url;
     console.log('ifameUrl', ifameUrl);
+    if (!ifameUrl.includes('multimovies')) {
+      const iframeRes = await axios.get(ifameUrl, {headers});
+      const $$ = cheerio.load(iframeRes.data);
+      let newIframeUrl = $$('li[data-sourceKey="smwh"]').attr('data-link');
+      if (newIframeUrl) {
+        ifameUrl = newIframeUrl;
+      }
+    }
     const iframeRes = await axios.get(ifameUrl, {headers});
     const iframeData = iframeRes.data;
-    const streamUrl = iframeData?.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)?.[1];
+
+    // Step 1: Extract the function parameters and the encoded string
+    var functionRegex =
+      /eval\(function\((.*?)\)\{.*?return p\}.*?\('(.*?)'\.split/;
+    var match = functionRegex.exec(iframeData);
+    let p = '';
+    if (match) {
+      var params = match[1].split(',').map(param => param.trim());
+      var encodedString = match[2];
+
+      console.log('Parameters:', params);
+      // console.log('Encoded String:', encodedString.split("',36,")[0], '🔥🔥');
+
+      p = encodedString.split("',36,")?.[0].trim();
+      let a = 36;
+      let c = encodedString.split("',36,")[1].slice(2).split('|').length;
+      let k = encodedString.split("',36,")[1].slice(2).split('|');
+
+      while (c--) {
+        if (k[c]) {
+          var regex = new RegExp('\\b' + c.toString(a) + '\\b', 'g');
+          p = p.replace(regex, k[c]);
+        }
+      }
+
+      // console.log('Decoded String:', p);
+    } else {
+      console.log('No match found');
+    }
+
+    const streamUrl = p?.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)?.[1];
     const subtitles: {
       lang: string;
       url: string;
     }[] = [];
-    const subtitleMatch = iframeData?.match(/https:\/\/[^\s"]+\.vtt/g);
+    const subtitleMatch = p?.match(/https:\/\/[^\s"]+\.vtt/g);
     // console.log('subtitleMatch', subtitleMatch);
-    if (subtitleMatch?.length > 0) {
+    if (subtitleMatch?.length) {
       subtitleMatch.forEach((sub: any) => {
         const lang = sub.match(/_([a-zA-Z]{3})\.vtt$/)[1];
         subtitles.push({lang: lang, url: sub});
       });
     }
-    // console.log('streamUrl', subtitles);
+    console.log('streamUrl', streamUrl);
+    console.log('newUrl', streamUrl?.replace(/&i=\d+,'\.4&/, '&i=0.4&'));
     if (streamUrl) {
       streamLinks.push({
         server: 'Multi',
-        link: streamUrl,
+        link: streamUrl.replace(/&i=\d+,'\.4&/, '&i=0.4&'),
         type: 'm3u8',
         subtitles: subtitles,
       });

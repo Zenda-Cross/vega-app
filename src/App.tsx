@@ -21,6 +21,7 @@ import About, {checkForUpdate} from './screens/settings/About';
 import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
+import Preferences from './screens/settings/Preference';
 
 enableScreens(true);
 enableFreeze(true);
@@ -60,6 +61,7 @@ export type SettingsStackParamList = {
   Settings: undefined;
   DisableProviders: undefined;
   About: undefined;
+  Preferences: undefined;
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
@@ -135,6 +137,7 @@ const App = () => {
           component={DisableProviders}
         />
         <SettingsStack.Screen name="About" component={About} />
+        <SettingsStack.Screen name="Preferences" component={Preferences} />
       </SettingsStack.Navigator>
     );
   }
@@ -208,7 +211,7 @@ const App = () => {
 
   useEffect(() => {
     if (MMKV.getBool('autoCheckUpdate') !== false) {
-      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false);
+      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false, false);
     }
   }, []);
 

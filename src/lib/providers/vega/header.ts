@@ -12,6 +12,8 @@ export const headers = {
   'Sec-Fetch-Mode': 'navigate',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
+  Cookie:
+    '_lscache_vary=ee6da9b0889c5478e05dcac864810b28; cf_clearance=MykCU0GeV7b1PSR0hFBwPHQX3zT0gBoq8MpsAExRTAg-1722511539-1.0.1.1-GROEaFc9_8OD8sUDs6eNIYmBc6pyhs4jiGUu6bpHlsUTvxYYWS.aOV3TftZTi05_YNwEmLyuUjd._tk0siURdw',
   'Upgrade-Insecure-Requests': '1',
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
