@@ -17,7 +17,12 @@ import {providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SettingsStackParamList} from '../../App';
-import {MaterialCommunityIcons, AntDesign, Feather} from '@expo/vector-icons';
+import {
+  MaterialCommunityIcons,
+  AntDesign,
+  Feather,
+  MaterialIcons,
+} from '@expo/vector-icons';
 
 const players = [
   {
@@ -40,10 +45,6 @@ const Settings = ({navigation}: Props) => {
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     players.find(player => player.value === MMKV.getString('externalPlayer')) ||
       players[0],
-  );
-
-  const [ExcludedQualities, setExcludedQualities] = useState(
-    MMKV.getArray('ExcludedQualities') || [],
   );
 
   const {provider, setProvider} = useContentStore(state => state);
@@ -256,43 +257,20 @@ const Settings = ({navigation}: Props) => {
         </View>
       </TouchableNativeFeedback>
 
-      {/* Excluded qualities */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">Excluded qualities</Text>
-        <View className="flex flex-row flex-wrap">
-          {['480p', '720p', '1080p'].map((quality, index) => (
-            <TouchableOpacity
-              key={index}
-              className={`bg-secondary p-2 rounded-md m-1 ${
-                ExcludedQualities.includes(quality) ? 'bg-[#343434]' : ''
-              }`}
-              onPress={() => {
-                ReactNativeHapticFeedback.trigger('effectTick', {
-                  enableVibrateFallback: true,
-                  ignoreAndroidSystemSettings: false,
-                });
-                if (ExcludedQualities.includes(quality)) {
-                  setExcludedQualities(prev => prev.filter(q => q !== quality));
-                  MMKV.setArray(
-                    'ExcludedQualities',
-                    ExcludedQualities.filter(q => q !== quality),
-                  );
-                } else {
-                  setExcludedQualities(prev => [...prev, quality]);
-                  MMKV.setArray('ExcludedQualities', [
-                    ...ExcludedQualities,
-                    quality,
-                  ]);
-                }
-                console.log(ExcludedQualities);
-              }}>
-              <Text className="text-white text-xs rounded-md px-1">
-                {quality}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      {/* Preferences */}
+      <TouchableNativeFeedback
+        onPress={() => {
+          navigation.navigate('Preferences');
+        }}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <View className="flex-row justify-center items-center gap-1 my-1">
+            <MaterialIcons name="room-preferences" size={18} color="white" />
+            <Text className="text-white font-semibold">Preference</Text>
+          </View>
+          <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </View>
+      </TouchableNativeFeedback>
 
       {/* clear cache */}
       <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">

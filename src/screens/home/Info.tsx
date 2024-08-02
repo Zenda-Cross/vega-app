@@ -253,14 +253,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       {meta?.cast?.slice(0, 3).map((actor: string) => (
                         <Text
                           key={actor}
-                          className="text-white text-xs bg-tertiary p-1 rounded-md">
+                          className="text-white text-xs bg-tertiary p-1 rounded-sm">
                           {actor}
                         </Text>
                       ))}
                       {info?.cast?.slice(0, 3).map((actor: string) => (
                         <Text
                           key={actor}
-                          className="text-white text-xs bg-tertiary p-1 rounded-md">
+                          className="text-white text-xs bg-tertiary p-1 rounded-sm">
                           {actor}
                         </Text>
                       ))}
@@ -274,7 +274,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       <Text className="text-white text-xl font-semibold">
                         Synopsis
                       </Text>
-                      <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
+                      <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-sm">
                         {route.params.provider || provider.value}
                       </Text>
                     </View>
@@ -308,7 +308,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                   </View>
                 </View>
                 <Skeleton show={infoLoading} colorMode="dark" height={20}>
-                  <Text className="text-white text-xs">
+                  <Text className="text-white text-xs px-1">
                     {meta?.description
                       ? meta?.description.length > 180
                         ? meta?.description.slice(0, 180) + '...'
@@ -365,6 +365,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     }
                     poster={meta?.logo || ''}
                     metaTitle={meta?.name || info?.title}
+                    routeParams={route.params}
                   />
                 )}
               </View>
