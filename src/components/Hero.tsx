@@ -76,17 +76,24 @@ function Hero() {
           <MotiView
             from={{opacity: 0, scale: 0.5}}
             animate={{opacity: 1, scale: 1}}
+            //@ts-ignore
             transition={{type: 'timing', duration: 300}}
             className="w-full items-center justify-center">
             <TextInput
               onBlur={() => setSearchActive(false)}
               autoFocus={true}
               onSubmitEditing={e => {
-                searchNavigation.navigate('ScrollList', {
-                  providerValue: provider.value,
-                  filter: 'query' + e.nativeEvent.text,
-                  title: `${provider.name}`,
-                });
+                if (e.nativeEvent.text.includes('https://')) {
+                  navigation.navigate('Info', {
+                    link: e.nativeEvent.text,
+                  });
+                } else {
+                  searchNavigation.navigate('ScrollList', {
+                    providerValue: provider.value,
+                    filter: 'query' + e.nativeEvent.text,
+                    title: `${provider.name}`,
+                  });
+                }
               }}
               placeholder={`Search in ${provider.name}`}
               className="w-[95%] px-4 h-10 rounded-full border-white border"

@@ -9,7 +9,7 @@ import React, {useEffect, useState} from 'react';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
-import {MmmkvCache} from '../../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {manifest} from '../../lib/Manifest';
@@ -17,6 +17,7 @@ import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNFS from 'react-native-fs';
 import useDownloadsStore from '../../lib/zustand/downloadsStore';
 import {FFmpegKit} from 'ffmpeg-kit-react-native';
+import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -24,6 +25,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const downloadStore = useDownloadsStore(state => state);
+  const recentlyWatched = useWatchHistoryStore(state => state).history;
+  const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -142,6 +145,14 @@ const Home = () => {
         }>
         <Hero />
         <View className="p-4">
+          {!loading && recentlyWatched?.length > 0 && ShowRecentlyWatched && (
+            <Slider
+              isLoading={loading}
+              title={'Recently Watched'}
+              posts={recentlyWatched}
+              filter={''}
+            />
+          )}
           {loading
             ? manifest[provider.value].catalog.map((item, index) => (
                 <Slider

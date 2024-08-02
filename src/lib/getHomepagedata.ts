@@ -1,11 +1,6 @@
 import {Content} from './zustand/contentStore';
 import {manifest} from './Manifest';
-
-export interface Post {
-  title: string;
-  link: string;
-  image: string;
-}
+import {Post} from './providers/types';
 
 export interface HomePageData {
   title: string;
