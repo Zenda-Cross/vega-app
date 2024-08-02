@@ -3,6 +3,7 @@ export interface Post {
   title: string;
   link: string;
   image: string;
+  provider?: string;
 }
 
 // getStream

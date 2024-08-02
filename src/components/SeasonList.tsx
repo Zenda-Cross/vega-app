@@ -25,6 +25,7 @@ import {manifest} from '../lib/Manifest';
 import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Feather from '@expo/vector-icons/Feather';
+import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 
 const SeasonList = ({
   LinkList,
@@ -32,12 +33,18 @@ const SeasonList = ({
   metaTitle,
   providerValue,
   refreshing,
+  routeParams,
 }: {
   LinkList: Link[];
   poster: string;
   metaTitle: string;
   providerValue: string;
   refreshing?: boolean;
+  routeParams: Readonly<{
+    link: string;
+    provider?: string;
+    poster?: string;
+  }>;
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -56,6 +63,8 @@ const SeasonList = ({
     MmmkvCache.getMap(`ActiveSeason${metaTitle + providerValue}`) ||
       LinkList[0],
   );
+
+  const {addItem} = useWatchHistoryStore(state => state);
 
   useEffect(() => {
     const fetchList = async () => {
@@ -158,7 +167,14 @@ const SeasonList = ({
       return;
     }
   };
+
   const playHandler = async ({link, type, title, file}: playHandlerProps) => {
+    addItem({
+      link: routeParams.link,
+      title: metaTitle,
+      image: routeParams.poster!,
+      provider: providerValue,
+    });
     const externalPlayer = MMKV.getString('externalPlayer');
     const downloaded = await ifExists(file);
     if (externalPlayer && !downloaded) {

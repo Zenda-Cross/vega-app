@@ -1,13 +1,15 @@
-import {Image, Text, TouchableOpacity, View} from 'react-native';
+import {Image, Pressable, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import type {Post} from '../lib/providers/types';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import {HomeStackParamList} from '../App';
-import {Skeleton} from 'moti/skeleton';
 import useContentStore from '../lib/zustand/contentStore';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from './Skeleton';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 
 export default function Slider({
   isLoading,
@@ -25,21 +27,25 @@ export default function Slider({
   const {provider} = useContentStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const [isSelected, setSelected] = React.useState('');
+  const {removeItem} = useWatchHistoryStore(state => state);
 
   return (
-    <View className="gap-3 mt-7">
+    <Pressable onPress={() => setSelected('')} className="gap-3 mt-7">
       <View className="flex flex-row items-center justify-between px-2">
         <Text className="text-2xl text-primary font-semibold">{title}</Text>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('ScrollList', {
-              title: title,
-              filter: filter,
-              providerValue: providerValue,
-            })
-          }>
-          <Text className="text-white text-sm">more</Text>
-        </TouchableOpacity>
+        {filter && (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('ScrollList', {
+                title: title,
+                filter: filter,
+                providerValue: providerValue,
+              })
+            }>
+            <Text className="text-white text-sm">more</Text>
+          </TouchableOpacity>
+        )}
       </View>
       {isLoading ? (
         <View className="flex flex-row gap-2 overflow-hidden">
@@ -57,18 +63,29 @@ export default function Slider({
           estimatedItemSize={30}
           showsHorizontalScrollIndicator={false}
           data={posts}
+          extraData={isSelected}
           horizontal
           contentContainerStyle={{paddingHorizontal: 3, paddingTop: 7}}
           renderItem={({item}) => (
             <View className="flex flex-col mx-2">
               <TouchableOpacity
-                onPress={() =>
+                onLongPress={e => {
+                  e.stopPropagation();
+                  ReactNativeHapticFeedback.trigger('effectClick', {
+                    enableVibrateFallback: true,
+                    ignoreAndroidSystemSettings: false,
+                  });
+                  setSelected(item.link);
+                }}
+                onPress={e => {
+                  e.stopPropagation();
+                  setSelected('');
                   navigation.navigate('Info', {
                     link: item.link,
-                    provider: providerValue || provider?.value,
+                    provider: item.provider || providerValue || provider?.value,
                     poster: item?.image,
-                  })
-                }>
+                  });
+                }}>
                 <Image
                   className="rounded-md"
                   source={{
@@ -78,6 +95,20 @@ export default function Slider({
                   }}
                   style={{width: 100, height: 150}}
                 />
+                {isSelected === item.link && (
+                  <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+                    <AntDesign
+                      name="delete"
+                      size={24}
+                      color="white"
+                      onPress={() => {
+                        console.log('remove', item);
+                        setSelected('');
+                        removeItem(item);
+                      }}
+                    />
+                  </View>
+                )}
               </TouchableOpacity>
               <Text className="text-white text-center truncate w-24 text-xs">
                 {item.title.length > 24
@@ -98,6 +129,6 @@ export default function Slider({
           keyExtractor={item => item.link}
         />
       )}
-    </View>
+    </Pressable>
   );
 }
