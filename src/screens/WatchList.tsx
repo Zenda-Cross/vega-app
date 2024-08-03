@@ -29,6 +29,7 @@ const Library = () => {
                     navigation.navigate('Info', {
                       link: item.link,
                       provider: item.provider,
+                      poster: item.poster,
                     })
                   }>
                   <Image
