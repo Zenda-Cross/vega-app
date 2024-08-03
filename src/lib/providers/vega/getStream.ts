@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {ToastAndroid} from 'react-native';
 import {Stream} from '../types';
+import {hubcloudExtracter} from '../hubcloudExtractor';
 
 const encode = function (value: string) {
   return btoa(value.toString());
@@ -182,7 +183,7 @@ export async function vegaGetStream(
     // );
     /////////////////////////////
 
-    return await hubcloudExtracter(link, streamLinks, signal);
+    return await hubcloudExtracter(link, signal);
   } catch (error: any) {
     console.log('getStream error: ', error);
     if (error.message.includes('Aborted')) {
@@ -193,58 +194,6 @@ export async function vegaGetStream(
         ToastAndroid.SHORT,
       );
     }
-    return [];
-  }
-}
-
-export async function hubcloudExtracter(
-  link: string,
-  streamLinks: Stream[],
-  signal: AbortSignal,
-) {
-  try {
-    const vLinkRes = await axios(`${link}`, {headers, signal});
-    const vLinkText = vLinkRes.data;
-    const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
-    const vcloudLink =
-      decode(vLinkRedirect[1]?.split('r=')?.[1]) || vLinkRedirect[1];
-    console.log('vcloudLink', vcloudLink);
-
-    const vcloudRes = await fetch(vcloudLink, {
-      headers,
-      signal,
-      redirect: 'follow',
-    });
-    const $ = cheerio.load(await vcloudRes.text());
-
-    const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
-    for (const element of linkClass) {
-      const itm = $(element);
-      let link = itm.attr('href') || '';
-      if (link?.includes('.dev')) {
-        streamLinks.push({server: 'Cf Worker', link: link, type: 'mkv'});
-      }
-      if (link?.includes('pixel')) {
-        if (!link?.includes('api')) {
-          const token = link.split('/').pop();
-          const baseUrl = link.split('/').slice(0, -2).join('/');
-          link = `${baseUrl}/api/file/${token}?download`;
-        }
-        streamLinks.push({server: 'pixeldrain', link: link, type: 'mkv'});
-      }
-      if (link?.includes('hubcloud')) {
-        const newLinkRes = await axios.head(link, {headers, signal});
-        const newLink =
-          newLinkRes.request?.responseURL?.split('link=')?.[1] || link;
-        streamLinks.push({server: 'hubcloud', link: newLink, type: 'mkv'});
-      }
-      if (link?.includes('cloudflarestorage')) {
-        streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
-      }
-    }
-    return streamLinks;
-  } catch (error) {
-    console.log('hubcloudExtracter error: ', error);
     return [];
   }
 }
