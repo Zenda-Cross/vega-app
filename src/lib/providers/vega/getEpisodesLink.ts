@@ -11,7 +11,7 @@ export const vegaGetEpisodeLinks = async function (
     const res = await axios.get(url, {headers});
     const $ = cheerio.load(res.data);
     const container = $('.entry-content');
-    $('.unili-content').remove();
+    $('.unili-content,.code-block-1').remove();
     const episodes: EpisodeLink[] = [];
     container.find('h4').each((index, element) => {
       const el = $(element);

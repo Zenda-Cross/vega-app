@@ -2,8 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {ToastAndroid} from 'react-native';
-import {Stream} from '../types';
-import {hubcloudExtracter} from '../vega/getStream';
+import {hubcloudExtracter} from '../hubcloudExtractor';
 import {getRedirectLinks} from './getRedirectLinks';
 
 export async function hdhub4uGetStream(
@@ -11,7 +10,6 @@ export async function hdhub4uGetStream(
   type: string,
   signal: AbortSignal,
 ) {
-  const streamLinks: Stream[] = [];
   let hubdriveLink = '';
 
   if (link.includes('hubdrive')) {
@@ -53,7 +51,7 @@ export async function hdhub4uGetStream(
     ) || [];
   // console.log('hubcloudLink', hubcloudLink[1]);
   try {
-    return await hubcloudExtracter(hubcloudLink[1], streamLinks, signal);
+    return await hubcloudExtracter(hubcloudLink[1], signal);
   } catch (error: any) {
     console.log('getStream error: ', error);
     if (error.message.includes('Aborted')) {
