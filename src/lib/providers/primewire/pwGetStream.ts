@@ -11,21 +11,22 @@ export const pwGetStream = async (
     console.log('pwGetStream', type, url);
     const baseUrl = url.split('/').slice(0, 3).join('/');
     const streamLinks: Stream[] = [];
-    const urls: string[] = [];
+    const urls: {id: string; size: string}[] = [];
     const res = await axios.get(url, {headers});
     const data = res.data;
     const $ = cheerio.load(data);
     $('tr:contains("mixdrop")').map((i, element) => {
       const id = $(element).find('.wp-menu-btn').attr('data-wp-menu');
+      const size = $(element).find('.wp-menu-btn').next().text();
       if (id) {
-        urls.push(baseUrl + '/links/go/' + id);
+        urls.push({id: baseUrl + '/links/go/' + id, size});
       }
     });
 
     console.log('urls', urls);
 
     for (const url of urls) {
-      const res2 = await axios.head(url, {headers});
+      const res2 = await axios.head(url.id, {headers});
       const location = res2.request?.responseURL.replace('/f/', '/e/');
 
       const res3 = await axios.get(location, {headers});
@@ -99,7 +100,11 @@ export const pwGetStream = async (
         const wurl = decoded.match(/MDCore\.wurl="([^"]+)"/)?.[1];
         console.log('wurl:', wurl);
         const streamUrl = 'https:' + wurl;
-        streamLinks.push({server: 'Mixdrop', link: streamUrl, type: 'mp4'});
+        streamLinks.push({
+          server: 'Mixdrop ' + url.size,
+          link: streamUrl,
+          type: 'mp4',
+        });
       } else {
         console.log('No match found');
       }
