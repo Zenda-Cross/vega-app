@@ -66,6 +66,12 @@ export const providersList: ProvidersList[] = [
     flag: '🇬🇧',
   },
   {
+    name: 'Primewire',
+    value: 'primewire',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
     name: 'GogoAnime',
     value: 'gogo',
     type: 'global',
