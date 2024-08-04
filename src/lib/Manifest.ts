@@ -96,6 +96,10 @@ import {katGetPosts} from './providers/katmovies/katGetPosts';
 import {katGetInfo} from './providers/katmovies/katGetInfo';
 import {katEpisodeLinks} from './providers/katmovies/katGetEpsodes';
 import {katGetStream} from './providers/katmovies/katGetSteam';
+import {pwCatalogList, pwGenresList} from './providers/primewire/pwCatalogl';
+import {pwGetPosts} from './providers/primewire/pwGetPosts';
+import pwGetInfo from './providers/primewire/pwGetInfo';
+import {pwGetStream} from './providers/primewire/pwGetStream';
 
 interface Manifest {
   [key: string]: {
@@ -253,5 +257,13 @@ export const manifest: Manifest = {
     getPosts: katGetPosts,
     getInfo: katGetInfo,
     getEpisodeLinks: katEpisodeLinks,
+  },
+  primewire: {
+    catalog: pwCatalogList,
+    genres: pwGenresList,
+    getStream: pwGetStream,
+    getPosts: pwGetPosts,
+    getEpisodeLinks: vegaGetEpisodeLinks,
+    getInfo: pwGetInfo,
   },
 };
