@@ -70,6 +70,7 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
         )
         ?.parent()
         ?.attr('href');
+      console.log(title);
       const episodesLink =
         (vcloudLinks
           ? vcloudLinks
@@ -103,7 +104,7 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
     };
   } catch (error) {
     console.log('getInfo error');
-    // console.error(error);
+    console.error(error);
     // ToastAndroid.show('No response', ToastAndroid.SHORT);
     return {
       title: '',

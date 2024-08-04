@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Stream} from '../types';
-import {hubcloudExtracter} from '../vega/getStream';
+import {hubcloudExtracter} from '../hubcloudExtractor';
 import {extractKmhdLink} from './katGetEpsodes';
 
 export async function katGetStream(
@@ -15,11 +15,7 @@ export async function katGetStream(
   try {
     if (link.includes('kmhd')) {
       const hubcloudLink = await extractKmhdLink(link);
-      const stereams = await hubcloudExtracter(
-        hubcloudLink,
-        streamLinks,
-        signal,
-      );
+      const stereams = await hubcloudExtracter(hubcloudLink, signal);
       return stereams;
     }
     if (link.includes('gdflix')) {
@@ -77,7 +73,7 @@ export async function katGetStream(
       }
       return streamLinks;
     }
-    const stereams = await hubcloudExtracter(link, streamLinks, signal);
+    const stereams = await hubcloudExtracter(link, signal);
     return stereams;
   } catch (error: any) {
     console.log('katgetStream error: ', error);
