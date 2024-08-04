@@ -169,6 +169,8 @@ function Hero() {
               onPress={() => {
                 navigation.navigate('Info', {
                   link: hero.link,
+                  provider: provider.value,
+                  poster: post?.image || post?.poster || post?.background,
                 });
               }}>
               <FontAwesome6 name="play" size={20} color="black" />
