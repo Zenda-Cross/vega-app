@@ -292,7 +292,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           setVideoTracks(e.videoTracks);
         }}
         selectedVideoTrack={selectedVideoTrack}
-        style={{flex: 1}}
+        style={{flex: 1, zIndex: 100}}
       />
 
       {/* // cast button */}
@@ -382,11 +382,11 @@ const Player = ({route}: Props): React.JSX.Element => {
           <MotiView
             from={{translateY: 0, opacity: 0}}
             animate={{
-              translateY: showSettings ? 0 : 500,
+              translateY: showSettings ? 0 : 5000,
               opacity: showSettings ? 1 : 0,
             }}
             //@ts-ignore
-            transition={{type: 'timing', duration: 260}}
+            transition={{type: 'timing', duration: 250}}
             className="absolute opacity-0 top-0 left-0 w-full h-full bg-black/20 justify-end items-center"
             onTouchEnd={() => {
               setShowSettings(false);
