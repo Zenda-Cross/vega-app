@@ -71,11 +71,14 @@ export default function Slider({
               <TouchableOpacity
                 onLongPress={e => {
                   e.stopPropagation();
-                  ReactNativeHapticFeedback.trigger('effectClick', {
-                    enableVibrateFallback: true,
-                    ignoreAndroidSystemSettings: false,
-                  });
-                  setSelected(item.link);
+                  if (!filter) {
+                    console.log('long press', filter);
+                    ReactNativeHapticFeedback.trigger('effectClick', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                    setSelected(item.link);
+                  }
                 }}
                 onPress={e => {
                   e.stopPropagation();
