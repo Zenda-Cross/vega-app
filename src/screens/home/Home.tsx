@@ -18,6 +18,7 @@ import RNFS from 'react-native-fs';
 import useDownloadsStore from '../../lib/zustand/downloadsStore';
 import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import Touturial from '../../components/Touturial';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -122,6 +123,7 @@ const Home = () => {
   notifee.onForegroundEvent(actionHandler);
   return (
     <SafeAreaView className="bg-black h-full w-full">
+      <Touturial />
       <StatusBar
         showHideTransition={'fade'}
         animated={true}
