@@ -12,9 +12,9 @@ export const tokyoGetPosts = async (
   try {
     const baseURL = 'https://www.tokyoinsider.com';
     const start = page < 2 ? 0 : (page - 1) * 20;
-    const url = filter.includes('query')
+    const url = filter.includes('searchQuery=')
       ? `${baseURL}/anime/search?k=${filter.replace(
-          'query',
+          'searchQuery=',
           '',
         )}&start=${start}`
       : `${baseURL}/${filter}&start=${start}`;

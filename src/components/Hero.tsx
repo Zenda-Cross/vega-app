@@ -90,7 +90,7 @@ function Hero() {
                 } else {
                   searchNavigation.navigate('ScrollList', {
                     providerValue: provider.value,
-                    filter: 'query' + e.nativeEvent.text,
+                    filter: 'searchQuery=' + e.nativeEvent.text,
                     title: `${provider.name}`,
                   });
                 }
