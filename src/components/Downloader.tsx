@@ -113,7 +113,7 @@ const DownloadComponent = ({
     try {
       await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
         data: link,
-        type: 'application/octet-stream',
+        type: 'video/*',
       });
     } catch (error) {
       console.log(error);
