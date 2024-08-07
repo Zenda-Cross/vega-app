@@ -18,9 +18,9 @@ export const dcGetPosts = async function (
     // console.log(dataRes.hdhub.url);
     const baseUrl = dataRes?.dc?.url;
     console.log('dcBaseUrl', baseUrl);
-    const url = filter.includes('query')
+    const url = filter.includes('searchQuery=')
       ? `${baseUrl}/search?type=movies&keyword=${filter.replace(
-          'query',
+          'searchQuery=',
           '',
         )}&page=${page}`
       : `${baseUrl + filter}?page=${page}`;

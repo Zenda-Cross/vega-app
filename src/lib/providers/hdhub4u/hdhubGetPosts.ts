@@ -17,8 +17,8 @@ export const hdhubGetPosts = async function (
     const dataRes = urlRes.data;
     // console.log(dataRes.hdhub.url);
     const baseUrl = dataRes?.hdhub?.url;
-    const url = filter.includes('query')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
     console.log('hdhubGetPosts', url);
     const res = await axios.get(url, {headers, signal});

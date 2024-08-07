@@ -20,7 +20,7 @@ const Search = () => {
           autoFocus={true}
           onSubmitEditing={e => {
             navigation.navigate('SearchResults', {
-              filter: 'query' + e.nativeEvent.text,
+              filter: 'searchQuery=' + e.nativeEvent.text,
             });
           }}
           placeholderTextColor={'white'}
