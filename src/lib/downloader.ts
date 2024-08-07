@@ -14,12 +14,14 @@ export const downloadManager = async ({
   downloadStore,
   setAlreadyDownloaded,
   setDownloadId,
+  headers,
 }: {
   title: string;
   url: string;
   fileName: string;
   fileType: string;
   downloadStore: Downloads;
+  headers?: any;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
@@ -81,6 +83,7 @@ export const downloadManager = async ({
       progressInterval: 1000,
       backgroundTimeout: 1000 * 60 * 60,
       progressDivider: 1,
+      headers: headers ? headers : {},
       toFile: downloadDest,
       background: true,
       begin: (res: any) => {

@@ -56,6 +56,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'NetflixMirror',
+    value: 'netflixMirror',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'HdHub4u',
     value: 'hdhub4u',
     type: 'global',

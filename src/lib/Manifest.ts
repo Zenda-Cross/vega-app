@@ -96,10 +96,19 @@ import {katGetPosts} from './providers/katmovies/katGetPosts';
 import {katGetInfo} from './providers/katmovies/katGetInfo';
 import {katEpisodeLinks} from './providers/katmovies/katGetEpsodes';
 import {katGetStream} from './providers/katmovies/katGetSteam';
+
+/// primewire
 import {pwCatalogList, pwGenresList} from './providers/primewire/pwCatalogl';
 import {pwGetPosts} from './providers/primewire/pwGetPosts';
 import pwGetInfo from './providers/primewire/pwGetInfo';
 import {pwGetStream} from './providers/primewire/pwGetStream';
+
+/// netflixMirror
+import {nfCatalog, nfGenresList} from './providers/netflixMirror/nfCatalog';
+import {nfGetEpisodes} from './providers/netflixMirror/nfGetEpisodes';
+import {nfGetStream} from './providers/netflixMirror/nfGetSteam';
+import {nfGetInfo} from './providers/netflixMirror/nfGetInfo';
+import {nfGetPost} from './providers/netflixMirror/nfGetPost';
 
 interface Manifest {
   [key: string]: {
@@ -265,5 +274,13 @@ export const manifest: Manifest = {
     getPosts: pwGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: pwGetInfo,
+  },
+  netflixMirror: {
+    catalog: nfCatalog,
+    genres: nfGenresList,
+    getStream: nfGetStream,
+    getPosts: nfGetPost,
+    getEpisodeLinks: nfGetEpisodes,
+    getInfo: nfGetInfo,
   },
 };
