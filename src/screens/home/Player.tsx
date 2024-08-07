@@ -34,16 +34,9 @@ import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
 import {Entypo} from '@expo/vector-icons';
+import {Stream} from '../../lib/providers/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
-type Stream = {
-  server: string;
-  link: string;
-  subtitles?: {
-    lang: string;
-    url: string;
-  }[];
-};
 
 const Player = ({route}: Props): React.JSX.Element => {
   const {provider} = useContentStore();
@@ -210,6 +203,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         source={{
           uri: selectedStream?.link || '',
           shouldCache: true,
+          headers: selectedStream?.headers,
         }}
         textTracks={selectedStream?.subtitles?.map(sub => ({
           type: TextTrackType.VTT,

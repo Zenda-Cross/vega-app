@@ -219,6 +219,7 @@ const DownloadComponent = ({
                               downloadStore: downloadStore,
                               setAlreadyDownloaded: setAlreadyDownloaded,
                               setDownloadId: setDownloadId,
+                              headers: server?.headers,
                             });
                           }}
                           onLongPress={() => {
