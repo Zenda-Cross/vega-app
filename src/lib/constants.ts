@@ -1,3 +1,5 @@
+import RNFS from 'react-native-fs';
+
 export interface ProvidersList {
   name: string;
   value: string;
@@ -96,3 +98,5 @@ export const providersList: ProvidersList[] = [
     flag: '🇮🇳',
   },
 ];
+
+export const downloadFolder = RNFS.DownloadDirectoryPath + '/vega';

@@ -12,10 +12,14 @@ import {useState} from 'react';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
-import {providersList} from '../../lib/constants';
+import {downloadFolder, providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
+import * as IntentLauncher from 'expo-intent-launcher';
+
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
+
 import {
   MaterialCommunityIcons,
   AntDesign,
@@ -31,6 +35,17 @@ const Settings = ({navigation}: Props) => {
   );
 
   const {provider, setProvider} = useContentStore(state => state);
+
+  const onDownloadFolderPress = async () => {
+    try {
+      await RNFS.mkdir(downloadFolder);
+      await Linking.openURL(
+        'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fvega',
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <View className="w-full h-full bg-black p-4">
@@ -103,6 +118,30 @@ const Settings = ({navigation}: Props) => {
           }}
         />
       </View>
+
+      {/* download folder shortcut */}
+
+      <TouchableNativeFeedback
+        onPress={async () => {
+          ReactNativeHapticFeedback.trigger('virtualKey', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false,
+          });
+          onDownloadFolderPress();
+        }}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <View className="flex-row justify-center items-center gap-1 my-1">
+            <MaterialCommunityIcons
+              name="folder-download"
+              size={18}
+              color="white"
+            />
+            <Text className="text-white font-semibold">Downloads</Text>
+          </View>
+          <Feather name="chevron-right" size={24} color="white" />
+        </View>
+      </TouchableNativeFeedback>
 
       {/* Subtitle Style  */}
       <TouchableNativeFeedback

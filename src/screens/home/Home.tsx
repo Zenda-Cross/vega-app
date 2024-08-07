@@ -19,6 +19,7 @@ import useDownloadsStore from '../../lib/zustand/downloadsStore';
 import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
+import {downloadFolder} from '../../lib/constants';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -101,8 +102,7 @@ const Home = () => {
       // setAlreadyDownloaded(false);
       downloadStore.removeActiveDownload(detail.notification?.data?.fileName!);
       try {
-        const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
-        const files = await RNFS.readDir(downloadDir);
+        const files = await RNFS.readDir(downloadFolder);
         // Find a file with the given name (without extension)
         const file = files.find(file => {
           const nameWithoutExtension = file.name

@@ -22,6 +22,7 @@ import useDownloadsStore from '../lib/zustand/downloadsStore';
 import {downloadManager} from '../lib/downloader';
 import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
+import {downloadFolder} from '../lib/constants';
 
 const DownloadComponent = ({
   link,
@@ -63,9 +64,8 @@ const DownloadComponent = ({
 
   // handle download deletion
   const deleteDownload = async () => {
-    const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
     try {
-      const files = await RNFS.readDir(downloadDir);
+      const files = await RNFS.readDir(downloadFolder);
       // Find a file with the given name (without extension)
       const file = files.find(file => {
         const nameWithoutExtension = file.name
@@ -335,8 +335,7 @@ const DownloadComponent = ({
               RNFS.stopDownload(downloadId);
               FFmpegKit.cancel(downloadId);
               downloadStore.removeActiveDownload(fileName);
-              const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
-              const files = await RNFS.readDir(downloadDir);
+              const files = await RNFS.readDir(downloadFolder);
               // Find a file with the given name (without extension)
               const file = files.find(file => {
                 const nameWithoutExtension = file.name
