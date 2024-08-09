@@ -4,6 +4,7 @@ import RNFS from 'react-native-fs';
 import notifee from '@notifee/react-native';
 import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
+import {downloadFolder} from './constants';
 
 export const downloadManager = async ({
   title,
@@ -13,12 +14,14 @@ export const downloadManager = async ({
   downloadStore,
   setAlreadyDownloaded,
   setDownloadId,
+  headers,
 }: {
   title: string;
   url: string;
   fileName: string;
   fileType: string;
   downloadStore: Downloads;
+  headers?: any;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
@@ -56,8 +59,8 @@ export const downloadManager = async ({
   // }
   try {
     // downloadFile and save it to download folder
-    if (!(await RNFS.exists(`${RNFS.DownloadDirectoryPath}/vega`))) {
-      await RNFS.mkdir(`${RNFS.DownloadDirectoryPath}/vega`);
+    if (!(await RNFS.exists(downloadFolder))) {
+      await RNFS.mkdir(downloadFolder);
     }
     await notifee.requestPermission();
 
@@ -65,7 +68,7 @@ export const downloadManager = async ({
       hlsDownloader({
         videoUrl: url,
         downloadStore,
-        path: `${RNFS.DownloadDirectoryPath}/vega/${fileName}.mp4`,
+        path: `${downloadFolder}/${fileName}.mp4`,
         fileName,
         title,
         setAlreadyDownloaded,
@@ -74,12 +77,13 @@ export const downloadManager = async ({
       console.log('Downloading HLS');
       return;
     }
-    const downloadDest = `${RNFS.DownloadDirectoryPath}/vega/${fileName}.${fileType}`;
+    const downloadDest = `${downloadFolder}/${fileName}.${fileType}`;
     const ret = RNFS.downloadFile({
       fromUrl: url,
       progressInterval: 1000,
       backgroundTimeout: 1000 * 60 * 60,
       progressDivider: 1,
+      headers: headers ? headers : {},
       toFile: downloadDest,
       background: true,
       begin: (res: any) => {

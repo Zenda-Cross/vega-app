@@ -6,13 +6,13 @@ import {Post} from '../lib/providers/types';
 import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {Skeleton} from 'moti/skeleton';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import {MaterialIcons} from '@expo/vector-icons';
 import {MMKV} from '../lib/Mmkv';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
+import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -38,7 +38,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
       const newPosts = await manifest[
         route.params.providerValue || provider.value
       ].getPosts(filter, page, provider, signal);
-      if (newPosts.length === 0) {
+      if (newPosts?.length === 0) {
         setIsEnd(true);
         setIsLoading(false);
         return;
@@ -57,6 +57,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <View className="h-full w-full bg-black items-center p-4">
+      <OrientationLocker orientation={PORTRAIT} />
       <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
@@ -135,7 +136,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
                     ? 'text-white text-center truncate w-24 text-xs'
                     : 'text-white ml-3 truncate w-72 font-semibold text-base'
                 }>
-                {item.title.length > 24 && viewType === 1
+                {item?.title?.length > 24 && viewType === 1
                   ? item.title.slice(0, 24) + '...'
                   : item.title}
               </Text>

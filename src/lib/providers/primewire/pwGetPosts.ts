@@ -18,12 +18,12 @@ export const pwGetPosts = async function (
   try {
     const baseUrl = 'https://www.primewire.tf';
     const hash = await getSHA256ofJSON(
-      filter.replace('query', '') + 'JyjId97F9PVqUPuMO0',
+      filter.replace('searchQuery=', '') + 'JyjId97F9PVqUPuMO0',
     );
     console.log('hash', hash);
-    const url = filter.includes('query')
+    const url = filter.includes('searchQuery=')
       ? `${baseUrl}/filter?s=${filter.replace(
-          'query',
+          'searchQuery=',
           '',
         )}&page=${page}&ds=${hash.slice(0, 10)}`
       : `${baseUrl + filter}&page=${page}`;

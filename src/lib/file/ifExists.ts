@@ -1,12 +1,11 @@
 import RNFS from 'react-native-fs';
+import {downloadFolder} from '../constants';
 
-// check if file exists in download folder/vega folder
+// check if file exists in download folder folder
 
 export const ifExists = async (fileName: string) => {
-  const downloadDir = `${RNFS.DownloadDirectoryPath}/vega`;
-
   try {
-    const files = await RNFS.readDir(downloadDir);
+    const files = await RNFS.readDir(downloadFolder);
 
     // Find a file with the given name (without extension)
     const file = files.find(file => {

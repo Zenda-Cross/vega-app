@@ -37,8 +37,8 @@ export const vegaGetPosts = async (
         MmmkvCache.setInt('baseUrlTime' + provider.value, Date.now());
       }
     }
-    const url = filter.includes('query')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl}/${filter}/page/${page}/`;
     const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);

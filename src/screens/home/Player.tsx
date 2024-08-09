@@ -34,16 +34,11 @@ import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
 import {Entypo} from '@expo/vector-icons';
+import {Stream} from '../../lib/providers/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
-type Stream = {
-  server: string;
-  link: string;
-  subtitles?: {
-    lang: string;
-    url: string;
-  }[];
-};
+
+type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 
 const Player = ({route}: Props): React.JSX.Element => {
   const {provider} = useContentStore();
@@ -54,9 +49,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   // controls
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    'audio' | 'subtitle' | 'server' | 'quality'
-  >('audio');
+  const [activeTab, setActiveTab] = useState<SettingsTabs>('audio');
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [selectedAudioTrack, setSelectedAudioTrack] =
     useState<SelectedAudioTrack>({type: 'index', value: '0'});
@@ -74,12 +67,12 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
 
   const [playbackRate, setPlaybackRate] = useState(1);
-  const playbacks = [1, 1.25, 1.5, 1.75, 2];
+  const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
   const settings:
     | {
         title: string;
         icon: string;
-        value: 'audio' | 'subtitle' | 'server' | 'quality';
+        value: SettingsTabs;
       }[] = [
     {
       title: 'Audio',
@@ -100,6 +93,11 @@ const Player = ({route}: Props): React.JSX.Element => {
       title: 'Quality',
       icon: 'video-settings',
       value: 'quality',
+    },
+    {
+      title: 'Speed',
+      icon: 'speed',
+      value: 'speed',
     },
   ];
 
@@ -210,6 +208,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         source={{
           uri: selectedStream?.link || '',
           shouldCache: true,
+          headers: selectedStream?.headers,
         }}
         textTracks={selectedStream?.subtitles?.map(sub => ({
           type: TextTrackType.VTT,
@@ -301,7 +300,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           from={{translateY: 0}}
           animate={{translateY: showControls ? 0 : -300}}
           //@ts-ignore
-          transition={{type: 'timing', duration: 260}}
+          transition={{type: 'timing', duration: 190}}
           className="absolute top-5 right-20">
           <CastButton
             style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
@@ -314,7 +313,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : -200}}
         //@ts-ignore
-        transition={{type: 'timing', duration: 260}}
+        transition={{type: 'timing', duration: 190}}
         className="absolute top-6 right-5">
         <TouchableOpacity
           onPress={() => {
@@ -332,35 +331,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         </TouchableOpacity>
       </MotiView>
 
-      {/* // playback speed button */}
-      <MotiView
-        from={{translateY: 0}}
-        animate={{translateY: showControls ? 0 : -100}}
-        //@ts-ignore
-        transition={{type: 'timing', duration: 260}}
-        className="absolute top-5 left-24">
-        <TouchableOpacity
-          onPress={() => {
-            const index = playbacks.indexOf(playbackRate);
-            setPlaybackRate(
-              index === playbacks.length - 1
-                ? playbacks[0]
-                : playbacks[index + 1],
-            );
-          }}>
-          <Text className="text-white/60 text-xl font-bold">
-            {playbackRate}x
-          </Text>
-        </TouchableOpacity>
-      </MotiView>
-
       {/* resize button */}
       <MotiView
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : 150}}
         //@ts-ignore
         transition={{type: 'timing', duration: 260}}
-        className="absolute bottom-11 right-6 opacity-60">
+        className="absolute bottom-5 right-6 opacity-60">
         <TouchableOpacity
           onPress={() => {
             setResizeMode(
@@ -370,9 +347,9 @@ const Player = ({route}: Props): React.JSX.Element => {
             );
           }}>
           {resizeMode === ResizeMode.NONE ? (
-            <Entypo name="resize-full-screen" size={26} color="white" />
+            <Entypo name="resize-full-screen" size={24} color="white" />
           ) : (
-            <Entypo name="resize-100" size={26} color="white" />
+            <Entypo name="resize-100" size={24} color="white" />
           )}
         </TouchableOpacity>
       </MotiView>
@@ -593,6 +570,32 @@ const Player = ({route}: Props): React.JSX.Element => {
                         )}
                       </TouchableOpacity>
                     ))}
+                </ScrollView>
+              )}
+
+              {/* speed */}
+              {activeTab === 'speed' && (
+                <ScrollView className="w-full h-full p-1 px-4">
+                  {playbacks.map((track, i) => (
+                    <TouchableOpacity
+                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
+                      key={i}
+                      onPress={() => {
+                        setPlaybackRate(track);
+                        // setShowSettings(false);
+                        // playerRef?.current?.resume();
+                      }}>
+                      <Text
+                        className={`text-lg font-semibold ${
+                          playbackRate === track ? 'text-primary' : 'text-white'
+                        }`}>
+                        {track}x
+                      </Text>
+                      {playbackRate === track && (
+                        <MaterialIcons name="check" size={20} color="white" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
                 </ScrollView>
               )}
             </View>

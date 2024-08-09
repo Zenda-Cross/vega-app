@@ -13,8 +13,8 @@ export const modGetPosts = async function (
 ): Promise<Post[]> {
   try {
     const baseUrl = await modGetBaseurl(provider.value);
-    const url = filter.includes('query')
-      ? `${baseUrl}/search/${filter.replace('query', '')}/page/${page}/`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const data = res.data;

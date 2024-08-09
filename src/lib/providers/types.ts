@@ -15,6 +15,7 @@ export interface Stream {
     lang: string;
     url: string;
   }[];
+  headers?: any;
 }
 
 // getInfo

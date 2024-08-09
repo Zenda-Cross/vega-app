@@ -16,13 +16,11 @@ import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
 import {MMKV, MmmkvCache} from '../lib/Mmkv';
-import {Linking} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
 import * as IntentLauncher from 'expo-intent-launcher';
 import {manifest} from '../lib/Manifest';
-import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Feather from '@expo/vector-icons/Feather';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
@@ -104,68 +102,24 @@ const SeasonList = ({
     file: string;
   };
   // handle external player playback
-  const handleExternalPlayer = async (
-    link: string,
-    type: string,
-    externalPlayer: string,
-  ) => {
+  const handleExternalPlayer = async (link: string, type: string) => {
     setVlcLoading(true);
     const stream = await manifest[providerValue].getStream(link, type);
     const availableStream = stream.filter(
       e => !manifest[providerValue].nonStreamableServer?.includes(e.server),
     );
-    // vlc player
-    if (externalPlayer === 'vlc') {
-      const vlcInstalled = await Linking.canOpenURL('vlc://');
-      if (!vlcInstalled) {
-        Linking.openURL('market://details?id=org.videolan.vlc');
-        ToastAndroid.show('VLC not installed', ToastAndroid.SHORT);
-        setVlcLoading(false);
-        return;
-      }
-      if (availableStream?.length === 0) {
-        ToastAndroid.show('No stream found', ToastAndroid.SHORT);
-        setVlcLoading(false);
-        return;
-      }
-      Linking.openURL('vlc://' + availableStream?.[0].link);
-      setVlcLoading(false);
-      return;
-    } else if (externalPlayer === 'mx') {
-      try {
-        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-          data: availableStream?.[0].link,
-          packageName: 'com.mxtech.videoplayer.pro',
-          className: 'com.mxtech.videoplayer.pro.ActivityScreen',
-        });
-      } catch (e) {
-        console.log(e);
-        // open pro version
-        try {
-          await IntentLauncher.startActivityAsync(
-            'android.intent.action.VIEW',
-            {
-              data: availableStream?.[0].link,
-              packageName: 'com.mxtech.videoplayer.ad',
-              className: 'com.mxtech.videoplayer.ad.ActivityScreen',
-            },
-          );
-        } catch (error) {
-          try {
-            await SharedGroupPreferences.isAppInstalledAndroid(
-              'com.mxtech.videoplayer.ad',
-            );
-            ToastAndroid.show('Error in playing stream', ToastAndroid.SHORT);
-          } catch (err) {
-            Linking.openURL('market://details?id=com.mxtech.videoplayer.ad');
-            ToastAndroid.show('MX Player not installed', ToastAndroid.SHORT);
-          }
-          setVlcLoading(false);
-        }
-      }
-      setVlcLoading(false);
-      return;
+    if (availableStream.length === 0) {
+      ToastAndroid.show('No stream available', ToastAndroid.SHORT);
     }
+
+    const streamUrl = availableStream[0].link;
+    await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+      data: streamUrl,
+      type: 'video/*',
+    });
+
+    setVlcLoading(false);
+    return;
   };
 
   const playHandler = async ({link, type, title, file}: playHandlerProps) => {
@@ -175,10 +129,10 @@ const SeasonList = ({
       image: routeParams.poster!,
       provider: providerValue,
     });
-    const externalPlayer = MMKV.getString('externalPlayer');
+    const externalPlayer = MMKV.getBool('useExternalPlayer');
     const downloaded = await ifExists(file);
     if (externalPlayer && !downloaded) {
-      handleExternalPlayer(link, type, externalPlayer);
+      handleExternalPlayer(link, type);
       return;
     }
 
@@ -519,23 +473,11 @@ const SeasonList = ({
                   handleExternalPlayer(
                     stickyMenu.link || '',
                     stickyMenu.type || '',
-                    'vlc',
                   );
                 }}>
-                <Text className="text-white font-bold text-base">VLC</Text>
-                <Feather name="external-link" size={20} color="tomato" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-row justify-center bg-tertiary rounded-md items-center pt-0 pb-2 px-2 gap-2"
-                onPress={() => {
-                  setStickyMenu({active: false});
-                  handleExternalPlayer(
-                    stickyMenu.link || '',
-                    stickyMenu.type || '',
-                    'mx',
-                  );
-                }}>
-                <Text className="text-white text-base font-bold">MX</Text>
+                <Text className="text-white font-bold text-base">
+                  External Player
+                </Text>
                 <Feather name="external-link" size={20} color="tomato" />
               </TouchableOpacity>
             </View>

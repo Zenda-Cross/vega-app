@@ -10,8 +10,8 @@ export const flixhqGetPosts = async function (
 ): Promise<Post[]> {
   try {
     const baseUrl = 'https://consumet8.vercel.app/movies/flixhq';
-    const url = filter.includes('query')
-      ? `${baseUrl}/${filter.replace('query', '')}?page=${page}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/${filter.replace('searchQuery=', '')}?page=${page}`
       : `${baseUrl + filter}`;
     console.log(url);
     const res = await axios.get(url, {signal});

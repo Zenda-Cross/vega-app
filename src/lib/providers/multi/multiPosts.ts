@@ -18,8 +18,8 @@ export const multiGetPosts = async function (
     // console.log(dataRes);
     const baseUrl = dataRes?.multi?.url;
     // console.log(baseUrl);
-    const url = filter.includes('query')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}page/${page}/`;
     console.log('multiUrl', url);
     const res = await axios.get(url, {headers, signal});

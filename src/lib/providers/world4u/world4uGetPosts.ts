@@ -16,8 +16,8 @@ export const world4uGetPosts = async function (
     );
     const dataRes = urlRes.data;
     const baseUrl = dataRes?.w4u?.url;
-    const url = filter.includes('query')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
     console.log('world4uGetPosts', url);
     const res = await axios.get(url, {headers, signal});

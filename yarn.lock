@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@8man/react-native-media-console@^2.2.4":
-  version "2.2.4"
-  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4.tgz"
-  integrity sha512-TtFf5exAu8kkSfW2QTR2Oh4abuBrSlaslHa8tOGfbqMvxfGqqdA4+tK/7u8bMwPGpwbFtdVfSsnU2a9vPbzI9Q==
+"@8man/react-native-media-console@^2.2.4-alpha.1":
+  version "2.2.4-alpha.1"
+  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4-alpha.1.tgz"
+  integrity sha512-cSXTfw8u8usVRjlQkr6MJZz7YRNUjZspqeD52bkiITjCVZoVA1e0kMREjFmxr29yBMmk+NozGPDpBu8T+cGBZw==
 
 "@aashutoshrathi/word-wrap@^1.2.3":
   version "1.2.6"
@@ -8421,11 +8421,6 @@ react-native-screens@^3.31.1, "react-native-screens@>= 3.0.0":
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native-shared-group-preferences@^1.1.24:
-  version "1.1.24"
-  resolved "https://registry.npmjs.org/react-native-shared-group-preferences/-/react-native-shared-group-preferences-1.1.24.tgz"
-  integrity sha512-lncFBltdqXLp8H87wNZUg/P7KvaCqscQ/8GXvrRl0RIUBVVSzrKdAQyBTcsHb7mkMULmph73u41/6nQ5BvUchw==
-
 react-native-svg@15.2.0:
   version "15.2.0"
   resolved "https://registry.npmjs.org/react-native-svg/-/react-native-svg-15.2.0.tgz"
@@ -8447,7 +8442,7 @@ react-native-webview@13.8.6:
     escape-string-regexp "2.0.0"
     invariant "2.2.4"
 
-react-native@*, "react-native@>= 0.30.0", react-native@>=0.41.2, react-native@>=0.46.0, react-native@>=0.60.0, "react-native@>=0.60.0-rc.0 <1.0.x", react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
+react-native@*, "react-native@>= 0.30.0", react-native@>=0.46.0, react-native@>=0.60.0, "react-native@>=0.60.0-rc.0 <1.0.x", react-native@>=0.63.2, react-native@>=0.70.0, react-native@0.74.1:
   version "0.74.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.74.1.tgz"
   integrity sha512-0H2XpmghwOtfPpM2LKqHIN7gxy+7G/r1hwJHKLV6uoyXGC/gCojRtoo5NqyKrWpFC8cqyT6wTYCLuG7CxEKilg==
