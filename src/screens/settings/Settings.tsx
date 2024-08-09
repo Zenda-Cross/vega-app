@@ -14,11 +14,10 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import {downloadFolder, providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
-import * as IntentLauncher from 'expo-intent-launcher';
-
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
+import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 import {
   MaterialCommunityIcons,
@@ -26,6 +25,7 @@ import {
   Feather,
   MaterialIcons,
 } from '@expo/vector-icons';
+import {ScrollView} from 'react-native';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -48,9 +48,9 @@ const Settings = ({navigation}: Props) => {
   };
 
   return (
-    <View className="w-full h-full bg-black p-4">
+    <ScrollView className="w-full h-full bg-black p-4">
+      <OrientationLocker orientation={PORTRAIT} />
       <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
-
       {/* Content provider */}
       {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
@@ -235,7 +235,7 @@ const Settings = ({navigation}: Props) => {
           Github: Zenda-Cross/vega-app
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 

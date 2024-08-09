@@ -21,6 +21,7 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {manifest} from '../../lib/Manifest';
 import {BlurView} from 'expo-blur';
+import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
@@ -135,6 +136,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         translucent={true}
         backgroundColor={backgroundColor}
       />
+      <OrientationLocker orientation={PORTRAIT} />
       <View>
         <View className="absolute w-full h-[256px]">
           <Skeleton
