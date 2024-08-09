@@ -34,7 +34,7 @@ export default function Slider({
     <Pressable onPress={() => setSelected('')} className="gap-3 mt-7">
       <View className="flex flex-row items-center justify-between px-2">
         <Text className="text-2xl text-primary font-semibold">{title}</Text>
-        {filter && (
+        {filter !== 'recent' && (
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('ScrollList', {
@@ -71,7 +71,7 @@ export default function Slider({
               <TouchableOpacity
                 onLongPress={e => {
                   e.stopPropagation();
-                  if (!filter) {
+                  if (filter === 'recent') {
                     console.log('long press', filter);
                     ReactNativeHapticFeedback.trigger('effectClick', {
                       enableVibrateFallback: true,
