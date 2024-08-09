@@ -154,7 +154,7 @@ const Home = () => {
               isLoading={loading}
               title={'Recently Watched'}
               posts={recentlyWatched}
-              filter={''}
+              filter={'recent'}
             />
           )}
           {loading
