@@ -74,6 +74,12 @@ export const providersList: ProvidersList[] = [
     flag: '🇬🇧',
   },
   {
+    name: 'AutoEmbed',
+    value: 'autoEmbed',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
     name: 'Primewire',
     value: 'primewire',
     type: 'global',
