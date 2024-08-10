@@ -10,8 +10,11 @@ export const gogoGetPosts = async function (
 ): Promise<Post[]> {
   try {
     const baseUrl = 'https://consumet8.vercel.app';
-    const url = filter.includes('query')
-      ? `${baseUrl}/anime/gogoanime/${filter.replace('query', '')}?page=${page}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/anime/gogoanime/${filter.replace(
+          'searchQuery=',
+          '',
+        )}?page=${page}`
       : `${baseUrl + filter}?page=${page}`;
     console.log(url);
     const res = await axios.get(url, {signal});
