@@ -13,8 +13,8 @@ export const uhdGetPosts = async (
 ): Promise<Post[]> => {
   try {
     const baseUrl = await uhdGetBaseurl();
-    const url = filter.includes('query')
-      ? `${baseUrl}/search/${filter.replace('query', '')}/page/${page}/`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const html = res.data;

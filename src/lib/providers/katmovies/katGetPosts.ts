@@ -17,8 +17,8 @@ export const katGetPosts = async function (
     const dataRes = urlRes.data;
     // console.log(dataRes);
     const baseUrl = dataRes?.kat?.url;
-    const url = filter.includes('query')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
     console.log('katGetPosts', url);
     const res = await axios.get(url, {headers, signal});

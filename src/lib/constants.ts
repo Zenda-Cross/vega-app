@@ -1,3 +1,5 @@
+import RNFS from 'react-native-fs';
+
 export interface ProvidersList {
   name: string;
   value: string;
@@ -54,6 +56,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'NetflixMirror',
+    value: 'netflixMirror',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'HdHub4u',
     value: 'hdhub4u',
     type: 'global',
@@ -62,6 +70,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'FlixHQ',
     value: 'flixhq',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
+    name: 'AutoEmbed',
+    value: 'autoEmbed',
     type: 'global',
     flag: '🇬🇧',
   },
@@ -96,3 +110,5 @@ export const providersList: ProvidersList[] = [
     flag: '🇮🇳',
   },
 ];
+
+export const downloadFolder = RNFS.DownloadDirectoryPath + '/vega';

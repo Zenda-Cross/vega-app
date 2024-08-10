@@ -17,8 +17,8 @@ export const driveGetPosts = async function (
     const dataRes = urlRes.data;
     console.log(dataRes.drive.url);
     const baseUrl = dataRes?.drive?.url;
-    const url = filter.includes('query')
-      ? `${baseUrl}page/${page}/?s=${filter.replace('query', '')}`
+    const url = filter.includes('searchQuery=')
+      ? `${baseUrl}page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const data = res.data;

@@ -1,10 +1,10 @@
 import {
   View,
   Text,
-  Alert,
   Linking,
   TouchableOpacity,
   TouchableNativeFeedback,
+  Switch,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
@@ -12,47 +12,45 @@ import {useState} from 'react';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
-import SharedGroupPreferences from 'react-native-shared-group-preferences';
-import {providersList} from '../../lib/constants';
+import {downloadFolder, providersList} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
+import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
+
 import {
   MaterialCommunityIcons,
   AntDesign,
   Feather,
   MaterialIcons,
 } from '@expo/vector-icons';
-
-const players = [
-  {
-    label: 'None',
-    value: '',
-  },
-  {
-    label: 'VLC Player',
-    value: 'vlc',
-  },
-  {
-    label: 'MX Player',
-    value: 'mx',
-  },
-];
+import {ScrollView} from 'react-native';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
-    players.find(player => player.value === MMKV.getString('externalPlayer')) ||
-      players[0],
+    MMKV.getBool('useExternalPlayer', () => false),
   );
 
   const {provider, setProvider} = useContentStore(state => state);
 
-  return (
-    <View className="w-full h-full bg-black p-4">
-      <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
+  const onDownloadFolderPress = async () => {
+    try {
+      await RNFS.mkdir(downloadFolder);
+      await Linking.openURL(
+        'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fvega',
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
+  return (
+    <ScrollView className="w-full h-full bg-black p-4">
+      <OrientationLocker orientation={PORTRAIT} />
+      <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
       {/* Content provider */}
       {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
@@ -103,7 +101,7 @@ const Settings = ({navigation}: Props) => {
         </View>
       }
 
-      {/* open in vlc */}
+      {/* open in external player */}
       <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
         <View className="flex-row items-center gap-1">
           <MaterialCommunityIcons name="motion-play" size={18} color="white" />
@@ -111,118 +109,39 @@ const Settings = ({navigation}: Props) => {
             Open in External player
           </Text>
         </View>
-        <View className="w-20">
-          <Dropdown
-            selectedTextStyle={{
-              color: 'white',
-              overflow: 'hidden',
-              height: 23,
-            }}
-            containerStyle={{
-              borderColor: 'black',
-              width: 100,
-              overflow: 'hidden',
-            }}
-            labelField={'label'}
-            valueField={'value'}
-            placeholder="Select"
-            value={OpenExternalPlayer}
-            data={players}
-            onChange={async player => {
-              if (player.value === 'vlc') {
-                try {
-                  await SharedGroupPreferences.isAppInstalledAndroid(
-                    'org.videolan.vlc',
-                  );
-                } catch (error) {
-                  Alert.alert(
-                    'VLC not installed',
-                    'VLC player is not installed on your device',
-                    [
-                      {
-                        text: 'Cancel',
-                        onPress: () => {
-                          // setOpenExternalPlayer('None');
-                          // MMKV.setString('externalPlayer', 'None');
-                        },
-                      },
-                      {
-                        text: 'Install',
-                        onPress: () =>
-                          Linking.openURL(
-                            'market://details?id=org.videolan.vlc',
-                          ),
-                      },
-                    ],
-                  );
-                }
-              } else if (player.value === 'mx') {
-                try {
-                  await SharedGroupPreferences.isAppInstalledAndroid(
-                    'com.mxtech.videoplayer.ad',
-                  );
-                } catch (error) {
-                  Alert.alert(
-                    'MX Player not installed',
-                    'MX player is not installed on your device',
-                    [
-                      {
-                        text: 'Cancel',
-                        onPress: () => {
-                          // setOpenExternalPlayer('None');
-                          // MMKV.setString('externalPlayer', 'None');
-                        },
-                      },
-                      {
-                        text: 'Install',
-                        onPress: () => {
-                          Linking.openURL(
-                            'market://details?id=com.mxtech.videoplayer.ad',
-                          );
-                        },
-                      },
-                    ],
-                  );
-                }
-              }
-              MMKV.setString('externalPlayer', player.value);
-              setOpenExternalPlayer(player);
-            }}
-            renderItem={item => {
-              return (
-                <View className="p-2 bg-black text-white w-48 flex-row justify-start gap-2 items-center">
-                  <Text className=" text-white">{item.label}</Text>
-                </View>
-              );
-            }}
-          />
-        </View>
-        {/* <Switch
-          thumbColor={OpenVlc ? 'tomato' : 'gray'}
-          value={OpenVlc}
+        <Switch
+          thumbColor={OpenExternalPlayer ? 'tomato' : 'gray'}
+          value={OpenExternalPlayer}
           onValueChange={async val => {
-            MMKV.setBool('vlc', val);
-            setOpenVlc(val);
-            if (val) {
-              const res = await Linking.canOpenURL('vlc://');
-              if (!res) {
-                Alert.alert(
-                  'VLC not installed',
-                  'VLC player is not installed on your device',
-                  [
-                    {text: 'Cancel', onPress: () => setOpenVlc(false)},
-                    {
-                      text: 'Install',
-                      onPress: () =>
-                        Linking.openURL('market://details?id=org.videolan.vlc'),
-                    },
-                  ],
-                );
-              }
-            }
+            MMKV.setBool('useExternalPlayer', val);
+            setOpenExternalPlayer(val);
           }}
-        /> */}
+        />
       </View>
+
+      {/* download folder shortcut */}
+
+      <TouchableNativeFeedback
+        onPress={async () => {
+          ReactNativeHapticFeedback.trigger('virtualKey', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false,
+          });
+          onDownloadFolderPress();
+        }}
+        background={TouchableNativeFeedback.Ripple('gray', false)}>
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <View className="flex-row justify-center items-center gap-1 my-1">
+            <MaterialCommunityIcons
+              name="folder-download"
+              size={18}
+              color="white"
+            />
+            <Text className="text-white font-semibold">Downloads</Text>
+          </View>
+          <Feather name="chevron-right" size={24} color="white" />
+        </View>
+      </TouchableNativeFeedback>
 
       {/* Subtitle Style  */}
       <TouchableNativeFeedback
@@ -316,7 +235,7 @@ const Settings = ({navigation}: Props) => {
           Github: Zenda-Cross/vega-app
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
