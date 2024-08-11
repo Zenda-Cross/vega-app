@@ -18,11 +18,11 @@ const Touturial = () => {
             <Text className="text-white text-xl my-10">
               Select a provider to start watching
             </Text>
-            <View className="flex justify-around flex-wrap h-[500px]">
+            <View className="flex flex-row justify-around w-96 flex-wrap">
               {providersList.map(provider => (
                 <Pressable
                   key={provider.value}
-                  className="bg-quaternary p-3 m-3 flex items-center flex-row rounded-md"
+                  className="bg-quaternary p-3 m-3 w-32 flex items-center flex-row rounded-md"
                   onPress={() => {
                     setProvider(provider);
                     MMKV.setBool('showTouturial', false);
