@@ -109,6 +109,8 @@ import {nfGetEpisodes} from './providers/netflixMirror/nfGetEpisodes';
 import {nfGetStream} from './providers/netflixMirror/nfGetSteam';
 import {nfGetInfo} from './providers/netflixMirror/nfGetInfo';
 import {nfGetPost} from './providers/netflixMirror/nfGetPost';
+
+/// autoEmbed
 import {allCatalog, allGenresList} from './providers/autoEmbed/allCatalog';
 import {allGetPost} from './providers/autoEmbed/allGetPost';
 import {allGetInfo} from './providers/autoEmbed/allGetInfo';
@@ -130,7 +132,7 @@ interface Manifest {
     getPosts: (
       filter: string,
       page: number,
-      provider: Content['provider'],
+      provider: string,
       signal: AbortSignal,
     ) => Promise<Post[]>;
     getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;

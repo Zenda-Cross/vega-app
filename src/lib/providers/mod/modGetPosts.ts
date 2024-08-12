@@ -2,17 +2,16 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 import {modGetBaseurl} from './modGetBaseurl';
 
 export const modGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = await modGetBaseurl(provider.value);
+    const baseUrl = await modGetBaseurl(providerValue);
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
@@ -40,7 +39,7 @@ export const modGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('mod error ', err);
     return [];
   }
 };

@@ -6,7 +6,7 @@ import * as cheerio from 'cheerio';
 export const tokyoGetPosts = async (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
@@ -18,7 +18,7 @@ export const tokyoGetPosts = async (
           '',
         )}&start=${start}`
       : `${baseURL}/${filter}&start=${start}`;
-    console.log('url', url);
+    // console.log('url', url);
     const res = await axios.get(url, {signal, headers});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -41,8 +41,8 @@ export const tokyoGetPosts = async (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.log('tokyoGetPosts');
-    // console.error(err);
+    // console.log('tokyoGetPosts');
+    console.error('tokyo error ', err);
     return [];
   }
 };
