@@ -1,11 +1,10 @@
 import axios from 'axios';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 
 export const gogoGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
@@ -16,7 +15,7 @@ export const gogoGetPosts = async function (
           '',
         )}?page=${page}`
       : `${baseUrl + filter}?page=${page}`;
-    console.log(url);
+    // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.results;
     const catalog: Post[] = [];
@@ -33,10 +32,10 @@ export const gogoGetPosts = async function (
       }
     });
 
-    console.log(catalog);
+    // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('gogo error ', err);
     return [];
   }
 };

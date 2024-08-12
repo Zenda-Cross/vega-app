@@ -2,22 +2,16 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const dcGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(
-      'https://himanshu8443.github.io/providers/modflix.json',
-    );
-    const dataRes = urlRes.data;
-    // console.log(dataRes.hdhub.url);
-    const baseUrl = dataRes?.dc?.url;
-    console.log('dcBaseUrl', baseUrl);
+    const baseUrl = await getBaseUrl('dc');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/search?type=movies&keyword=${filter.replace(
           'searchQuery=',
@@ -38,7 +32,7 @@ export const dcGetPosts = async function (
           $(element).find('.title').text();
         const link = $(element).find('a').attr('href');
         const image = $(element).find('img').attr('data-original');
-        console.log('dcTitle', title, link, image);
+        // console.log('dcTitle', title, link, image);
         if (title && link && image) {
           catalog.push({
             title: title,
@@ -50,7 +44,7 @@ export const dcGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.error(err);
+    console.error('dc error ', err);
     return [];
   }
 };

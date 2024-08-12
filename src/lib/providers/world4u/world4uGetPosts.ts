@@ -1,25 +1,21 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {headers} from './header';
+import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const world4uGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(
-      'https://himanshu8443.github.io/providers/modflix.json',
-    );
-    const dataRes = urlRes.data;
-    const baseUrl = dataRes?.w4u?.url;
+    const baseUrl = await getBaseUrl('w4u');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
-    console.log('world4uGetPosts', url);
+    // console.log('world4uGetPosts', url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -43,7 +39,7 @@ export const world4uGetPosts = async function (
     // console.log('world4uGetPosts', catalog);
     return catalog;
   } catch (err) {
-    console.error(err);
+    console.error('world4u error ', err);
     return [];
   }
 };

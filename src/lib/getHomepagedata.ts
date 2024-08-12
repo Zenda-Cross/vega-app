@@ -17,7 +17,7 @@ export const getHomePageData = async (
     const data = await manifest[activeProvider.value].getPosts(
       item.filter,
       1,
-      activeProvider,
+      activeProvider.value,
       signal,
     );
     homeData.push({

@@ -1,45 +1,26 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import {headers} from './header';
-import {MMKV, MmmkvCache} from '../../Mmkv';
-import {Content} from '../../zustand/contentStore';
 import {Post} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const vegaGetPosts = async (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
-    let baseUrl = '';
-    if (MMKV.getBool('UseCustomUrl')) {
-      baseUrl = MMKV.getString('baseUrl');
-    } else {
-      if (
-        MmmkvCache.getString('CacheBaseUrl' + provider.value) &&
-        MmmkvCache.getInt('baseUrlTime' + provider.value) &&
-        // 2 minutes
-        Date.now() - MmmkvCache.getInt('baseUrlTime' + provider.value) < 120000
-      ) {
-        baseUrl = MmmkvCache.getString('CacheBaseUrl' + provider.value);
-        console.log('baseUrl from cache', baseUrl);
-      } else {
-        const baseUrlRes = await axios.get(
-          'https://himanshu8443.github.io/providers/modflix.json',
-        );
-        baseUrl =
-          provider.value === 'vega'
-            ? baseUrlRes.data.Vega.url
-            : baseUrlRes.data.lux.url;
-        MMKV.setString('baseUrl', baseUrl);
-        MmmkvCache.setString('CacheBaseUrl' + provider.value, baseUrl);
-        MmmkvCache.setInt('baseUrlTime' + provider.value, Date.now());
-      }
-    }
+    const baseUrl =
+      providerValue === 'lux'
+        ? await getBaseUrl('lux')
+        : await getBaseUrl('Vega');
+
+    console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl}/${filter}/page/${page}/`;
+    console.log('vegaGetPosts url:', url);
     const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
@@ -72,9 +53,7 @@ export const vegaGetPosts = async (
     // console.log(posts);
     return posts;
   } catch (error) {
-    console.log('getPosts error: ');
-    MmmkvCache.removeItem('CacheBaseUrl');
-    // console.error(error);
+    console.error('vegaGetPosts error:', error);
     return [];
   }
 };

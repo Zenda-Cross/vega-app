@@ -1,27 +1,21 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
+import {getBaseUrl} from '../getBaseUrl';
+import axios from 'axios';
 
 export const ExtraGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(
-      'https://himanshu8443.github.io/providers/modflix.json',
-    );
-    const dataRes = urlRes.data;
-    console.log(dataRes.extra.url);
-    const baseUrl = dataRes?.extra?.url;
+    const baseUrl = await getBaseUrl('extra');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
-    console.log(url);
-    const res = await axios.get(url, {headers, signal});
+    console.log('extraGetPosts', url);
+    const res = await axios(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -57,7 +51,7 @@ export const ExtraGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('extra movies error ', err);
     return [];
   }
 };

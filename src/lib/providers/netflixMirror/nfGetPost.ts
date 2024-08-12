@@ -2,12 +2,11 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './nfHeaders';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 
 export const nfGetPost = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
@@ -16,14 +15,14 @@ export const nfGetPost = async function (
     if (page > 1) {
       return [];
     }
-    console.log(filter);
+    // console.log(filter);
     if (filter.includes('searchQuery=')) {
       const url = `${
         baseUrl +
         '/search.php?s=' +
         encodeURI(filter.replace('searchQuery=', ''))
       }`;
-      console.log('search', url);
+      // console.log('search', url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;
       data?.searchResult.map((result: any) => {
@@ -38,11 +37,11 @@ export const nfGetPost = async function (
           });
         }
       });
-      console.log('nfSearch', catalog);
+      // console.log('nfSearch', catalog);
       return catalog;
     } else {
       const url = `${baseUrl + filter}`;
-      console.log(url);
+      // console.log(url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;
       const $ = cheerio.load(data);
@@ -62,7 +61,7 @@ export const nfGetPost = async function (
       return catalog;
     }
   } catch (err) {
-    // console.error(err);
+    console.error('nf error ', err);
     return [];
   }
 };
