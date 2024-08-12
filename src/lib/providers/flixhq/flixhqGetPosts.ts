@@ -1,11 +1,10 @@
 import axios from 'axios';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 
 export const flixhqGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
@@ -13,7 +12,7 @@ export const flixhqGetPosts = async function (
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/${filter.replace('searchQuery=', '')}?page=${page}`
       : `${baseUrl + filter}`;
-    console.log(url);
+    // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.results || res.data;
     const catalog: Post[] = [];
@@ -33,7 +32,7 @@ export const flixhqGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('flixhq error ', err);
     return [];
   }
 };

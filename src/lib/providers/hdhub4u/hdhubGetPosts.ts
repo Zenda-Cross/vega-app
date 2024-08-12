@@ -1,28 +1,26 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 
 export const hdhubGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(
+    const urlRes = await fetch(
       'https://himanshu8443.github.io/providers/modflix.json',
     );
-    const dataRes = urlRes.data;
+    const dataRes = await urlRes.json();
     // console.log(dataRes.hdhub.url);
     const baseUrl = dataRes?.hdhub?.url;
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
-    console.log('hdhubGetPosts', url);
-    const res = await axios.get(url, {headers, signal});
-    const data = res.data;
+    // console.log('hdhubGetPosts', url);
+    const res = await fetch(url, {headers, signal});
+    const data = await res.text();
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
     $('.recent-movies')
@@ -42,7 +40,7 @@ export const hdhubGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('hdhub error ', err);
     return [];
   }
 };

@@ -3,12 +3,11 @@ import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Post} from '../types';
 import {uhdGetBaseurl} from './uhdGetBaseurl';
-import {Content} from '../../zustand/contentStore';
 
 export const uhdGetPosts = async (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
@@ -38,7 +37,7 @@ export const uhdGetPosts = async (
       });
     return uhdCatalog;
   } catch (err) {
-    // console.error(err);
+    console.error('uhd error ', err);
     return [];
   }
 };

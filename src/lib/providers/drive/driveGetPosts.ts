@@ -1,27 +1,21 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const driveGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(
-      'https://himanshu8443.github.io/providers/modflix.json',
-    );
-    const dataRes = urlRes.data;
-    console.log(dataRes.drive.url);
-    const baseUrl = dataRes?.drive?.url;
+    const baseUrl = await getBaseUrl('drive');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;
-    const res = await axios.get(url, {headers, signal});
-    const data = res.data;
+    const res = await fetch(url, {headers, signal});
+    const data = await res.text();
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
     $('.recent-movies')
@@ -41,7 +35,7 @@ export const driveGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('drive error ', err);
     return [];
   }
 };
