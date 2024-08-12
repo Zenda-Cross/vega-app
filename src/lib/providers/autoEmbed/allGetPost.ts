@@ -1,12 +1,11 @@
 import axios from 'axios';
 import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 
 export const allGetPost = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
@@ -24,7 +23,7 @@ export const allGetPost = async function (
       const url2 = `https://v3-cinemeta.strem.io/catalog/movie/top/search=${encodeURI(
         filter.replace('searchQuery=', ''),
       )}.json`;
-      console.log(url1);
+      // console.log(url1);
       const res = await axios.get(url1, {headers, signal});
       const data = res.data;
       data?.metas.map((result: any) => {
@@ -55,11 +54,11 @@ export const allGetPost = async function (
           });
         }
       });
-      console.log('nfSearch', catalog);
+      // console.log('nfSearch', catalog);
       return catalog;
     } else {
       const url = `${baseUrl + filter}/skip=${(page - 1) * 50}.json`;
-      console.log(url);
+      // console.log(url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;
 
@@ -77,11 +76,11 @@ export const allGetPost = async function (
           });
         }
       });
-      console.log('catalog', catalog.length);
+      // console.log('catalog', catalog.length);
       return catalog;
     }
   } catch (err) {
-    // console.error(err);
+    console.error('AutoEmbed error ', err);
     return [];
   }
 };

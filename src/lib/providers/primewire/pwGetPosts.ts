@@ -2,7 +2,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
-import {Content} from '../../zustand/contentStore';
 import Aes from 'react-native-aes-crypto';
 
 const getSHA256ofJSON = async function (input: any) {
@@ -12,7 +11,7 @@ const getSHA256ofJSON = async function (input: any) {
 export const pwGetPosts = async function (
   filter: string,
   page: number,
-  provider: Content['provider'],
+  providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
@@ -20,14 +19,14 @@ export const pwGetPosts = async function (
     const hash = await getSHA256ofJSON(
       filter.replace('searchQuery=', '') + 'JyjId97F9PVqUPuMO0',
     );
-    console.log('hash', hash);
+    // console.log('hash', hash);
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/filter?s=${filter.replace(
           'searchQuery=',
           '',
         )}&page=${page}&ds=${hash.slice(0, 10)}`
       : `${baseUrl + filter}&page=${page}`;
-    console.log(url);
+    // console.log(url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -47,7 +46,7 @@ export const pwGetPosts = async function (
     // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.error(err);
+    console.error('pw error ', err);
     return [];
   }
 };
