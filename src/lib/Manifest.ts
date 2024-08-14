@@ -116,6 +116,9 @@ import {allGetPost} from './providers/autoEmbed/allGetPost';
 import {allGetInfo} from './providers/autoEmbed/allGetInfo';
 import {allGetStream} from './providers/autoEmbed/allGetStream';
 
+/// luxMovies
+import {luxGetPosts} from './providers/luxMovies/luxGetPosts';
+
 interface Manifest {
   [key: string]: {
     searchFilter?: string;
@@ -154,7 +157,7 @@ export const manifest: Manifest = {
     genres: genresList,
     nonStreamableServer: ['filepress'],
     getStream: vegaGetStream,
-    getPosts: vegaGetPosts,
+    getPosts: luxGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: vegaGetInfo,
   },
