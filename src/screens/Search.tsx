@@ -8,7 +8,6 @@ import {TextInput} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import {manifest} from '../lib/Manifest';
 import useContentStore from '../lib/zustand/contentStore';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 const Search = () => {
   const {provider} = useContentStore(state => state);
@@ -16,7 +15,6 @@ const Search = () => {
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   return (
     <View className="h-full w-full bg-black p-4 items-center">
-      <OrientationLocker orientation={PORTRAIT} />
       <View className="flex flex-row gap-1 items-center mt-7">
         <TextInput
           autoFocus={true}

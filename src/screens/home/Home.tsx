@@ -20,7 +20,6 @@ import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
 import {downloadFolder} from '../../lib/constants';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -125,7 +124,6 @@ const Home = () => {
   return (
     <SafeAreaView className="bg-black h-full w-full">
       <Touturial />
-      <OrientationLocker orientation={PORTRAIT} />
       <StatusBar
         showHideTransition={'fade'}
         animated={true}

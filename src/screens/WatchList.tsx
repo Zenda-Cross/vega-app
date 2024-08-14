@@ -6,7 +6,6 @@ import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 const Library = () => {
   const navigation =
@@ -17,7 +16,6 @@ const Library = () => {
     <ScrollView
       className="h-full w-full bg-black p-2"
       contentContainerStyle={{alignItems: 'center', justifyContent: 'center'}}>
-      <OrientationLocker orientation={PORTRAIT} />
       <Text className="text-primary text-2xl font-semibold mt-7">
         Watch List
       </Text>
