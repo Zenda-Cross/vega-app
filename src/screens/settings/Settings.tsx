@@ -17,7 +17,6 @@ import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 import {
   MaterialCommunityIcons,
@@ -49,7 +48,6 @@ const Settings = ({navigation}: Props) => {
 
   return (
     <ScrollView className="w-full h-full bg-black p-4">
-      <OrientationLocker orientation={PORTRAIT} />
       <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
       {/* Content provider */}
       {

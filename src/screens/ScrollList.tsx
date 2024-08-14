@@ -12,7 +12,6 @@ import {MaterialIcons} from '@expo/vector-icons';
 import {MMKV} from '../lib/Mmkv';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
-import {OrientationLocker, PORTRAIT} from 'react-native-orientation-locker';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -37,7 +36,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
       setIsLoading(true);
       const newPosts = await manifest[
         route.params.providerValue || provider.value
-      ].getPosts(filter, page, provider, signal);
+      ].getPosts(filter, page, provider.value, signal);
       if (newPosts?.length === 0) {
         setIsEnd(true);
         setIsLoading(false);
@@ -57,7 +56,6 @@ const ScrollList = ({route}: Props): React.ReactElement => {
 
   return (
     <View className="h-full w-full bg-black items-center p-4">
-      <OrientationLocker orientation={PORTRAIT} />
       <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
         <Text className="text-primary text-2xl font-bold">
           {route.params.title}
