@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   StatusBar,
+  Platform,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -35,6 +36,10 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
 import {Entypo} from '@expo/vector-icons';
 import {Stream} from '../../lib/providers/types';
+import DocumentPicker, {
+  DocumentPickerResponse,
+  isCancel,
+} from 'react-native-document-picker';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -57,6 +62,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'language', value: 'off'},
   );
+  const [externalFileSubs, setExternalFileSubs] = useState<
+    DocumentPickerResponse[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
@@ -107,11 +115,11 @@ const Player = ({route}: Props): React.JSX.Element => {
   console.log('watchedDuration', watchedDuration);
 
   const navigation = useNavigation();
-  const remoteMediaClient = useRemoteMediaClient();
+  const remoteMediaClient = Platform.isTV ? null : useRemoteMediaClient();
 
   // cast
   useEffect(() => {
-    if (remoteMediaClient) {
+    if (remoteMediaClient && !Platform.isTV) {
       remoteMediaClient.loadMedia({
         startTime: watchedDuration,
         playbackRate: playbackRate,
@@ -134,7 +142,9 @@ const Player = ({route}: Props): React.JSX.Element => {
       GoogleCast.showExpandedControls();
     }
     return () => {
-      remoteMediaClient?.stop();
+      if (remoteMediaClient) {
+        remoteMediaClient?.stop();
+      }
     };
   }, [remoteMediaClient, selectedStream]);
 
@@ -210,12 +220,24 @@ const Player = ({route}: Props): React.JSX.Element => {
           shouldCache: true,
           headers: selectedStream?.headers,
         }}
-        textTracks={selectedStream?.subtitles?.map(sub => ({
-          type: TextTrackType.VTT,
-          title: sub.lang,
-          language: sub.lang.slice(0, 2) as any,
-          uri: sub.url,
-        }))}
+        textTracks={selectedStream?.subtitles
+          ?.map(sub => ({
+            type: TextTrackType.VTT,
+            title: sub.lang,
+            language: sub.lang.slice(0, 2) as any,
+            uri: sub.url,
+          }))
+          .concat(
+            externalFileSubs?.map(sub => ({
+              type: sub?.type as any,
+              title:
+                sub?.name && sub?.name?.length > 20
+                  ? sub?.name?.slice(0, 20) + '...'
+                  : sub?.name || 'unknown',
+              language: 'unknown',
+              uri: sub?.uri,
+            })),
+          )}
         onProgress={e => {
           MmmkvCache.setString(
             route.params.link,
@@ -295,7 +317,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       />
 
       {/* // cast button */}
-      {loading === false && (
+      {loading === false && !Platform.isTV && (
         <MotiView
           from={{translateY: 0}}
           animate={{translateY: showControls ? 0 : -300}}
@@ -498,6 +520,34 @@ const Player = ({route}: Props): React.JSX.Element => {
                       )}
                     </TouchableOpacity>
                   ))}
+                  {/* // external file */}
+                  <TouchableOpacity
+                    className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
+                    onPress={async () => {
+                      try {
+                        const res = await DocumentPicker.pick({
+                          type: [
+                            'text/vtt',
+                            'application/x-subrip',
+                            'text/srt',
+                            'application/ttml+xml',
+                          ],
+                          allowMultiSelection: false,
+                          presentationStyle: 'pageSheet',
+                        });
+                        setExternalFileSubs(res);
+                        console.log('ExternalFile', res);
+                      } catch (err) {
+                        if (!isCancel(err)) {
+                          console.log(err);
+                        }
+                      }
+                    }}>
+                    <MaterialIcons name="add" size={20} color="white" />
+                    <Text className="text-base font-semibold text-white">
+                      add external File
+                    </Text>
+                  </TouchableOpacity>
                 </ScrollView>
               )}
               {/* server */}
@@ -572,7 +622,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                     ))}
                 </ScrollView>
               )}
-
               {/* speed */}
               {activeTab === 'speed' && (
                 <ScrollView className="w-full h-full p-1 px-4">
