@@ -118,30 +118,35 @@ import {allGetStream} from './providers/autoEmbed/allGetStream';
 
 /// luxMovies
 import {luxGetPosts} from './providers/luxMovies/luxGetPosts';
+import {dooflixProvider} from './providers/dooflix';
 
-interface Manifest {
-  [key: string]: {
-    searchFilter?: string;
-    catalog: Catalog[];
-    genres: Catalog[];
-    blurImage?: boolean;
-    nonStreamableServer?: string[];
-    nonDownloadableServer?: string[];
-    getStream: (
-      link: string,
-      type: string,
-      signal: AbortSignal,
-    ) => Promise<Stream[]>;
-    getPosts: (
-      filter: string,
-      page: number,
-      provider: string,
-      signal: AbortSignal,
-    ) => Promise<Post[]>;
-    getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
-    getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
-  };
+/// dooflix
+
+export interface ProviderType {
+  searchFilter?: string;
+  catalog: Catalog[];
+  genres: Catalog[];
+  blurImage?: boolean;
+  nonStreamableServer?: string[];
+  nonDownloadableServer?: string[];
+  getStream: (
+    link: string,
+    type: string,
+    signal: AbortSignal,
+  ) => Promise<Stream[]>;
+  getPosts: (
+    filter: string,
+    page: number,
+    provider: string,
+    signal: AbortSignal,
+  ) => Promise<Post[]>;
+  getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
+  getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
 }
+export interface Manifest {
+  [key: string]: ProviderType;
+}
+
 export const manifest: Manifest = {
   vega: {
     catalog: homeList,
@@ -300,4 +305,5 @@ export const manifest: Manifest = {
     getEpisodeLinks: () => Promise.resolve([]),
     getInfo: allGetInfo,
   },
+  dooflix: dooflixProvider,
 };
