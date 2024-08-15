@@ -218,6 +218,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         source={{
           uri: selectedStream?.link || '',
           shouldCache: true,
+          ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
         }}
         textTracks={selectedStream?.subtitles
