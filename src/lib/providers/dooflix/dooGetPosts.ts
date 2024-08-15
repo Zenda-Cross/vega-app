@@ -61,13 +61,15 @@ export const dooGetPost = async function (
       const url = `${baseUrl + filter + `?page=${page}`}`;
       //   console.log('dooflix', url);
       const res = await axios.get(url, {headers, signal});
-      const data = res.data;
-      const jsonStart = data?.indexOf('[');
-      const jsonEnd = data?.lastIndexOf(']') + 1;
-      const jsonString = data?.slice(jsonStart, jsonEnd);
-      const jsonData = JSON?.parse(jsonString);
+      const resData = res.data;
+      const jsonStart = resData?.indexOf('[');
+      const jsonEnd = resData?.lastIndexOf(']') + 1;
+      const data =
+        JSON?.parse(resData?.substring(jsonStart, jsonEnd))?.length > 0
+          ? JSON.parse(resData.substring(jsonStart, jsonEnd))
+          : resData;
       //   console.log('JsonData', jsonData);
-      jsonData?.map((result: any) => {
+      data?.map((result: any) => {
         const id = result?.videos_id;
         const link = `${baseUrl}/rest-api//v130/single_details?type=${
           !result?.is_tvseries ? 'tvseries' : 'movie'
