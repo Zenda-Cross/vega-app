@@ -98,6 +98,12 @@ export const providersList: ProvidersList[] = [
     flag: '🇬🇧',
   },
   {
+    name: 'AE Anime',
+    value: 'AEAnime',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
     name: 'TokyoInsider',
     value: 'tokyoInsider',
     type: 'global',
@@ -106,6 +112,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'DramaCool',
     value: 'dramaCool',
+    type: 'global',
+    flag: '🇬🇧',
+  },
+  {
+    name: 'AE Drama',
+    value: 'AEDrama',
     type: 'global',
     flag: '🇬🇧',
   },

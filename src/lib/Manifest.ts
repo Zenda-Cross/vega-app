@@ -119,6 +119,8 @@ import {allGetStream} from './providers/autoEmbed/allGetStream';
 /// luxMovies
 import {luxGetPosts} from './providers/luxMovies/luxGetPosts';
 import {dooflixProvider} from './providers/dooflix';
+import {autoEmbedDrama} from './providers/autoEmbedDrama';
+import {AEAnime} from './providers/autoEmbedAnime';
 
 /// dooflix
 
@@ -306,4 +308,6 @@ export const manifest: Manifest = {
     getInfo: allGetInfo,
   },
   dooflix: dooflixProvider,
+  AEDrama: autoEmbedDrama,
+  AEAnime: AEAnime,
 };
