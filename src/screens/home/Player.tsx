@@ -34,7 +34,6 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
-import {Entypo} from '@expo/vector-icons';
 import {Stream} from '../../lib/providers/types';
 import DocumentPicker, {
   DocumentPickerResponse,
@@ -73,6 +72,8 @@ const Player = ({route}: Props): React.JSX.Element => {
     useState<SelectedVideoTrack>({
       type: SelectedVideoTrackType.AUTO,
     });
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [showToast, setShowToast] = useState(false);
 
   const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
@@ -201,6 +202,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
     return unsubscribe;
   }, [navigation]);
+
+  const setToast = (message: string, duration: number) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, duration);
+  };
 
   return (
     <SafeAreaView
@@ -360,7 +369,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         animate={{translateY: showControls ? 0 : 150}}
         //@ts-ignore
         transition={{type: 'timing', duration: 260}}
-        className="absolute bottom-5 right-6 opacity-60">
+        className="absolute bottom-4 right-6 opacity-60">
         <TouchableOpacity
           onPress={() => {
             setResizeMode(
@@ -368,13 +377,27 @@ const Player = ({route}: Props): React.JSX.Element => {
                 ? ResizeMode.COVER
                 : ResizeMode.NONE,
             );
+            setToast(
+              'Resize Mode: ' +
+                (resizeMode === ResizeMode.NONE ? 'Cover' : 'None'),
+              2000,
+            );
           }}>
-          {resizeMode === ResizeMode.NONE ? (
-            <Entypo name="resize-full-screen" size={24} color="white" />
-          ) : (
-            <Entypo name="resize-100" size={24} color="white" />
-          )}
+          <MaterialIcons name="fullscreen" size={28} color="white" />
         </TouchableOpacity>
+      </MotiView>
+
+      {/* message toast   */}
+      <MotiView
+        from={{opacity: 0}}
+        animate={{opacity: showToast ? 1 : 0}}
+        //@ts-ignore
+        transition={{type: 'timing', duration: 150}}
+        pointerEvents="none"
+        className="absolute w-full top-12 justify-center items-center">
+        <Text className="text-white bg-black/50 p-2 rounded-md text-base">
+          {toastMessage}
+        </Text>
       </MotiView>
       {
         // settings
