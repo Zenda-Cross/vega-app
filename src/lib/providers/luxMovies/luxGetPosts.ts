@@ -1,17 +1,17 @@
 import * as cheerio from 'cheerio';
 import axios from 'axios';
-import {headers} from './header';
+import {headers} from './headers';
 import {Post} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 
-export const vegaGetPosts = async (
+export const luxGetPosts = async (
   filter: string,
   page: number,
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
-    const baseUrl = await getBaseUrl('Vega');
+    const baseUrl = await getBaseUrl('lux');
 
     console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
     const url = filter.includes('searchQuery=')

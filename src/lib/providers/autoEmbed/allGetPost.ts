@@ -14,7 +14,7 @@ export const allGetPost = async function (
 
     // console.log(filter);
     if (filter.includes('searchQuery=')) {
-      if (page > 1) {
+      if (page > 2) {
         return [];
       }
       const url1 = `https://v3-cinemeta.strem.io/catalog/series/top/search=${encodeURI(

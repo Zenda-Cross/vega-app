@@ -3,12 +3,17 @@ import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';
 
 const getVideoDuration = async (videoUrl: string) => {
-  const information = await FFprobeKit.getMediaInformation(videoUrl);
-  const output = await information.getOutput();
-  const jsonOutput = JSON.parse(output);
-  console.log('Output: 🔥🔥🔥', jsonOutput.format.duration);
-  const duration = parseFloat(jsonOutput.format.duration);
-  return duration;
+  try {
+    const information = await FFprobeKit.getMediaInformation(videoUrl);
+    const output = await information.getOutput();
+    const jsonOutput = JSON.parse(output);
+    console.log('Output: 🔥🔥🔥', jsonOutput.format.duration);
+    const duration = parseFloat(jsonOutput.format.duration);
+    return duration;
+  } catch (error) {
+    console.log('Error getting video duration', error);
+    return 0;
+  }
 };
 
 export const hlsDownloader = async ({
@@ -28,7 +33,7 @@ export const hlsDownloader = async ({
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
-  const command = `-i ${videoUrl} -c copy -bsf:a aac_adtstoasc -f mp4 ${path}`;
+  const command = `-i ${videoUrl} -c copy -bsf:a aac_adtstoasc -f mp4 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 5000000 -preset ultrafast ${path}`;
   const channelId = await notifee.createChannel({
     id: 'download',
     name: 'Download Notifications',

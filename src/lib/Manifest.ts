@@ -116,29 +116,39 @@ import {allGetPost} from './providers/autoEmbed/allGetPost';
 import {allGetInfo} from './providers/autoEmbed/allGetInfo';
 import {allGetStream} from './providers/autoEmbed/allGetStream';
 
-interface Manifest {
-  [key: string]: {
-    searchFilter?: string;
-    catalog: Catalog[];
-    genres: Catalog[];
-    blurImage?: boolean;
-    nonStreamableServer?: string[];
-    nonDownloadableServer?: string[];
-    getStream: (
-      link: string,
-      type: string,
-      signal: AbortSignal,
-    ) => Promise<Stream[]>;
-    getPosts: (
-      filter: string,
-      page: number,
-      provider: string,
-      signal: AbortSignal,
-    ) => Promise<Post[]>;
-    getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
-    getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
-  };
+/// luxMovies
+import {luxGetPosts} from './providers/luxMovies/luxGetPosts';
+import {dooflixProvider} from './providers/dooflix';
+import {autoEmbedDrama} from './providers/autoEmbedDrama';
+import {AEAnime} from './providers/autoEmbedAnime';
+
+/// dooflix
+
+export interface ProviderType {
+  searchFilter?: string;
+  catalog: Catalog[];
+  genres: Catalog[];
+  blurImage?: boolean;
+  nonStreamableServer?: string[];
+  nonDownloadableServer?: string[];
+  getStream: (
+    link: string,
+    type: string,
+    signal: AbortSignal,
+  ) => Promise<Stream[]>;
+  getPosts: (
+    filter: string,
+    page: number,
+    provider: string,
+    signal: AbortSignal,
+  ) => Promise<Post[]>;
+  getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
+  getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
 }
+export interface Manifest {
+  [key: string]: ProviderType;
+}
+
 export const manifest: Manifest = {
   vega: {
     catalog: homeList,
@@ -154,7 +164,7 @@ export const manifest: Manifest = {
     genres: genresList,
     nonStreamableServer: ['filepress'],
     getStream: vegaGetStream,
-    getPosts: vegaGetPosts,
+    getPosts: luxGetPosts,
     getEpisodeLinks: vegaGetEpisodeLinks,
     getInfo: vegaGetInfo,
   },
@@ -297,4 +307,7 @@ export const manifest: Manifest = {
     getEpisodeLinks: () => Promise.resolve([]),
     getInfo: allGetInfo,
   },
+  dooflix: dooflixProvider,
+  AEDrama: autoEmbedDrama,
+  AEAnime: AEAnime,
 };
