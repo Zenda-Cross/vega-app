@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
   Switch,
+  Alert,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
@@ -17,7 +18,7 @@ import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
-
+import requestStoragePermission from '../../lib/file/getStoragePermission';
 import {
   MaterialCommunityIcons,
   AntDesign,
@@ -36,13 +37,15 @@ const Settings = ({navigation}: Props) => {
   const {provider, setProvider} = useContentStore(state => state);
 
   const onDownloadFolderPress = async () => {
-    try {
-      await RNFS.mkdir(downloadFolder);
-      await Linking.openURL(
-        'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fvega',
-      );
-    } catch (e) {
-      console.log(e);
+    if (await requestStoragePermission()) {
+      try {
+        await RNFS.mkdir(downloadFolder);
+        await Linking.openURL(
+          'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fvega',
+        );
+      } catch (e) {
+        console.log(e);
+      }
     }
   };
 

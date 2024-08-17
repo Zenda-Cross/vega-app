@@ -65,7 +65,7 @@ const Preferences = () => {
               <TouchableOpacity
                 key={index}
                 className={`bg-secondary p-2 rounded-md m-1 ${
-                  ExcludedQualities.includes(quality) ? 'bg-[#343434]' : ''
+                  ExcludedQualities.includes(quality) ? 'bg-primary' : ''
                 }`}
                 onPress={() => {
                   RNReactNativeHapticFeedback.trigger('effectTick', {
