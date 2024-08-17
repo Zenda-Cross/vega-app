@@ -5,6 +5,7 @@ import notifee from '@notifee/react-native';
 import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
+import requestStoragePermission from './file/getStoragePermission';
 
 export const downloadManager = async ({
   title,
@@ -25,6 +26,7 @@ export const downloadManager = async ({
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
+  await requestStoragePermission();
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;
   const channelId = await notifee.createChannel({
