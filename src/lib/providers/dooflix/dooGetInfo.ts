@@ -10,7 +10,7 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
     const jsonStart = resData?.indexOf('{');
     const jsonEnd = resData?.lastIndexOf('}') + 1;
     const data = JSON?.parse(resData?.substring(jsonStart, jsonEnd))?.title
-      ? JSON.parse(resData.substring(jsonStart, jsonEnd))
+      ? JSON?.parse(resData?.substring(jsonStart, jsonEnd))
       : resData;
     // console.log('data🌏🌏', data);
     const title = data?.title || '';
@@ -53,7 +53,7 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
     }
     console.log('links', links);
     return {
-      image: image,
+      image: image?.includes('https') ? image : image?.replace('http', 'https'),
       synopsis: synopsis,
       title: title,
       rating: rating,

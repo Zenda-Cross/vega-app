@@ -30,7 +30,7 @@ export const dooGetPost = async function (
       const jsonStart = resData?.indexOf('{');
       const jsonEnd = resData?.lastIndexOf('}') + 1;
       const data = JSON?.parse(resData?.substring(jsonStart, jsonEnd))?.movie
-        ? JSON.parse(resData.substring(jsonStart, jsonEnd))
+        ? JSON?.parse(resData?.substring(jsonStart, jsonEnd))
         : resData;
       console.log('data🌏🌏', data);
       data?.movie?.map((result: any) => {
@@ -40,7 +40,9 @@ export const dooGetPost = async function (
           catalog.push({
             title: result?.title,
             link: link,
-            image: result?.thumbnail_url,
+            image: result?.thumbnail_url?.includes('https')
+              ? result?.thumbnail_url
+              : result?.thumbnail_url?.replace('http', 'https'),
           });
         }
       });
@@ -52,7 +54,9 @@ export const dooGetPost = async function (
           catalog.push({
             title: result?.title,
             link: link,
-            image: result?.thumbnail_url,
+            image: result?.thumbnail_url?.includes('https')
+              ? result?.thumbnail_url
+              : result?.thumbnail_url?.replace('http', 'https'),
           });
         }
       });
@@ -66,7 +70,7 @@ export const dooGetPost = async function (
       const jsonEnd = resData?.lastIndexOf(']') + 1;
       const data =
         JSON?.parse(resData?.substring(jsonStart, jsonEnd))?.length > 0
-          ? JSON.parse(resData.substring(jsonStart, jsonEnd))
+          ? JSON?.parse(resData?.substring(jsonStart, jsonEnd))
           : resData;
       //   console.log('JsonData', jsonData);
       data?.map((result: any) => {
@@ -78,7 +82,9 @@ export const dooGetPost = async function (
           catalog.push({
             title: result?.title,
             link: link,
-            image: result?.thumbnail_url,
+            image: result?.thumbnail_url?.includes('https')
+              ? result?.thumbnail_url
+              : result?.thumbnail_url?.replace('http', 'https'),
           });
         }
       });
