@@ -27,6 +27,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [viewType, setViewType] = useState<number>(
     MMKV.getInt('viewType') || 1,
   );
+  console.log('isl', isLoading);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -37,19 +38,22 @@ const ScrollList = ({route}: Props): React.ReactElement => {
       const newPosts = await manifest[
         route.params.providerValue || provider.value
       ].getPosts(filter, page, provider.value, signal);
-      if (newPosts?.length === 0) {
+      if (newPosts?.length === 0 && page > 2) {
+        console.log('end🔥🔥', page);
         setIsEnd(true);
         setIsLoading(false);
         return;
       }
       setPosts(prev => [...prev, ...newPosts]);
-      setIsLoading(false);
     };
     fetchPosts();
   }, [page]);
 
   const onEndReached = async () => {
-    if (isEnd) return;
+    if (isEnd) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setPage(page + 1);
   };
