@@ -230,24 +230,24 @@ const Player = ({route}: Props): React.JSX.Element => {
           ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
         }}
-        textTracks={selectedStream?.subtitles
-          ?.map(sub => ({
-            type: TextTrackType.VTT,
+        textTracks={(
+          selectedStream?.subtitles?.map(sub => ({
+            type: sub.type || TextTrackType.VTT,
             title: sub.lang,
             language: sub.lang.slice(0, 2) as any,
             uri: sub.url,
-          }))
-          .concat(
-            externalFileSubs?.map(sub => ({
-              type: sub?.type as any,
-              title:
-                sub?.name && sub?.name?.length > 20
-                  ? sub?.name?.slice(0, 20) + '...'
-                  : sub?.name || 'unknown',
-              language: 'unknown',
-              uri: sub?.uri,
-            })),
-          )}
+          })) || []
+        ).concat(
+          externalFileSubs?.map(sub => ({
+            type: sub?.type as any,
+            title:
+              sub?.name && sub?.name?.length > 20
+                ? sub?.name?.slice(0, 20) + '...'
+                : sub?.name || 'undefined',
+            language: 'und',
+            uri: sub?.uri,
+          })),
+        )}
         onProgress={e => {
           MmmkvCache.setString(
             route.params.link,
