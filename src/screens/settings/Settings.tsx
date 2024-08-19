@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
   Switch,
-  Alert,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
