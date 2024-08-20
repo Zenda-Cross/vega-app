@@ -9,7 +9,6 @@ export const allGetPost = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://cinemeta-catalogs.strem.io';
     const catalog: Post[] = [];
 
     // console.log(filter);
@@ -57,7 +56,7 @@ export const allGetPost = async function (
       // console.log('nfSearch', catalog);
       return catalog;
     } else {
-      const url = `${baseUrl + filter}/skip=${(page - 1) * 50}.json`;
+      const url = 'https://cyberflix.elfhosted.com' + filter;
       // console.log(url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;

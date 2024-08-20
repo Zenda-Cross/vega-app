@@ -4,7 +4,7 @@ type Links = {
 };
 export async function multiExtractor(url: string): Promise<Links[]> {
   try {
-    console.log('multiExtractorUrl', url);
+    // console.log('multiExtractorUrl', url);
     const links: Links[] = [];
 
     const res = await fetch(url);
@@ -17,10 +17,10 @@ export async function multiExtractor(url: string): Promise<Links[]> {
       const [, lang, url] = match;
       links.push({lang, url});
     }
-    console.log('multiExtractor', links);
+    // console.log('multiExtractor', links);
     return links;
   } catch (err) {
-    console.error(err);
+    console.error('multiExtractor', err);
     return [];
   }
 }
