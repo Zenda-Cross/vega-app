@@ -10,7 +10,7 @@ import {
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
-import {MmmkvCache} from '../../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
@@ -27,6 +27,7 @@ import {
   SelectedVideoTrackType,
   ResizeMode,
   VideoTrack,
+  TextTracks,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -61,9 +62,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'language', value: 'off'},
   );
-  const [externalFileSubs, setExternalFileSubs] = useState<
-    DocumentPickerResponse[]
-  >([]);
+  const [externalSubs, setExternalSubs] = useState<TextTracks>([]);
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
@@ -109,6 +108,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       value: 'speed',
     },
   ];
+  const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
 
   const watchedDuration = MmmkvCache.getString(route?.params?.link)
     ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
@@ -158,8 +158,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       if (route.params.file) {
         const exists = await ifExists(route.params.file);
         if (exists) {
-          setStream([{server: 'downloaded', link: exists}]);
-          setSelectedStream({server: 'downloaded', link: exists});
+          setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
+          setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
           setLoading(false);
           return;
         }
@@ -167,13 +167,19 @@ const Player = ({route}: Props): React.JSX.Element => {
       const data = await manifest[
         route.params.providerValue || provider.value
       ].getStream(route.params.link, route.params.type, controller.signal);
-      const filteredData = data.filter(
+      const streamAbleServers = data.filter(
+        // filter out non streamable servers
         stream =>
           !manifest[
             route.params.providerValue || provider.value
           ].nonStreamableServer?.includes(stream.server),
       );
-      // remove filepress server and hubcloud server
+      const filteredQualities = streamAbleServers?.filter(
+        // filter out excluded qualities
+        stream => !excludedQualities.includes(stream?.quality + 'p'),
+      );
+      const filteredData =
+        filteredQualities?.length > 0 ? filteredQualities : streamAbleServers;
       if (filteredData.length === 0) {
         ToastAndroid.show(
           'No stream found, try again later',
@@ -185,6 +191,11 @@ const Player = ({route}: Props): React.JSX.Element => {
         ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
       setStream(filteredData);
+      filteredData?.forEach(track => {
+        if (track?.subtitles?.length && track.subtitles.length > 0) {
+          setExternalSubs((prev: any) => [...prev, ...(track.subtitles || [])]);
+        }
+      });
       setSelectedStream(filteredData[0]);
       setLoading(false);
     };
@@ -230,24 +241,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
         }}
-        textTracks={(
-          selectedStream?.subtitles?.map(sub => ({
-            type: sub.type || TextTrackType.VTT,
-            title: sub.lang,
-            language: sub.lang.slice(0, 2) as any,
-            uri: sub.url,
-          })) || []
-        ).concat(
-          externalFileSubs?.map(sub => ({
-            type: sub?.type as any,
-            title:
-              sub?.name && sub?.name?.length > 20
-                ? sub?.name?.slice(0, 20) + '...'
-                : sub?.name || 'undefined',
-            language: 'und',
-            uri: sub?.uri,
-          })),
-        )}
+        textTracks={externalSubs}
         onProgress={e => {
           MmmkvCache.setString(
             route.params.link,
@@ -368,7 +362,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : 150}}
         //@ts-ignore
-        transition={{type: 'timing', duration: 260}}
+        transition={{type: 'timing', duration: 250}}
         className="absolute bottom-4 right-6 opacity-60">
         <TouchableOpacity
           onPress={() => {
@@ -559,7 +553,16 @@ const Player = ({route}: Props): React.JSX.Element => {
                           allowMultiSelection: false,
                           presentationStyle: 'pageSheet',
                         });
-                        setExternalFileSubs(res);
+                        const track = {
+                          type: res?.[0]?.type as any,
+                          title:
+                            res?.[0]?.name && res?.[0]?.name?.length > 20
+                              ? res?.[0]?.name?.slice(0, 20) + '...'
+                              : res?.[0]?.name || 'undefined',
+                          language: 'und',
+                          uri: res?.[0]?.uri,
+                        };
+                        setExternalSubs((prev: any) => [track, ...prev]);
                         console.log('ExternalFile', res);
                       } catch (err) {
                         if (!isCancel(err)) {

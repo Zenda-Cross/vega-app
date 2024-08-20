@@ -61,7 +61,7 @@ const Preferences = () => {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold">Excluded qualities</Text>
           <View className="flex flex-row flex-wrap">
-            {['480p', '720p', '1080p'].map((quality, index) => (
+            {['360p', '480p', '720p', '1080p'].map((quality, index) => (
               <TouchableOpacity
                 key={index}
                 className={`bg-secondary p-2 rounded-md m-1 ${
