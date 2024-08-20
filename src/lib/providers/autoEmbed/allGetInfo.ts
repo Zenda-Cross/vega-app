@@ -18,14 +18,22 @@ export const allGetInfo = async function (link: string): Promise<Info> {
     let directLinks: EpisodeLink[] = [];
     let season = new Map();
     if (meta.type === 'series') {
-      data?.meta?.videos?.map((video: any, idx: number) => {
+      data?.meta?.videos?.map((video: any) => {
         if (video?.season <= 0) return;
         if (!season.has(video?.season)) {
           season.set(video?.season, []);
         }
         season.get(video?.season).push({
           title: 'Episode ' + video?.episode,
-          link: video?.id,
+          link: JSON.stringify({
+            title: data?.meta?.name as string,
+            imdbId: data?.meta?.imdb_id,
+            season: video?.id?.split(':')[1],
+            episode: video?.id?.split(':')[2],
+            type: data?.meta?.type,
+            tmdbId: data?.meta?.moviedb_id?.toString() || '',
+            year: data?.meta?.year,
+          }),
         });
       });
       const keys = Array.from(season.keys());
@@ -43,7 +51,15 @@ export const allGetInfo = async function (link: string): Promise<Info> {
     } else {
       links.push({
         title: data?.meta?.name as string,
-        movieLinks: data?.meta?.imdb_id as string,
+        movieLinks: JSON.stringify({
+          title: data?.meta?.name as string,
+          imdbId: data?.meta?.imdb_id,
+          season: '',
+          episode: '',
+          type: data?.meta?.type,
+          tmdbId: data?.meta?.moviedb_id?.toString() || '',
+          year: data?.meta?.year,
+        }),
         episodesLink: '',
         quality: '',
       });

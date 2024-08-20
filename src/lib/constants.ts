@@ -8,6 +8,12 @@ export interface ProvidersList {
 }
 export const providersList: ProvidersList[] = [
   {
+    name: 'MultiStream',
+    value: 'autoEmbed',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'VegaMovies',
     value: 'vega',
     type: 'global',
@@ -58,12 +64,6 @@ export const providersList: ProvidersList[] = [
   {
     name: 'NetflixMirror',
     value: 'netflixMirror',
-    type: 'global',
-    flag: '🌏',
-  },
-  {
-    name: 'AutoEmbed',
-    value: 'autoEmbed',
     type: 'global',
     flag: '🌏',
   },

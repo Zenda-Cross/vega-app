@@ -4,7 +4,7 @@ type Links = {
 };
 export async function stableExtractor(url: string): Promise<Links[]> {
   try {
-    console.log('stableExtractorUrl', url);
+    // console.log('stableExtractorUrl', url);
     const links: Links[] = [];
 
     const res = await fetch(url);
@@ -17,10 +17,10 @@ export async function stableExtractor(url: string): Promise<Links[]> {
       const [, url] = match;
       links.push({lang: '', url});
     }
-    console.log('stableExtractor', links);
+    // console.log('stableExtractor', links);
     return links;
   } catch (err) {
-    console.error(err);
+    console.error('stableExtractor', err);
     return [];
   }
 }

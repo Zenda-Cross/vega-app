@@ -1,18 +1,96 @@
+import {TextTracks, TextTrackType} from 'react-native-video';
 import {Stream} from '../types';
+import {getWhvxStream} from './getWhvxStream';
 import {multiExtractor} from './multiExtractor';
 import {stableExtractor} from './stableExtractor';
+import {getFlimxyStream} from './getFlimxyStream';
 
 export const allGetStream = async (
   id: string,
   type: string,
 ): Promise<Stream[]> => {
   try {
-    console.log(id);
+    // console.log(id);
     const streams: Stream[] = [];
-    const imdbId = id?.split(':')?.[0];
-    const season = id?.split(':')?.[1];
-    const episode = id?.split(':')?.[2];
+    const {imdbId, season, episode, title, tmdbId} = JSON.parse(id);
 
+    ///// whvx
+    const whvxStream = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      'nova',
+    );
+    // whvx nova
+    const subtitles: TextTracks = [];
+    for (const caption in whvxStream?.captions) {
+      subtitles.push({
+        language: whvxStream?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStream?.captions?.[caption]?.url,
+        type:
+          whvxStream?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStream?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    for (const quality in whvxStream?.qualities) {
+      streams.push({
+        server: 'Nova-' + quality,
+        link: whvxStream?.qualities?.[quality]?.url,
+        type: whvxStream?.qualities?.[quality]?.type || 'mp4',
+        subtitles: subtitles,
+        quality: quality as any,
+      });
+    }
+
+    // whvx orion
+    const whvxStreamOrion = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      'orion',
+    );
+    const subtitlesOrion: TextTracks = [];
+    for (const caption in whvxStreamOrion?.captions) {
+      subtitlesOrion.push({
+        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStreamOrion?.captions?.[caption]?.url,
+        type:
+          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    streams.push({
+      server: 'Orion',
+      link: whvxStreamOrion?.playlist,
+      type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+      subtitles: subtitlesOrion,
+    });
+    console.log('whvxorion', whvxStreamOrion?.playlist);
+
+    ///// flimxy
+    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    if (flimxyStream) {
+      for (const quality in flimxyStream?.qualities) {
+        streams.push({
+          server: 'Flimxy-' + quality,
+          link: flimxyStream?.qualities?.[quality]?.url,
+          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+          quality: quality as any,
+        });
+      }
+    }
+
+    ///// autoembed
     // server1
     const server1Url =
       type === 'movie'

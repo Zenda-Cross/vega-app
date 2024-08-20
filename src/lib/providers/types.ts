@@ -1,3 +1,5 @@
+import {TextTracks, TextTrackType} from 'react-native-video';
+
 // getPosts
 export interface Post {
   title: string;
@@ -11,10 +13,8 @@ export interface Stream {
   server: string;
   link: string;
   type: string;
-  subtitles?: {
-    lang: string;
-    url: string;
-  }[];
+  quality?: '360' | '480' | '720' | '1080' | '2160';
+  subtitles?: TextTracks;
   headers?: any;
 }
 
