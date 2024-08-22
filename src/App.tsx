@@ -22,6 +22,7 @@ import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
+import useThemeStore from './lib/zustand/themeStore';
 
 enableScreens(true);
 enableFreeze(true);
@@ -70,6 +71,7 @@ const App = () => {
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
   const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+  const {primary} = useThemeStore(state => state);
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -148,7 +150,7 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: 'tomato',
+          tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {backgroundColor: 'black'},
           tabBarHideOnKeyboard: true,
@@ -223,17 +225,17 @@ const App = () => {
         colors: {
           background: 'black',
           card: 'black',
-          primary: 'tomato',
+          primary: primary,
           text: 'white',
           border: 'black',
-          notification: 'tomato',
+          notification: primary,
         },
       }}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
           headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
+          headerTintColor: primary,
           headerStyle: {backgroundColor: '#171717'},
         }}>
         <Stack.Screen name="TabStack" component={TabStack} />
