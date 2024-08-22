@@ -6,7 +6,6 @@ import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
-import useThemeStore from './zustand/themeStore';
 
 export const downloadManager = async ({
   title,
@@ -27,7 +26,7 @@ export const downloadManager = async ({
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
-  const {primary} = useThemeStore(state => state);
+  const primary = '#FF6347';
   await requestStoragePermission();
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;
