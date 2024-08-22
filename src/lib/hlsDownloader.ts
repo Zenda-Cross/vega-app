@@ -1,7 +1,6 @@
 import {FFmpegKit, FFprobeKit, ReturnCode} from 'ffmpeg-kit-react-native';
 import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';
-import useThemeStore from './zustand/themeStore';
 
 const getVideoDuration = async (videoUrl: string) => {
   try {
@@ -39,7 +38,7 @@ export const hlsDownloader = async ({
     id: 'download',
     name: 'Download Notifications',
   });
-  const {primary} = useThemeStore(state => state);
+  const primary = '#FF6347';
   try {
     const duration = await getVideoDuration(videoUrl);
     await FFmpegKit.executeAsync(
