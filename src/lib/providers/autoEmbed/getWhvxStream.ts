@@ -5,7 +5,9 @@ export const getWhvxStream = async (
   episode: string,
   title: string,
   type: string,
+  year: string,
   provider: string,
+  baseUrl: string,
 ) => {
   try {
     const searchQuery = encodeURIComponent(
@@ -16,6 +18,11 @@ export const getWhvxStream = async (
         type: type === 'series' ? 'show' : 'movie',
         season: season || '',
         episode: episode || '',
+        releaseYear: year
+          ? year?.split('–')?.length > 0
+            ? year?.split('–')[0]
+            : year
+          : '',
       }),
     );
     console.log('searchQuery', {
@@ -23,6 +30,11 @@ export const getWhvxStream = async (
       imdbId: imdbId,
       tmdbId: tmdbId,
       type: type === 'series' ? 'show' : 'movie',
+      releaseYear: year
+        ? year?.split('–')?.length > 0
+          ? year?.split('–')[0]
+          : year
+        : '',
       season: season,
       episode: episode,
     });
@@ -31,7 +43,7 @@ export const getWhvxStream = async (
       controller.abort();
     }, 5000);
     const searchRes = await fetch(
-      `https://api.whvx.net/search?query=${searchQuery}&provider=${provider}`,
+      `${atob(baseUrl)}/search?query=${searchQuery}&provider=${provider}`,
       {
         headers: {
           'if-none-match': 'W/"d4-7mcv5HTZs5ogd/iJwPMEZ/NGCw0"',
@@ -45,9 +57,9 @@ export const getWhvxStream = async (
       },
     );
     const searchJson = await searchRes.json();
-    console.log('whvx', provider, searchJson);
+    console.log('whvx', provider, searchQuery);
     const streamRes = await fetch(
-      `https://api.whvx.net/source?resourceId=${encodeURIComponent(
+      `${atob(baseUrl)}/source?resourceId=${encodeURIComponent(
         searchJson?.url,
       )}&provider=${provider}`,
       {
@@ -64,7 +76,7 @@ export const getWhvxStream = async (
     const streamJson = await streamRes.json();
     console.log('whvx', provider, streamJson);
 
-    return streamJson?.stream?.[0];
+    return streamJson?.stream?.[0] || null;
   } catch (err) {
     console.error('whvx', err);
   }

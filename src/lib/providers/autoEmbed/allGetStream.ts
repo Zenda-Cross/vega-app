@@ -12,7 +12,20 @@ export const allGetStream = async (
   try {
     // console.log(id);
     const streams: Stream[] = [];
-    const {imdbId, season, episode, title, tmdbId} = JSON.parse(id);
+    const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
+
+    ///// flimxy
+    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    if (flimxyStream) {
+      for (const quality in flimxyStream?.qualities) {
+        streams.push({
+          server: 'Flimxy-' + quality,
+          link: flimxyStream?.qualities?.[quality]?.url,
+          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+          quality: quality as any,
+        });
+      }
+    }
 
     ///// whvx
     const whvxStream = await getWhvxStream(
@@ -22,7 +35,9 @@ export const allGetStream = async (
       episode,
       title,
       type,
+      year,
       'nova',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     );
     // whvx nova
     const subtitles: TextTracks = [];
@@ -55,7 +70,9 @@ export const allGetStream = async (
       episode,
       title,
       type,
+      year,
       'orion',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     );
     const subtitlesOrion: TextTracks = [];
     for (const caption in whvxStreamOrion?.captions) {
@@ -69,25 +86,66 @@ export const allGetStream = async (
         title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
       });
     }
-    streams.push({
-      server: 'Orion',
-      link: whvxStreamOrion?.playlist,
-      type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-      subtitles: subtitlesOrion,
-    });
+    if (whvxStreamOrion?.playlist) {
+      streams.push({
+        server: 'Orion',
+        link: whvxStreamOrion?.playlist,
+        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+        subtitles: subtitlesOrion,
+        headers: {
+          origin: 'https://www.vidbinge.com',
+        },
+      });
+    }
     console.log('whvxorion', whvxStreamOrion?.playlist);
 
-    ///// flimxy
-    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    if (flimxyStream) {
-      for (const quality in flimxyStream?.qualities) {
-        streams.push({
-          server: 'Flimxy-' + quality,
-          link: flimxyStream?.qualities?.[quality]?.url,
-          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-          quality: quality as any,
-        });
-      }
+    const whvxStreamAstra = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      year,
+      'astra',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    );
+    console.log('whvxastra', whvxStreamAstra?.playlist);
+
+    ///// nsbx
+    const nsbxStream = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      year,
+      'alpha',
+      'aHR0cHM6Ly9uc2J4LndhZmZsZWhhY2tlci5pbw==',
+    );
+    const subtitlesNsbx: TextTracks = [];
+    for (const caption in nsbxStream?.captions) {
+      subtitlesNsbx.push({
+        language: nsbxStream?.captions?.[caption]?.language || 'Undefined',
+        uri: nsbxStream?.captions?.[caption]?.url,
+        type:
+          nsbxStream?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: nsbxStream?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    if (nsbxStream?.playlist) {
+      streams.push({
+        server: 'Nsbx',
+        link: nsbxStream?.playlist,
+        type: nsbxStream?.type === 'hls' ? 'm3u8' : 'mp4',
+        subtitles: subtitlesNsbx,
+        headers: {
+          origin: 'https://www.vidbinge.com',
+        },
+      });
     }
 
     ///// autoembed
@@ -107,7 +165,7 @@ export const allGetStream = async (
     // server 2
     const server2Url =
       type === 'movie'
-        ? `https://duka.autoembed.cc/tv/${imdbId}`
+        ? `https://duka.autoembed.cc/movie/${imdbId}`
         : `https://duka.autoembed.cc/tv/${imdbId}/${season}/${episode}`;
     const links2 = await stableExtractor(server2Url);
     links2.forEach(({lang, url}) => {
@@ -121,7 +179,7 @@ export const allGetStream = async (
     // server 3
     const server3Url =
       type === 'movie'
-        ? `https://viet.autoembed.cc/tv/${imdbId}`
+        ? `https://viet.autoembed.cc/movie/${imdbId}`
         : `https://viet.autoembed.cc/tv/${imdbId}/${season}/${episode}`;
     const links3 = await stableExtractor(server3Url);
     links3.forEach(({lang, url}) => {

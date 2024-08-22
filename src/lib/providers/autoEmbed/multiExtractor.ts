@@ -17,7 +17,7 @@ export async function multiExtractor(url: string): Promise<Links[]> {
       const [, lang, url] = match;
       links.push({lang, url});
     }
-    // console.log('multiExtractor', links);
+    console.log('multiExtractor', links);
     return links;
   } catch (err) {
     console.error('multiExtractor', err);
