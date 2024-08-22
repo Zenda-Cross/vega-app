@@ -21,9 +21,11 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {manifest} from '../../lib/Manifest';
 import {BlurView} from 'expo-blur';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
+  const {primary} = useThemeStore(state => state);
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
@@ -294,14 +296,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       <Ionicons
                         name="bookmark"
                         size={30}
-                        color="tomato"
+                        color={primary}
                         onPress={() => removeLibrary()}
                       />
                     ) : (
                       <Ionicons
                         name="bookmark-outline"
                         size={30}
-                        color="tomato"
+                        color={primary}
                         onPress={() => addLibrary()}
                       />
                     )}
@@ -377,8 +379,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
-              colors={['tomato']}
-              tintColor="tomato"
+              colors={[primary]}
+              tintColor={primary}
               progressBackgroundColor={'black'}
               refreshing={refreshing}
               onRefresh={() => {

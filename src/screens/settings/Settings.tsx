@@ -25,10 +25,12 @@ import {
   MaterialIcons,
 } from '@expo/vector-icons';
 import {ScrollView} from 'react-native';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
+  const {primary} = useThemeStore(state => state);
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     MMKV.getBool('useExternalPlayer', () => false),
   );
@@ -110,7 +112,7 @@ const Settings = ({navigation}: Props) => {
           </Text>
         </View>
         <Switch
-          thumbColor={OpenExternalPlayer ? 'tomato' : 'gray'}
+          thumbColor={OpenExternalPlayer ? primary : 'gray'}
           value={OpenExternalPlayer}
           onValueChange={async val => {
             MMKV.setBool('useExternalPlayer', val);

@@ -23,6 +23,7 @@ import {downloadManager} from '../lib/downloader';
 import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
+import useThemeStore from '../lib/zustand/themeStore';
 
 const DownloadComponent = ({
   link,
@@ -37,6 +38,7 @@ const DownloadComponent = ({
   providerValue: string;
   title: string;
 }) => {
+  const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore(state => state);
   const [alreadyDownloaded, setAlreadyDownloaded] = useState<string | boolean>(
     false,
@@ -140,7 +142,7 @@ const DownloadComponent = ({
                 setCancelModal(prev => !prev);
                 console.log('pressed');
               }}>
-              <MaterialIcons name="downloading" size={27} color="tomato" />
+              <MaterialIcons name="downloading" size={27} color={primary} />
             </TouchableOpacity>
           </MotiView>
         ) : alreadyDownloaded ? (

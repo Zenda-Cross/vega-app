@@ -1,6 +1,7 @@
 import {FFmpegKit, FFprobeKit, ReturnCode} from 'ffmpeg-kit-react-native';
 import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';
+import useThemeStore from './zustand/themeStore';
 
 const getVideoDuration = async (videoUrl: string) => {
   try {
@@ -38,6 +39,7 @@ export const hlsDownloader = async ({
     id: 'download',
     name: 'Download Notifications',
   });
+  const {primary} = useThemeStore(state => state);
   try {
     const duration = await getVideoDuration(videoUrl);
     await FFmpegKit.executeAsync(
@@ -59,7 +61,7 @@ export const hlsDownloader = async ({
             title: 'Download completed',
             body: `Downloaded ${title}`,
             android: {
-              color: '#FF6347',
+              color: primary,
               smallIcon: 'ic_notification',
               channelId,
             },
@@ -73,7 +75,7 @@ export const hlsDownloader = async ({
             title: 'Download failed',
             body: `Failed to download ${title}`,
             android: {
-              color: '#FF6347',
+              color: primary,
               smallIcon: 'ic_notification',
               channelId,
             },
@@ -104,7 +106,7 @@ export const hlsDownloader = async ({
                 max: 100,
                 current: progress > 100 ? 100 : progress,
               },
-              color: '#FF6347',
+              color: primary,
               channelId,
               actions: [
                 {
@@ -127,7 +129,7 @@ export const hlsDownloader = async ({
       title: 'Download failed',
       body: `Failed to download ${fileName}`,
       android: {
-        color: '#FF6347',
+        color: primary,
         smallIcon: 'ic_notification',
         channelId,
       },

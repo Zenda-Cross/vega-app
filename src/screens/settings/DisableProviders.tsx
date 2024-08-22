@@ -2,8 +2,10 @@ import {View, Text, Switch, ScrollView} from 'react-native';
 import React from 'react';
 import {MMKV} from '../../lib/Mmkv';
 import {providersList} from '../../lib/constants';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 const DisableProviders = () => {
+  const {primary} = useThemeStore(state => state);
   const [disabledProviders, setDisabledProviders] = React.useState<string[]>(
     MMKV.getArray('disabledProviders') || [],
   );
@@ -25,7 +27,7 @@ const DisableProviders = () => {
             <View className="w-20" />
             <Switch
               thumbColor={
-                disabledProviders?.includes(provider.value) ? 'tomato' : 'gray'
+                disabledProviders?.includes(provider.value) ? primary : 'gray'
               }
               value={disabledProviders?.includes(provider.value)}
               onValueChange={

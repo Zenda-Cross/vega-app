@@ -22,7 +22,6 @@ import {
   TextTrack,
   SelectedAudioTrack,
   SelectedTextTrack,
-  TextTrackType,
   SelectedVideoTrack,
   SelectedVideoTrackType,
   ResizeMode,
@@ -36,16 +35,15 @@ import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
 import {Stream} from '../../lib/providers/types';
-import DocumentPicker, {
-  DocumentPickerResponse,
-  isCancel,
-} from 'react-native-document-picker';
+import DocumentPicker, {isCancel} from 'react-native-document-picker';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 
 const Player = ({route}: Props): React.JSX.Element => {
+  const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
@@ -267,7 +265,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         }}
         title={route.params.title}
         navigator={navigation}
-        seekColor="tomato"
+        seekColor={primary}
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
         fullscreen={true}

@@ -7,6 +7,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {manifest} from '../lib/Manifest';
 import {MMKV} from '../lib/Mmkv';
+import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
@@ -20,6 +21,7 @@ interface SearchPageData {
 }
 
 const SearchResults = ({route}: Props): React.ReactElement => {
+  const {primary} = useThemeStore(state => state);
   // const [refreshing, setRefreshing] = useState(false);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
   const trueLoading = providersList.map(item => {
@@ -88,8 +90,8 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         showsVerticalScrollIndicator={false}
         // refreshControl={
         //   <RefreshControl
-        //     colors={['tomato']}
-        //     tintColor="tomato"
+        //     colors={[primary]}
+        //     tintColor={primary}
         //     progressBackgroundColor={'black'}
         //     refreshing={refreshing}
         //     onRefresh={() => {
@@ -130,7 +132,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         </View>
         {!loading?.every(i => !i.isLoading) && (
           <View className="flex justify-center items-center h-20">
-            <ActivityIndicator size="large" color="tomato" animating={true} />
+            <ActivityIndicator size="large" color={primary} animating={true} />
           </View>
         )}
       </ScrollView>

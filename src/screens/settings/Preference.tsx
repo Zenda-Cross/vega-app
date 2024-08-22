@@ -4,8 +4,10 @@ import {MMKV} from '../../lib/Mmkv';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 const Preferences = () => {
+  const {primary, setPrimary} = useThemeStore(state => state);
   const [showRecentlyWatched, setShowRecentlyWatched] = useState(
     MMKV.getBool('showRecentlyWatched') || false,
   );
@@ -14,11 +16,57 @@ const Preferences = () => {
   const [ExcludedQualities, setExcludedQualities] = useState(
     MMKV.getArray('ExcludedQualities') || [],
   );
+  const themes: {
+    name: string;
+    primary: string;
+  }[] = [
+    {
+      name: 'Vega',
+      primary: '#FF6347',
+    },
+    {
+      name: 'Sky',
+      primary: '#87CEEB',
+    },
+    {
+      name: 'Sunset',
+      primary: '#FFA07A',
+    },
+    {
+      name: 'Forest',
+      primary: '#228B22',
+    },
+  ];
   return (
     <ScrollView className="w-full h-full bg-black">
       <Text className="text-white mt-10 ml-4 font-bold text-2xl">
         Preference
       </Text>
+
+      {/* // Theme */}
+      <View className="mt-2 p-2">
+        <Text className="text-white font-semibold">Theme</Text>
+        <View className="flex flex-row flex-wrap mt-2">
+          {themes.map((theme, index) => (
+            <TouchableOpacity
+              key={index}
+              className="bg-secondary p-2 rounded-md m-1"
+              onPress={() => {
+                RNReactNativeHapticFeedback.trigger('selection', {
+                  enableVibrateFallback: true,
+                  ignoreAndroidSystemSettings: false,
+                });
+                setPrimary(theme.primary);
+              }}>
+              <Text
+                className="text-white text-xs rounded-md px-1"
+                style={{color: theme.primary}}>
+                {theme.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
       <View className="mt-2 p-2">
         {/* show recentlyWatched */}
@@ -28,7 +76,7 @@ const Preferences = () => {
           </Text>
           <View className="w-20" />
           <Switch
-            thumbColor={showRecentlyWatched ? 'tomato' : 'gray'}
+            thumbColor={showRecentlyWatched ? primary : 'gray'}
             value={showRecentlyWatched}
             onValueChange={() => {
               MMKV.setBool('showRecentlyWatched', !showRecentlyWatched);
