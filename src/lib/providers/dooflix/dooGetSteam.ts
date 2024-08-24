@@ -11,7 +11,6 @@ export const dooGetStream = async (link: string): Promise<Stream[]> => {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0',
         Referer: 'https://hdmovie2.moe/',
-        Connection: 'keep-alive',
       },
     });
     console.log('doo streams', streams);

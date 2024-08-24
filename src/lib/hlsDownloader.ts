@@ -24,6 +24,7 @@ export const hlsDownloader = async ({
   downloadStore,
   setAlreadyDownloaded,
   setDownloadId,
+  headers = {},
 }: {
   videoUrl: string;
   path: string;
@@ -32,15 +33,21 @@ export const hlsDownloader = async ({
   downloadStore: Downloads;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
+  headers?: any;
 }) => {
-  const command = `-i ${videoUrl} -c copy -bsf:a aac_adtstoasc -f mp4 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 5000000 -preset ultrafast ${path}`;
+  const ffprobeHttpHeaders = headers
+    ? Object.entries(headers)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\r\n') + '\r\n'
+    : '';
+  const command = `-headers "${ffprobeHttpHeaders}" -i ${videoUrl} -c copy -bsf:a aac_adtstoasc -f mp4 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 5000000 -preset ultrafast ${path}`;
   const channelId = await notifee.createChannel({
     id: 'download',
     name: 'Download Notifications',
   });
   const primary = '#FF6347';
   try {
-    const duration = await getVideoDuration(videoUrl);
+    const duration = (await getVideoDuration(videoUrl)) || 0;
     await FFmpegKit.executeAsync(
       command,
       async session => {
@@ -95,7 +102,10 @@ export const hlsDownloader = async ({
           setDownloadId(log.getSessionId());
           await notifee.displayNotification({
             title: title,
-            body: `Downloaded ${progress.toFixed(2)}%`,
+            body:
+              progress > 100
+                ? 'Downloading'
+                : `Downloaded ${progress.toFixed(2)}%`,
             id: fileName,
             data: {fileName, jobId: log.getSessionId()},
             android: {
@@ -103,6 +113,7 @@ export const hlsDownloader = async ({
               onlyAlertOnce: true,
               progress: {
                 max: 100,
+                indeterminate: progress > 100,
                 current: progress > 100 ? 100 : progress,
               },
               color: primary,
