@@ -5,6 +5,7 @@ import {multiExtractor} from './multiExtractor';
 import {stableExtractor} from './stableExtractor';
 import {getFlimxyStream} from './getFlimxyStream';
 
+const autoembed = 'YXV0b2VtYmVkLmNj';
 export const allGetStream = async (
   id: string,
   type: string,
@@ -93,7 +94,7 @@ export const allGetStream = async (
         type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
         subtitles: subtitlesOrion,
         headers: {
-          origin: 'https://www.vidbinge.com',
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
         },
       });
     }
@@ -143,7 +144,7 @@ export const allGetStream = async (
         type: nsbxStream?.type === 'hls' ? 'm3u8' : 'mp4',
         subtitles: subtitlesNsbx,
         headers: {
-          origin: 'https://www.vidbinge.com',
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
         },
       });
     }
@@ -152,8 +153,10 @@ export const allGetStream = async (
     // server1
     const server1Url =
       type === 'movie'
-        ? `https://autoembed.cc/embed/oplayer.php?id=${imdbId}`
-        : `https://autoembed.cc/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
+        ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
+        : `https://${atob(
+            autoembed,
+          )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
     const links = await multiExtractor(server1Url);
     links.forEach(({lang, url}) => {
       streams.push({
@@ -165,8 +168,8 @@ export const allGetStream = async (
     // server 2
     const server2Url =
       type === 'movie'
-        ? `https://duka.autoembed.cc/movie/${imdbId}`
-        : `https://duka.autoembed.cc/tv/${imdbId}/${season}/${episode}`;
+        ? `https://duka.${atob(autoembed)}/movie/${imdbId}`
+        : `https://duka.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
     const links2 = await stableExtractor(server2Url);
     links2.forEach(({lang, url}) => {
       streams.push({
@@ -179,8 +182,8 @@ export const allGetStream = async (
     // server 3
     const server3Url =
       type === 'movie'
-        ? `https://viet.autoembed.cc/movie/${imdbId}`
-        : `https://viet.autoembed.cc/tv/${imdbId}/${season}/${episode}`;
+        ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
+        : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
     const links3 = await stableExtractor(server3Url);
     links3.forEach(({lang, url}) => {
       streams.push({

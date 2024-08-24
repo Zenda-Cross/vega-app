@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {Post} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const flixhqGetPosts = async function (
   filter: string,
@@ -8,7 +9,8 @@ export const flixhqGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://consumet8.vercel.app/movies/flixhq';
+    const urlRes = await getBaseUrl('consumet');
+    const baseUrl = urlRes + '/movies/flixhq';
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/${filter.replace('searchQuery=', '')}?page=${page}`
       : `${baseUrl + filter}`;

@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Post} from '../types';
-import {uhdGetBaseurl} from './uhdGetBaseurl';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const uhdGetPosts = async (
   filter: string,
@@ -11,7 +11,7 @@ export const uhdGetPosts = async (
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
-    const baseUrl = await uhdGetBaseurl();
+    const baseUrl = await getBaseUrl('UhdMovies');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;

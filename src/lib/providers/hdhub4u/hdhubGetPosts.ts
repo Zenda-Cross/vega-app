@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const hdhubGetPosts = async function (
   filter: string,
@@ -9,12 +10,7 @@ export const hdhubGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const urlRes = await fetch(
-      'https://himanshu8443.github.io/providers/modflix.json',
-    );
-    const dataRes = await urlRes.json();
-    // console.log(dataRes.hdhub.url);
-    const baseUrl = dataRes?.hdhub?.url;
+    const baseUrl = await getBaseUrl('hdhub');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
       : `${baseUrl + filter}/page/${page}/`;

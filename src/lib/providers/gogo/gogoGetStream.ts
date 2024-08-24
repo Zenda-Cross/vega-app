@@ -1,9 +1,11 @@
 import axios from 'axios';
 import {Stream} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const gogoGetStream = async (id: string): Promise<Stream[]> => {
   try {
-    const url = `https://consumet8.vercel.app/anime/gogoanime/watch/${id}`;
+    const baseUrl = await getBaseUrl('consumet');
+    const url = `${baseUrl}/anime/gogoanime/watch/${id}`;
     const res = await axios.get(url);
     const data = res.data;
     const streamLinks: Stream[] = [];
