@@ -5,9 +5,11 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import useThemeStore from '../../lib/zustand/themeStore';
+import {Dropdown} from 'react-native-element-dropdown';
+import {themes} from '../../lib/constants';
 
 const Preferences = () => {
-  const {primary} = useThemeStore(state => state);
+  const {primary, setPrimary} = useThemeStore(state => state);
   const [showRecentlyWatched, setShowRecentlyWatched] = useState(
     MMKV.getBool('showRecentlyWatched') || false,
   );
@@ -16,6 +18,7 @@ const Preferences = () => {
   const [ExcludedQualities, setExcludedQualities] = useState(
     MMKV.getArray('ExcludedQualities') || [],
   );
+
   return (
     <ScrollView className="w-full h-full bg-black">
       <Text className="text-white mt-10 ml-4 font-bold text-2xl">
@@ -59,6 +62,51 @@ const Preferences = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Themes */}
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold">Themes</Text>
+          <View className="w-28">
+            <Dropdown
+              selectedTextStyle={{
+                color: 'white',
+                overflow: 'hidden',
+                fontWeight: 'bold',
+                height: 23,
+              }}
+              containerStyle={{
+                borderColor: '#363636',
+                width: 100,
+                borderRadius: 5,
+                overflow: 'hidden',
+                padding: 2,
+                backgroundColor: 'black',
+                maxHeight: 450,
+              }}
+              labelField="name"
+              valueField="color"
+              renderItem={item => {
+                return (
+                  <View
+                    className={`bg-black font-extrabold text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 ${
+                      primary === item.color ? 'bg-quaternary' : ''
+                    }`}>
+                    <Text
+                      style={{color: item.color}}
+                      className="mb-2 font-bold">
+                      {item.name}
+                    </Text>
+                  </View>
+                );
+              }}
+              data={themes}
+              value={primary}
+              onChange={value => {
+                setPrimary(value.color);
+              }}
+            />
+          </View>
+        </View>
+
         {/* Excluded qualities */}
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold">Excluded qualities</Text>
@@ -66,9 +114,12 @@ const Preferences = () => {
             {['360p', '480p', '720p'].map((quality, index) => (
               <TouchableOpacity
                 key={index}
-                className={`bg-secondary p-2 rounded-md m-1 ${
-                  ExcludedQualities.includes(quality) ? 'bg-primary' : ''
-                }`}
+                className={'bg-secondary p-2 rounded-md m-1'}
+                style={{
+                  backgroundColor: ExcludedQualities.includes(quality)
+                    ? primary
+                    : '#343434',
+                }}
                 onPress={() => {
                   RNReactNativeHapticFeedback.trigger('effectTick', {
                     enableVibrateFallback: true,

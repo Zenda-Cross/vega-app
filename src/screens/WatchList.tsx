@@ -6,8 +6,10 @@ import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
+import useThemeStore from '../lib/zustand/themeStore';
 
 const Library = () => {
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const [library, setLibrary] = useState(MMKV.getArray('watchlist') || []);
@@ -16,7 +18,7 @@ const Library = () => {
     <ScrollView
       className="h-full w-full bg-black p-2"
       contentContainerStyle={{alignItems: 'center', justifyContent: 'center'}}>
-      <Text className="text-primary text-2xl font-semibold mt-7">
+      <Text className="text-2xl font-semibold mt-7" style={{color: primary}}>
         Watch List
       </Text>
       <View className="w-[400px] flex-row justify-center">

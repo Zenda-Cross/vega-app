@@ -107,7 +107,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         <View className="mt-14 px-4">
           <Text className="text-white text-xl font-semibold ">
             Search Results for{' '}
-            <Text className="text-primary">
+            <Text style={{color: primary}}>
               "{route?.params?.filter?.replace('searchQuery=', '')}"
             </Text>
           </Text>

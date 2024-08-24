@@ -1,6 +1,7 @@
 import {FFmpegKit, FFprobeKit, ReturnCode} from 'ffmpeg-kit-react-native';
 import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';
+import {MMKV} from './Mmkv';
 
 const getVideoDuration = async (videoUrl: string) => {
   try {
@@ -45,7 +46,7 @@ export const hlsDownloader = async ({
     id: 'download',
     name: 'Download Notifications',
   });
-  const primary = '#FF6347';
+  const primary = MMKV.getString('primaryColor') || '#FF6347';
   try {
     const duration = (await getVideoDuration(videoUrl)) || 0;
     await FFmpegKit.executeAsync(

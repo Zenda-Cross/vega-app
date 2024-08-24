@@ -178,14 +178,16 @@ const DownloadComponent = ({
                 <View className="flex-row items-center justify-evenly w-full my-5">
                   <TouchableOpacity
                     onPress={deleteDownload}
-                    className="bg-primary p-2 rounded-md m-1 px-3">
+                    className="p-2 rounded-md m-1 px-3"
+                    style={{backgroundColor: primary}}>
                     <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
                       Yes
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => setDeleteModal(false)}
-                    className="bg-primary p-2 px-4 rounded-md m-1">
+                    className="p-2 px-4 rounded-md m-1"
+                    style={{backgroundColor: primary}}>
                     <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
                       No
                     </Text>
@@ -238,7 +240,8 @@ const DownloadComponent = ({
                               ToastAndroid.SHORT,
                             );
                           }}
-                          className="bg-primary p-2 rounded-md m-1">
+                          className="p-2 rounded-md m-1"
+                          style={{backgroundColor: primary}}>
                           <Text className="text-white text-xs rounded-md capitalize px-1">
                             {server.server}
                           </Text>
@@ -303,7 +306,8 @@ const DownloadComponent = ({
                             setLongPressModal(false);
                             longPressDownload(server.link);
                           }}
-                          className="bg-primary p-2 rounded-md m-1">
+                          className="p-2 rounded-md m-1"
+                          style={{backgroundColor: primary}}>
                           <Text className="text-white text-xs rounded-md capitalize px-1">
                             {server.server}
                           </Text>
