@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Info, Link} from '../types';
-export default async function getUhdInfo(link: string): Promise<Info> {
+export async function getUhdInfo(link: string): Promise<Info> {
   try {
     const url = link;
     const res = await axios.get(url, {headers});
