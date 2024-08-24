@@ -76,6 +76,7 @@ export const downloadManager = async ({
         title,
         setAlreadyDownloaded,
         setDownloadId: setDownloadId,
+        headers,
       });
       console.log('Downloading HLS');
       return;
