@@ -56,7 +56,7 @@ const Settings = ({navigation}: Props) => {
       {/* Content provider */}
       {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-primary font-bold text-lg">
+          <Text className="font-bold text-lg" style={{color: primary}}>
             Change Provider
           </Text>
           <View className="w-40">

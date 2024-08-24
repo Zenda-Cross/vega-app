@@ -4,6 +4,7 @@ import {Modal, TouchableOpacity} from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Skeleton} from 'moti/skeleton';
+import useThemeStore from '../lib/zustand/themeStore';
 
 const StreamModal = ({
   downloadModal,
@@ -18,6 +19,7 @@ const StreamModal = ({
   serverLoading: boolean;
   downloadFile: (link: string) => void;
 }) => {
+  const {primary} = useThemeStore(state => state);
   return (
     <Modal animationType="fade" visible={downloadModal} transparent={true}>
       <View className="flex-1 bg-black/10 justify-center items-center p-4">
@@ -45,7 +47,8 @@ const StreamModal = ({
                         ToastAndroid.SHORT,
                       );
                     }}
-                    className="bg-primary p-2 rounded-md m-1">
+                    className="p-2 rounded-md m-1"
+                    style={{backgroundColor: primary}}>
                     <Text className="text-white text-xs rounded-md capitalize px-1">
                       {server.server}
                     </Text>

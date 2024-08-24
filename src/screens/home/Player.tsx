@@ -423,11 +423,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                       color="white"
                     />
                     <Text
-                      className={`text-xl capitalize ${
-                        activeTab === setting.value
-                          ? 'font-bold text-primary'
-                          : 'font-bold text-white'
-                      }`}>
+                      className={'text-xl capitalize font-semibold'}
+                      style={{
+                        color: activeTab === setting.value ? primary : 'white',
+                      }}>
                       {setting.title}
                     </Text>
                   </TouchableOpacity>
@@ -459,21 +458,18 @@ const Player = ({route}: Props): React.JSX.Element => {
                         // setShowSettings(false);
                       }}>
                       <Text
-                        className={`text-lg font-semibold ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-lg font-semibold'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.language}
                       </Text>
                       <Text
-                        className={`text-base italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-base italic'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.type}
                       </Text>
                       <Text
-                        className={`text-sm italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.title}
                       </Text>
                       {track.selected && (
@@ -500,7 +496,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                   {textTracks.map((track, i) => (
                     <TouchableOpacity
                       className={
-                        'flex-row gap-3 items-center text-primary rounded-md my-1 overflow-hidden ml-2'
+                        'flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2'
                       }
                       key={i}
                       onPress={() => {
@@ -514,21 +510,18 @@ const Player = ({route}: Props): React.JSX.Element => {
                         // playerRef?.current?.resume();
                       }}>
                       <Text
-                        className={`text-xl font-semibold ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-xl font-semibold'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.language}
                       </Text>
                       <Text
-                        className={`text-sm italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.type}
                       </Text>
                       <Text
-                        className={`text-sm italic text-white ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic text-white'}
+                        style={{color: track.selected ? primary : 'white'}}>
                         {track.title}
                       </Text>
                       {track.selected && (
@@ -589,11 +582,13 @@ const Player = ({route}: Props): React.JSX.Element => {
                           // playerRef?.current?.resume();
                         }}>
                         <Text
-                          className={`text-lg capitalize font-semibold ${
-                            track.link === selectedStream.link
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-lg capitalize font-semibold'}
+                          style={{
+                            color:
+                              track.link === selectedStream.link
+                                ? primary
+                                : 'white',
+                          }}>
                           {track.server}
                         </Text>
                         {track.link === selectedStream.link && (
@@ -622,19 +617,13 @@ const Player = ({route}: Props): React.JSX.Element => {
                           // playerRef?.current?.resume();
                         }}>
                         <Text
-                          className={`text-lg font-semibold ${
-                            selectedVideoTrack.value === track.index
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-lg font-semibold'}
+                          style={{color: track.selected ? primary : 'white'}}>
                           {track.height + 'p'}
                         </Text>
                         <Text
-                          className={`text-sm italic ${
-                            selectedVideoTrack.value === track.index
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-sm italic'}
+                          style={{color: track.selected ? primary : 'white'}}>
                           {'Bitrate-' +
                             track.bitrate +
                             ' | Codec-' +
@@ -660,9 +649,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                         // playerRef?.current?.resume();
                       }}>
                       <Text
-                        className={`text-lg font-semibold ${
-                          playbackRate === track ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-lg font-semibold'}
+                        style={{
+                          color: playbackRate === track ? primary : 'white',
+                        }}>
                         {track}x
                       </Text>
                       {playbackRate === track && (

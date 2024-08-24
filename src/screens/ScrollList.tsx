@@ -12,10 +12,12 @@ import {MaterialIcons} from '@expo/vector-icons';
 import {MMKV} from '../lib/Mmkv';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
+import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
 const ScrollList = ({route}: Props): React.ReactElement => {
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -61,7 +63,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   return (
     <View className="h-full w-full bg-black items-center p-4">
       <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
-        <Text className="text-primary text-2xl font-bold">
+        <Text className="text-2xl font-bold" style={{color: primary}}>
           {route.params.title}
         </Text>
         <TouchableOpacity

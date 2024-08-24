@@ -10,6 +10,7 @@ import SkeletonLoader from './Skeleton';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
+import useThemeStore from '../lib/zustand/themeStore';
 
 export default function Slider({
   isLoading,
@@ -25,6 +26,7 @@ export default function Slider({
   providerValue?: string;
 }): JSX.Element {
   const {provider} = useContentStore(state => state);
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [isSelected, setSelected] = React.useState('');
@@ -33,7 +35,9 @@ export default function Slider({
   return (
     <Pressable onPress={() => setSelected('')} className="gap-3 mt-7">
       <View className="flex flex-row items-center justify-between px-2">
-        <Text className="text-2xl text-primary font-semibold">{title}</Text>
+        <Text className="text-2xl font-semibold" style={{color: primary}}>
+          {title}
+        </Text>
         {filter !== 'recent' && (
           <TouchableOpacity
             onPress={() =>
