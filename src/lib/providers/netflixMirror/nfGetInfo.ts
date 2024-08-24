@@ -4,11 +4,7 @@ import {headers} from './nfHeaders';
 
 export const nfGetInfo = async function (link: string): Promise<Info> {
   try {
-    const url =
-      'https://iosmirror.cc/post.php?id=' +
-      link +
-      '&t=' +
-      Math.round(new Date().getTime() / 1000);
+    const url = link;
     console.log('nfifo', url);
     const res = await axios.get(url, {
       headers: headers,

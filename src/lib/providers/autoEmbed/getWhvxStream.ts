@@ -47,7 +47,7 @@ export const getWhvxStream = async (
       {
         headers: {
           'if-none-match': 'W/"d4-7mcv5HTZs5ogd/iJwPMEZ/NGCw0"',
-          origin: 'https://www.vidbinge.com',
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
         },
         signal: controller.signal,
         referrerPolicy: 'no-referrer',
@@ -65,7 +65,7 @@ export const getWhvxStream = async (
       {
         headers: {
           'if-none-match': 'W/"d4-7mcv5HTZs5ogd/iJwPMEZ/NGCw0"',
-          origin: 'https://www.vidbinge.com',
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
         },
         referrerPolicy: 'no-referrer',
         body: null,

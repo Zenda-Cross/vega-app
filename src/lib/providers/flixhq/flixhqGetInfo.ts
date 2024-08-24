@@ -1,9 +1,11 @@
 import axios from 'axios';
 import {Info, EpisodeLink} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const flixhqGetInfo = async function (id: string): Promise<Info> {
   try {
-    const url = 'https://consumet8.vercel.app/movies/flixhq/info?id=' + id;
+    const baseUrl = await getBaseUrl('consumet');
+    const url = `${baseUrl}/movies/flixhq/info?id=` + id;
     console.log(url);
     const res = await axios.get(url);
     const data = res.data;

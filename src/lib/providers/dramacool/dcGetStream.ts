@@ -1,12 +1,14 @@
 import axios from 'axios';
 import {Stream} from '../types';
 import {getQualityLinks} from '../../m3u8Parcer';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const dcGetStream = async (id: string): Promise<Stream[]> => {
   try {
     const episodeId = id.split('*')[0];
     const mediaId = id.split('*')[1];
-    const url = `https://consumet8.vercel.app/movies/dramacool/watch?episodeId=${episodeId}&mediaId=${mediaId}`;
+    const baseUrl = await getBaseUrl('consumet');
+    const url = `${baseUrl}/movies/dramacool/watch?episodeId=${episodeId}&mediaId=${mediaId}`;
     console.log('dcStreamurl', url);
     const res = await axios.get(url);
     const data = res.data;
