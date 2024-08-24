@@ -97,9 +97,8 @@ export const checkForUpdate = async (
   setUpdateLoading: React.Dispatch<React.SetStateAction<boolean>>,
   autoDownload: boolean,
   showToast: boolean = true,
+  primary: string,
 ) => {
-  const {primary} = useThemeStore(state => state);
-
   setUpdateLoading(true);
   try {
     const res = await fetch(
@@ -215,7 +214,7 @@ const About = () => {
       </View>
 
       <TouchableNativeFeedback
-        onPress={() => checkForUpdate(setUpdateLoading, autoDownload)}
+        onPress={() => checkForUpdate(setUpdateLoading, autoDownload, primary)}
         disabled={updateLoading}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 py-3 rounded-md">

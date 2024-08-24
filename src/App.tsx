@@ -23,6 +23,7 @@ import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import useThemeStore from './lib/zustand/themeStore';
+import {LogBox} from 'react-native';
 
 enableScreens(true);
 enableFreeze(true);
@@ -66,6 +67,7 @@ export type SettingsStackParamList = {
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
+  LogBox.ignoreLogs(['You have passed a style to FlashList']);
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
