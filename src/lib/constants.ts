@@ -8,14 +8,14 @@ export interface ProvidersList {
 }
 export const providersList: ProvidersList[] = [
   {
-    name: 'MultiStream',
-    value: 'autoEmbed',
+    name: 'VegaMovies',
+    value: 'vega',
     type: 'global',
     flag: '🌏',
   },
   {
-    name: 'VegaMovies',
-    value: 'vega',
+    name: 'MultiStream',
+    value: 'multiStream',
     type: 'global',
     flag: '🌏',
   },

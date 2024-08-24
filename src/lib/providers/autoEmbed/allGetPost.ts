@@ -57,7 +57,7 @@ export const allGetPost = async function (
       return catalog;
     } else {
       const url = 'https://cyberflix.elfhosted.com' + filter;
-      // console.log(url);
+      console.log('allGetPostUrl', url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;
 
@@ -75,7 +75,7 @@ export const allGetPost = async function (
           });
         }
       });
-      // console.log('catalog', catalog.length);
+      console.log('catalog', catalog.length);
       return catalog;
     }
   } catch (err) {
