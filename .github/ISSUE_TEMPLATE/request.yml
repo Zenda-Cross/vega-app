@@ -1,0 +1,50 @@
+name: ⭐ Feature Request
+description: Suggest a feature to improve the Vega app
+labels: [enhancement]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 🌟 Feature Request Template
+        Thank you for contributing to the Vega app by suggesting a new feature! Please provide detailed information about your idea to help us understand and potentially implement it.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description (required)
+      description: Describe the feature you'd like to see added or improved.
+      placeholder: |
+        Example:
+          "It would be great if the app could [describe feature] to [achieve specific outcome]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-benefits
+    attributes:
+      label: Benefits and Use Cases (required)
+      description: Explain how this feature would benefit users or improve the app. Include any specific use cases.
+      placeholder: |
+        Example:
+          "This feature would allow users to [benefit] by [specific action]."
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-details
+    attributes:
+      label: Additional Information
+      description: Provide any additional details, context, or attachments related to the feature request.
+      placeholder: "Optional: Add any other relevant information, links, or attachments."
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      description: Please confirm the following:
+      options:
+        - label: I have searched the existing issues and this feature is not a duplicate.
+          required: true
+        - label: I understand that this is a feature request and not a bug report.
+          required: true
