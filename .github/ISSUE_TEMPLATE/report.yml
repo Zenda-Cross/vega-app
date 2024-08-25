@@ -3,99 +3,42 @@ description: Report a bug or issue with the Vega app
 labels: [bug]
 body:
 
-  - type: markdown
-    attributes:
-      value: |
-        ## 📝 Bug Report Template
-        Thank you for taking the time to report a bug. Please fill out the following fields to help us understand and resolve the issue. Fields marked with **(required)** are mandatory.
-
-  - type: textarea
-    id: reproduce-steps
-    attributes:
-      label: Steps to Reproduce (required)
-      description: Provide a step-by-step guide on how to reproduce the issue.
-      placeholder: |
-        Example:
-          1. Open the app.
-          2. Navigate to [specific section].
-          3. Perform [action].
-          4. Observe the issue.
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected-behavior
-    attributes:
-      label: Expected Behavior (required)
-      description: Describe what you expected to happen.
-      placeholder: |
-        Example:
-          "The app should [describe expected outcome] when [action] is performed."
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual-behavior
-    attributes:
-      label: Actual Behavior (required)
-      description: Describe what actually happened when you followed the steps.
-      placeholder: |
-        Example:
-          "Instead of the expected outcome, the app [describe what happened]."
-    validations:
-      required: true
-
-  - type: textarea
-    id: crash-logs
-    attributes:
-      label: Crash Logs or Stack Trace
-      description: If the app crashed, please provide the crash logs or stack trace here.
-      placeholder: "Paste the crash logs or stack trace here, or upload them as an attachment."
-      render: shell
-
-  - type: input
-    id: app-version
-    attributes:
-      label: App Version (required)
-      description: Specify the version of the app you are using.
-      placeholder: "Example: 1.0"
-    validations:
-      required: true
-
-  - type: input
-    id: android-version
-    attributes:
-      label: Android Version (required)
-      description: Specify the version of Android you are using. You can find this in your device settings.
-      placeholder: "Example: Android 11"
-    validations:
-      required: true
-
-  - type: input
-    id: device
-    attributes:
-      label: Device Model (required)
-      description: Specify the make and model of your device.
-      placeholder: "Example: Google Pixel 5"
-    validations:
-      required: true
-
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: Additional Information
-      description: Add any other relevant information or attach files that might help in resolving the issue.
-      placeholder: "Optional: Provide any other details that might help in diagnosing the issue."
-
-  - type: checkboxes
-    id: acknowledgements
-    attributes:
-      label: Acknowledgements (required)
-      description: Please confirm the following to ensure your report is complete:
-      options:
-        - label: I have searched existing issues and this report is not a duplicate.
+    - type: textarea
+      id: summary
+      attributes:
+          label: Brief summary
+          description: Please describe, what went wrong
+      validations:
           required: true
-        - label: I have provided a concise and descriptive title for this issue.
+
+    - type: textarea
+      id: reproduce-steps
+      attributes:
+          label: Steps to reproduce
+          description: Please provide a way to reproduce this issue. Screenshots or videos can be very helpful
+          placeholder: |
+              Example:
+                1. First step
+                2. Second step
+                3. Issue here
+      validations:
+          required: false
+
+
+    - type: input
+      id: vega-version
+      attributes:
+          label: Vega version
+          description: Specify the version of the app you are using.
+          placeholder: |
+              Example: "1.0"
+      validations:
           required: true
-        - label: I have updated the app to the latest version available.
-          required: true
+
+    - type: checkboxes
+      id: acknowledgements
+      attributes:
+          label: Acknowledgements
+          options:
+              - label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open issue.
+                required: true
