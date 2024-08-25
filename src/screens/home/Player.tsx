@@ -60,6 +60,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'language', value: 'off'},
   );
+  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
+  const [selectedTextTrackIndex, setSelectedTextTrackIndex] = useState(1000);
+  const [selectedQualityIndex, setSelectedQualityIndex] = useState(0);
   const [externalSubs, setExternalSubs] = useState<TextTracks>([]);
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
@@ -211,6 +214,12 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
     return unsubscribe;
   }, [navigation]);
+
+  useEffect(() => {
+    setSelectedAudioTrackIndex(0);
+    setSelectedTextTrackIndex(1000);
+    setSelectedQualityIndex(0);
+  }, [selectedStream]);
 
   const setToast = (message: string, duration: number) => {
     setToastMessage(message);
@@ -453,26 +462,33 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: 'language',
                           value: track.language,
                         });
-                        audioTracks.forEach(t => (t.selected = false));
-                        track.selected = true;
-                        // setShowSettings(false);
+                        setSelectedAudioTrackIndex(i);
                       }}>
                       <Text
                         className={'text-lg font-semibold'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.language}
                       </Text>
                       <Text
                         className={'text-base italic'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.type}
                       </Text>
                       <Text
                         className={'text-sm italic'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.title}
                       </Text>
-                      {track.selected && (
+                      {selectedAudioTrackIndex === i && (
                         <MaterialIcons name="check" size={20} color="white" />
                       )}
                     </TouchableOpacity>
@@ -486,8 +502,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                     onPress={() => {
                       setSelectedTextTrack({type: 'language', value: 'off'});
-                      // setShowSettings(false);
-                      // playerRef?.current?.resume();
                     }}>
                     <Text className="text-base font-semibold text-white">
                       Disable
@@ -504,27 +518,33 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: 'index',
                           value: track.index,
                         });
-                        textTracks.forEach(t => (t.selected = false));
-                        track.selected = true;
-                        // setShowSettings(false);
-                        // playerRef?.current?.resume();
+                        setSelectedTextTrackIndex(i);
                       }}>
                       <Text
                         className={'text-xl font-semibold'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.language}
                       </Text>
                       <Text
                         className={'text-sm italic'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.type}
                       </Text>
                       <Text
                         className={'text-sm italic text-white'}
-                        style={{color: track.selected ? primary : 'white'}}>
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.title}
                       </Text>
-                      {track.selected && (
+                      {selectedTextTrackIndex === i && (
                         <MaterialIcons name="check" size={20} color="white" />
                       )}
                     </TouchableOpacity>
@@ -611,25 +631,28 @@ const Player = ({route}: Props): React.JSX.Element => {
                             type: SelectedVideoTrackType.INDEX,
                             value: track.index,
                           });
-                          videoTracks.forEach(t => (t.selected = false));
-                          track.selected = true;
-                          // setShowSettings(false);
-                          // playerRef?.current?.resume();
+                          setSelectedQualityIndex(i);
                         }}>
                         <Text
                           className={'text-lg font-semibold'}
-                          style={{color: track.selected ? primary : 'white'}}>
+                          style={{
+                            color:
+                              selectedQualityIndex === i ? primary : 'white',
+                          }}>
                           {track.height + 'p'}
                         </Text>
                         <Text
                           className={'text-sm italic'}
-                          style={{color: track.selected ? primary : 'white'}}>
+                          style={{
+                            color:
+                              selectedQualityIndex === i ? primary : 'white',
+                          }}>
                           {'Bitrate-' +
                             track.bitrate +
                             ' | Codec-' +
                             (track?.codecs || 'unknown')}
                         </Text>
-                        {selectedVideoTrack.value === track.index && (
+                        {(selectedQualityIndex === i) === track.index && (
                           <MaterialIcons name="check" size={20} color="white" />
                         )}
                       </TouchableOpacity>
