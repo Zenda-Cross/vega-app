@@ -62,7 +62,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
   const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
   const [selectedTextTrackIndex, setSelectedTextTrackIndex] = useState(1000);
-  const [selectedQualityIndex, setSelectedQualityIndex] = useState(0);
+  const [selectedQualityIndex, setSelectedQualityIndex] = useState(1000);
   const [externalSubs, setExternalSubs] = useState<TextTracks>([]);
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
@@ -218,7 +218,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   useEffect(() => {
     setSelectedAudioTrackIndex(0);
     setSelectedTextTrackIndex(1000);
-    setSelectedQualityIndex(0);
+    setSelectedQualityIndex(1000);
   }, [selectedStream]);
 
   const setToast = (message: string, duration: number) => {
