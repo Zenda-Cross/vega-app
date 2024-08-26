@@ -6,6 +6,7 @@ import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
+import {MMKV} from './Mmkv';
 
 export const downloadManager = async ({
   title,
@@ -26,6 +27,7 @@ export const downloadManager = async ({
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
 }) => {
+  const primary = MMKV.getString('primaryColor') || '#FF6347';
   await requestStoragePermission();
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;
@@ -47,7 +49,7 @@ export const downloadManager = async ({
   //     body: 'Downloading ' + fileName,
   //     android: {
   //       channelId,
-  //       color: '#FF6347',
+  //       color: primary,
   //     },
   //   });
   //   console.log(
@@ -75,6 +77,7 @@ export const downloadManager = async ({
         title,
         setAlreadyDownloaded,
         setDownloadId: setDownloadId,
+        headers,
       });
       console.log('Downloading HLS');
       return;
@@ -115,7 +118,7 @@ export const downloadManager = async ({
           android: {
             smallIcon: 'ic_notification',
             channelId,
-            color: '#FF6347',
+            color: primary,
             onlyAlertOnce: true,
             progress: {
               max: 100,
@@ -148,7 +151,7 @@ export const downloadManager = async ({
         android: {
           smallIcon: 'ic_notification',
           channelId,
-          color: '#FF6347',
+          color: primary,
         },
       });
       removeActiveDownload(fileName);
@@ -169,7 +172,7 @@ export const downloadManager = async ({
         android: {
           smallIcon: 'ic_notification',
           channelId,
-          color: '#FF6347',
+          color: primary,
         },
       });
       removeActiveDownload(fileName);

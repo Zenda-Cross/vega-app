@@ -2,6 +2,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {Stream} from '../types';
 import {headers} from './headers';
+import {TextTracks} from 'react-native-video';
+import {TextTrackType} from 'react-native-video/lib/types/video';
 
 export const multiGetStream = async (
   url: string,
@@ -79,16 +81,18 @@ export const multiGetStream = async (
     }
 
     const streamUrl = p?.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)?.[1];
-    const subtitles: {
-      lang: string;
-      url: string;
-    }[] = [];
+    const subtitles: TextTracks = [];
     const subtitleMatch = p?.match(/https:\/\/[^\s"]+\.vtt/g);
     // console.log('subtitleMatch', subtitleMatch);
     if (subtitleMatch?.length) {
       subtitleMatch.forEach((sub: any) => {
         const lang = sub.match(/_([a-zA-Z]{3})\.vtt$/)[1];
-        subtitles.push({lang: lang, url: sub});
+        subtitles.push({
+          language: lang,
+          uri: sub,
+          type: TextTrackType.VTT,
+          title: lang,
+        });
       });
     }
     console.log('streamUrl', streamUrl);

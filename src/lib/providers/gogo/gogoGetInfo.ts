@@ -1,9 +1,11 @@
 import axios from 'axios';
 import {Info, EpisodeLink} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const gogoGetInfo = async function (link: string): Promise<Info> {
   try {
-    const url = 'https://consumet8.vercel.app/anime/gogoanime/info/' + link;
+    const baseUrl = await getBaseUrl('consumet');
+    const url = `${baseUrl}/anime/gogoanime/info/` + link;
     console.log(url);
     const res = await axios.get(url);
     const data = res.data;

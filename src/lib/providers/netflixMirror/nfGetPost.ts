@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './nfHeaders';
 import {Post} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const nfGetPost = async function (
   filter: string,
@@ -10,7 +11,7 @@ export const nfGetPost = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://iosmirror.cc';
+    const baseUrl = await getBaseUrl('nfMirror');
     const catalog: Post[] = [];
     if (page > 1) {
       return [];
@@ -52,7 +53,12 @@ export const nfGetPost = async function (
         if (id) {
           catalog.push({
             title: title,
-            link: id,
+            link:
+              baseUrl +
+              '/post.php?id=' +
+              id +
+              '&t=' +
+              Math.round(new Date().getTime() / 1000),
             image: image,
           });
         }

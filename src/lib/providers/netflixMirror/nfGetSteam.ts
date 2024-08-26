@@ -1,10 +1,12 @@
 import axios from 'axios';
 import {Stream} from '../types';
 import {headers} from './nfHeaders';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const nfGetStream = async (id: string): Promise<Stream[]> => {
   try {
-    const url = `https://iosmirror.cc/playlist.php?id=${id}&t=${Math.round(
+    const baseUrl = await getBaseUrl('nfMirror');
+    const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
       new Date().getTime() / 1000,
     )}`;
     const res = await axios.get(url, {
@@ -15,10 +17,10 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
     data?.sources.forEach((source: any) => {
       streamLinks.push({
         server: source.label,
-        link: 'https://iosmirror.cc' + source.file,
+        link: baseUrl + source.file,
         type: 'm3u8',
         headers: {
-          Referer: 'https://iosmirror.cc/',
+          Referer: baseUrl,
         },
       });
     });

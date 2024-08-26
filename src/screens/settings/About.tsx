@@ -15,9 +15,10 @@ import RNFS from 'react-native-fs';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 // download update
-const downloadUpdate = async (url: string, name: string) => {
+const downloadUpdate = async (url: string, name: string, theme: string) => {
   console.log('downloading', url, name);
   await notifee.requestPermission();
   // Create a channel (required for Android)
@@ -32,6 +33,7 @@ const downloadUpdate = async (url: string, name: string) => {
         body: 'Tap to install',
         data: {name: `${name}`},
         android: {
+          color: theme,
           smallIcon: 'ic_notification',
           channelId,
           pressAction: {
@@ -60,6 +62,7 @@ const downloadUpdate = async (url: string, name: string) => {
         android: {
           smallIcon: 'ic_notification',
           channelId,
+          color: theme,
           onlyAlertOnce: true,
           progress: {
             current: res.bytesWritten,
@@ -77,6 +80,7 @@ const downloadUpdate = async (url: string, name: string) => {
         body: 'Tap to install',
         data: {name},
         android: {
+          color: theme,
           smallIcon: 'ic_notification',
           channelId,
           pressAction: {
@@ -93,6 +97,7 @@ export const checkForUpdate = async (
   setUpdateLoading: React.Dispatch<React.SetStateAction<boolean>>,
   autoDownload: boolean,
   showToast: boolean = true,
+  primary: string,
 ) => {
   setUpdateLoading(true);
   try {
@@ -111,6 +116,7 @@ export const checkForUpdate = async (
               ? downloadUpdate(
                   data?.assets?.[2]?.browser_download_url,
                   data.assets?.[2]?.name,
+                  primary,
                 )
               : Linking.openURL(data.html_url),
         },
@@ -158,6 +164,7 @@ notifee.onForegroundEvent(handleAction);
 notifee.onBackgroundEvent(handleAction);
 
 const About = () => {
+  const {primary} = useThemeStore(state => state);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [autoDownload, setAutoDownload] = useState(
     MMKV.getBool('autoDownload') || false,
@@ -187,7 +194,7 @@ const About = () => {
             setAutoDownload(!autoDownload);
             MMKV.setBool('autoDownload', !autoDownload);
           }}
-          thumbColor={autoDownload ? 'tomato' : 'gray'}
+          thumbColor={autoDownload ? primary : 'gray'}
         />
       </View>
 
@@ -202,12 +209,12 @@ const About = () => {
             setAutoCheckUpdate(!autoCheckUpdate);
             MMKV.setBool('autoCheckUpdate', !autoCheckUpdate);
           }}
-          thumbColor={autoCheckUpdate ? 'tomato' : 'gray'}
+          thumbColor={autoCheckUpdate ? primary : 'gray'}
         />
       </View>
 
       <TouchableNativeFeedback
-        onPress={() => checkForUpdate(setUpdateLoading, autoDownload)}
+        onPress={() => checkForUpdate(setUpdateLoading, autoDownload, primary)}
         disabled={updateLoading}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 py-3 rounded-md">

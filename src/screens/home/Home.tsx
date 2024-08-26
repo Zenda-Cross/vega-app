@@ -20,8 +20,10 @@ import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
 import {downloadFolder} from '../../lib/constants';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 const Home = () => {
+  const {primary} = useThemeStore(state => state);
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ const Home = () => {
   notifee.onForegroundEvent(actionHandler);
   return (
     <SafeAreaView className="bg-black h-full w-full">
-      <Touturial />
+      {/* <Touturial /> */}
       <StatusBar
         showHideTransition={'fade'}
         animated={true}
@@ -135,8 +137,8 @@ const Home = () => {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            colors={['tomato']}
-            tintColor="tomato"
+            colors={[primary]}
+            tintColor={primary}
             progressBackgroundColor={'black'}
             refreshing={refreshing}
             onRefresh={() => {

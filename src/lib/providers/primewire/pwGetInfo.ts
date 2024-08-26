@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Info, Link} from '../types';
-export default async function pwGetInfo(link: string): Promise<Info> {
+export async function pwGetInfo(link: string): Promise<Info> {
   try {
     const url = link;
     const baseUrl = link.split('/').slice(0, 3).join('/');

@@ -8,8 +8,8 @@ export const katCatalog = [
     filter: '/category/netflix',
   },
   {
-    title: 'HBO Max',
-    filter: '/category/hbo-max',
+    title: 'Animated',
+    filter: '/category/animated',
   },
   {
     title: 'Amazon Prime',

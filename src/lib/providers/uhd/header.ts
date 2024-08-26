@@ -10,7 +10,6 @@ export const headers = {
   'sec-ch-ua-platform': '"Windows"',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
-  Referer: 'https://uhdmovies.foo/',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
   'Upgrade-Insecure-Requests': '1',

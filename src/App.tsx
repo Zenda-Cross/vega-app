@@ -22,6 +22,8 @@ import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
+import useThemeStore from './lib/zustand/themeStore';
+import {LogBox} from 'react-native';
 
 enableScreens(true);
 enableFreeze(true);
@@ -65,11 +67,13 @@ export type SettingsStackParamList = {
 };
 const Tab = createBottomTabNavigator();
 const App = () => {
+  LogBox.ignoreLogs(['You have passed a style to FlashList']);
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
   const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+  const {primary} = useThemeStore(state => state);
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -148,7 +152,7 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: 'tomato',
+          tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {backgroundColor: 'black'},
           tabBarHideOnKeyboard: true,
@@ -223,17 +227,17 @@ const App = () => {
         colors: {
           background: 'black',
           card: 'black',
-          primary: 'tomato',
+          primary: primary,
           text: 'white',
           border: 'black',
-          notification: 'tomato',
+          notification: primary,
         },
       }}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
           headerBlurEffect: 'light',
-          headerTintColor: 'tomato',
+          headerTintColor: primary,
           headerStyle: {backgroundColor: '#171717'},
         }}>
         <Stack.Screen name="TabStack" component={TabStack} />

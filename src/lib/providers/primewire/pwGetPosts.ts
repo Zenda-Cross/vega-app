@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
 import Aes from 'react-native-aes-crypto';
+import {getBaseUrl} from '../getBaseUrl';
 
 const getSHA256ofJSON = async function (input: any) {
   return await Aes.sha1(input);
@@ -15,7 +16,7 @@ export const pwGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://www.primewire.tf';
+    const baseUrl = await getBaseUrl('primewire');
     const hash = await getSHA256ofJSON(
       filter.replace('searchQuery=', '') + 'JyjId97F9PVqUPuMO0',
     );

@@ -9,12 +9,11 @@ export const allGetPost = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://cinemeta-catalogs.strem.io';
     const catalog: Post[] = [];
 
     // console.log(filter);
     if (filter.includes('searchQuery=')) {
-      if (page > 2) {
+      if (page > 1) {
         return [];
       }
       const url1 = `https://v3-cinemeta.strem.io/catalog/series/top/search=${encodeURI(
@@ -57,8 +56,8 @@ export const allGetPost = async function (
       // console.log('nfSearch', catalog);
       return catalog;
     } else {
-      const url = `${baseUrl + filter}/skip=${(page - 1) * 50}.json`;
-      // console.log(url);
+      const url = 'https://cyberflix.elfhosted.com' + filter;
+      console.log('allGetPostUrl', url);
       const res = await axios.get(url, {headers, signal});
       const data = res.data;
 
@@ -76,7 +75,7 @@ export const allGetPost = async function (
           });
         }
       });
-      // console.log('catalog', catalog.length);
+      console.log('catalog', catalog.length);
       return catalog;
     }
   } catch (err) {

@@ -8,3 +8,5 @@ export const tokyoCatalogList = [
     filter: 'anime/',
   },
 ];
+
+export const tokyoGenresList = [];

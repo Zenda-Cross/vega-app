@@ -2,6 +2,7 @@ import axios from 'axios';
 import {Post} from '../types';
 import {headers} from './header';
 import * as cheerio from 'cheerio';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const tokyoGetPosts = async (
   filter: string,
@@ -10,7 +11,7 @@ export const tokyoGetPosts = async (
   signal: AbortSignal,
 ): Promise<Post[]> => {
   try {
-    const baseURL = 'https://www.tokyoinsider.com';
+    const baseURL = await getBaseUrl('tokyoinsider');
     const start = page < 2 ? 0 : (page - 1) * 20;
     const url = filter.includes('searchQuery=')
       ? `${baseURL}/anime/search?k=${filter.replace(
