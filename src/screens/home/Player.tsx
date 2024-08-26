@@ -37,6 +37,7 @@ import GoogleCast from 'react-native-google-cast';
 import {Stream} from '../../lib/providers/types';
 import DocumentPicker, {isCancel} from 'react-native-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
+import {FlashList} from '@shopify/flash-list';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -497,7 +498,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                 </ScrollView>
               )}
               {/* subtitle */}
-              {activeTab === 'subtitle' && (
+              {/* {activeTab === 'subtitle' && (
                 <ScrollView className="w-full h-full p-1 px-4">
                   <TouchableOpacity
                     className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
@@ -549,9 +550,9 @@ const Player = ({route}: Props): React.JSX.Element => {
                         <MaterialIcons name="check" size={20} color="white" />
                       )}
                     </TouchableOpacity>
-                  ))}
-                  {/* // external file */}
-                  <TouchableOpacity
+                  ))} */}
+              {/* // external file */}
+              {/* <TouchableOpacity
                     className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                     onPress={async () => {
                       try {
@@ -588,7 +589,109 @@ const Player = ({route}: Props): React.JSX.Element => {
                     </Text>
                   </TouchableOpacity>
                 </ScrollView>
+              )} */}
+              {activeTab === 'subtitle' && (
+                <FlashList
+                  data={textTracks}
+                  ListHeaderComponent={
+                    <TouchableOpacity
+                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
+                      onPress={() => {
+                        setSelectedTextTrack({type: 'language', value: 'off'});
+                      }}>
+                      <Text className="text-base font-semibold text-white">
+                        Disable
+                      </Text>
+                    </TouchableOpacity>
+                  }
+                  ListFooterComponent={
+                    <TouchableOpacity
+                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
+                      onPress={async () => {
+                        try {
+                          const res = await DocumentPicker.pick({
+                            type: [
+                              'text/vtt',
+                              'application/x-subrip',
+                              'text/srt',
+                              'application/ttml+xml',
+                            ],
+                            allowMultiSelection: false,
+                            presentationStyle: 'pageSheet',
+                          });
+                          const track = {
+                            type: res?.[0]?.type as any,
+                            title:
+                              res?.[0]?.name && res?.[0]?.name?.length > 20
+                                ? res?.[0]?.name?.slice(0, 20) + '...'
+                                : res?.[0]?.name || 'undefined',
+                            language: 'und',
+                            uri: res?.[0]?.uri,
+                          };
+                          setExternalSubs((prev: any) => [track, ...prev]);
+                          console.log('ExternalFile', res);
+                        } catch (err) {
+                          if (!isCancel(err)) {
+                            console.log(err);
+                          }
+                        }
+                      }}>
+                      <MaterialIcons name="add" size={20} color="white" />
+                      <Text className="text-base font-semibold text-white">
+                        add external File
+                      </Text>
+                    </TouchableOpacity>
+                  }
+                  renderItem={({item: track}) => (
+                    <TouchableOpacity
+                      className={
+                        'flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2'
+                      }
+                      onPress={() => {
+                        setSelectedTextTrack({
+                          type: 'index',
+                          value: track.index,
+                        });
+                        setSelectedTextTrackIndex(track.index);
+                      }}>
+                      <Text
+                        className={'text-xl font-semibold'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === track.index
+                              ? primary
+                              : 'white',
+                        }}>
+                        {track.language}
+                      </Text>
+                      <Text
+                        className={'text-sm italic'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === track.index
+                              ? primary
+                              : 'white',
+                        }}>
+                        {track.type}
+                      </Text>
+                      <Text
+                        className={'text-sm italic text-white'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === track.index
+                              ? primary
+                              : 'white',
+                        }}>
+                        {track.title}
+                      </Text>
+                      {selectedTextTrackIndex === track.index && (
+                        <MaterialIcons name="check" size={20} color="white" />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                />
               )}
+
               {/* server */}
               {activeTab === 'server' && (
                 <ScrollView className="w-full h-full p-1 px-4">
