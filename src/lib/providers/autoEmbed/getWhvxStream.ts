@@ -56,6 +56,10 @@ export const getWhvxStream = async (
         method: 'GET',
       },
     );
+    const searchController = new AbortController();
+    setTimeout(() => {
+      searchController.abort();
+    }, 4000);
     const searchJson = await searchRes.json();
     console.log('whvx', provider, searchQuery);
     const streamRes = await fetch(
@@ -69,6 +73,7 @@ export const getWhvxStream = async (
         },
         referrerPolicy: 'no-referrer',
         body: null,
+        signal: searchController.signal,
 
         method: 'GET',
       },

@@ -66,40 +66,40 @@ export const allGetStream = async (
     }
 
     // whvx orion
-    // const whvxStreamOrion = await getWhvxStream(
-    //   imdbId,
-    //   tmdbId,
-    //   season,
-    //   episode,
-    //   title,
-    //   type,
-    //   year,
-    //   'orion',
-    //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    // );
-    // const subtitlesOrion: TextTracks = [];
-    // for (const caption in whvxStreamOrion?.captions) {
-    //   subtitlesOrion.push({
-    //     language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-    //     uri: whvxStreamOrion?.captions?.[caption]?.url,
-    //     type:
-    //       whvxStreamOrion?.captions?.[caption]?.type === 'srt'
-    //         ? TextTrackType.SUBRIP
-    //         : TextTrackType.VTT,
-    //     title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-    //   });
-    // }
-    // if (whvxStreamOrion?.playlist) {
-    //   streams.push({
-    //     server: 'Orion',
-    //     link: whvxStreamOrion?.playlist,
-    //     type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-    //     subtitles: subtitlesOrion,
-    //     headers: {
-    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-    //     },
-    //   });
-    // }
+    const whvxStreamOrion = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      year,
+      'orion',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    );
+    const subtitlesOrion: TextTracks = [];
+    for (const caption in whvxStreamOrion?.captions) {
+      subtitlesOrion.push({
+        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStreamOrion?.captions?.[caption]?.url,
+        type:
+          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    if (whvxStreamOrion?.playlist) {
+      streams.push({
+        server: 'Orion',
+        link: whvxStreamOrion?.playlist,
+        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+        subtitles: subtitlesOrion,
+        headers: {
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+        },
+      });
+    }
     // console.log('whvxorion', whvxStreamOrion?.playlist);
 
     // const whvxStreamAstra = await getWhvxStream(
@@ -163,21 +163,24 @@ export const allGetStream = async (
 
     ///// autoembed
     // server1
-    const server1Url =
-      type === 'movie'
-        ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
-        : `https://${atob(
-            autoembed,
-          )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
-    const links = await multiExtractor(server1Url);
-    links.forEach(({lang, url}) => {
-      streams.push({
-        server: 'Multi' + (lang ? `-${lang}` : ''),
-        link: url,
-        type: 'm3u8',
-      });
-    });
+
+    // const server1Url =
+    //   type === 'movie'
+    //     ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
+    //     : `https://${atob(
+    //         autoembed,
+    //       )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
+    // const links = await multiExtractor(server1Url);
+    // links.forEach(({lang, url}) => {
+    //   streams.push({
+    //     server: 'Multi' + (lang ? `-${lang}` : ''),
+    //     link: url,
+    //     type: 'm3u8',
+    //   });
+    // });
+
     // server 2
+
     // const server2Url =
     //   type === 'movie'
     //     ? `https://duka.${atob(autoembed)}/movie/${imdbId}`
@@ -192,18 +195,19 @@ export const allGetStream = async (
     // });
 
     // server 3
-    const server3Url =
-      type === 'movie'
-        ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
-        : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
-    const links3 = await stableExtractor(server3Url);
-    links3.forEach(({lang, url}) => {
-      streams.push({
-        server: 'Viet ' + (lang ? `-${lang}` : ''),
-        link: url,
-        type: 'm3u8',
-      });
-    });
+
+    // const server3Url =
+    //   type === 'movie'
+    //     ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
+    //     : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
+    // const links3 = await stableExtractor(server3Url);
+    // links3.forEach(({lang, url}) => {
+    //   streams.push({
+    //     server: 'Viet ' + (lang ? `-${lang}` : ''),
+    //     link: url,
+    //     type: 'm3u8',
+    //   });
+    // });
     return streams;
   } catch (err) {
     console.error(err);
