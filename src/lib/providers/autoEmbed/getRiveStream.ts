@@ -10,29 +10,32 @@ export async function getRiveStream(
   type: string,
   Streams: Stream[],
 ) {
-  const servers = ['vidcloud', 'upcloud'];
+  const servers = ['vidcloud', 'upcloud', 'ophim', 'nova', 'indian'];
   const baseUrl = await getBaseUrl('rive');
   const route =
     type === 'series'
       ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&service=`
       : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&service=`;
   const url = baseUrl + route;
-  servers.forEach(async server => {
-    // console.log('Rive: ' + url + server);
-    try {
-      const res = await axios.get(url + server, {timeout: 4000});
-      if (res.data) {
+  await Promise.all(
+    servers.map(async server => {
+      // console.log('Rive: ' + url + server);
+      try {
+        const res = await axios.get(url + server, {timeout: 4000});
+        console.log('Rive Stream: ' + url + server);
         const subtitles: TextTracks = [];
-        res.data?.data?.captions.forEach((sub: any) => {
-          subtitles.push({
-            language: sub?.label?.slice(0, 2) || 'Und',
-            uri: sub?.file,
-            title: sub?.label || 'Undefined',
-            type: sub?.file?.endsWith('.vtt')
-              ? TextTrackType.VTT
-              : TextTrackType.SUBRIP,
+        if (res.data?.data?.captions) {
+          res.data?.data?.captions.forEach((sub: any) => {
+            subtitles.push({
+              language: sub?.label?.slice(0, 2) || 'Und',
+              uri: sub?.file,
+              title: sub?.label || 'Undefined',
+              type: sub?.file?.endsWith('.vtt')
+                ? TextTrackType.VTT
+                : TextTrackType.SUBRIP,
+            });
           });
-        });
+        }
         res.data?.data?.sources.forEach((source: any) => {
           Streams.push({
             server: source?.source + '-' + source?.quality,
@@ -42,9 +45,9 @@ export async function getRiveStream(
             subtitles: subtitles,
           });
         });
+      } catch (e) {
+        console.log(e);
       }
-    } catch (e) {
-      console.log(e);
-    }
-  });
+    }),
+  );
 }
