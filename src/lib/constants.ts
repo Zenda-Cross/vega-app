@@ -86,6 +86,12 @@ export const providersList: ProvidersList[] = [
     flag: '🇬🇧',
   },
   {
+    name: 'HiAnime',
+    value: 'hiAnime',
+    type: 'english',
+    flag: '🇬🇧',
+  },
+  {
     name: 'GogoAnime',
     value: 'gogo',
     type: 'english',
