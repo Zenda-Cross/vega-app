@@ -170,4 +170,8 @@ export const themes: {name: string; color: string}[] = [
     name: 'Material',
     color: '#2196F3',
   },
+  {
+    name: 'Custom',
+    color: '#FFFFFF',
+  },
 ];

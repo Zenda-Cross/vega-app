@@ -1,4 +1,4 @@
-import {TextTracks, TextTrackType} from 'react-native-video';
+import {TextTracks} from 'react-native-video';
 
 // getPosts
 export interface Post {
