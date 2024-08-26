@@ -5,6 +5,7 @@ import {
   StatusBar,
   RefreshControl,
   FlatList,
+  Linking,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -282,6 +283,19 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     </View>
                   </Skeleton>
                   <View className="flex-row items-center gap-4">
+                    {meta?.trailers && meta?.trailers.length > 0 && (
+                      <MaterialCommunityIcons
+                        name="movie-open"
+                        size={25}
+                        color="rgb(156 163 175)"
+                        onPress={() =>
+                          Linking.openURL(
+                            'https://www.youtube.com/watch?v=' +
+                              meta?.trailers?.[0]?.source,
+                          )
+                        }
+                      />
+                    )}
                     <MaterialCommunityIcons
                       name="web"
                       size={25}
