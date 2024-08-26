@@ -12,6 +12,7 @@ export const hianimeGetStream = async (id: string): Promise<Stream[]> => {
         server: source.quality || 'unknown',
         link: source.url,
         type: source.type ? 'm3u8' : 'mp4',
+        subtitles: data.tracks,
       });
     });
     return streamLinks;
