@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {Post} from '../types';
 
-export const gogoGetPosts = async function (
+export const hianimeGetPosts = async function (
   filter: string,
   page: number,
   providerValue: string,
@@ -14,7 +14,7 @@ export const gogoGetPosts = async function (
           'q=',
           '',
         )}&page=${page}`
-      : `${baseUrl + filter}&page=${page}`;
+      : `${baseUrl + filter}`;
     // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.animes;
