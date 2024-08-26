@@ -272,6 +272,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           },
           resizeMode: 'center',
         }}
+        subtitleStyle={{paddingBottom: externalSubs.length > 0 ? 50 : 0}}
         title={route.params.title}
         navigator={navigation}
         seekColor={primary}
