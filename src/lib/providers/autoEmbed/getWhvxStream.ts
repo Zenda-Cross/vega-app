@@ -41,7 +41,7 @@ export const getWhvxStream = async (
     const controller = new AbortController();
     setTimeout(() => {
       controller.abort();
-    }, 5000);
+    }, 4000);
     const searchRes = await fetch(
       `${atob(baseUrl)}/search?query=${searchQuery}&provider=${provider}`,
       {

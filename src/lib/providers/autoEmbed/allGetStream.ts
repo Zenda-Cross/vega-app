@@ -4,6 +4,7 @@ import {getWhvxStream} from './getWhvxStream';
 import {multiExtractor} from './multiExtractor';
 import {stableExtractor} from './stableExtractor';
 import {getFlimxyStream} from './getFlimxyStream';
+import {getRiveStream} from './getRiveStream';
 
 const autoembed = 'YXV0b2VtYmVkLmNj';
 export const allGetStream = async (
@@ -15,20 +16,8 @@ export const allGetStream = async (
     const streams: Stream[] = [];
     const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
 
-    ///// flimxy
-    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    if (flimxyStream) {
-      for (const quality in flimxyStream?.qualities) {
-        streams.push({
-          server: 'Flimxy-' + quality,
-          link: flimxyStream?.qualities?.[quality]?.url,
-          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-          quality: quality as any,
-        });
-      }
-    }
-
     ///// whvx
+
     const whvxStream = await getWhvxStream(
       imdbId,
       tmdbId,
@@ -63,55 +52,68 @@ export const allGetStream = async (
       });
     }
 
-    // whvx orion
-    const whvxStreamOrion = await getWhvxStream(
-      imdbId,
-      tmdbId,
-      season,
-      episode,
-      title,
-      type,
-      year,
-      'orion',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    const subtitlesOrion: TextTracks = [];
-    for (const caption in whvxStreamOrion?.captions) {
-      subtitlesOrion.push({
-        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStreamOrion?.captions?.[caption]?.url,
-        type:
-          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-      });
+    ///// flimxy
+    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    if (flimxyStream) {
+      for (const quality in flimxyStream?.qualities) {
+        streams.push({
+          server: 'Flimxy-' + quality,
+          link: flimxyStream?.qualities?.[quality]?.url,
+          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+          quality: quality as any,
+        });
+      }
     }
-    if (whvxStreamOrion?.playlist) {
-      streams.push({
-        server: 'Orion',
-        link: whvxStreamOrion?.playlist,
-        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesOrion,
-        headers: {
-          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-        },
-      });
-    }
-    console.log('whvxorion', whvxStreamOrion?.playlist);
 
-    const whvxStreamAstra = await getWhvxStream(
-      imdbId,
-      tmdbId,
-      season,
-      episode,
-      title,
-      type,
-      year,
-      'astra',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    console.log('whvxastra', whvxStreamAstra?.playlist);
+    // whvx orion
+    // const whvxStreamOrion = await getWhvxStream(
+    //   imdbId,
+    //   tmdbId,
+    //   season,
+    //   episode,
+    //   title,
+    //   type,
+    //   year,
+    //   'orion',
+    //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    // );
+    // const subtitlesOrion: TextTracks = [];
+    // for (const caption in whvxStreamOrion?.captions) {
+    //   subtitlesOrion.push({
+    //     language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+    //     uri: whvxStreamOrion?.captions?.[caption]?.url,
+    //     type:
+    //       whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+    //         ? TextTrackType.SUBRIP
+    //         : TextTrackType.VTT,
+    //     title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+    //   });
+    // }
+    // if (whvxStreamOrion?.playlist) {
+    //   streams.push({
+    //     server: 'Orion',
+    //     link: whvxStreamOrion?.playlist,
+    //     type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+    //     subtitles: subtitlesOrion,
+    //     headers: {
+    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+    //     },
+    //   });
+    // }
+    // console.log('whvxorion', whvxStreamOrion?.playlist);
+
+    // const whvxStreamAstra = await getWhvxStream(
+    //   imdbId,
+    //   tmdbId,
+    //   season,
+    //   episode,
+    //   title,
+    //   type,
+    //   year,
+    //   'astra',
+    //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    // );
+    // console.log('whvxastra', whvxStreamAstra?.playlist);
 
     ///// nsbx
     const nsbxStream = await getWhvxStream(
@@ -149,6 +151,16 @@ export const allGetStream = async (
       });
     }
 
+    ///// rive
+
+    const riveStream = await getRiveStream(
+      tmdbId,
+      episode,
+      season,
+      type,
+      streams,
+    );
+
     ///// autoembed
     // server1
     const server1Url =
@@ -166,18 +178,18 @@ export const allGetStream = async (
       });
     });
     // server 2
-    const server2Url =
-      type === 'movie'
-        ? `https://duka.${atob(autoembed)}/movie/${imdbId}`
-        : `https://duka.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
-    const links2 = await stableExtractor(server2Url);
-    links2.forEach(({lang, url}) => {
-      streams.push({
-        server: 'Stable ' + (lang ? `-${lang}` : ''),
-        link: url,
-        type: 'm3u8',
-      });
-    });
+    // const server2Url =
+    //   type === 'movie'
+    //     ? `https://duka.${atob(autoembed)}/movie/${imdbId}`
+    //     : `https://duka.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
+    // const links2 = await stableExtractor(server2Url);
+    // links2.forEach(({lang, url}) => {
+    //   streams.push({
+    //     server: 'Stable ' + (lang ? `-${lang}` : ''),
+    //     link: url,
+    //     type: 'm3u8',
+    //   });
+    // });
 
     // server 3
     const server3Url =
