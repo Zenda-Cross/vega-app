@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {Post} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const gogoGetPosts = async function (
   filter: string,
@@ -8,7 +9,7 @@ export const gogoGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = 'https://consumet8.vercel.app';
+    const baseUrl = await getBaseUrl('consumet');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/anime/gogoanime/${filter.replace(
           'searchQuery=',

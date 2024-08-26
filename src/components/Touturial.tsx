@@ -1,4 +1,4 @@
-import {View, Text, Modal, Pressable} from 'react-native';
+import {View, Text, Modal, Pressable, ScrollView} from 'react-native';
 import React from 'react';
 import {MMKV} from '../lib/Mmkv';
 import {useState} from 'react';
@@ -18,7 +18,14 @@ const Touturial = () => {
             <Text className="text-white text-xl my-10">
               Select a provider to start watching
             </Text>
-            <View className="flex flex-row justify-around w-96 flex-wrap">
+            <ScrollView
+              contentContainerStyle={{
+                display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'space-around',
+                width: 384,
+              }}>
               {providersList.map(provider => (
                 <Pressable
                   key={provider.value}
@@ -32,7 +39,7 @@ const Touturial = () => {
                   <Text className="text-white">{provider.name}</Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
           </View>
         </Modal>
       </View>

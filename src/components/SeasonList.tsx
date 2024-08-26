@@ -24,6 +24,7 @@ import {manifest} from '../lib/Manifest';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Feather from '@expo/vector-icons/Feather';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
+import useThemeStore from '../lib/zustand/themeStore';
 
 const SeasonList = ({
   LinkList,
@@ -44,6 +45,7 @@ const SeasonList = ({
     poster?: string;
   }>;
 }) => {
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   // const {provider} = useContentStore(state => state);
@@ -169,7 +171,7 @@ const SeasonList = ({
   return (
     <View>
       <Dropdown
-        selectedTextStyle={{color: 'tomato', overflow: 'hidden', height: 22}}
+        selectedTextStyle={{color: primary, overflow: 'hidden', height: 22}}
         labelField={'title'}
         valueField={
           LinkList[0]?.movieLinks
@@ -225,7 +227,7 @@ const SeasonList = ({
                 onLongPress={() =>
                   onLongPressHandler(true, ActiveSeason.movieLinks, 'movie')
                 }>
-                <Ionicons name="play-circle" size={28} color="tomato" />
+                <Ionicons name="play-circle" size={28} color={primary} />
                 <Text className="text-white">Play</Text>
               </TouchableOpacity>
               <Downloader
@@ -276,7 +278,7 @@ const SeasonList = ({
                     onLongPress={() =>
                       onLongPressHandler(true, item.link, 'series')
                     }>
-                    <Ionicons name="play-circle" size={28} color="tomato" />
+                    <Ionicons name="play-circle" size={28} color={primary} />
                     <Text className="text-white">
                       {item.title.length > 30
                         ? item.title.slice(0, 30) + '...'
@@ -339,7 +341,7 @@ const SeasonList = ({
                       onLongPress={() =>
                         onLongPressHandler(true, item.link, 'series')
                       }>
-                      <Ionicons name="play-circle" size={28} color="tomato" />
+                      <Ionicons name="play-circle" size={28} color={primary} />
                       <Text className="text-white">
                         {ActiveSeason?.directLinks?.length &&
                         ActiveSeason?.directLinks?.length > 1
@@ -411,7 +413,7 @@ const SeasonList = ({
               loop: true,
               repeatReverse: false,
             }}>
-            <MaterialCommunityIcons name="vlc" size={70} color="tomato" />
+            <MaterialCommunityIcons name="vlc" size={70} color={primary} />
           </MotiView>
           <Text className="text-white text-lg font-semibold mt-2">
             Opening in External Player
@@ -444,7 +446,7 @@ const SeasonList = ({
                     }
                   }}>
                   <Text className="text-white">Marked as Unwatched</Text>
-                  <Ionicons name="checkmark-done" size={30} color="tomato" />
+                  <Ionicons name="checkmark-done" size={30} color={primary} />
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -462,7 +464,7 @@ const SeasonList = ({
                     }
                   }}>
                   <Text className="text-white">Mark as Watched</Text>
-                  <Ionicons name="checkmark" size={25} color="tomato" />
+                  <Ionicons name="checkmark" size={25} color={primary} />
                 </TouchableOpacity>
               )}
               {/* open in external player */}
@@ -478,7 +480,7 @@ const SeasonList = ({
                 <Text className="text-white font-bold text-base">
                   External Player
                 </Text>
-                <Feather name="external-link" size={20} color="tomato" />
+                <Feather name="external-link" size={20} color={primary} />
               </TouchableOpacity>
             </View>
           </View>

@@ -5,6 +5,7 @@ import {
   StatusBar,
   RefreshControl,
   FlatList,
+  Linking,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -21,9 +22,11 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {manifest} from '../../lib/Manifest';
 import {BlurView} from 'expo-blur';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
+  const {primary} = useThemeStore(state => state);
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
@@ -279,7 +282,20 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       </Text>
                     </View>
                   </Skeleton>
-                  <View className="flex-row items-center gap-4">
+                  <View className="flex-row items-center gap-6 mb-1">
+                    {meta?.trailers && meta?.trailers.length > 0 && (
+                      <MaterialCommunityIcons
+                        name="movie-open"
+                        size={25}
+                        color="rgb(156 163 175)"
+                        onPress={() =>
+                          Linking.openURL(
+                            'https://www.youtube.com/watch?v=' +
+                              meta?.trailers?.[0]?.source,
+                          )
+                        }
+                      />
+                    )}
                     <MaterialCommunityIcons
                       name="web"
                       size={25}
@@ -294,14 +310,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       <Ionicons
                         name="bookmark"
                         size={30}
-                        color="tomato"
+                        color={primary}
                         onPress={() => removeLibrary()}
                       />
                     ) : (
                       <Ionicons
                         name="bookmark-outline"
                         size={30}
-                        color="tomato"
+                        color={primary}
                         onPress={() => addLibrary()}
                       />
                     )}
@@ -377,8 +393,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
-              colors={['tomato']}
-              tintColor="tomato"
+              colors={[primary]}
+              tintColor={primary}
               progressBackgroundColor={'black'}
               refreshing={refreshing}
               onRefresh={() => {

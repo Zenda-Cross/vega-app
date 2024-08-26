@@ -14,6 +14,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'MultiStream',
+    value: 'multiStream',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'MoviesDrive',
     value: 'drive',
     type: 'global',
@@ -31,12 +37,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: '🌏',
   },
-  // {
-  //   name: 'KatMoviesHd',
-  //   value: 'katmovies',
-  //   type: 'global',
-  //   flag: '🌏',
-  // },
+  {
+    name: 'KatMoviesHd',
+    value: 'katmovies',
+    type: 'global',
+    flag: '🌏',
+  },
   {
     name: 'ExtraMovies',
     value: 'extraMovies',
@@ -62,12 +68,6 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
-    name: 'AutoEmbed',
-    value: 'autoEmbed',
-    type: 'global',
-    flag: '🌏',
-  },
-  {
     name: 'HdHub4u',
     value: 'hdhub4u',
     type: 'global',
@@ -82,6 +82,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'Primewire',
     value: 'primewire',
+    type: 'english',
+    flag: '🇬🇧',
+  },
+  {
+    name: 'HiAnime',
+    value: 'hiAnime',
     type: 'english',
     flag: '🇬🇧',
   },
@@ -130,3 +136,42 @@ export const providersList: ProvidersList[] = [
 ];
 
 export const downloadFolder = RNFS.DownloadDirectoryPath + '/vega';
+
+export const themes: {name: string; color: string}[] = [
+  {
+    name: 'Vega',
+    color: '#FF6347',
+  },
+  {
+    name: 'Hayasaka',
+    color: '#00e6e6',
+  },
+  {
+    name: 'Lavender',
+    color: '#B2A4D4',
+  },
+  {
+    name: 'Sky',
+    color: '#87CEEB',
+  },
+  {
+    name: 'Mint',
+    color: '#98FB98',
+  },
+  {
+    name: 'Sunset',
+    color: '#FFA07A',
+  },
+  {
+    name: 'Flix',
+    color: '#E50914',
+  },
+  {
+    name: 'Material',
+    color: '#2196F3',
+  },
+  {
+    name: 'Custom',
+    color: '#FFFFFF',
+  },
+];

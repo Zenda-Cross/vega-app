@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
   Switch,
-  Alert,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
@@ -26,10 +25,12 @@ import {
   MaterialIcons,
 } from '@expo/vector-icons';
 import {ScrollView} from 'react-native';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
+  const {primary} = useThemeStore(state => state);
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
     MMKV.getBool('useExternalPlayer', () => false),
   );
@@ -55,7 +56,7 @@ const Settings = ({navigation}: Props) => {
       {/* Content provider */}
       {
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-primary font-bold text-lg">
+          <Text className="font-bold text-lg" style={{color: primary}}>
             Change Provider
           </Text>
           <View className="w-40">
@@ -111,7 +112,7 @@ const Settings = ({navigation}: Props) => {
           </Text>
         </View>
         <Switch
-          thumbColor={OpenExternalPlayer ? 'tomato' : 'gray'}
+          thumbColor={OpenExternalPlayer ? primary : 'gray'}
           value={OpenExternalPlayer}
           onValueChange={async val => {
             MMKV.setBool('useExternalPlayer', val);

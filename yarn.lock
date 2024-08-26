@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@8man/react-native-media-console@^2.2.4-alpha.2":
-  version "2.2.4-alpha.2"
-  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4-alpha.2.tgz"
-  integrity sha512-hKwchFXhad0DKt/bLxChg8bms7Qs58IIcYPI0GSlsJKxopk5Ec7SuE7pYsqYXhHyFl+IYzzX5rekkdTsE0nc9w==
+"@8man/react-native-media-console@^2.2.4-alpha.4":
+  version "2.2.4-alpha.4"
+  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4-alpha.4.tgz"
+  integrity sha512-08rObixNFujNBMU+VseonEVMqmoKUTnlqHtlAKaVgBh5c54gPRwwNKkCx8j2A0eqEdHUaV43DcNbzCG5Y/UMtQ==
 
 "@aashutoshrathi/word-wrap@^1.2.3":
   version "1.2.6"
@@ -8436,10 +8436,10 @@ react-native-svg@15.2.0:
     css-select "^5.1.0"
     css-tree "^1.1.3"
 
-react-native-video@^6.4.3:
-  version "6.4.3"
-  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.4.3.tgz"
-  integrity sha512-KDuIz/JsD3mYT1Ma2oDBE3GIEHRO3a9GzMAEV8pKMtIh29j7X2DLr2L9oD4Kv94ggYag/+RuZpOtftxnDHDoXA==
+react-native-video@^6.4.5:
+  version "6.4.5"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.4.5.tgz"
+  integrity sha512-pq0oD/lm0NZv/nkQtNy2Bq1eG1+nlb9vVNgdeIz7twDhxLpqiwv4ef39UQlUHfPdnTa9fDyAke6VBc+0ogNjfA==
 
 react-native-webview@13.8.6:
   version "13.8.6"

@@ -10,7 +10,6 @@ export const headers = {
   'sec-ch-ua-platform': '"Windows"',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
-  Referer: 'https://moviesmod.band/',
   Cookie: 'popads_user_id=6ba8fe60a481387a3249f05aa058822d',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',

@@ -12,10 +12,12 @@ import {MaterialIcons} from '@expo/vector-icons';
 import {MMKV} from '../lib/Mmkv';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
+import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
 const ScrollList = ({route}: Props): React.ReactElement => {
+  const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -27,6 +29,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [viewType, setViewType] = useState<number>(
     MMKV.getInt('viewType') || 1,
   );
+  console.log('isl', isLoading);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -37,19 +40,22 @@ const ScrollList = ({route}: Props): React.ReactElement => {
       const newPosts = await manifest[
         route.params.providerValue || provider.value
       ].getPosts(filter, page, provider.value, signal);
-      if (newPosts?.length === 0) {
+      if (newPosts?.length === 0 && page > 2) {
+        console.log('end🔥🔥', page);
         setIsEnd(true);
         setIsLoading(false);
         return;
       }
       setPosts(prev => [...prev, ...newPosts]);
-      setIsLoading(false);
     };
     fetchPosts();
   }, [page]);
 
   const onEndReached = async () => {
-    if (isEnd) return;
+    if (isEnd) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setPage(page + 1);
   };
@@ -57,7 +63,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   return (
     <View className="h-full w-full bg-black items-center p-4">
       <View className="w-full px-4 font-semibold my-6 flex-row justify-between items-center">
-        <Text className="text-primary text-2xl font-bold">
+        <Text className="text-2xl font-bold" style={{color: primary}}>
           {route.params.title}
         </Text>
         <TouchableOpacity

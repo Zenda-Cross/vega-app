@@ -1,13 +1,15 @@
 import axios from 'axios';
 import {EpisodeLink} from '../types';
 import {headers} from './nfHeaders';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const nfGetEpisodes = async function (
   link: string,
 ): Promise<EpisodeLink[]> {
   try {
+    const baseUrl = await getBaseUrl('nfMirror');
     const url =
-      'https://iosmirror.cc/episodes.php?s=' +
+      `${baseUrl}/episodes.php?s=` +
       link +
       '&t=' +
       Math.round(new Date().getTime() / 1000);

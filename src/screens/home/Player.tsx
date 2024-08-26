@@ -10,7 +10,7 @@ import {
 import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
-import {MmmkvCache} from '../../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
@@ -22,11 +22,11 @@ import {
   TextTrack,
   SelectedAudioTrack,
   SelectedTextTrack,
-  TextTrackType,
   SelectedVideoTrack,
   SelectedVideoTrackType,
   ResizeMode,
   VideoTrack,
+  TextTracks,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -35,16 +35,15 @@ import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
 import {Stream} from '../../lib/providers/types';
-import DocumentPicker, {
-  DocumentPickerResponse,
-  isCancel,
-} from 'react-native-document-picker';
+import DocumentPicker, {isCancel} from 'react-native-document-picker';
+import useThemeStore from '../../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 
 const Player = ({route}: Props): React.JSX.Element => {
+  const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
@@ -61,9 +60,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
     {type: 'language', value: 'off'},
   );
-  const [externalFileSubs, setExternalFileSubs] = useState<
-    DocumentPickerResponse[]
-  >([]);
+  const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
+  const [selectedTextTrackIndex, setSelectedTextTrackIndex] = useState(1000);
+  const [selectedQualityIndex, setSelectedQualityIndex] = useState(1000);
+  const [externalSubs, setExternalSubs] = useState<TextTracks>([]);
   const [loading, setLoading] = useState(false);
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
@@ -109,6 +109,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       value: 'speed',
     },
   ];
+  const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
 
   const watchedDuration = MmmkvCache.getString(route?.params?.link)
     ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
@@ -158,8 +159,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       if (route.params.file) {
         const exists = await ifExists(route.params.file);
         if (exists) {
-          setStream([{server: 'downloaded', link: exists}]);
-          setSelectedStream({server: 'downloaded', link: exists});
+          setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
+          setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
           setLoading(false);
           return;
         }
@@ -167,13 +168,19 @@ const Player = ({route}: Props): React.JSX.Element => {
       const data = await manifest[
         route.params.providerValue || provider.value
       ].getStream(route.params.link, route.params.type, controller.signal);
-      const filteredData = data.filter(
+      const streamAbleServers = data.filter(
+        // filter out non streamable servers
         stream =>
           !manifest[
             route.params.providerValue || provider.value
           ].nonStreamableServer?.includes(stream.server),
       );
-      // remove filepress server and hubcloud server
+      const filteredQualities = streamAbleServers?.filter(
+        // filter out excluded qualities
+        stream => !excludedQualities.includes(stream?.quality + 'p'),
+      );
+      const filteredData =
+        filteredQualities?.length > 0 ? filteredQualities : streamAbleServers;
       if (filteredData.length === 0) {
         ToastAndroid.show(
           'No stream found, try again later',
@@ -185,6 +192,11 @@ const Player = ({route}: Props): React.JSX.Element => {
         ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
       setStream(filteredData);
+      filteredData?.forEach(track => {
+        if (track?.subtitles?.length && track.subtitles.length > 0) {
+          setExternalSubs((prev: any) => [...prev, ...(track.subtitles || [])]);
+        }
+      });
       setSelectedStream(filteredData[0]);
       setLoading(false);
     };
@@ -202,6 +214,12 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
     return unsubscribe;
   }, [navigation]);
+
+  useEffect(() => {
+    setSelectedAudioTrackIndex(0);
+    setSelectedTextTrackIndex(1000);
+    setSelectedQualityIndex(1000);
+  }, [selectedStream]);
 
   const setToast = (message: string, duration: number) => {
     setToastMessage(message);
@@ -230,24 +248,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
         }}
-        textTracks={selectedStream?.subtitles
-          ?.map(sub => ({
-            type: TextTrackType.VTT,
-            title: sub.lang,
-            language: sub.lang.slice(0, 2) as any,
-            uri: sub.url,
-          }))
-          .concat(
-            externalFileSubs?.map(sub => ({
-              type: sub?.type as any,
-              title:
-                sub?.name && sub?.name?.length > 20
-                  ? sub?.name?.slice(0, 20) + '...'
-                  : sub?.name || 'unknown',
-              language: 'unknown',
-              uri: sub?.uri,
-            })),
-          )}
+        textTracks={externalSubs}
         onProgress={e => {
           MmmkvCache.setString(
             route.params.link,
@@ -271,9 +272,10 @@ const Player = ({route}: Props): React.JSX.Element => {
           },
           resizeMode: 'center',
         }}
+        subtitleStyle={{paddingBottom: externalSubs.length > 0 ? 50 : 0}}
         title={route.params.title}
         navigator={navigation}
-        seekColor="tomato"
+        seekColor={primary}
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
         fullscreen={true}
@@ -368,7 +370,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         from={{translateY: 0}}
         animate={{translateY: showControls ? 0 : 150}}
         //@ts-ignore
-        transition={{type: 'timing', duration: 260}}
+        transition={{type: 'timing', duration: 250}}
         className="absolute bottom-4 right-6 opacity-60">
         <TouchableOpacity
           onPress={() => {
@@ -431,11 +433,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                       color="white"
                     />
                     <Text
-                      className={`text-xl capitalize ${
-                        activeTab === setting.value
-                          ? 'font-bold text-primary'
-                          : 'font-bold text-white'
-                      }`}>
+                      className={'text-xl capitalize font-semibold'}
+                      style={{
+                        color: activeTab === setting.value ? primary : 'white',
+                      }}>
                       {setting.title}
                     </Text>
                   </TouchableOpacity>
@@ -462,29 +463,33 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: 'language',
                           value: track.language,
                         });
-                        audioTracks.forEach(t => (t.selected = false));
-                        track.selected = true;
-                        // setShowSettings(false);
+                        setSelectedAudioTrackIndex(i);
                       }}>
                       <Text
-                        className={`text-lg font-semibold ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-lg font-semibold'}
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.language}
                       </Text>
                       <Text
-                        className={`text-base italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-base italic'}
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.type}
                       </Text>
                       <Text
-                        className={`text-sm italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic'}
+                        style={{
+                          color:
+                            selectedAudioTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.title}
                       </Text>
-                      {track.selected && (
+                      {selectedAudioTrackIndex === i && (
                         <MaterialIcons name="check" size={20} color="white" />
                       )}
                     </TouchableOpacity>
@@ -498,8 +503,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                     className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                     onPress={() => {
                       setSelectedTextTrack({type: 'language', value: 'off'});
-                      // setShowSettings(false);
-                      // playerRef?.current?.resume();
                     }}>
                     <Text className="text-base font-semibold text-white">
                       Disable
@@ -508,7 +511,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                   {textTracks.map((track, i) => (
                     <TouchableOpacity
                       className={
-                        'flex-row gap-3 items-center text-primary rounded-md my-1 overflow-hidden ml-2'
+                        'flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2'
                       }
                       key={i}
                       onPress={() => {
@@ -516,30 +519,33 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: 'index',
                           value: track.index,
                         });
-                        textTracks.forEach(t => (t.selected = false));
-                        track.selected = true;
-                        // setShowSettings(false);
-                        // playerRef?.current?.resume();
+                        setSelectedTextTrackIndex(i);
                       }}>
                       <Text
-                        className={`text-xl font-semibold ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-xl font-semibold'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.language}
                       </Text>
                       <Text
-                        className={`text-sm italic ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.type}
                       </Text>
                       <Text
-                        className={`text-sm italic text-white ${
-                          track.selected ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-sm italic text-white'}
+                        style={{
+                          color:
+                            selectedTextTrackIndex === i ? primary : 'white',
+                        }}>
                         {track.title}
                       </Text>
-                      {track.selected && (
+                      {selectedTextTrackIndex === i && (
                         <MaterialIcons name="check" size={20} color="white" />
                       )}
                     </TouchableOpacity>
@@ -559,7 +565,16 @@ const Player = ({route}: Props): React.JSX.Element => {
                           allowMultiSelection: false,
                           presentationStyle: 'pageSheet',
                         });
-                        setExternalFileSubs(res);
+                        const track = {
+                          type: res?.[0]?.type as any,
+                          title:
+                            res?.[0]?.name && res?.[0]?.name?.length > 20
+                              ? res?.[0]?.name?.slice(0, 20) + '...'
+                              : res?.[0]?.name || 'undefined',
+                          language: 'und',
+                          uri: res?.[0]?.uri,
+                        };
+                        setExternalSubs((prev: any) => [track, ...prev]);
                         console.log('ExternalFile', res);
                       } catch (err) {
                         if (!isCancel(err)) {
@@ -588,11 +603,13 @@ const Player = ({route}: Props): React.JSX.Element => {
                           // playerRef?.current?.resume();
                         }}>
                         <Text
-                          className={`text-lg capitalize font-semibold ${
-                            track.link === selectedStream.link
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-lg capitalize font-semibold'}
+                          style={{
+                            color:
+                              track.link === selectedStream.link
+                                ? primary
+                                : 'white',
+                          }}>
                           {track.server}
                         </Text>
                         {track.link === selectedStream.link && (
@@ -615,31 +632,28 @@ const Player = ({route}: Props): React.JSX.Element => {
                             type: SelectedVideoTrackType.INDEX,
                             value: track.index,
                           });
-                          videoTracks.forEach(t => (t.selected = false));
-                          track.selected = true;
-                          // setShowSettings(false);
-                          // playerRef?.current?.resume();
+                          setSelectedQualityIndex(i);
                         }}>
                         <Text
-                          className={`text-lg font-semibold ${
-                            selectedVideoTrack.value === track.index
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-lg font-semibold'}
+                          style={{
+                            color:
+                              selectedQualityIndex === i ? primary : 'white',
+                          }}>
                           {track.height + 'p'}
                         </Text>
                         <Text
-                          className={`text-sm italic ${
-                            selectedVideoTrack.value === track.index
-                              ? 'text-primary'
-                              : 'text-white'
-                          }`}>
+                          className={'text-sm italic'}
+                          style={{
+                            color:
+                              selectedQualityIndex === i ? primary : 'white',
+                          }}>
                           {'Bitrate-' +
                             track.bitrate +
                             ' | Codec-' +
                             (track?.codecs || 'unknown')}
                         </Text>
-                        {selectedVideoTrack.value === track.index && (
+                        {(selectedQualityIndex === i) === track.index && (
                           <MaterialIcons name="check" size={20} color="white" />
                         )}
                       </TouchableOpacity>
@@ -659,9 +673,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                         // playerRef?.current?.resume();
                       }}>
                       <Text
-                        className={`text-lg font-semibold ${
-                          playbackRate === track ? 'text-primary' : 'text-white'
-                        }`}>
+                        className={'text-lg font-semibold'}
+                        style={{
+                          color: playbackRate === track ? primary : 'white',
+                        }}>
                         {track}x
                       </Text>
                       {playbackRate === track && (

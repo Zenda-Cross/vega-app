@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from './header';
 import {Post} from '../types';
-import {modGetBaseurl} from './modGetBaseurl';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const modGetPosts = async function (
   filter: string,
@@ -11,7 +11,7 @@ export const modGetPosts = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   try {
-    const baseUrl = await modGetBaseurl(providerValue);
+    const baseUrl = await getBaseUrl('Moviesmod');
     const url = filter.includes('searchQuery=')
       ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
       : `${baseUrl + filter}/page/${page}/`;
