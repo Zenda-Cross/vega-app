@@ -5,7 +5,7 @@ export const hianimeGetStream = async (id: string): Promise<Stream[]> => {
   try {
     const url = `https://private-aniwatch-api.vercel.app/anime/episode-srcs?id=${id}`;
     const res = await axios.get(url);
-    const data = res.data;
+    const data = res.json();
     const streamLinks: Stream[] = [];
     data.sources.forEach((source: any) => {
       streamLinks.push({
