@@ -21,6 +21,7 @@ import {hdhub4uProvider} from './providers/hdhub4u';
 import {katMoviesHd} from './providers/katmovies';
 import {primewire} from './providers/primewire';
 import {autoEmbed} from './providers/autoEmbed';
+import {HiAnime} from './providers/hiAnime';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -69,4 +70,5 @@ export const manifest: Manifest = {
   dooflix: dooflixProvider,
   AEDrama: autoEmbedDrama,
   AEAnime: AEAnime,
+  hiAnime: HiAnime,
 };
