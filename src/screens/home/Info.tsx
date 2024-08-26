@@ -282,7 +282,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       </Text>
                     </View>
                   </Skeleton>
-                  <View className="flex-row items-center gap-4">
+                  <View className="flex-row items-center gap-6 mb-1">
                     {meta?.trailers && meta?.trailers.length > 0 && (
                       <MaterialCommunityIcons
                         name="movie-open"
