@@ -125,7 +125,7 @@ const Home = () => {
   notifee.onForegroundEvent(actionHandler);
   return (
     <SafeAreaView className="bg-black h-full w-full">
-      {/* <Touturial /> */}
+      <Touturial />
       <StatusBar
         showHideTransition={'fade'}
         animated={true}
