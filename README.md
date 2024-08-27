@@ -26,6 +26,21 @@ Note: Download Universal version if armeabi-v7a and arm64-v8a are not working fo
 
 ___
 
+## Stack
+<p align="left">
+     
+[![React-Native](https://custom-icon-badges.demolab.com/badge/-React_Native-287aad?style=for-the-badge&logo=react&logoColor=white)](https://reactnative.dev/)
+[![TypeScript](https://custom-icon-badges.demolab.com/badge/Typescript-3078C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NativeWind](https://custom-icon-badges.demolab.com/badge/Native_Wind-0CA6E9?style=for-the-badge&logo=tailwind&logoColor=white)](https://www.nativewind.dev/)
+[![React-Navigation](https://custom-icon-badges.demolab.com/badge/React_Navigation-6838d9?style=for-the-badge&logo=menu&logoColor=white)](https://reactnavigation.org/)
+[![Expo-Modules](https://custom-icon-badges.demolab.com/badge/Expo_Modules-black?style=for-the-badge&logo=expo&logoColor=white)](https://docs.expo.dev/modules/overview/)
+[![React-Native-Video](https://custom-icon-badges.demolab.com/badge/React_native_video-38d9c9?style=for-the-badge&logo=video&logoColor=white)](https://www.nativewind.dev/)
+[![MMKV-Storage](https://custom-icon-badges.demolab.com/badge/MMKV_Storage-yellow?style=for-the-badge&logo=zap&logoColor=white)](https://github.com/mrousavy/react-native-mmkv)
+
+
+
+</p>
+
 ## Build and Dev
 0. Set-up React Native environment if you haven't already. [Guide](https://reactnative.dev/docs/set-up-your-environment)
 
