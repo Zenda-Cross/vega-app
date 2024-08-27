@@ -39,95 +39,94 @@ const Preferences = () => {
         Preference
       </Text>
 
-      {/* Themes */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">Themes</Text>
-        {isCustom ? (
-          <View className="w-36 flex-row items-center justify-around">
-            <TextInput
-              style={{
-                color: 'white',
-                backgroundColor: '#343434',
-                borderRadius: 5,
-                padding: 5,
-              }}
-              placeholder="Hex Color"
-              placeholderTextColor="gray"
-              value={customColor}
-              onChangeText={e => {
-                setCustomColor(e);
-              }}
-              onSubmitEditing={(e: any) => {
-                if (e.nativeEvent.text.length < 7) {
-                  ToastAndroid.show('Invalid Color', ToastAndroid.SHORT);
-                  return;
-                }
-                MMKV.setString('customColor', e.nativeEvent.text);
-                setPrimary(e.nativeEvent.text);
-              }}
-            />
-            <MaterialCommunityIcons
-              name="close"
-              size={24}
-              color="white"
-              onPress={() => {
-                setCustom(false);
-                setPrimary('#FF6347');
-              }}
-            />
-          </View>
-        ) : (
-          <View className="w-28">
-            <Dropdown
-              selectedTextStyle={{
-                color: 'white',
-                overflow: 'hidden',
-                fontWeight: 'bold',
-                height: 23,
-              }}
-              containerStyle={{
-                borderColor: '#363636',
-                width: 100,
-                borderRadius: 5,
-                overflow: 'hidden',
-                padding: 2,
-                backgroundColor: 'black',
-                maxHeight: 450,
-              }}
-              labelField="name"
-              valueField="color"
-              renderItem={item => {
-                return (
-                  <View
-                    className={`bg-black font-extrabold text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 ${
-                      primary === item.color ? 'bg-quaternary' : ''
-                    }`}>
-                    <Text
-                      style={{color: item.color}}
-                      className="mb-2 font-bold">
-                      {item.name}
-                    </Text>
-                  </View>
-                );
-              }}
-              data={themes}
-              value={primary}
-              onChange={value => {
-                if (value.name === 'Custom') {
-                  setCustom(true);
-                  setPrimary(customColor);
-                  return;
-                }
-                setPrimary(value.color);
-              }}
-            />
-          </View>
-        )}
-      </View>
-
       <View className="mt-2 p-2">
+        {/* Themes */}
+        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <Text className="text-white font-semibold">Themes</Text>
+          {isCustom ? (
+            <View className="w-36 flex-row items-center justify-around">
+              <TextInput
+                style={{
+                  color: 'white',
+                  backgroundColor: '#343434',
+                  borderRadius: 5,
+                  padding: 5,
+                }}
+                placeholder="Hex Color"
+                placeholderTextColor="gray"
+                value={customColor}
+                onChangeText={e => {
+                  setCustomColor(e);
+                }}
+                onSubmitEditing={(e: any) => {
+                  if (e.nativeEvent.text.length < 7) {
+                    ToastAndroid.show('Invalid Color', ToastAndroid.SHORT);
+                    return;
+                  }
+                  MMKV.setString('customColor', e.nativeEvent.text);
+                  setPrimary(e.nativeEvent.text);
+                }}
+              />
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color="white"
+                onPress={() => {
+                  setCustom(false);
+                  setPrimary('#FF6347');
+                }}
+              />
+            </View>
+          ) : (
+            <View className="w-28">
+              <Dropdown
+                selectedTextStyle={{
+                  color: 'white',
+                  overflow: 'hidden',
+                  fontWeight: 'bold',
+                  height: 23,
+                }}
+                containerStyle={{
+                  borderColor: '#363636',
+                  width: 100,
+                  borderRadius: 5,
+                  overflow: 'hidden',
+                  padding: 2,
+                  backgroundColor: 'black',
+                  maxHeight: 450,
+                }}
+                labelField="name"
+                valueField="color"
+                renderItem={item => {
+                  return (
+                    <View
+                      className={`bg-black font-extrabold text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 border border-b border-white/10 rounded-md ${
+                        primary === item.color ? 'bg-quaternary' : ''
+                      }`}>
+                      <Text
+                        style={{color: item.color}}
+                        className="mb-2 font-bold">
+                        {item.name}
+                      </Text>
+                    </View>
+                  );
+                }}
+                data={themes}
+                value={primary}
+                onChange={value => {
+                  if (value.name === 'Custom') {
+                    setCustom(true);
+                    setPrimary(customColor);
+                    return;
+                  }
+                  setPrimary(value.color);
+                }}
+              />
+            </View>
+          )}
+        </View>
         {/* show recentlyWatched */}
-        <View className="flex-row items-center px-4 justify-between mt-3 bg-tertiary p-2 rounded-md">
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
             Show Recently Watched
           </Text>
@@ -156,7 +155,7 @@ const Preferences = () => {
             }}>
             <MaterialCommunityIcons
               name="delete-outline"
-              size={24}
+              size={20}
               color="white"
             />
           </TouchableOpacity>
