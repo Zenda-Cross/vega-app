@@ -13,7 +13,7 @@ export interface Content {
 const useContentStore = create<Content>()(
   persist(
     set => ({
-      provider: providersList[2],
+      provider: providersList[1],
 
       setProvider: (provider: Content['provider']) => set({provider}),
     }),

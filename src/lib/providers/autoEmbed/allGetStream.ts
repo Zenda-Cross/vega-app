@@ -164,20 +164,20 @@ export const allGetStream = async (
     ///// autoembed
     // server1
 
-    // const server1Url =
-    //   type === 'movie'
-    //     ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
-    //     : `https://${atob(
-    //         autoembed,
-    //       )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
-    // const links = await multiExtractor(server1Url);
-    // links.forEach(({lang, url}) => {
-    //   streams.push({
-    //     server: 'Multi' + (lang ? `-${lang}` : ''),
-    //     link: url,
-    //     type: 'm3u8',
-    //   });
-    // });
+    const server1Url =
+      type === 'movie'
+        ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
+        : `https://${atob(
+            autoembed,
+          )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
+    const links = await multiExtractor(server1Url);
+    links.forEach(({lang, url}) => {
+      streams.push({
+        server: 'Multi' + (lang ? `-${lang}` : ''),
+        link: url,
+        type: 'm3u8',
+      });
+    });
 
     // server 2
 
@@ -196,18 +196,18 @@ export const allGetStream = async (
 
     // server 3
 
-    // const server3Url =
-    //   type === 'movie'
-    //     ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
-    //     : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
-    // const links3 = await stableExtractor(server3Url);
-    // links3.forEach(({lang, url}) => {
-    //   streams.push({
-    //     server: 'Viet ' + (lang ? `-${lang}` : ''),
-    //     link: url,
-    //     type: 'm3u8',
-    //   });
-    // });
+    const server3Url =
+      type === 'movie'
+        ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
+        : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
+    const links3 = await stableExtractor(server3Url);
+    links3.forEach(({lang, url}) => {
+      streams.push({
+        server: 'Viet ' + (lang ? `-${lang}` : ''),
+        link: url,
+        type: 'm3u8',
+      });
+    });
     return streams;
   } catch (err) {
     console.error(err);
