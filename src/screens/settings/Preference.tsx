@@ -100,9 +100,11 @@ const Preferences = () => {
                 renderItem={item => {
                   return (
                     <View
-                      className={`bg-black font-extrabold text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 border border-b border-white/10 rounded-md ${
+                      className={`bg-black font-extrabold text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 border border-b border-white/10 rounded-md ${
                         primary === item.color ? 'bg-quaternary' : ''
-                      }`}>
+                      }
+                        ${item.name === 'Custom' ? 'pb-1' : 'pb-3'}
+                      `}>
                       <Text
                         style={{color: item.color}}
                         className="mb-2 font-bold">
