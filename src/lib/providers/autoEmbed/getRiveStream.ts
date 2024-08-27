@@ -10,7 +10,7 @@ export async function getRiveStream(
   type: string,
   Streams: Stream[],
 ) {
-  const servers = ['vidcloud', 'upcloud', 'ophim', 'nova', 'indian'];
+  const servers = ['vidcloud', 'upcloud', 'nova'];
   const baseUrl = await getBaseUrl('rive');
   const route =
     type === 'series'
