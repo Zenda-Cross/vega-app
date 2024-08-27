@@ -87,9 +87,9 @@ const Settings = ({navigation}: Props) => {
               renderItem={item => {
                 return (
                   <View
-                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 pb-3 ${
+                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 rounded-s-md border-b border-white/10 border rounded-md ${
                       provider.value === item.value ? 'bg-quaternary' : ''
-                    }`}>
+                    } ${item.value === 'lux' ? 'pb-1' : 'pb-3'}`}>
                     <Text className=" text-white mb-2">
                       {item.flag}
                       &nbsp; &nbsp;
@@ -207,7 +207,7 @@ const Settings = ({navigation}: Props) => {
           }}>
           <MaterialCommunityIcons
             name="delete-outline"
-            size={24}
+            size={20}
             color="white"
           />
         </TouchableOpacity>

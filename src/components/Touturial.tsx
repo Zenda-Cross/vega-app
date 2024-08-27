@@ -15,7 +15,7 @@ const Touturial = () => {
       <View className="bg-black/50 w-full h-full flex items-center">
         <Modal animationType="fade" visible={true} transparent={true}>
           <View className=" flex items-center">
-            <Text className="text-white text-xl my-10">
+            <Text className="text-white text-xl my-7 font-semibold">
               Select a provider to start watching
             </Text>
             <ScrollView
@@ -25,6 +25,7 @@ const Touturial = () => {
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
                 width: 384,
+                height: '90%',
               }}>
               {providersList.map(provider => (
                 <Pressable
