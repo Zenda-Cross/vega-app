@@ -22,6 +22,7 @@ import {katMoviesHd} from './providers/katmovies';
 import {primewire} from './providers/primewire';
 import {autoEmbed} from './providers/autoEmbed';
 import {HiAnime} from './providers/hiAnime';
+import {vadapavProvider} from './providers/vadapav';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -71,4 +72,5 @@ export const manifest: Manifest = {
   AEDrama: autoEmbedDrama,
   AEAnime: AEAnime,
   hiAnime: HiAnime,
+  vadapav: vadapavProvider,
 };
