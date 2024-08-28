@@ -42,7 +42,7 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
           $(element).text()?.includes('.mkv'))
       ) {
         directLinks.push({
-          title: $(element).text(),
+          title: i + 1 + '. ' + $(element).text(),
           link: baseUrl + link,
         });
       }

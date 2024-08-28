@@ -20,11 +20,9 @@ export const vadapavGetEpisodeLinks = async function (
           $(element).text()?.includes('.mkv'))
       ) {
         episodeLinks.push({
-          // Almost There - S01E09 - Identity Crisis SDTV.mp4
-          // [Judas] Haikyuu!! S1 - 10.mkv
           title:
             $(element).text()?.match(/E\d+/)?.[0]?.replace('E', 'Episode ') ||
-            $(element).text(),
+            i + 1 + '. ' + $(element).text(),
           link: baseUrl + link,
         });
       }
