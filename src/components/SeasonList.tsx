@@ -106,7 +106,12 @@ const SeasonList = ({
   // handle external player playback
   const handleExternalPlayer = async (link: string, type: string) => {
     setVlcLoading(true);
-    const stream = await manifest[providerValue].getStream(link, type);
+    const controller = new AbortController();
+    const stream = await manifest[providerValue].getStream(
+      link,
+      type,
+      controller.signal,
+    );
     const availableStream = stream.filter(
       e => !manifest[providerValue].nonStreamableServer?.includes(e.server),
     );
@@ -260,9 +265,8 @@ const SeasonList = ({
               `}>
                 <View className="flex-row w-full justify-between gap-2 items-center">
                   <TouchableOpacity
-                    className={
-                      'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
-                    }
+                    className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative 
+                      ${item.title.length < 20 ? 'justify-center' : ''}`}
                     onPress={() =>
                       playHandler({
                         link: item.link,
@@ -278,7 +282,7 @@ const SeasonList = ({
                     onLongPress={() =>
                       onLongPressHandler(true, item.link, 'series')
                     }>
-                    <Ionicons name="play-circle" size={28} color={primary} />
+                    <Ionicons name="play-circle" size={32} color={primary} />
                     <Text className="text-white">
                       {item.title.length > 30
                         ? item.title.slice(0, 30) + '...'
