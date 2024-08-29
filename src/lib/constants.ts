@@ -74,6 +74,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'VadaPav',
+    value: 'vadapav',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'FlixHQ',
     value: 'flixhq',
     type: 'english',

@@ -22,6 +22,8 @@ import {katMoviesHd} from './providers/katmovies';
 import {primewire} from './providers/primewire';
 import {autoEmbed} from './providers/autoEmbed';
 import {HiAnime} from './providers/hiAnime';
+import {vadapavProvider} from './providers/vadapav';
+import {netflixMirror} from './providers/netflixMirror';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -64,11 +66,12 @@ export const manifest: Manifest = {
   hdhub4u: hdhub4uProvider,
   katmovies: katMoviesHd,
   primewire: primewire,
-  netflixMirror: multiMovies,
+  netflixMirror: netflixMirror,
   autoEmbed: autoEmbed,
   multiStream: autoEmbed,
   dooflix: dooflixProvider,
   AEDrama: autoEmbedDrama,
   AEAnime: AEAnime,
   hiAnime: HiAnime,
+  vadapav: vadapavProvider,
 };
