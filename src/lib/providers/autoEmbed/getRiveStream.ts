@@ -12,11 +12,12 @@ export async function getRiveStream(
 ) {
   const servers = ['vidcloud', 'upcloud', 'nova'];
   const baseUrl = await getBaseUrl('rive');
+  const pxy = 'aHR0cHM6Ly9jcnMuMXByb3h5LndvcmtlcnMuZGV2Lz91cmw9';
   const route =
     type === 'series'
       ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&service=`
       : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&service=`;
-  const url = baseUrl + route;
+  const url = atob(pxy) + encodeURIComponent(baseUrl + route);
   await Promise.all(
     servers.map(async server => {
       // console.log('Rive: ' + url + server);
