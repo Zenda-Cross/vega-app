@@ -500,6 +500,7 @@ const Player = ({route}: Props): React.JSX.Element => {
               {/* subtitle */}
               {activeTab === 'subtitle' && (
                 <FlashList
+                  estimatedItemSize={70}
                   data={textTracks}
                   ListHeaderComponent={
                     <TouchableOpacity
