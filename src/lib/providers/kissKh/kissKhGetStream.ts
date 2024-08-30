@@ -31,7 +31,7 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
     streamLinks.push({
       server: 'kissKh',
       link: stream,
-      type: 'm3u8',
+      type: stream?.includes('.m3u8') ? 'm3u8' : 'mp4',
       subtitles,
       headers: {
         referer: baseUrl,
