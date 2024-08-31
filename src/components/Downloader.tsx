@@ -51,8 +51,6 @@ const DownloadComponent = ({
   const [servers, setServers] = useState<Stream[]>([]);
   const [serverLoading, setServerLoading] = useState(false);
 
-  const reqController = new AbortController();
-
   const downloadStore = useDownloadsStore(state => state);
 
   // check if file already exists
@@ -88,6 +86,7 @@ const DownloadComponent = ({
 
   // choose server
   useEffect(() => {
+    const controller = new AbortController();
     if (!downloadModal && !longPressModal) {
       return;
     }
@@ -96,7 +95,7 @@ const DownloadComponent = ({
       const servers = await manifest[providerValue || provider.value].getStream(
         link,
         type,
-        reqController.signal,
+        controller.signal,
       );
       const filteredServers = servers.filter(
         server =>
@@ -108,6 +107,10 @@ const DownloadComponent = ({
       setServers(filteredServers);
     };
     getServer();
+
+    return () => {
+      controller.abort();
+    };
   }, [downloadModal, longPressModal]);
 
   // on holdPress external downloader
@@ -277,7 +280,6 @@ const DownloadComponent = ({
                 <TouchableOpacity
                   onPress={() => {
                     setDownloadModal(false);
-                    reqController.abort();
                   }}
                   className="absolute top-2 right-2">
                   <MaterialIcons name="close" size={20} color="#c1c4c9" />
