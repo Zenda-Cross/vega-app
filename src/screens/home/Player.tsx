@@ -38,6 +38,7 @@ import {Stream} from '../../lib/providers/types';
 import DocumentPicker, {isCancel} from 'react-native-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
+import SearchSubtitles from '../../components/SearchSubtitles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -75,6 +76,9 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToast, setShowToast] = useState(false);
+
+  // search subtitles
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
@@ -222,6 +226,10 @@ const Player = ({route}: Props): React.JSX.Element => {
     setSelectedQualityIndex(1000);
   }, [selectedStream]);
 
+  useEffect(() => {
+    setSearchQuery(route.params.primaryTitle || '');
+  }, []);
+
   const setToast = (message: string, duration: number) => {
     setToastMessage(message);
     setShowToast(true);
@@ -274,7 +282,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           resizeMode: 'center',
         }}
         subtitleStyle={{paddingBottom: externalSubs.length > 0 ? 50 : 0}}
-        title={route.params.title}
+        title={route.params.primaryTitle || ''}
         navigator={navigation}
         seekColor={primary}
         showDuration={true}
@@ -514,42 +522,49 @@ const Player = ({route}: Props): React.JSX.Element => {
                     </TouchableOpacity>
                   }
                   ListFooterComponent={
-                    <TouchableOpacity
-                      className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
-                      onPress={async () => {
-                        try {
-                          const res = await DocumentPicker.pick({
-                            type: [
-                              'text/vtt',
-                              'application/x-subrip',
-                              'text/srt',
-                              'application/ttml+xml',
-                            ],
-                            allowMultiSelection: false,
-                            presentationStyle: 'pageSheet',
-                          });
-                          const track = {
-                            type: res?.[0]?.type as any,
-                            title:
-                              res?.[0]?.name && res?.[0]?.name?.length > 20
-                                ? res?.[0]?.name?.slice(0, 20) + '...'
-                                : res?.[0]?.name || 'undefined',
-                            language: 'und',
-                            uri: res?.[0]?.uri,
-                          };
-                          setExternalSubs((prev: any) => [track, ...prev]);
-                          console.log('ExternalFile', res);
-                        } catch (err) {
-                          if (!isCancel(err)) {
-                            console.log(err);
+                    <>
+                      <TouchableOpacity
+                        className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
+                        onPress={async () => {
+                          try {
+                            const res = await DocumentPicker.pick({
+                              type: [
+                                'text/vtt',
+                                'application/x-subrip',
+                                'text/srt',
+                                'application/ttml+xml',
+                              ],
+                              allowMultiSelection: false,
+                              presentationStyle: 'pageSheet',
+                            });
+                            const track = {
+                              type: res?.[0]?.type as any,
+                              title:
+                                res?.[0]?.name && res?.[0]?.name?.length > 20
+                                  ? res?.[0]?.name?.slice(0, 20) + '...'
+                                  : res?.[0]?.name || 'undefined',
+                              language: 'und',
+                              uri: res?.[0]?.uri,
+                            };
+                            setExternalSubs((prev: any) => [track, ...prev]);
+                            console.log('ExternalFile', res);
+                          } catch (err) {
+                            if (!isCancel(err)) {
+                              console.log(err);
+                            }
                           }
-                        }
-                      }}>
-                      <MaterialIcons name="add" size={20} color="white" />
-                      <Text className="text-base font-semibold text-white">
-                        add external File
-                      </Text>
-                    </TouchableOpacity>
+                        }}>
+                        <MaterialIcons name="add" size={20} color="white" />
+                        <Text className="text-base font-semibold text-white">
+                          add external File
+                        </Text>
+                      </TouchableOpacity>
+                      <SearchSubtitles
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        setExternalSubs={setExternalSubs}
+                      />
+                    </>
                   }
                   renderItem={({item: track}) => (
                     <TouchableOpacity

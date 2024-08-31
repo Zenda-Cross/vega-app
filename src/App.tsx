@@ -40,7 +40,8 @@ export type RootStackParamList = {
   Player: {
     link: string;
     type: string;
-    title: string;
+    primaryTitle?: string;
+    secondaryTitle?: string;
     poster: string;
     file?: string;
     providerValue?: string;

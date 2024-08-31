@@ -100,7 +100,8 @@ const SeasonList = ({
   type playHandlerProps = {
     link: string;
     type: string;
-    title: string;
+    primaryTitle: string;
+    secondaryTitle?: string;
     file: string;
   };
   // handle external player playback
@@ -129,10 +130,16 @@ const SeasonList = ({
     return;
   };
 
-  const playHandler = async ({link, type, title, file}: playHandlerProps) => {
+  const playHandler = async ({
+    link,
+    type,
+    primaryTitle,
+    secondaryTitle,
+    file,
+  }: playHandlerProps) => {
     addItem({
       link: routeParams.link,
-      title: metaTitle,
+      title: primaryTitle,
       image: routeParams.poster!,
       provider: providerValue,
     });
@@ -146,7 +153,8 @@ const SeasonList = ({
     navigation.navigate('Player', {
       link: link,
       type: type,
-      title: title,
+      primaryTitle: primaryTitle,
+      secondaryTitle: secondaryTitle,
       file: file,
       poster: poster,
       providerValue: providerValue,
@@ -222,7 +230,7 @@ const SeasonList = ({
                   playHandler({
                     link: ActiveSeason.movieLinks,
                     type: 'movie',
-                    title: metaTitle,
+                    primaryTitle: metaTitle,
                     file: (metaTitle + ActiveSeason.quality).replaceAll(
                       /[^a-zA-Z0-9]/g,
                       '_',
@@ -271,7 +279,8 @@ const SeasonList = ({
                       playHandler({
                         link: item.link,
                         type: 'series',
-                        title: metaTitle + ' ' + item.title,
+                        primaryTitle: metaTitle,
+                        secondaryTitle: item.title,
                         file: (
                           metaTitle +
                           ActiveSeason.title +
@@ -334,7 +343,8 @@ const SeasonList = ({
                         playHandler({
                           link: item.link,
                           type: 'series',
-                          title: metaTitle + ' ' + item.title,
+                          primaryTitle: metaTitle,
+                          secondaryTitle: item.title,
                           file: (
                             metaTitle +
                             ActiveSeason.title +
