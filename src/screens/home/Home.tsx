@@ -5,7 +5,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Slider from '../../components/Slider';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
@@ -21,8 +21,14 @@ import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
 import {downloadFolder} from '../../lib/constants';
 import useThemeStore from '../../lib/zustand/themeStore';
+import ProviderDrawer from '../../components/ProviderDrawer';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {HomeStackParamList} from '../../App';
+import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
-const Home = () => {
+type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
+const Home = ({}: Props) => {
   const {primary} = useThemeStore(state => state);
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
@@ -31,6 +37,7 @@ const Home = () => {
   const downloadStore = useDownloadsStore(state => state);
   const recentlyWatched = useWatchHistoryStore(state => state).history;
   const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
+  const drawer = useRef<DrawerLayout>(null);
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -124,61 +131,76 @@ const Home = () => {
   notifee.onBackgroundEvent(actionHandler);
   notifee.onForegroundEvent(actionHandler);
   return (
-    <SafeAreaView className="bg-black h-full w-full">
-      <Touturial />
-      <StatusBar
-        showHideTransition={'fade'}
-        animated={true}
-        translucent={true}
-        backgroundColor={backgroundColor}
-      />
-      <ScrollView
-        onScroll={handleScroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            colors={[primary]}
-            tintColor={primary}
-            progressBackgroundColor={'black'}
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              setTimeout(() => setRefreshing(false), 1000);
-            }}
+    <GestureHandlerRootView>
+      <SafeAreaView className="bg-black h-full w-full">
+        <DrawerLayout
+          drawerPosition="left"
+          drawerWidth={200}
+          hideStatusBar={true}
+          drawerType="slide"
+          edgeWidth={70}
+          useNativeAnimations={true}
+          ref={drawer}
+          drawerBackgroundColor={'black'}
+          renderNavigationView={() => <ProviderDrawer drawerRef={drawer} />}>
+          <Touturial />
+          <StatusBar
+            showHideTransition={'fade'}
+            animated={true}
+            translucent={true}
+            backgroundColor={backgroundColor}
           />
-        }>
-        <Hero />
-        <View className="p-4">
-          {!loading && recentlyWatched?.length > 0 && ShowRecentlyWatched && (
-            <Slider
-              isLoading={loading}
-              title={'Recently Watched'}
-              posts={recentlyWatched}
-              filter={'recent'}
-            />
-          )}
-          {loading
-            ? manifest[provider.value].catalog.map((item, index) => (
-                <Slider
-                  isLoading={loading}
-                  key={index}
-                  title={item.title}
-                  posts={[]}
-                  filter={item.filter}
-                />
-              ))
-            : homeData.map((item, index) => (
-                <Slider
-                  isLoading={loading}
-                  key={index}
-                  title={item.title}
-                  posts={item.Posts}
-                  filter={item.filter}
-                />
-              ))}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <ScrollView
+            onScroll={handleScroll}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                colors={[primary]}
+                tintColor={primary}
+                progressBackgroundColor={'black'}
+                refreshing={refreshing}
+                onRefresh={() => {
+                  setRefreshing(true);
+                  setTimeout(() => setRefreshing(false), 1000);
+                }}
+              />
+            }>
+            <Hero />
+            <View className="p-4">
+              {!loading &&
+                recentlyWatched?.length > 0 &&
+                ShowRecentlyWatched && (
+                  <Slider
+                    isLoading={loading}
+                    title={'Recently Watched'}
+                    posts={recentlyWatched}
+                    filter={'recent'}
+                  />
+                )}
+              {loading
+                ? manifest[provider.value].catalog.map((item, index) => (
+                    <Slider
+                      isLoading={loading}
+                      key={index}
+                      title={item.title}
+                      posts={[]}
+                      filter={item.filter}
+                    />
+                  ))
+                : homeData.map((item, index) => (
+                    <Slider
+                      isLoading={loading}
+                      key={index}
+                      title={item.title}
+                      posts={item.Posts}
+                      filter={item.filter}
+                    />
+                  ))}
+            </View>
+          </ScrollView>
+        </DrawerLayout>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
