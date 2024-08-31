@@ -136,7 +136,6 @@ const Home = ({}: Props) => {
         <DrawerLayout
           drawerPosition="left"
           drawerWidth={200}
-          hideStatusBar={true}
           drawerType="slide"
           edgeWidth={70}
           useNativeAnimations={true}
