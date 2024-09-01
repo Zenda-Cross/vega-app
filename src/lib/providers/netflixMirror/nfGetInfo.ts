@@ -10,15 +10,17 @@ export const nfGetInfo = async function (link: string): Promise<Info> {
       headers: headers,
     });
     const data = res.data;
+    const id = link.split('id=')[1]?.split('&')[0];
     const meta = {
       title: data.title,
       synopsis: data.desc,
-      image: `https://img.nfmirrorcdn.top/poster/h/${link}.jpg`,
+      image: `https://img.nfmirrorcdn.top/poster/h/${id}.jpg`,
       cast: data?.short_cast?.split(','),
       tags: [data?.year, data?.hdsd, ...data?.thismovieis?.split(',')],
       imdbId: '',
       type: 'series',
     };
+    console.log('nfinfo', meta);
 
     const linkList: Link[] = [];
     if (data?.season?.length > 0) {
