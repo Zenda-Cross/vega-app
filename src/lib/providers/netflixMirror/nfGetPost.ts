@@ -33,7 +33,12 @@ export const nfGetPost = async function (
         if (id) {
           catalog.push({
             title: title,
-            link: id,
+            link:
+              baseUrl +
+              '/post.php?id=' +
+              id +
+              '&t=' +
+              Math.round(new Date().getTime() / 1000),
             image: image,
           });
         }
