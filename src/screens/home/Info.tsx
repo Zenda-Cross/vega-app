@@ -209,26 +209,26 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 <View className="flex-row gap-x-3 gap-y-1 flex-wrap items-center mb-4">
                   {/* badges */}
                   {meta?.year && (
-                    <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
+                    <Text className="text-white text-lg bg-tertiary px-2 rounded-md">
                       {meta?.year}
                     </Text>
                   )}
                   {meta?.runtime && (
-                    <Text className="text-white text-lg bg-tertiary px-1 rounded-md">
+                    <Text className="text-white text-lg bg-tertiary px-2 rounded-md">
                       {meta?.runtime}
                     </Text>
                   )}
-                  {meta?.genres?.slice(0, 3).map((genre: string) => (
+                  {meta?.genres?.slice(0, 2).map((genre: string) => (
                     <Text
                       key={genre}
-                      className="text-white text-lg bg-tertiary px-1 rounded-md">
+                      className="text-white text-lg bg-tertiary px-2 rounded-md">
                       {genre}
                     </Text>
                   ))}
                   {info?.tags?.map((tag: string) => (
                     <Text
                       key={tag}
-                      className="text-white text-lg bg-tertiary px-1 rounded-md">
+                      className="text-white text-lg bg-tertiary px-2 rounded-md">
                       {tag}
                     </Text>
                   ))}
@@ -239,7 +239,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     <Text className="text-white text- font-semibold">
                       Awards:
                     </Text>
-                    <Text className="text-white text-xs bg-tertiary">
+                    <Text className="text-white text-xs px-1 bg-tertiary rounded-sm">
                       {meta?.awards?.length > 50
                         ? meta?.awards.slice(0, 50) + '...'
                         : meta?.awards}
@@ -249,21 +249,21 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                 {/* cast  */}
                 {(meta?.cast?.length! > 0 || info?.cast?.length! > 0) && (
                   <View className="mb-2 w-full flex-row items-start gap-2">
-                    <Text className="text-white text-lg font-semibold py-1">
+                    <Text className="text-white text-lg font-semibold pt-[0.9px]">
                       Cast
                     </Text>
                     <View className="flex-row gap-1 flex-wrap">
                       {meta?.cast?.slice(0, 3).map((actor: string) => (
                         <Text
                           key={actor}
-                          className="text-white text-xs bg-tertiary p-1 rounded-sm">
+                          className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
                           {actor}
                         </Text>
                       ))}
                       {info?.cast?.slice(0, 3).map((actor: string) => (
                         <Text
                           key={actor}
-                          className="text-white text-xs bg-tertiary p-1 rounded-sm">
+                          className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
                           {actor}
                         </Text>
                       ))}
@@ -277,7 +277,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       <Text className="text-white text-xl font-semibold">
                         Synopsis
                       </Text>
-                      <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-sm">
+                      <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
                         {route.params.provider || provider.value}
                       </Text>
                     </View>
