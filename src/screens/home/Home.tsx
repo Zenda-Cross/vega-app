@@ -38,6 +38,7 @@ const Home = ({}: Props) => {
   const recentlyWatched = useWatchHistoryStore(state => state).history;
   const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
   const drawer = useRef<DrawerLayout>(null);
+  const disableDrawer = MMKV.getBool('disableDrawer') || false;
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -136,12 +137,15 @@ const Home = ({}: Props) => {
         <DrawerLayout
           drawerPosition="left"
           drawerWidth={200}
+          drawerLockMode={disableDrawer ? 'locked-closed' : 'unlocked'}
           drawerType="slide"
           edgeWidth={70}
-          useNativeAnimations={true}
+          useNativeAnimations={false}
           ref={drawer}
           drawerBackgroundColor={'black'}
-          renderNavigationView={() => <ProviderDrawer drawerRef={drawer} />}>
+          renderNavigationView={() =>
+            !disableDrawer && <ProviderDrawer drawerRef={drawer} />
+          }>
           <Touturial />
           <StatusBar
             showHideTransition={'fade'}
