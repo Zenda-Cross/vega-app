@@ -35,7 +35,11 @@ const SeasonList = ({
   routeParams,
 }: {
   LinkList: Link[];
-  poster: string;
+  poster: {
+    logo?: string;
+    poster?: string;
+    background?: string;
+  };
   metaTitle: string;
   providerValue: string;
   refreshing?: boolean;
@@ -140,7 +144,7 @@ const SeasonList = ({
     addItem({
       link: routeParams.link,
       title: primaryTitle,
-      image: routeParams.poster!,
+      image: poster.poster || '',
       provider: providerValue,
     });
     const externalPlayer = MMKV.getBool('useExternalPlayer');

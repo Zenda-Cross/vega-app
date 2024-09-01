@@ -36,6 +36,10 @@ const Preferences = () => {
     MMKV.getString('customColor') || '#FF6347',
   );
 
+  const [showMediaControls, setShowMediaControls] = useState(
+    MMKV.getBool('showMediaControls') || false,
+  );
+
   return (
     <ScrollView className="w-full h-full bg-black">
       <Text className="text-white mt-10 ml-4 font-bold text-2xl">
@@ -146,6 +150,23 @@ const Preferences = () => {
             }}
           />
         </View>
+
+        {/* show media controls */}
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Show Video Controls in Notification
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={showMediaControls ? primary : 'gray'}
+            value={showMediaControls}
+            onValueChange={() => {
+              MMKV.setBool('showMediaControls', !showMediaControls);
+              setShowMediaControls(!showMediaControls);
+            }}
+          />
+        </View>
+
         {/* show recentlyWatched */}
         <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">

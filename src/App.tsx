@@ -42,7 +42,11 @@ export type RootStackParamList = {
     type: string;
     primaryTitle?: string;
     secondaryTitle?: string;
-    poster: string;
+    poster: {
+      logo?: string;
+      poster?: string;
+      background?: string;
+    };
     file?: string;
     providerValue?: string;
   };

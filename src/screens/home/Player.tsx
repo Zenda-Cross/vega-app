@@ -80,6 +80,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   // search subtitles
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [showMediaControls] = useState(
+    MMKV.getBool('showMediaControls') || false,
+  );
+
   const [playbackRate, setPlaybackRate] = useState(1);
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
   const settings:
@@ -135,11 +139,12 @@ const Player = ({route}: Props): React.JSX.Element => {
           contentUrl: selectedStream.link,
           contentType: 'video/x-matroska',
           metadata: {
-            title: route.params.title,
+            title: route.params.primaryTitle,
+            subtitle: route.params.secondaryTitle,
             type: 'movie',
             images: [
               {
-                url: route.params.poster,
+                url: route.params?.poster?.poster || '',
               },
             ],
           },
@@ -256,6 +261,11 @@ const Player = ({route}: Props): React.JSX.Element => {
           shouldCache: true,
           ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
+          metadata: {
+            title: route.params.primaryTitle,
+            subtitle: route.params.secondaryTitle,
+            imageUri: route.params.poster.poster,
+          },
         }}
         textTracks={externalSubs}
         onProgress={e => {
@@ -276,7 +286,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         poster={{
           source: {
             uri:
-              route?.params?.poster ||
+              route?.params?.poster?.logo ||
               'https://placehold.co/600x400/000000/000000/png',
           },
           resizeMode: 'center',
@@ -300,7 +310,9 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableFullscreen={true}
         disableVolume={true}
         showHours={true}
-        // bufferConfig={{backBufferDurationMs: 20000}}
+        progressUpdateInterval={1000}
+        showNotificationControls={showMediaControls}
+        bufferConfig={{backBufferDurationMs: 30000}}
         onError={e => {
           const serverIndex = stream.indexOf(selectedStream);
           console.log('PlayerError', e);
