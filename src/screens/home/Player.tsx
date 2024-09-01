@@ -282,7 +282,10 @@ const Player = ({route}: Props): React.JSX.Element => {
           resizeMode: 'center',
         }}
         subtitleStyle={{paddingBottom: externalSubs.length > 0 ? 50 : 0}}
-        title={route.params.primaryTitle || ''}
+        title={{
+          primary: route.params.primaryTitle || '',
+          secondary: route.params.secondaryTitle,
+        }}
         navigator={navigation}
         seekColor={primary}
         showDuration={true}
@@ -297,7 +300,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableFullscreen={true}
         disableVolume={true}
         showHours={true}
-        bufferConfig={{backBufferDurationMs: 20000}}
+        // bufferConfig={{backBufferDurationMs: 20000}}
         onError={e => {
           const serverIndex = stream.indexOf(selectedStream);
           console.log('PlayerError', e);
