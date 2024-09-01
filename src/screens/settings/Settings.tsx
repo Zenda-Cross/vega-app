@@ -227,16 +227,20 @@ const Settings = ({navigation}: Props) => {
           <Feather name="chevron-right" size={24} color="white" />
         </View>
       </TouchableNativeFeedback>
-      <TouchableOpacity
-        className="flex-row items-center justify-center gap-4 mt-12"
-        onPress={() =>
-          Linking.openURL('https://github.com/Zenda-Cross/vega-app')
-        }>
-        <AntDesign name="github" size={22} color="white" />
-        <Text className="text-white text-xs font-semibold">
-          Github: Zenda-Cross/vega-app
-        </Text>
-      </TouchableOpacity>
+      <View className="flex-row items-center justify-center gap-4 mt-12">
+        <TouchableOpacity
+          className="flex-row items-center justify-center "
+          onPress={() =>
+            Linking.openURL('https://github.com/Zenda-Cross/vega-app')
+          }>
+          <AntDesign name="github" size={22} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-row items-center justify-center "
+          onPress={() => Linking.openURL('https://discord.gg/cr42m6maWy')}>
+          <MaterialIcons name="discord" size={27} color="white" />
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
