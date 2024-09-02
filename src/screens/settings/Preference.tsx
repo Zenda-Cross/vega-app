@@ -36,8 +36,8 @@ const Preferences = () => {
     MMKV.getString('customColor') || '#FF6347',
   );
 
-  const [showMediaControls, setShowMediaControls] = useState(
-    MMKV.getBool('showMediaControls') || false,
+  const [showMediaControls, setShowMediaControls] = useState<boolean>(
+    MMKV.getBool('showMediaControls') || true,
   );
 
   return (
