@@ -81,7 +81,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [showMediaControls] = useState(
-    MMKV.getBool('showMediaControls') || false,
+    MMKV.getBool('showMediaControls') || true,
   );
 
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -377,7 +377,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           onPress={() => {
             if (!loading) {
               setShowSettings(!showSettings);
-              // playerRef?.current?.pause();
+              playerRef?.current?.pause();
             }
           }}>
           <MaterialIcons
@@ -439,7 +439,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             className="absolute opacity-0 top-0 left-0 w-full h-full bg-black/20 justify-end items-center"
             onTouchEnd={() => {
               setShowSettings(false);
-              // playerRef?.current?.resume();
+              playerRef?.current?.resume();
             }}>
             <View
               className="bg-black p-3 w-[600px] h-72 rounded-t-lg flex-row justify-start items-center"
@@ -642,7 +642,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                         onPress={() => {
                           setSelectedStream(track);
                           setShowSettings(false);
-                          // playerRef?.current?.resume();
+                          playerRef?.current?.resume();
                         }}>
                         <Text
                           className={'text-lg capitalize font-semibold'}
@@ -711,8 +711,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                       key={i}
                       onPress={() => {
                         setPlaybackRate(track);
-                        // setShowSettings(false);
-                        // playerRef?.current?.resume();
                       }}>
                       <Text
                         className={'text-lg font-semibold'}
