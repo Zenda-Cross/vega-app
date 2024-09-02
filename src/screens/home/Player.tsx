@@ -27,6 +27,7 @@ import {
   ResizeMode,
   VideoTrack,
   TextTracks,
+  TextTrackType,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -280,6 +281,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         }}
         onLoad={() => {
           playerRef?.current?.seek(watchedDuration);
+          playerRef?.current?.resume();
+          setPlaybackRate(1);
         }}
         videoRef={playerRef}
         rate={playbackRate}
@@ -291,7 +294,13 @@ const Player = ({route}: Props): React.JSX.Element => {
           },
           resizeMode: 'center',
         }}
-        subtitleStyle={{paddingBottom: externalSubs.length > 0 ? 50 : 0}}
+        subtitleStyle={{
+          paddingBottom:
+            textTracks?.[Number(selectedTextTrack?.value) || 0]?.type ===
+            TextTrackType.VTT
+              ? 50
+              : 0,
+        }}
         title={{
           primary: route.params.primaryTitle || '',
           secondary: route.params.secondaryTitle,
