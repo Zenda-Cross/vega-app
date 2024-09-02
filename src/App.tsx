@@ -40,8 +40,13 @@ export type RootStackParamList = {
   Player: {
     link: string;
     type: string;
-    title: string;
-    poster: string;
+    primaryTitle?: string;
+    secondaryTitle?: string;
+    poster: {
+      logo?: string;
+      poster?: string;
+      background?: string;
+    };
     file?: string;
     providerValue?: string;
   };
@@ -215,7 +220,12 @@ const App = () => {
 
   useEffect(() => {
     if (MMKV.getBool('autoCheckUpdate') !== false) {
-      checkForUpdate(() => {}, MMKV.getBool('autoDownload') || false, false);
+      checkForUpdate(
+        () => {},
+        MMKV.getBool('autoDownload') || false,
+        false,
+        primary,
+      );
     }
   }, []);
 

@@ -35,7 +35,11 @@ const SeasonList = ({
   routeParams,
 }: {
   LinkList: Link[];
-  poster: string;
+  poster: {
+    logo?: string;
+    poster?: string;
+    background?: string;
+  };
   metaTitle: string;
   providerValue: string;
   refreshing?: boolean;
@@ -100,7 +104,8 @@ const SeasonList = ({
   type playHandlerProps = {
     link: string;
     type: string;
-    title: string;
+    primaryTitle: string;
+    secondaryTitle?: string;
     file: string;
   };
   // handle external player playback
@@ -129,11 +134,17 @@ const SeasonList = ({
     return;
   };
 
-  const playHandler = async ({link, type, title, file}: playHandlerProps) => {
+  const playHandler = async ({
+    link,
+    type,
+    primaryTitle,
+    secondaryTitle,
+    file,
+  }: playHandlerProps) => {
     addItem({
       link: routeParams.link,
-      title: metaTitle,
-      image: routeParams.poster!,
+      title: primaryTitle,
+      image: poster.poster || '',
       provider: providerValue,
     });
     const externalPlayer = MMKV.getBool('useExternalPlayer');
@@ -146,7 +157,8 @@ const SeasonList = ({
     navigation.navigate('Player', {
       link: link,
       type: type,
-      title: title,
+      primaryTitle: primaryTitle,
+      secondaryTitle: secondaryTitle,
       file: file,
       poster: poster,
       providerValue: providerValue,
@@ -222,7 +234,7 @@ const SeasonList = ({
                   playHandler({
                     link: ActiveSeason.movieLinks,
                     type: 'movie',
-                    title: metaTitle,
+                    primaryTitle: metaTitle,
                     file: (metaTitle + ActiveSeason.quality).replaceAll(
                       /[^a-zA-Z0-9]/g,
                       '_',
@@ -271,7 +283,8 @@ const SeasonList = ({
                       playHandler({
                         link: item.link,
                         type: 'series',
-                        title: metaTitle + ' ' + item.title,
+                        primaryTitle: metaTitle,
+                        secondaryTitle: item.title,
                         file: (
                           metaTitle +
                           ActiveSeason.title +
@@ -282,7 +295,7 @@ const SeasonList = ({
                     onLongPress={() =>
                       onLongPressHandler(true, item.link, 'series')
                     }>
-                    <Ionicons name="play-circle" size={32} color={primary} />
+                    <Ionicons name="play-circle" size={28} color={primary} />
                     <Text className="text-white">
                       {item.title.length > 30
                         ? item.title.slice(0, 30) + '...'
@@ -327,14 +340,14 @@ const SeasonList = ({
                 `}>
                   <View className="flex-row w-full justify-between gap-2 items-center">
                     <TouchableOpacity
-                      className={
-                        'rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2 relative '
-                      }
+                      className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative 
+                        ${item.title.length < 20 ? 'justify-center' : ''}`}
                       onPress={() =>
                         playHandler({
                           link: item.link,
                           type: 'series',
-                          title: metaTitle + ' ' + item.title,
+                          primaryTitle: metaTitle,
+                          secondaryTitle: item.title,
                           file: (
                             metaTitle +
                             ActiveSeason.title +
@@ -349,7 +362,9 @@ const SeasonList = ({
                       <Text className="text-white">
                         {ActiveSeason?.directLinks?.length &&
                         ActiveSeason?.directLinks?.length > 1
-                          ? item.title
+                          ? item.title?.length > 30
+                            ? item.title.slice(0, 30) + '...'
+                            : item.title
                           : 'Play'}
                       </Text>
                     </TouchableOpacity>

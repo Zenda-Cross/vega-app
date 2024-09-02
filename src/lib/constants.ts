@@ -116,6 +116,12 @@ export const providersList: ProvidersList[] = [
     flag: '🇬🇧',
   },
   {
+    name: 'KissKh',
+    value: 'kissKh',
+    type: 'english',
+    flag: '🇬🇧',
+  },
+  {
     name: 'DramaCool',
     value: 'dramaCool',
     type: 'english',

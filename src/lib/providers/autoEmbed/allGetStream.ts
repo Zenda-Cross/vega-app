@@ -152,14 +152,7 @@ export const allGetStream = async (
     }
 
     ///// rive
-
-    const riveStream = await getRiveStream(
-      tmdbId,
-      episode,
-      season,
-      type,
-      streams,
-    );
+    await getRiveStream(tmdbId, episode, season, type, streams);
 
     ///// autoembed
     // server1

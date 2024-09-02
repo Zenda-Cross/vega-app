@@ -23,6 +23,9 @@ const Preferences = () => {
   const [showRecentlyWatched, setShowRecentlyWatched] = useState(
     MMKV.getBool('showRecentlyWatched') || false,
   );
+  const [disableDrawer, setDisableDrawer] = useState(
+    MMKV.getBool('disableDrawer') || false,
+  );
   const {clearHistory} = useWatchHistoryStore(state => state);
 
   const [ExcludedQualities, setExcludedQualities] = useState(
@@ -31,6 +34,10 @@ const Preferences = () => {
 
   const [customColor, setCustomColor] = useState(
     MMKV.getString('customColor') || '#FF6347',
+  );
+
+  const [showMediaControls, setShowMediaControls] = useState<boolean>(
+    MMKV.getBool('showMediaControls') || true,
   );
 
   return (
@@ -127,6 +134,39 @@ const Preferences = () => {
             </View>
           )}
         </View>
+
+        {/* disable drawer */}
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Disable Drawer at Home Screen
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={disableDrawer ? primary : 'gray'}
+            value={disableDrawer}
+            onValueChange={() => {
+              MMKV.setBool('disableDrawer', !disableDrawer);
+              setDisableDrawer(!disableDrawer);
+            }}
+          />
+        </View>
+
+        {/* show media controls */}
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Show Video Controls in Notification
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={showMediaControls ? primary : 'gray'}
+            value={showMediaControls}
+            onValueChange={() => {
+              MMKV.setBool('showMediaControls', !showMediaControls);
+              setShowMediaControls(!showMediaControls);
+            }}
+          />
+        </View>
+
         {/* show recentlyWatched */}
         <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
