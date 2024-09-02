@@ -105,9 +105,13 @@ export const checkForUpdate = async (
       'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
     );
     const data = await res.json();
-    if (data.tag_name.replace('v', '') !== pkg.version) {
+    const localVersion = Number(pkg.version?.split('.').join(''));
+    const remoteVersion = Number(
+      data.tag_name.replace('v', '')?.split('.').join(''),
+    );
+    if (remoteVersion > localVersion) {
       ToastAndroid.show('New update available', ToastAndroid.SHORT);
-      Alert.alert('Update', data.body, [
+      Alert.alert(`Update v${pkg.version} -> ${data.tag_name}`, data.body, [
         {text: 'Cancel'},
         {
           text: 'Update',
@@ -121,10 +125,20 @@ export const checkForUpdate = async (
               : Linking.openURL(data.html_url),
         },
       ]);
-      console.log('version', data.tag_name.replace('v', ''), pkg.version);
+      console.log(
+        'local version',
+        localVersion,
+        'remote version',
+        remoteVersion,
+      );
     } else {
       showToast && ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
-      console.log('version', data.tag_name.replace('v', ''), pkg.version);
+      console.log(
+        'local version',
+        localVersion,
+        'remote version',
+        remoteVersion,
+      );
     }
   } catch (error) {
     ToastAndroid.show('Failed to check for update', ToastAndroid.SHORT);
@@ -214,7 +228,9 @@ const About = () => {
       </View>
 
       <TouchableNativeFeedback
-        onPress={() => checkForUpdate(setUpdateLoading, autoDownload, primary)}
+        onPress={() =>
+          checkForUpdate(setUpdateLoading, autoDownload, true, primary)
+        }
         disabled={updateLoading}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 py-3 rounded-md">
