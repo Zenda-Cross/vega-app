@@ -63,3 +63,7 @@ Dev
 Build apk/aab
 https://reactnative.dev/docs/signed-apk-android
 
+
+![Untitled](https://github.com/user-attachments/assets/d871afcf-0ded-49e2-92c8-88ac8dbf79af)
+
+
