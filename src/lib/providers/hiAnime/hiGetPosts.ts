@@ -8,15 +8,28 @@ export const hiGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('consumet');
+  const url = `${baseUrl + filter}?page=${page}`;
+  // console.log(url);
+
+  return posts(url, signal);
+};
+
+export const hiGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('consumet');
+  const url = `${baseUrl}/anime/zoro/${searchQuery}?page=${page}`;
+  // console.log(url);
+
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('consumet');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/anime/zoro/${filter.replace(
-          'searchQuery=',
-          '',
-        )}?page=${page}`
-      : `${baseUrl + filter}?page=${page}`;
-    // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.results;
     const catalog: Post[] = [];
@@ -39,4 +52,4 @@ export const hiGetPosts = async function (
     console.error('zoro error ', err);
     return [];
   }
-};
+}

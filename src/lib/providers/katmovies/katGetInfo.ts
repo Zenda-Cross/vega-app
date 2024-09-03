@@ -58,8 +58,6 @@ export const katGetInfo = async function (link: string): Promise<Info> {
       links.push({
         quality: '',
         title: title,
-        episodesLink: '',
-        movieLinks: '',
         directLinks: directLink,
       });
     }
@@ -80,7 +78,6 @@ export const katGetInfo = async function (link: string): Promise<Info> {
             quality,
             title,
             episodesLink: link,
-            movieLinks: '',
           });
         }
       });
@@ -101,8 +98,7 @@ export const katGetInfo = async function (link: string): Promise<Info> {
             links.push({
               quality,
               title,
-              episodesLink: '',
-              movieLinks: link,
+              directLinks: [{link, title, type: 'movie'}],
             });
           }
         });

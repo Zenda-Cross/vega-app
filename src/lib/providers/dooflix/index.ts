@@ -1,14 +1,14 @@
 import {ProviderType} from '../../Manifest';
 import {dooCatalog, dooGenresList} from './dooCatalog';
 import {dooGetInfo} from './dooGetInfo';
-import {dooGetPost} from './dooGetPosts';
+import {dooGetPost, dooGetSearchPost} from './dooGetPosts';
 import {dooGetStream} from './dooGetSteam';
 
 export const dooflixProvider: ProviderType = {
   catalog: dooCatalog,
   genres: dooGenresList,
-  getInfo: dooGetInfo,
-  getStream: dooGetStream,
-  getEpisodeLinks: () => Promise.resolve([]),
-  getPosts: dooGetPost,
+  GetMetaData: dooGetInfo,
+  GetStream: dooGetStream,
+  GetHomePosts: dooGetPost,
+  GetSearchPosts: dooGetSearchPost,
 };

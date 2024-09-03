@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
-import {EpisodeLink, Info, Link} from '../types';
+import {EpisodeLink, Info} from '../types';
 
 export const aedGetInfo = async function (link: string): Promise<Info> {
   try {
@@ -47,9 +47,6 @@ export const aedGetInfo = async function (link: string): Promise<Info> {
       linkList: [
         {
           title: title?.trim(),
-          episodesLink: '',
-          quality: '',
-          movieLinks: '',
           directLinks,
         },
       ],

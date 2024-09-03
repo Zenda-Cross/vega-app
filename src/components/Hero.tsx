@@ -37,7 +37,10 @@ function Hero() {
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
-            info = await manifest[provider.value].getInfo(hero.link, provider);
+            info = await manifest[provider.value].GetMetaData(
+              hero.link,
+              provider,
+            );
             MmmkvCache.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);
@@ -83,14 +86,14 @@ function Hero() {
               onBlur={() => setSearchActive(false)}
               autoFocus={true}
               onSubmitEditing={e => {
-                if (e.nativeEvent.text.includes('https://')) {
+                if (e.nativeEvent.text.startsWith('https://')) {
                   navigation.navigate('Info', {
                     link: e.nativeEvent.text,
                   });
                 } else {
                   searchNavigation.navigate('ScrollList', {
                     providerValue: provider.value,
-                    filter: 'searchQuery=' + e.nativeEvent.text,
+                    filter: e.nativeEvent.text,
                     title: `${provider.name}`,
                   });
                 }

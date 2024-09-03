@@ -10,16 +10,25 @@ export const dcGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
-  try {
-    const baseUrl = await getBaseUrl('dc');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/search?type=movies&keyword=${filter.replace(
-          'searchQuery=',
-          '',
-        )}&page=${page}`
-      : `${baseUrl + filter}?page=${page}`;
-    // console.log('dcUrrl', url);
+  const baseUrl = await getBaseUrl('dc');
+  const url = `${baseUrl + filter}?page=${page}`;
+  return posts(url, signal);
+};
 
+export const dcGetSearchPost = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('dc');
+  const url = `${baseUrl}/search?type=movies&keyword=${searchQuery}&page=${page}`;
+  // console.log('dcUrrl', url);
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+  try {
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -47,4 +56,4 @@ export const dcGetPosts = async function (
     console.error('dc error ', err);
     return [];
   }
-};
+}

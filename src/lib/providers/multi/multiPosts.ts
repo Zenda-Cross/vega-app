@@ -9,13 +9,30 @@ export const multiGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('multi');
+  // console.log(baseUrl);
+  const url = `${baseUrl + filter}page/${page}/`;
+  console.log('multiUrl', url);
+
+  return posts(url, signal);
+};
+
+export const multiGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('multi');
+  // console.log(baseUrl);
+  const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
+  console.log('multiUrl', url);
+
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('multi');
-    // console.log(baseUrl);
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}page/${page}/`;
-    console.log('multiUrl', url);
     const res = await fetch(url, {headers, signal});
     const data = await res.text();
     const $ = cheerio.load(data);
@@ -52,4 +69,4 @@ export const multiGetPosts = async function (
     console.error('multiMovies error ', err);
     return [];
   }
-};
+}

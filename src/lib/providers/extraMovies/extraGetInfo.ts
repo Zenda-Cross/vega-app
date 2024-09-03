@@ -37,7 +37,9 @@ export const extraGetInfo = async function (link: string): Promise<Info> {
         links.push({
           title: seriesTitle,
           episodesLink: link.includes('hub') ? '' : link,
-          movieLinks: link.includes('hub') ? link : '',
+          directLinks: link.includes('hub')
+            ? [{link: link, title: 'Movie', type: 'movie'}]
+            : [],
           quality: seriesTitle?.match(/\d+p\b/)?.[0] || '',
         });
       }

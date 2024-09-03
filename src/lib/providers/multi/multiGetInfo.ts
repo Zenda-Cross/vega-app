@@ -48,18 +48,13 @@ export const multiGetInfo = async function (link: string): Promise<Info> {
             links.push({
               title,
               directLinks: episodesList,
-              episodesLink: '',
-              movieLinks: '',
-              quality: '',
             });
           }
         });
     } else {
       links.push({
         title: title,
-        episodesLink: '',
-        movieLinks: url.slice(0, -1),
-        quality: '',
+        directLinks: [{title: title, link: url.slice(0, -1), type: 'movie'}],
       });
     }
     // console.log('multi meta', links);

@@ -35,9 +35,6 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
           })) || [];
         links.push({
           title: title,
-          movieLinks: '',
-          episodesLink: '',
-          quality: '',
           directLinks: directLinks,
         });
       });
@@ -45,9 +42,12 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
       data?.videos?.map((video: any) => {
         links.push({
           title: title + ' ' + video?.label,
-          movieLinks: video?.file_url,
-          episodesLink: '',
-          quality: '',
+          directLinks: [
+            {
+              title: 'Play',
+              link: video?.file_url,
+            },
+          ],
         });
       });
     }

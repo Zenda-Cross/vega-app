@@ -70,9 +70,6 @@ export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
     }
     if (directLink.length > 0) {
       links.push({
-        episodesLink: '',
-        movieLinks: '',
-        quality: '',
         title: title,
         directLinks: directLink,
       });
@@ -91,11 +88,9 @@ export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
           const title = $(element).text();
           if (movieLinks) {
             links.push({
-              episodesLink: '',
-              movieLinks: movieLinks,
+              directLinks: [{link: movieLinks, title: 'Movie', type: 'movie'}],
               quality: quality,
               title: title,
-              directLinks: [],
             });
           }
         });

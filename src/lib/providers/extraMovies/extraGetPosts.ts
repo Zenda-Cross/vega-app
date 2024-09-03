@@ -9,12 +9,28 @@ export const ExtraGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('extra');
+  const url = `${baseUrl + filter}/page/${page}/`;
+  console.log('extraGetPosts', url);
+
+  return posts(url, signal);
+};
+
+export const ExtraGetSearchPost = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('extra');
+  const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
+  console.log('extraGetPosts', url);
+
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('extra');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}/page/${page}/`;
-    console.log('extraGetPosts', url);
     const res = await axios(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -54,4 +70,4 @@ export const ExtraGetPosts = async function (
     console.error('extra movies error ', err);
     return [];
   }
-};
+}

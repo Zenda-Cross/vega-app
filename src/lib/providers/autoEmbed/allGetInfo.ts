@@ -25,6 +25,7 @@ export const allGetInfo = async function (link: string): Promise<Info> {
         }
         season.get(video?.season).push({
           title: 'Episode ' + video?.episode,
+          type: 'series',
           link: JSON.stringify({
             title: data?.meta?.name as string,
             imdbId: data?.meta?.imdb_id,
@@ -42,26 +43,28 @@ export const allGetInfo = async function (link: string): Promise<Info> {
         directLinks = season.get(key);
         links.push({
           title: `Season ${key}`,
-          movieLinks: '',
-          episodesLink: '',
-          quality: '',
           directLinks: directLinks,
         });
       });
     } else {
+      console.log('all meta Mv🔥🔥', meta);
       links.push({
         title: data?.meta?.name as string,
-        movieLinks: JSON.stringify({
-          title: data?.meta?.name as string,
-          imdbId: data?.meta?.imdb_id,
-          season: '',
-          episode: '',
-          type: data?.meta?.type,
-          tmdbId: data?.meta?.moviedb_id?.toString() || '',
-          year: data?.meta?.year,
-        }),
-        episodesLink: '',
-        quality: '',
+        directLinks: [
+          {
+            title: 'Watch Now',
+            type: 'movie',
+            link: JSON.stringify({
+              title: data?.meta?.name as string,
+              imdbId: data?.meta?.imdb_id,
+              season: '',
+              episode: '',
+              type: data?.meta?.type,
+              tmdbId: data?.meta?.moviedb_id?.toString() || '',
+              year: data?.meta?.year,
+            }),
+          },
+        ],
       });
     }
     return {
