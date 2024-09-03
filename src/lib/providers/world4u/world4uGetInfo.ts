@@ -45,7 +45,10 @@ export const world4uGetInfo = async function (link: string): Promise<Info> {
         links.push({
           title,
           episodesLink: type === 'series' ? episodesLink : '',
-          movieLinks: type === 'movie' ? episodesLink : '',
+          directLinks:
+            type === 'movie'
+              ? [{link: episodesLink, title: 'Movie', type: 'movie'}]
+              : [],
           quality: quality,
         });
       }

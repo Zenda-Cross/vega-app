@@ -1,16 +1,16 @@
 import {ProviderType} from '../../Manifest';
 import {flixhqCatalog, flixhqGenresList} from './flixhqCatalog';
 import {flixhqGetInfo} from './flixhqGetInfo';
-import {flixhqGetPosts} from './flixhqGetPosts';
+import {flixhqGetPosts, flixhqGetSearchPost} from './flixhqGetPosts';
 import {flixhqGetStream} from './flixhqGetStream';
 
 export const flixhq: ProviderType = {
   catalog: flixhqCatalog,
   genres: flixhqGenresList,
-  getInfo: flixhqGetInfo,
-  getPosts: flixhqGetPosts,
-  getStream: flixhqGetStream,
-  getEpisodeLinks: () => Promise.resolve([]),
+  GetMetaData: flixhqGetInfo,
+  GetHomePosts: flixhqGetPosts,
+  GetStream: flixhqGetStream,
+  GetSearchPosts: flixhqGetSearchPost,
   nonDownloadableServer: ['upcloud-MultiQuality', 'vidcloud-MultiQuality'],
   nonStreamableServer: [
     'upcloud-1080',

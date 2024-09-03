@@ -16,7 +16,7 @@ export const getHomePageData = async (
 
   const fetchPromises = manifest[activeProvider.value].catalog.map(
     async item => {
-      const data = await manifest[activeProvider.value].getPosts(
+      const data = await manifest[activeProvider.value].GetHomePosts(
         item.filter,
         1,
         activeProvider.value,

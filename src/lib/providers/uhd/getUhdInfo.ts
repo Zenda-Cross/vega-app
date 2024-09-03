@@ -40,9 +40,6 @@ export async function getUhdInfo(link: string): Promise<Info> {
             episodes.push({
               title,
               directLinks: episodesList,
-              episodesLink: '',
-              movieLinks: '',
-              quality: '',
             });
           }
         });
@@ -69,9 +66,6 @@ export async function getUhdInfo(link: string): Promise<Info> {
           if (title && episodesList.length > 0) {
             episodes.push({
               title,
-              episodesLink: '',
-              movieLinks: '',
-              quality: '',
               directLinks: episodesList,
             });
           }

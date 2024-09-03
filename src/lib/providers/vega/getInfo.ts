@@ -90,7 +90,14 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
           ?.parent()
           ?.attr('href');
       if (movieLinks || episodesLink) {
-        links.push({title, movieLinks, episodesLink, quality});
+        links.push({
+          title,
+          directLinks: movieLinks
+            ? [{title: 'Movie', link: movieLinks, type: 'movie'}]
+            : [],
+          episodesLink,
+          quality,
+        });
       }
     });
     // console.log(links);

@@ -10,14 +10,31 @@ export const luxGetPosts = async (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
-  try {
-    const baseUrl = await getBaseUrl('lux');
+  const baseUrl = await getBaseUrl('lux');
 
-    console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl}/${filter}/page/${page}/`;
-    console.log('vegaGetPosts url:', url);
+  console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
+  const url = `${baseUrl}/${filter}/page/${page}/`;
+  console.log('lux url:', url);
+  return posts(url, signal);
+};
+
+export const luxGetPostsSearch = async (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> => {
+  const baseUrl = await getBaseUrl('lux');
+
+  console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
+  const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
+  console.log('lux url:', url);
+
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+  try {
     const urlRes = await axios.get(url, {headers, signal});
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
@@ -53,4 +70,4 @@ export const luxGetPosts = async (
     console.error('vegaGetPosts error:', error);
     return [];
   }
-};
+}

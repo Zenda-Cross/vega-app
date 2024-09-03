@@ -43,7 +43,8 @@ export const multiGetStream = async (
     if (!ifameUrl.includes('multimovies')) {
       const iframeRes = await axios.get(ifameUrl, {headers});
       const $$ = cheerio.load(iframeRes.data);
-      let newIframeUrl = $$('li[data-sourceKey="smwh"]').attr('data-link');
+      let newIframeUrl = $$('.linkserver').first().attr('data-video');
+      console.log('newIframeUrl', newIframeUrl);
       if (newIframeUrl) {
         ifameUrl = newIframeUrl;
       }
@@ -60,7 +61,7 @@ export const multiGetStream = async (
       var params = match[1].split(',').map(param => param.trim());
       var encodedString = match[2];
 
-      console.log('Parameters:', params);
+      // console.log('Parameters:', params);
       // console.log('Encoded String:', encodedString.split("',36,")[0], '🔥🔥');
 
       p = encodedString.split("',36,")?.[0].trim();

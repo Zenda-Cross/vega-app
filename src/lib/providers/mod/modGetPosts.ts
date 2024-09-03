@@ -10,11 +10,25 @@ export const modGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('Moviesmod');
+  const url = `${baseUrl + filter}/page/${page}/`;
+
+  return posts(url, signal);
+};
+
+export const modGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('Moviesmod');
+  const url = `${baseUrl}/search/${searchQuery}/page/${page}/`;
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('Moviesmod');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
-      : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -42,4 +56,4 @@ export const modGetPosts = async function (
     console.error('mod error ', err);
     return [];
   }
-};
+}

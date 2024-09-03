@@ -8,15 +8,26 @@ export const gogoGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('consumet');
+  const url = `${baseUrl + filter}?page=${page}`;
+  // console.log(url);
+  return posts(url, signal);
+};
+
+export const gogoGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('consumet');
+  const url = `${baseUrl}/anime/gogoanime/${searchQuery}?page=${page}`;
+  // console.log(url);
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('consumet');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/anime/gogoanime/${filter.replace(
-          'searchQuery=',
-          '',
-        )}?page=${page}`
-      : `${baseUrl + filter}?page=${page}`;
-    // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.results;
     const catalog: Post[] = [];
@@ -39,4 +50,4 @@ export const gogoGetPosts = async function (
     console.error('gogo error ', err);
     return [];
   }
-};
+}

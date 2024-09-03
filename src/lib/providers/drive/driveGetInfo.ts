@@ -34,7 +34,9 @@ export const driveGetInfo = async function (link: string): Promise<Info> {
     const image =
       $('img.entered.lazyloaded,img.entered,img.litespeed-loaded').attr(
         'src',
-      ) || $('img.aligncenter').attr('src');
+      ) ||
+      $('img.aligncenter').attr('src') ||
+      '';
 
     // Links
     const links: Link[] = [];
@@ -49,7 +51,10 @@ export const driveGetInfo = async function (link: string): Promise<Info> {
         links.push({
           title,
           episodesLink: type === 'series' ? episodesLink : '',
-          movieLinks: type === 'movie' ? episodesLink : '',
+          directLinks:
+            type === 'movie'
+              ? [{title: 'Movie', link: episodesLink, type: 'movie'}]
+              : [],
           quality: quality,
         });
       }
