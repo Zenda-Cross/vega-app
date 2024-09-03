@@ -22,7 +22,7 @@ export const vadapavGetEpisodeLinks = async function (
         episodeLinks.push({
           title:
             $(element).text()?.match(/E\d+/)?.[0]?.replace('E', 'Episode ') ||
-            i + 1 + '. ' + $(element).text(),
+            i + 1 + '. ' + $(element).text()?.replace('.mkv', ''),
           link: baseUrl + link,
         });
       }

@@ -30,22 +30,21 @@ export interface Info {
   rating?: string;
   linkList: Link[];
 }
-
-export interface Link {
-  title: string;
-  quality: string;
-  movieLinks: string;
-  episodesLink: string;
-  directLinks?: {
-    title: string;
-    link: string;
-  }[];
-}
-
 // getEpisodeLinks
 export interface EpisodeLink {
   title: string;
   link: string;
+}
+
+export interface Link {
+  title: string;
+  quality?: string;
+  episodesLink?: string;
+  directLinks?: {
+    title: string;
+    link: string;
+    type?: 'movie' | 'series';
+  }[];
 }
 
 // catalog

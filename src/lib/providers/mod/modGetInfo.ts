@@ -44,7 +44,9 @@ export const modGetInfo = async function (link: string): Promise<Info> {
         links.push({
           title: seriesTitle.replace('Download ', '').trim() || 'Download',
           episodesLink: episodesLink || '',
-          movieLinks: movieLink || '',
+          directLinks: movieLink
+            ? [{link: movieLink, title: 'Movie', type: 'movie'}]
+            : [],
           quality: seriesTitle?.match(/\d+p\b/)?.[0] || '',
         });
       }

@@ -1,4 +1,4 @@
-import {luxGetPosts} from './luxGetPosts';
+import {luxGetPosts, luxGetPostsSearch} from './luxGetPosts';
 import {vegaGetInfo} from '../vega/getInfo';
 import {vegaGetStream} from '../vega/getStream';
 import {vegaGetEpisodeLinks} from '../vega/getEpisodesLink';
@@ -8,9 +8,10 @@ import {ProviderType} from '../../Manifest';
 export const luxMovies: ProviderType = {
   catalog: homeList,
   genres: genresList,
-  getInfo: vegaGetInfo,
-  getPosts: luxGetPosts,
-  getStream: vegaGetStream,
+  GetMetaData: vegaGetInfo,
+  GetHomePosts: luxGetPosts,
+  GetStream: vegaGetStream,
   nonStreamableServer: ['filepress'],
-  getEpisodeLinks: vegaGetEpisodeLinks,
+  GetEpisodeLinks: vegaGetEpisodeLinks,
+  GetSearchPosts: luxGetPostsSearch,
 };

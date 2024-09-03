@@ -39,8 +39,8 @@ const ScrollList = ({route}: Props): React.ReactElement => {
       setIsLoading(true);
       const newPosts = await manifest[
         route.params.providerValue || provider.value
-      ].getPosts(filter, page, provider.value, signal);
-      if (newPosts?.length === 0 && page > 2) {
+      ].GetSearchPosts(filter, page, provider.value, signal);
+      if (newPosts?.length === 0 && (page > 2 || page === 1)) {
         console.log('end🔥🔥', page);
         setIsEnd(true);
         setIsLoading(false);

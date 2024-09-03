@@ -9,15 +9,38 @@ export const vadapavGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('vadapav');
+  if (page > 1) {
+    return [];
+  }
+  const url = `${baseUrl + filter}`;
+  console.log('vadapavGetPosts', url);
+
+  return posts(baseUrl, url, signal);
+};
+
+export const vadapavGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('vadapav');
+  if (page > 1) {
+    return [];
+  }
+  const url = `${baseUrl}/s/${searchQuery}`;
+  console.log('vadapavGetPosts', url);
+
+  return posts(baseUrl, url, signal);
+};
+
+async function posts(
+  baseUrl: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const baseUrl = 'https://vadapav.mov';
-    if (page > 1) {
-      return [];
-    }
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/s/${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}`;
-    console.log('vadapavGetPosts', url);
     const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -50,4 +73,4 @@ export const vadapavGetPosts = async function (
     console.error('vadapav error ', err);
     return [];
   }
-};
+}

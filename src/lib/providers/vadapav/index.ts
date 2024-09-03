@@ -1,4 +1,4 @@
-import {vadapavGetPosts} from './vadapavGetPosts';
+import {vadapavGetPosts, vadapavGetPostsSearch} from './vadapavGetPosts';
 import {vadapavCatalogList, vadapavGenresList} from './VagapavCatalog';
 import {ProviderType} from '../../Manifest';
 import {vadapavGetInfo} from './vadapavGetInfo';
@@ -8,8 +8,9 @@ import {vadapavGetEpisodeLinks} from './vadapavGetEpisodes';
 export const vadapavProvider: ProviderType = {
   catalog: vadapavCatalogList,
   genres: vadapavGenresList,
-  getPosts: vadapavGetPosts,
-  getEpisodeLinks: vadapavGetEpisodeLinks,
-  getInfo: vadapavGetInfo,
-  getStream: vadapavGetStream,
+  GetHomePosts: vadapavGetPosts,
+  GetEpisodeLinks: vadapavGetEpisodeLinks,
+  GetMetaData: vadapavGetInfo,
+  GetStream: vadapavGetStream,
+  GetSearchPosts: vadapavGetPostsSearch,
 };

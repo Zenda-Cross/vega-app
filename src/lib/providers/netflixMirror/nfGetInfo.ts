@@ -28,16 +28,12 @@ export const nfGetInfo = async function (link: string): Promise<Info> {
         linkList.push({
           title: 'Season ' + season?.s,
           episodesLink: season?.id,
-          movieLinks: '',
-          quality: '',
         });
       });
     } else {
       linkList.push({
         title: meta.title,
-        episodesLink: '',
-        movieLinks: link,
-        quality: '',
+        directLinks: [{link: link, title: 'Movie', type: 'movie'}],
       });
     }
 
@@ -53,7 +49,7 @@ export const nfGetInfo = async function (link: string): Promise<Info> {
       synopsis: '',
       image: '',
       imdbId: '',
-      type: 'movie',
+      type: '',
       linkList: [],
     };
   }

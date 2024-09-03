@@ -10,16 +10,32 @@ export const tokyoGetPosts = async (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
+  const baseURL = await getBaseUrl('tokyoinsider');
+  const start = page < 2 ? 0 : (page - 1) * 20;
+  const url = `${baseURL}/${filter}&start=${start}`;
+  // console.log('url', url);
+  return posts(baseURL, url, signal);
+};
+
+export const tokyoGetPostsSearch = async (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> => {
+  const baseURL = await getBaseUrl('tokyoinsider');
+  const start = page < 2 ? 0 : (page - 1) * 20;
+  const url = `${baseURL}/anime/search?k=${searchQuery}&start=${start}`;
+  // console.log('url', url);
+  return posts(baseURL, url, signal);
+};
+
+async function posts(
+  baseURL: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const baseURL = await getBaseUrl('tokyoinsider');
-    const start = page < 2 ? 0 : (page - 1) * 20;
-    const url = filter.includes('searchQuery=')
-      ? `${baseURL}/anime/search?k=${filter.replace(
-          'searchQuery=',
-          '',
-        )}&start=${start}`
-      : `${baseURL}/${filter}&start=${start}`;
-    // console.log('url', url);
     const res = await axios.get(url, {signal, headers});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -46,4 +62,4 @@ export const tokyoGetPosts = async (
     console.error('tokyo error ', err);
     return [];
   }
-};
+}

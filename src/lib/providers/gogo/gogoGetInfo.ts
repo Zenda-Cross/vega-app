@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Info, EpisodeLink} from '../types';
+import {Info, Link} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 
 export const gogoGetInfo = async function (link: string): Promise<Info> {
@@ -18,7 +18,7 @@ export const gogoGetInfo = async function (link: string): Promise<Info> {
       type: data.episodes.length > 0 ? 'series' : 'movie',
     };
 
-    const links: EpisodeLink[] = [];
+    const links: Link['directLinks'] = [];
     data.episodes.forEach((episode: any) => {
       const title = 'Episode ' + episode.number;
       const link = episode.id;
@@ -34,9 +34,6 @@ export const gogoGetInfo = async function (link: string): Promise<Info> {
       ...meta,
       linkList: [
         {
-          episodesLink: '',
-          movieLinks: '',
-          quality: '',
           title: meta.title,
           directLinks: links,
         },
