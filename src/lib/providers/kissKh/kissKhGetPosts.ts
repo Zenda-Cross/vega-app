@@ -14,8 +14,8 @@ export const kissKhGetPosts = async function (
       ? `${baseUrl}/api/DramaList/${filter.replace(
           'Search?q=',
           '',
-        )}`
-      : `${baseUrl + filter}`;
+        )}&type=0`
+      : `${baseUrl + filter}&type=0`;
     // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.data;
