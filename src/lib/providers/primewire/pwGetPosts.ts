@@ -15,19 +15,37 @@ export const pwGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('primewire');
+  const url = `${baseUrl + filter}&page=${page}`;
+  // console.log(url);
+
+  return posts(baseUrl, url, signal);
+};
+
+export const pwGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('primewire');
+  const hash = await getSHA256ofJSON(searchQuery + 'JyjId97F9PVqUPuMO0');
+  // console.log('hash', hash);
+  const url = `${baseUrl}/filter?s=${searchQuery}&page=${page}&ds=${hash.slice(
+    0,
+    10,
+  )}`;
+  // console.log(url);
+
+  return posts(baseUrl, url, signal);
+};
+
+async function posts(
+  baseUrl: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('primewire');
-    const hash = await getSHA256ofJSON(
-      filter.replace('searchQuery=', '') + 'JyjId97F9PVqUPuMO0',
-    );
-    // console.log('hash', hash);
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/filter?s=${filter.replace(
-          'searchQuery=',
-          '',
-        )}&page=${page}&ds=${hash.slice(0, 10)}`
-      : `${baseUrl + filter}&page=${page}`;
-    // console.log(url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -50,4 +68,4 @@ export const pwGetPosts = async function (
     console.error('pw error ', err);
     return [];
   }
-};
+}

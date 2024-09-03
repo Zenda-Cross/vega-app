@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Info, EpisodeLink, Link} from '../types';
+import {Info, Link} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 
 export const hiGetInfo = async function (link: string): Promise<Info> {
@@ -22,7 +22,7 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
     };
 
     const linkList: Link[] = [];
-    const subLinks: EpisodeLink[] = [];
+    const subLinks: Link['directLinks'] = [];
     data.episodes.forEach((episode: any) => {
       const title = 'Episode ' + episode.number;
       const link = episode.id;
@@ -36,14 +36,11 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
 
     linkList.push({
       title: meta.title + ' (Sub)',
-      episodesLink: '',
-      movieLinks: '',
       directLinks: subLinks,
-      quality: '',
     });
 
     if (data?.subOrDub === 'both') {
-      const dubLinks: EpisodeLink[] = [];
+      const dubLinks: Link['directLinks'] = [];
       data.episodes.forEach((episode: any) => {
         const title = 'Episode ' + episode.number;
         const link = episode.id?.replace('both', 'dub');
@@ -58,10 +55,7 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
 
       linkList.push({
         title: meta.title + ' (Dub)',
-        episodesLink: '',
-        movieLinks: '',
         directLinks: dubLinks,
-        quality: '',
       });
     }
 

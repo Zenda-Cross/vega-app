@@ -10,11 +10,30 @@ export const uhdGetPosts = async (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> => {
+  const baseUrl = await getBaseUrl('UhdMovies');
+  const url = `${baseUrl + filter}/page/${page}/`;
+
+  return posts(baseUrl, url, signal);
+};
+
+export const uhdGetPostsSearch = async (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> => {
+  const baseUrl = await getBaseUrl('UhdMovies');
+  const url = `${baseUrl}/search/${searchQuery}/page/${page}/`;
+
+  return posts(baseUrl, url, signal);
+};
+
+async function posts(
+  baseURL: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('UhdMovies');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/search/${filter.replace('searchQuery=', '')}/page/${page}/`
-      : `${baseUrl + filter}/page/${page}/`;
     const res = await axios.get(url, {headers, signal});
     const html = res.data;
     const $ = cheerio.load(html);
@@ -40,4 +59,4 @@ export const uhdGetPosts = async (
     console.error('uhd error ', err);
     return [];
   }
-};
+}

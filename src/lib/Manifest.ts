@@ -33,19 +33,25 @@ export interface ProviderType {
   blurImage?: boolean;
   nonStreamableServer?: string[];
   nonDownloadableServer?: string[];
-  getStream: (
+  GetStream: (
     link: string,
     type: string,
     signal: AbortSignal,
   ) => Promise<Stream[]>;
-  getPosts: (
+  GetHomePosts: (
     filter: string,
     page: number,
     provider: string,
     signal: AbortSignal,
   ) => Promise<Post[]>;
-  getEpisodeLinks: (url: string) => Promise<EpisodeLink[]>;
-  getInfo: (link: string, provider: Content['provider']) => Promise<Info>;
+  GetEpisodeLinks?: (url: string) => Promise<EpisodeLink[]>;
+  GetMetaData: (link: string, provider: Content['provider']) => Promise<Info>;
+  GetSearchPosts: (
+    searchQuery: string,
+    page: number,
+    provider: string,
+    signal: AbortSignal,
+  ) => Promise<Post[]>;
 }
 export interface Manifest {
   [key: string]: ProviderType;

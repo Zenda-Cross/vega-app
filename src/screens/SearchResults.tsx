@@ -40,7 +40,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
     const getSearchResults = () => {
       updatedProvidersList.forEach(async item => {
         try {
-          const data = await manifest[item.value].getPosts(
+          const data = await manifest[item.value].GetSearchPosts(
             route.params.filter,
             1,
             item.value,

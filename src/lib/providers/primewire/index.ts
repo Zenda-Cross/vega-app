@@ -1,5 +1,5 @@
 import {pwCatalogList, pwGenresList} from './pwCatalogl';
-import {pwGetPosts} from './pwGetPosts';
+import {pwGetPosts, pwGetPostsSearch} from './pwGetPosts';
 import {pwGetInfo} from './pwGetInfo';
 import {pwGetStream} from './pwGetStream';
 import {ProviderType} from '../../Manifest';
@@ -7,8 +7,8 @@ import {ProviderType} from '../../Manifest';
 export const primewire: ProviderType = {
   catalog: pwCatalogList,
   genres: pwGenresList,
-  getInfo: pwGetInfo,
-  getPosts: pwGetPosts,
-  getStream: pwGetStream,
-  getEpisodeLinks: () => Promise.resolve([]),
+  GetMetaData: pwGetInfo,
+  GetHomePosts: pwGetPosts,
+  GetStream: pwGetStream,
+  GetSearchPosts: pwGetPostsSearch,
 };

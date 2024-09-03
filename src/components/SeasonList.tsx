@@ -85,9 +85,11 @@ const SeasonList = ({
           // console.log('cache', JSON.parse(cacheEpisodes as string));
           setEpisodeLoading(false);
         }
-        const episodes = await manifest[providerValue].getEpisodeLinks(
-          ActiveSeason.episodesLink,
-        );
+        const episodes = manifest[providerValue].GetEpisodeLinks
+          ? await manifest[providerValue].GetEpisodeLinks(
+              ActiveSeason.episodesLink,
+            )
+          : [];
         if (episodes.length === 0) return;
         MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
         // console.log(episodes);
@@ -112,7 +114,7 @@ const SeasonList = ({
   const handleExternalPlayer = async (link: string, type: string) => {
     setVlcLoading(true);
     const controller = new AbortController();
-    const stream = await manifest[providerValue].getStream(
+    const stream = await manifest[providerValue].GetStream(
       link,
       type,
       controller.signal,
@@ -190,13 +192,7 @@ const SeasonList = ({
       <Dropdown
         selectedTextStyle={{color: primary, overflow: 'hidden', height: 22}}
         labelField={'title'}
-        valueField={
-          LinkList[0]?.movieLinks
-            ? 'movieLinks'
-            : LinkList[0]?.episodesLink
-            ? 'episodesLink'
-            : 'directLinks'
-        }
+        valueField={LinkList[0]?.episodesLink ? 'episodesLink' : 'directLinks'}
         onChange={item => {
           setActiveSeason(item);
           MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
@@ -217,49 +213,6 @@ const SeasonList = ({
         }}
       />
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
-        {/* movielinks */}
-        {ActiveSeason?.movieLinks && (
-          <View className="w-full justify-center items-center p-2 gap-2 flex-row">
-            <View
-              className={`flex-row w-full justify-between gap-2 items-center 
-            ${
-              isCompleted(ActiveSeason.movieLinks) ||
-              stickyMenu.link === ActiveSeason.movieLinks
-                ? 'opacity-60'
-                : ''
-            }`}>
-              <TouchableOpacity
-                className="rounded-md bg-white/30 w-[80%] h-12 justify-center items-center p-2 flex-row gap-x-2"
-                onPress={() =>
-                  playHandler({
-                    link: ActiveSeason.movieLinks,
-                    type: 'movie',
-                    primaryTitle: metaTitle,
-                    file: (metaTitle + ActiveSeason.quality).replaceAll(
-                      /[^a-zA-Z0-9]/g,
-                      '_',
-                    ),
-                  })
-                }
-                onLongPress={() =>
-                  onLongPressHandler(true, ActiveSeason.movieLinks, 'movie')
-                }>
-                <Ionicons name="play-circle" size={28} color={primary} />
-                <Text className="text-white">Play</Text>
-              </TouchableOpacity>
-              <Downloader
-                providerValue={providerValue}
-                link={ActiveSeason.movieLinks}
-                title={metaTitle}
-                type="movie"
-                fileName={(metaTitle + ActiveSeason.quality).replaceAll(
-                  /[^a-zA-Z0-9]/g,
-                  '_',
-                )}
-              />
-            </View>
-          </View>
-        )}
         {/* episodesLinks */}
         {
           <FlatList
@@ -278,7 +231,7 @@ const SeasonList = ({
                 <View className="flex-row w-full justify-between gap-2 items-center">
                   <TouchableOpacity
                     className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative 
-                      ${item.title.length < 20 ? 'justify-center' : ''}`}
+                      ${item.title.length < 25 ? 'justify-center' : ''}`}
                     onPress={() =>
                       playHandler({
                         link: item.link,
@@ -323,7 +276,7 @@ const SeasonList = ({
           />
         }
         {/* directLinks */}
-        {
+        {ActiveSeason?.directLinks && ActiveSeason?.directLinks.length > 0 && (
           <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
             <FlatList
               data={ActiveSeason?.directLinks}
@@ -345,7 +298,7 @@ const SeasonList = ({
                       onPress={() =>
                         playHandler({
                           link: item.link,
-                          type: 'series',
+                          type: item.type || 'series',
                           primaryTitle: metaTitle,
                           secondaryTitle: item.title,
                           file: (
@@ -362,8 +315,8 @@ const SeasonList = ({
                       <Text className="text-white">
                         {ActiveSeason?.directLinks?.length &&
                         ActiveSeason?.directLinks?.length > 1
-                          ? item.title?.length > 30
-                            ? item.title.slice(0, 30) + '...'
+                          ? item.title?.length > 27
+                            ? item.title.slice(0, 27) + '...'
                             : item.title
                           : 'Play'}
                       </Text>
@@ -371,7 +324,7 @@ const SeasonList = ({
                     <Downloader
                       providerValue={providerValue}
                       link={item.link}
-                      type="series"
+                      type={item.type || 'series'}
                       title={
                         metaTitle.length > 30
                           ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -388,7 +341,7 @@ const SeasonList = ({
               )}
             />
           </View>
-        }
+        )}
         {episodeLoading && (
           <MotiView
             animate={{backgroundColor: '#0000'}}

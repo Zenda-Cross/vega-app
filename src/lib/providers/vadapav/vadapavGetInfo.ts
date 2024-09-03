@@ -9,14 +9,15 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
     const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
-    const title = $('.directory')
-      .children()
-      .first()
-      .text()
-      .trim()
-      ?.split('/')
-      .pop()
-      ?.trim();
+    const title =
+      $('.directory')
+        .children()
+        .first()
+        .text()
+        .trim()
+        ?.split('/')
+        .pop()
+        ?.trim() || '';
     console.log('title', title);
     const links: Link[] = [];
 
@@ -27,8 +28,6 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
           links.push({
             episodesLink: baseUrl + link,
             title: $(element).text(),
-            movieLinks: '',
-            quality: '',
           });
         }
       },
@@ -50,10 +49,7 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
 
     if (directLinks.length > 0) {
       links.push({
-        episodesLink: '',
         title: title + ' DL',
-        movieLinks: '',
-        quality: '',
         directLinks: directLinks,
       });
     }

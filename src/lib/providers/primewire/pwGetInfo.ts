@@ -46,9 +46,6 @@ export async function pwGetInfo(link: string): Promise<Info> {
         });
       linkList.push({
         title: seasonTitle,
-        movieLinks: '',
-        episodesLink: '',
-        quality: '',
         directLinks: episodes,
       });
     });
@@ -56,9 +53,13 @@ export async function pwGetInfo(link: string): Promise<Info> {
     if (type === 'movie') {
       linkList.push({
         title: 'Movie',
-        movieLinks: link,
-        episodesLink: '',
-        quality: '',
+        directLinks: [
+          {
+            link: link,
+            title: 'Movie',
+            type: 'movie',
+          },
+        ],
       });
     }
     return {

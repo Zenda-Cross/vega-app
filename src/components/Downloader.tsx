@@ -92,7 +92,7 @@ const DownloadComponent = ({
     }
     const getServer = async () => {
       setServerLoading(true);
-      const servers = await manifest[providerValue || provider.value].getStream(
+      const servers = await manifest[providerValue || provider.value].GetStream(
         link,
         type,
         controller.signal,

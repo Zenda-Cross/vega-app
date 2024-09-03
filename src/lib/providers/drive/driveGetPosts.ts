@@ -9,11 +9,25 @@ export const driveGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('drive');
+  const url = `${baseUrl + filter}/page/${page}/`;
+  return posts(url, signal);
+};
+
+export const driveGetSearchPost = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('drive');
+  const url = `${baseUrl}page/${page}/?s=${searchQuery}`;
+
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('drive');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}page/${page}/?s=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}/page/${page}/`;
     const res = await fetch(url, {headers, signal});
     const data = await res.text();
     const $ = cheerio.load(data);
@@ -38,4 +52,4 @@ export const driveGetPosts = async function (
     console.error('drive error ', err);
     return [];
   }
-};
+}

@@ -10,12 +10,26 @@ export const world4uGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('w4u');
+  const url = `${baseUrl + filter}/page/${page}/`;
+  // console.log('world4uGetPosts', url);
+  return posts(url, signal);
+};
+
+export const world4uGetPostsSearch = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('w4u');
+  const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
+  // console.log('world4uGetPosts', url);
+  return posts(url, signal);
+};
+
+async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('w4u');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/page/${page}/?s=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}/page/${page}/`;
-    // console.log('world4uGetPosts', url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -42,4 +56,4 @@ export const world4uGetPosts = async function (
     console.error('world4u error ', err);
     return [];
   }
-};
+}

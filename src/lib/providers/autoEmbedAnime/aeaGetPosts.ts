@@ -9,15 +9,33 @@ export const aeaGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  const baseUrl = await getBaseUrl('aea');
+  const url = `${baseUrl + filter}?page=${page}`;
+
+  return await autoEmbedDramaAndAnimePosts(baseUrl, url, signal);
+};
+
+export const aeaGetSearchPosts = async function (
+  searchQuery: string,
+  page: number,
+  providerValue: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
+  if (page > 1) {
+    return [];
+  }
+  const baseUrl = await getBaseUrl('aea');
+  const url = `${baseUrl}/search.html?keyword=${searchQuery}`;
+
+  return await autoEmbedDramaAndAnimePosts(baseUrl, url, signal);
+};
+
+export async function autoEmbedDramaAndAnimePosts(
+  baseUrl: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const baseUrl = await getBaseUrl('aea');
-    // console.log(baseUrl);
-    if (filter.includes('searchQuery=') && page > 1) {
-      return [];
-    }
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/search.html?keyword=${filter.replace('searchQuery=', '')}`
-      : `${baseUrl + filter}?page=${page}`;
     const res = await fetch(url, {headers, signal});
     const data = await res.text();
     const $ = cheerio.load(data);
@@ -42,4 +60,4 @@ export const aeaGetPosts = async function (
     console.error('AEA error ', err);
     return [];
   }
-};
+}

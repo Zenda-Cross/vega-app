@@ -1,6 +1,5 @@
 import {Info} from '../types';
 import {headers} from './header';
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 export const tokyoGetInfo = async (link: string): Promise<Info> => {
@@ -51,9 +50,6 @@ export const tokyoGetInfo = async (link: string): Promise<Info> => {
         {
           title: meta.title,
           directLinks: episodesList,
-          episodesLink: '',
-          movieLinks: '',
-          quality: '',
         },
       ],
     };

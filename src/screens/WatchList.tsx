@@ -12,7 +12,7 @@ const Library = () => {
   const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
-  const [library, setLibrary] = useState(MMKV.getArray('watchlist') || []);
+  const [library] = useState(MMKV.getArray('watchlist') || []);
 
   return (
     <ScrollView

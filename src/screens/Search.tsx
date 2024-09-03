@@ -20,7 +20,7 @@ const Search = () => {
           autoFocus={true}
           onSubmitEditing={e => {
             navigation.navigate('SearchResults', {
-              filter: 'searchQuery=' + e.nativeEvent.text,
+              filter: e.nativeEvent.text,
             });
           }}
           placeholderTextColor={'white'}
@@ -38,7 +38,7 @@ const Search = () => {
           gap: 5,
         }}
         className="w-full h-full mt-4 ">
-        {manifest[provider.value].genres.map((genre, index) => (
+        {manifest[provider.value].genres.map(genre => (
           <TouchableOpacity
             key={genre.filter}
             onPress={() => {

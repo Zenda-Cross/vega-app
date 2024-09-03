@@ -68,7 +68,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         }
         const data = await manifest[
           route.params.provider || provider.value
-        ].getInfo(route.params.link, provider);
+        ].GetMetaData(route.params.link, provider);
 
         if (data.linkList?.length === 0) {
           setInfoLoading(false);

@@ -178,7 +178,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
       const data = await manifest[
         route.params.providerValue || provider.value
-      ].getStream(route.params.link, route.params.type, controller.signal);
+      ].GetStream(route.params.link, route.params.type, controller.signal);
       const streamAbleServers = data.filter(
         // filter out non streamable servers
         stream =>

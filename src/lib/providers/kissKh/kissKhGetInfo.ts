@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {Info, EpisodeLink, Link} from '../types';
+import {Info, Link} from '../types';
 
 export const kissKhGetInfo = async function (link: string): Promise<Info> {
   try {
@@ -15,7 +15,7 @@ export const kissKhGetInfo = async function (link: string): Promise<Info> {
     };
 
     const linkList: Link[] = [];
-    const subLinks: EpisodeLink[] = [];
+    const subLinks: Link['directLinks'] = [];
 
     data?.episodes?.map((episode: any) => {
       const title = 'Episode ' + episode?.number;
@@ -30,10 +30,7 @@ export const kissKhGetInfo = async function (link: string): Promise<Info> {
 
     linkList.push({
       title: meta.title,
-      episodesLink: '',
-      movieLinks: '',
       directLinks: subLinks,
-      quality: '',
     });
 
     return {
