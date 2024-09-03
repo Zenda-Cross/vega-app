@@ -10,12 +10,12 @@ export const kissKhGetPosts = async function (
 ): Promise<Post[]> {
   try {
     const baseUrl = await getBaseUrl('kissKh');
-    const url = filter.includes('searchQuery=')
-      ? `${baseUrl}/anime/zoro/${filter.replace(
-          'searchQuery=',
+    const url = filter.includes('Search?q=')
+      ? `${baseUrl}/api/DramaList/${filter.replace(
+          'Search?q=',
           '',
-        )}?page=${page}`
-      : `${baseUrl + filter}&page=${page}`;
+        )}`
+      : `${baseUrl + filter}`;
     // console.log(url);
     const res = await axios.get(url, {signal});
     const data = res.data?.data;
