@@ -539,6 +539,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       onPress={() => {
                         setSelectedTextTrack({type: 'language', value: 'off'});
+                        setSelectedTextTrackIndex(1000);
                       }}>
                       <Text className="text-base font-semibold text-white">
                         Disable
