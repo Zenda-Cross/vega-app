@@ -86,6 +86,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   const [playbackRate, setPlaybackRate] = useState(1);
+
+  // constants
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
   const settings:
     | {
