@@ -77,6 +77,11 @@ const DownloadBottomSheet = ({
                         <Text style={{color: 'white'}}>{item.server}</Text>
                       </TouchableOpacity>
                     ))}
+                {data.length === 0 && !loading && (
+                  <Text className="text-red-500 text-lg text-center">
+                    No server found
+                  </Text>
+                )}
               </BottomSheetScrollView>
             </Pressable>
           </BottomSheet>
