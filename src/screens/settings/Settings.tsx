@@ -12,7 +12,7 @@ import {useState} from 'react';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
-import {downloadFolder, providersList} from '../../lib/constants';
+import {downloadFolder, providersList, socialLinks} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import RNFS from 'react-native-fs';
@@ -229,14 +229,12 @@ const Settings = ({navigation}: Props) => {
       <View className="flex-row items-center justify-center gap-4 mt-12">
         <TouchableOpacity
           className="flex-row items-center justify-center "
-          onPress={() =>
-            Linking.openURL('https://github.com/Zenda-Cross/vega-app')
-          }>
+          onPress={() => Linking.openURL(socialLinks.github)}>
           <AntDesign name="github" size={22} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           className="flex-row items-center justify-center "
-          onPress={() => Linking.openURL('https://discord.gg/cr42m6maWy')}>
+          onPress={() => Linking.openURL(socialLinks.discord)}>
           <MaterialIcons name="discord" size={27} color="white" />
         </TouchableOpacity>
       </View>
