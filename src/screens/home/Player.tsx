@@ -265,6 +265,8 @@ const Player = ({route}: Props): React.JSX.Element => {
           metadata: {
             title: route.params.primaryTitle,
             subtitle: route.params.secondaryTitle,
+            artist: route.params.secondaryTitle,
+            description: route.params.secondaryTitle,
             imageUri: route.params.poster.poster,
           },
         }}
