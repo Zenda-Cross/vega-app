@@ -62,6 +62,7 @@ const SeasonList = ({
     link?: string;
     type?: string;
   }>({active: false});
+  const [titleSide, setTitleSide] = useState<string>('justify-center');
 
   const [ActiveSeason, setActiveSeason] = useState<Link>(
     MmmkvCache.getMap(`ActiveSeason${metaTitle + providerValue}`) ||
@@ -218,87 +219,28 @@ const SeasonList = ({
           <FlatList
             data={episodeList}
             keyExtractor={(item, index) => item.link + index}
-            renderItem={({item, index}) => (
-              <View
-                key={item.link + index}
-                className={`w-full justify-center items-center gap-2 flex-row my-1
+            renderItem={({item, index}) => {
+              // set titleSide to justify-center if title is too long
+              episodeList.length > 1 &&
+                item.title.length > 27 &&
+                setTitleSide('justify-start');
+              return (
+                <View
+                  key={item.link + index}
+                  className={`w-full justify-center items-center gap-2 flex-row my-1
               ${
                 isCompleted(item.link) || stickyMenu.link === item.link
                   ? 'opacity-60'
                   : ''
               }
               `}>
-                <View className="flex-row w-full justify-between gap-2 items-center">
-                  <TouchableOpacity
-                    className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative 
-                      ${item.title.length < 25 ? 'justify-center' : ''}`}
-                    onPress={() =>
-                      playHandler({
-                        link: item.link,
-                        type: 'series',
-                        primaryTitle: metaTitle,
-                        secondaryTitle: item.title,
-                        file: (
-                          metaTitle +
-                          ActiveSeason.title +
-                          item.title
-                        ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
-                      })
-                    }
-                    onLongPress={() =>
-                      onLongPressHandler(true, item.link, 'series')
-                    }>
-                    <Ionicons name="play-circle" size={28} color={primary} />
-                    <Text className="text-white">
-                      {item.title.length > 30
-                        ? item.title.slice(0, 30) + '...'
-                        : item.title}
-                    </Text>
-                  </TouchableOpacity>
-                  <Downloader
-                    providerValue={providerValue}
-                    link={item.link}
-                    type="series"
-                    title={
-                      metaTitle.length > 30
-                        ? metaTitle.slice(0, 30) + '... ' + item.title
-                        : metaTitle + ' ' + item.title
-                    }
-                    fileName={(
-                      metaTitle +
-                      ActiveSeason.title +
-                      item.title
-                    ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
-                  />
-                </View>
-              </View>
-            )}
-          />
-        }
-        {/* directLinks */}
-        {ActiveSeason?.directLinks && ActiveSeason?.directLinks.length > 0 && (
-          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
-            <FlatList
-              data={ActiveSeason?.directLinks}
-              keyExtractor={(item, index) => item.link + index}
-              renderItem={({item, index}) => (
-                <View
-                  key={item.link + index}
-                  className={`w-full justify-center items-center my-2 gap-2 flex-row
-                ${
-                  isCompleted(item.link) || stickyMenu.link === item.link
-                    ? 'opacity-60'
-                    : ''
-                }
-                `}>
                   <View className="flex-row w-full justify-between gap-2 items-center">
                     <TouchableOpacity
-                      className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative 
-                        ${item.title.length < 20 ? 'justify-center' : ''}`}
+                      className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative ${titleSide}`}
                       onPress={() =>
                         playHandler({
                           link: item.link,
-                          type: item.type || 'series',
+                          type: 'series',
                           primaryTitle: metaTitle,
                           secondaryTitle: item.title,
                           file: (
@@ -313,18 +255,15 @@ const SeasonList = ({
                       }>
                       <Ionicons name="play-circle" size={28} color={primary} />
                       <Text className="text-white">
-                        {ActiveSeason?.directLinks?.length &&
-                        ActiveSeason?.directLinks?.length > 1
-                          ? item.title?.length > 27
-                            ? item.title.slice(0, 27) + '...'
-                            : item.title
-                          : 'Play'}
+                        {item.title.length > 30
+                          ? item.title.slice(0, 30) + '...'
+                          : item.title}
                       </Text>
                     </TouchableOpacity>
                     <Downloader
                       providerValue={providerValue}
                       link={item.link}
-                      type={item.type || 'series'}
+                      type="series"
                       title={
                         metaTitle.length > 30
                           ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -338,7 +277,84 @@ const SeasonList = ({
                     />
                   </View>
                 </View>
-              )}
+              );
+            }}
+          />
+        }
+        {/* directLinks */}
+        {ActiveSeason?.directLinks && ActiveSeason?.directLinks.length > 0 && (
+          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
+            <FlatList
+              data={ActiveSeason?.directLinks}
+              keyExtractor={(item, index) => item.link + index}
+              renderItem={({item, index}) => {
+                // set titleSide to justify-center if title is too long
+                ActiveSeason?.directLinks?.length &&
+                  ActiveSeason?.directLinks?.length > 1 &&
+                  item?.title?.length > 27 &&
+                  setTitleSide('justify-start');
+                return (
+                  <View
+                    key={item.link + index}
+                    className={`w-full justify-center items-center my-2 gap-2 flex-row
+                ${
+                  isCompleted(item.link) || stickyMenu.link === item.link
+                    ? 'opacity-60'
+                    : ''
+                }
+                `}>
+                    <View className="flex-row w-full justify-between gap-2 items-center">
+                      <TouchableOpacity
+                        className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleSide}`}
+                        onPress={() =>
+                          playHandler({
+                            link: item.link,
+                            type: item.type || 'series',
+                            primaryTitle: metaTitle,
+                            secondaryTitle: item.title,
+                            file: (
+                              metaTitle +
+                              ActiveSeason.title +
+                              item.title
+                            ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
+                          })
+                        }
+                        onLongPress={() =>
+                          onLongPressHandler(true, item.link, 'series')
+                        }>
+                        <Ionicons
+                          name="play-circle"
+                          size={28}
+                          color={primary}
+                        />
+                        <Text className="text-white">
+                          {ActiveSeason?.directLinks?.length &&
+                          ActiveSeason?.directLinks?.length > 1
+                            ? item.title?.length > 27
+                              ? item.title.slice(0, 27) + '...'
+                              : item.title
+                            : 'Play'}
+                        </Text>
+                      </TouchableOpacity>
+                      <Downloader
+                        providerValue={providerValue}
+                        link={item.link}
+                        type={item.type || 'series'}
+                        title={
+                          metaTitle.length > 30
+                            ? metaTitle.slice(0, 30) + '... ' + item.title
+                            : metaTitle + ' ' + item.title
+                        }
+                        fileName={(
+                          metaTitle +
+                          ActiveSeason.title +
+                          item.title
+                        ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                      />
+                    </View>
+                  </View>
+                );
+              }}
             />
           </View>
         )}
