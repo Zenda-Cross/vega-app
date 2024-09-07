@@ -122,8 +122,7 @@ const Settings = ({navigation}: Props) => {
       </View>
 
       {/* download folder shortcut */}
-
-      <TouchableNativeFeedback
+      {/* <TouchableNativeFeedback
         onPress={async () => {
           ReactNativeHapticFeedback.trigger('virtualKey', {
             enableVibrateFallback: true,
@@ -143,7 +142,7 @@ const Settings = ({navigation}: Props) => {
           </View>
           <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </TouchableNativeFeedback>
+      </TouchableNativeFeedback> */}
 
       {/* Subtitle Style  */}
       <TouchableNativeFeedback
