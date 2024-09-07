@@ -54,17 +54,17 @@ export const allGetStream = async (
     }
 
     ///// flimxy
-    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    if (flimxyStream) {
-      for (const quality in flimxyStream?.qualities) {
-        streams.push({
-          server: 'Flimxy-' + quality,
-          link: flimxyStream?.qualities?.[quality]?.url,
-          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-          quality: quality as any,
-        });
-      }
-    }
+    // const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    // if (flimxyStream) {
+    //   for (const quality in flimxyStream?.qualities) {
+    //     streams.push({
+    //       server: 'Flimxy-' + quality,
+    //       link: flimxyStream?.qualities?.[quality]?.url,
+    //       type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+    //       quality: quality as any,
+    //     });
+    //   }
+    // }
 
     // whvx orion
     const whvxStreamOrion = await getWhvxStream(
