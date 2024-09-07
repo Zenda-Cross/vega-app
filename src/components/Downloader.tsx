@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
+import BottomSheet from '@gorhom/bottom-sheet';
+import DownloadBottomSheet from './DownloadBottomSheet';
 
 const DownloadComponent = ({
   link,
@@ -201,140 +203,36 @@ const DownloadComponent = ({
           </Modal>
         }
         {/* download modal */}
-        {
-          <Modal
-            animationType="fade"
-            visible={downloadModal}
-            transparent={true}>
-            <View className="flex-1 bg-black/10 justify-center items-center p-4">
-              <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
-                <Text className="text-lg font-semibold my-3 text-white">
-                  Select a server to download
-                </Text>
-                <View className="flex-row items-center flex-wrap gap-1 justify-evenly w-full my-5">
-                  {!serverLoading
-                    ? servers?.map((server, index) => (
-                        <TouchableOpacity
-                          key={server.server + index}
-                          onPress={() => {
-                            setDownloadModal(false);
-                            downloadManager({
-                              title: title,
-                              url: server.link,
-                              fileName: fileName,
-                              fileType: server.type,
-                              downloadStore: downloadStore,
-                              setAlreadyDownloaded: setAlreadyDownloaded,
-                              setDownloadId: setDownloadId,
-                              headers: server?.headers,
-                            });
-                          }}
-                          onLongPress={() => {
-                            ReactNativeHapticFeedback.trigger(
-                              'effectHeavyClick',
-                              {
-                                enableVibrateFallback: true,
-                                ignoreAndroidSystemSettings: false,
-                              },
-                            );
-                            Clipboard.setString(server.link);
-                            ToastAndroid.show(
-                              'Link copied to clipboard',
-                              ToastAndroid.SHORT,
-                            );
-                          }}
-                          className="p-2 rounded-md m-1"
-                          style={{backgroundColor: primary}}>
-                          <Text className="text-white text-xs rounded-md capitalize px-1">
-                            {server.server}
-                          </Text>
-                        </TouchableOpacity>
-                      ))
-                    : Array.from({length: 3}).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          show={true}
-                          colorMode="dark"
-                          height={30}
-                          width={90}
-                        />
-                      ))}
-                  {serverLoading === false && servers.length === 0 && (
-                    <Text className="text-red-500 text-center">
-                      No server available to download
-                    </Text>
-                  )}
-                </View>
-                <View className="flex-row items-center gap-2 w-full">
-                  <MaterialIcons
-                    name="info-outline"
-                    size={14}
-                    color="#c1c4c9"
-                    onPress={() => setDownloadModal(false)}
-                  />
-                  <Text className="text-[10px] text-center text-white">
-                    Long press to copy download link
-                  </Text>
-                </View>
-                {/* close modal */}
-                <TouchableOpacity
-                  onPress={() => {
-                    setDownloadModal(false);
-                  }}
-                  className="absolute top-2 right-2">
-                  <MaterialIcons name="close" size={20} color="#c1c4c9" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        }
+        <DownloadBottomSheet
+          setModal={setDownloadModal}
+          showModal={downloadModal}
+          data={servers}
+          loading={serverLoading}
+          title="Select Server To Download"
+          onPress={(server: Stream) => {
+            downloadManager({
+              title: title,
+              url: server.link,
+              fileName: fileName,
+              fileType: server.type,
+              downloadStore: downloadStore,
+              setAlreadyDownloaded: setAlreadyDownloaded,
+              setDownloadId: setDownloadId,
+              headers: server?.headers,
+            });
+          }}
+        />
         {/* long press modal */}
-        {
-          <Modal
-            animationType="fade"
-            visible={longPressModal}
-            transparent={true}>
-            <View className="flex-1 bg-black/10 justify-center items-center p-4">
-              <View className="bg-tertiary p-3 w-full rounded-md justify-center items-center">
-                <Text className="text-lg font-semibold my-3 text-white">
-                  Select a server to open
-                </Text>
-                <View className="flex-row items-center flex-wrap gap-1 justify-evenly w-full my-5">
-                  {!serverLoading
-                    ? servers?.map((server, index) => (
-                        <TouchableOpacity
-                          key={server.server + index}
-                          onPress={() => {
-                            setLongPressModal(false);
-                            longPressDownload(server.link);
-                          }}
-                          className="p-2 rounded-md m-1"
-                          style={{backgroundColor: primary}}>
-                          <Text className="text-white text-xs rounded-md capitalize px-1">
-                            {server.server}
-                          </Text>
-                        </TouchableOpacity>
-                      ))
-                    : Array.from({length: 3}).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          show={true}
-                          colorMode="dark"
-                          height={30}
-                          width={90}
-                        />
-                      ))}
-                </View>
-                {/* close modal */}
-                <TouchableOpacity
-                  onPress={() => setLongPressModal(false)}
-                  className="absolute top-2 right-2">
-                  <MaterialIcons name="close" size={20} color="#c1c4c9" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        }
+        <DownloadBottomSheet
+          setModal={setLongPressModal}
+          showModal={longPressModal}
+          data={servers}
+          loading={serverLoading}
+          title="Select Server To Open"
+          onPress={(server: Stream) => {
+            longPressDownload(server.link);
+          }}
+        />
       </View>
       {cancelModal && downloadId && (
         <Pressable
