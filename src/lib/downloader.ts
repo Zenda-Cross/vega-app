@@ -35,6 +35,23 @@ export const downloadManager = async ({
     id: 'download',
     name: 'Download Notifications',
   });
+  notifee.displayNotification({
+    id: fileName,
+    title: title,
+    body: 'Downloading ' + title,
+    android: {
+      channelId,
+      color: primary,
+      pressAction: {
+        id: 'default',
+      },
+      progress: {
+        max: 100,
+        current: 0,
+        indeterminate: true,
+      },
+    },
+  });
   if (await ifExists(fileName)) {
     console.log('File already exists');
     setAlreadyDownloaded(true);
