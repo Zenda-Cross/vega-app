@@ -8,12 +8,14 @@ type SkeletonLoaderProps = {
   height: number;
   style?: any;
   darkMode?: boolean;
+  marginVertical?: number;
 };
 const SkeletonLoader = ({
   width,
   height,
   style,
   darkMode = true,
+  marginVertical = 8,
 }: SkeletonLoaderProps) => {
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -42,7 +44,7 @@ const SkeletonLoader = ({
   });
 
   return (
-    <View style={[styles.skeleton, {width, height}, style]}>
+    <View style={[styles.skeleton, {width, height, marginVertical}, style]}>
       <Animated.View
         style={{
           flex: 1,
@@ -62,8 +64,7 @@ const SkeletonLoader = ({
 const styles = StyleSheet.create({
   skeleton: {
     overflow: 'hidden',
-    borderRadius: 4,
-    marginVertical: 8,
+    borderRadius: 5,
     // based on dark mode
     backgroundColor: '#333',
   },
