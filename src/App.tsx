@@ -31,7 +31,12 @@ enableFreeze(true);
 export type HomeStackParamList = {
   Home: undefined;
   Info: {link: string; provider?: string; poster?: string};
-  ScrollList: {filter: string; title?: string; providerValue?: string};
+  ScrollList: {
+    filter: string;
+    title?: string;
+    providerValue?: string;
+    isSearch: boolean;
+  };
   Webview: {link: string};
 };
 
@@ -54,7 +59,12 @@ export type RootStackParamList = {
 
 export type SearchStackParamList = {
   Search: undefined;
-  ScrollList: {filter: string; title?: string; providerValue?: string};
+  ScrollList: {
+    filter: string;
+    title?: string;
+    providerValue?: string;
+    isSearch: boolean;
+  };
   Info: {link: string; provider?: string; poster?: string};
   SearchResults: {filter: string};
 };

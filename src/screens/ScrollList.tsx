@@ -37,11 +37,22 @@ const ScrollList = ({route}: Props): React.ReactElement => {
     const fetchPosts = async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setIsLoading(true);
-      const newPosts = await manifest[
-        route.params.providerValue || provider.value
-      ].GetSearchPosts(filter, page, provider.value, signal);
+      const getNewPosts = route.params.isSearch
+        ? manifest[route.params.providerValue || provider.value].GetSearchPosts(
+            filter,
+            page,
+            provider.value,
+            signal,
+          )
+        : manifest[route.params.providerValue || provider.value].GetHomePosts(
+            filter,
+            page,
+            provider.value,
+            signal,
+          );
+      const newPosts = await getNewPosts;
       if (newPosts?.length === 0 && (page > 2 || page === 1)) {
-        console.log('end🔥🔥', page);
+        console.log('end', page);
         setIsEnd(true);
         setIsLoading(false);
         return;
