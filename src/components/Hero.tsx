@@ -95,6 +95,7 @@ function Hero() {
                     providerValue: provider.value,
                     filter: e.nativeEvent.text,
                     title: `${provider.name}`,
+                    isSearch: true,
                   });
                 }
               }}
