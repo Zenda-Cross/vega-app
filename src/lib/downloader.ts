@@ -17,6 +17,7 @@ export const downloadManager = async ({
   setAlreadyDownloaded,
   setDownloadId,
   headers,
+  deleteDownload,
 }: {
   title: string;
   url: string;
@@ -26,6 +27,7 @@ export const downloadManager = async ({
   headers?: any;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
+  deleteDownload: () => void;
 }) => {
   const primary = MMKV.getString('primaryColor') || '#FF6347';
   await requestStoragePermission();
@@ -38,8 +40,9 @@ export const downloadManager = async ({
   notifee.displayNotification({
     id: fileName,
     title: title,
-    body: 'Downloading ' + title,
+    body: 'Starting download',
     android: {
+      smallIcon: 'ic_notification',
       channelId,
       color: primary,
       pressAction: {
@@ -179,6 +182,7 @@ export const downloadManager = async ({
       // });
     });
     ret.promise.catch(err => {
+      deleteDownload();
       console.log('Download error:', err);
       Alert.alert('Download failed', err.message || 'Failed to download');
       notifee.cancelNotification(fileName);
@@ -205,6 +209,7 @@ export const downloadManager = async ({
     return ret.jobId;
   } catch (error: any) {
     console.error('Download error:', error);
+    deleteDownload();
     Alert.alert('Download failed', 'Failed to download');
     removeActiveDownload(fileName);
     setAlreadyDownloaded(false);
