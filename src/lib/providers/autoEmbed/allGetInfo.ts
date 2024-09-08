@@ -52,7 +52,7 @@ export const allGetInfo = async function (link: string): Promise<Info> {
         title: data?.meta?.name as string,
         directLinks: [
           {
-            title: 'Watch Now',
+            title: 'Movie',
             type: 'movie',
             link: JSON.stringify({
               title: data?.meta?.name as string,

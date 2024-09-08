@@ -45,6 +45,7 @@ const Search = () => {
               navigation.navigate('ScrollList', {
                 filter: genre.filter,
                 title: genre.title,
+                isSearch: false,
               });
             }}
             className="h-24 w-40 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">

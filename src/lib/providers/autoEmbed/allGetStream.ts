@@ -5,6 +5,7 @@ import {multiExtractor} from './multiExtractor';
 import {stableExtractor} from './stableExtractor';
 import {getFlimxyStream} from './getFlimxyStream';
 import {getRiveStream} from './getRiveStream';
+import {getVidSrcRip} from './getVidSrcRip';
 
 const autoembed = 'YXV0b2VtYmVkLmNj';
 export const allGetStream = async (
@@ -53,17 +54,17 @@ export const allGetStream = async (
     }
 
     ///// flimxy
-    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    if (flimxyStream) {
-      for (const quality in flimxyStream?.qualities) {
-        streams.push({
-          server: 'Flimxy-' + quality,
-          link: flimxyStream?.qualities?.[quality]?.url,
-          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-          quality: quality as any,
-        });
-      }
-    }
+    // const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    // if (flimxyStream) {
+    //   for (const quality in flimxyStream?.qualities) {
+    //     streams.push({
+    //       server: 'Flimxy-' + quality,
+    //       link: flimxyStream?.qualities?.[quality]?.url,
+    //       type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+    //       quality: quality as any,
+    //     });
+    //   }
+    // }
 
     // whvx orion
     const whvxStreamOrion = await getWhvxStream(
@@ -153,6 +154,9 @@ export const allGetStream = async (
 
     ///// rive
     await getRiveStream(tmdbId, episode, season, type, streams);
+
+    ///// vidsrcrip
+    await getVidSrcRip(tmdbId, season, episode, streams);
 
     ///// autoembed
     // server1

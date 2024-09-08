@@ -187,3 +187,8 @@ export const themes: {name: string; color: string}[] = [
     color: '#FFFFFF',
   },
 ];
+
+export const socialLinks = {
+  github: 'https://github.com/Zenda-Cross/vega-app',
+  discord: 'https://discord.gg/cr42m6maWy',
+};
