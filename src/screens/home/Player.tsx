@@ -86,6 +86,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   const [playbackRate, setPlaybackRate] = useState(1);
+
+  // constants
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
   const settings:
     | {
@@ -265,6 +267,8 @@ const Player = ({route}: Props): React.JSX.Element => {
           metadata: {
             title: route.params.primaryTitle,
             subtitle: route.params.secondaryTitle,
+            artist: route.params.secondaryTitle,
+            description: route.params.secondaryTitle,
             imageUri: route.params.poster.poster,
           },
         }}
@@ -539,6 +543,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       onPress={() => {
                         setSelectedTextTrack({type: 'language', value: 'off'});
+                        setSelectedTextTrackIndex(1000);
                       }}>
                       <Text className="text-base font-semibold text-white">
                         Disable

@@ -45,6 +45,7 @@ export default function Slider({
                 title: title,
                 filter: filter,
                 providerValue: providerValue,
+                isSearch: false,
               })
             }>
             <Text className="text-white text-sm">more</Text>
