@@ -1,20 +1,11 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  ToastAndroid,
-  Clipboard,
-  Pressable,
-} from 'react-native';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
+import {View, Text, TouchableOpacity, Modal, Pressable} from 'react-native';
 import {ifExists} from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import {Stream} from '../lib/providers/types';
 import {MotiView} from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import {Skeleton} from 'moti/skeleton';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -24,7 +15,6 @@ import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
-import BottomSheet from '@gorhom/bottom-sheet';
 import DownloadBottomSheet from './DownloadBottomSheet';
 
 const DownloadComponent = ({
@@ -219,6 +209,7 @@ const DownloadComponent = ({
               setAlreadyDownloaded: setAlreadyDownloaded,
               setDownloadId: setDownloadId,
               headers: server?.headers,
+              deleteDownload: deleteDownload,
             });
           }}
         />

@@ -36,7 +36,12 @@ const DownloadBottomSheet = ({
     }
   }, [showModal]);
   return (
-    <Modal visible={showModal} transparent={true}>
+    <Modal
+      onRequestClose={() => {
+        bottomSheetRef.current?.close();
+      }}
+      visible={showModal}
+      transparent={true}>
       <GestureHandlerRootView>
         <Pressable
           onPress={() => bottomSheetRef.current?.close()}
@@ -58,7 +63,7 @@ const DownloadBottomSheet = ({
                 style={{padding: 5, marginBottom: 5}}
                 showsVerticalScrollIndicator={false}>
                 {loading
-                  ? Array.from({length: 8}).map((_, index) => (
+                  ? Array.from({length: 4}).map((_, index) => (
                       <SkeletonLoader
                         key={index}
                         width={Dimensions.get('window').width - 30}
