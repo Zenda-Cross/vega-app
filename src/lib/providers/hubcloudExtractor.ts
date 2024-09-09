@@ -16,9 +16,13 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
     const streamLinks: Stream[] = [];
     const vLinkRes = await axios(`${link}`, {headers, signal});
     const vLinkText = vLinkRes.data;
+    const $vLink = cheerio.load(vLinkText);
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
     const vcloudLink =
-      decode(vLinkRedirect[1]?.split('r=')?.[1]) || vLinkRedirect[1] || link;
+      decode(vLinkRedirect[1]?.split('r=')?.[1]) ||
+      vLinkRedirect[1] ||
+      $vLink('.fa-file-download.fa-lg').parent().attr('href') ||
+      link;
     console.log('vcloudLink', vcloudLink);
 
     const vcloudRes = await fetch(vcloudLink, {
@@ -27,6 +31,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
       redirect: 'follow',
     });
     const $ = cheerio.load(await vcloudRes.text());
+    console.log('vcloudRes', vcloudRes.url);
 
     const linkClass = $('.btn-success.btn-lg.h6,.btn-danger,.btn-secondary');
     for (const element of linkClass) {
