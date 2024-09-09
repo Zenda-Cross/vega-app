@@ -4,12 +4,15 @@ import {
   Pressable,
   TouchableOpacity,
   Dimensions,
+  ToastAndroid,
 } from 'react-native';
 import React, {useEffect, useRef} from 'react';
 import {Stream} from '../lib/providers/types';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import SkeletonLoader from './Skeleton';
+import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {Clipboard} from 'react-native';
 
 type Props = {
   data: Stream[];
@@ -75,6 +78,14 @@ const DownloadBottomSheet = ({
                       <TouchableOpacity
                         className="p-2 bg-white/30 rounded-md my-1"
                         key={item.link}
+                        onLongPress={() => {
+                          RNReactNativeHapticFeedback.trigger('effectTick', {
+                            enableVibrateFallback: true,
+                            ignoreAndroidSystemSettings: false,
+                          });
+                          Clipboard.setString(item.link);
+                          ToastAndroid.show('Link copied', ToastAndroid.SHORT);
+                        }}
                         onPress={() => {
                           onPress(item);
                           bottomSheetRef.current?.close();
