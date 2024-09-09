@@ -62,6 +62,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'CinemaLuxe',
+    value: 'cinemaLuxe',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'NetflixMirror',
     value: 'netflixMirror',
     type: 'global',
