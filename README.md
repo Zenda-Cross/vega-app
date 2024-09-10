@@ -22,7 +22,7 @@ Note: Download Universal version if armeabi-v7a and arm64-v8a are not working fo
 <br>
 
 ## Screenshots
-![BeFunky-collage](https://github.com/Zenda-Cross/vega-app/assets/143804558/8b7ff105-3310-4485-b9f3-fdc24d128964)
+![Screenshots](https://github.com/user-attachments/assets/b86af756-e66e-4ae7-b2af-61b25cfd8d4e)
 
 ___
 
