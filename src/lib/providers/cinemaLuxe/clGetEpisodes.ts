@@ -7,6 +7,12 @@ export const clsEpisodeLinks = async function (
   url: string,
 ): Promise<EpisodeLink[]> {
   try {
+    if (!url.includes('luxelinks')) {
+      const res = await axios.get(url, {headers});
+      const data = res.data;
+      const encodedLink = data.match(/"link":"([^"]+)"/)[1];
+      url = encodedLink ? atob(encodedLink) : url;
+    }
     const res = await axios.get(url, {headers});
     const html = res.data;
     let $ = cheerio.load(html);
