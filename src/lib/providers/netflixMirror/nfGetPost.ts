@@ -20,8 +20,8 @@ export const nfGetPost = async function (
 
     const url = `${baseUrl + filter}`;
     // console.log(url);
-    const res = await axios.get(url, {headers, signal});
-    const data = res.data;
+    const res = await fetch(url, {headers, signal, credentials: 'omit'});
+    const data = await res.text();
     const $ = cheerio.load(data);
     $('a.post-data').map((i, element) => {
       const title = '';

@@ -6,10 +6,11 @@ export const nfGetInfo = async function (link: string): Promise<Info> {
   try {
     const url = link;
     console.log('nfifo', url);
-    const res = await axios.get(url, {
-      headers: headers,
+    const res = await fetch(url, {
+      headers,
+      credentials: 'omit',
     });
-    const data = res.data;
+    const data = await res.json();
     const id = link.split('id=')[1]?.split('&')[0];
     const meta = {
       title: data.title,
