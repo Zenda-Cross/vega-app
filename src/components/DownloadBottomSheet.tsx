@@ -52,7 +52,7 @@ const DownloadBottomSheet = ({
           <BottomSheet
             // detached={true}
             enablePanDownToClose={true}
-            snapPoints={['50%']}
+            snapPoints={['30%', 450]}
             containerStyle={{marginHorizontal: 5}}
             ref={bottomSheetRef}
             backgroundStyle={{backgroundColor: '#1a1a1a'}}
