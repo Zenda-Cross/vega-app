@@ -9,10 +9,12 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
     const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
       new Date().getTime() / 1000,
     )}`;
-    const res = await axios.get(url, {
+    const res = await fetch(url, {
       headers: headers,
+      credentials: 'omit',
     });
-    const data = res.data?.[0];
+    const resJson = await res.json();
+    const data = resJson?.[0];
     const streamLinks: Stream[] = [];
     data?.sources.forEach((source: any) => {
       streamLinks.push({
