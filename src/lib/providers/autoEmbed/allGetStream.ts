@@ -153,7 +153,7 @@ export const allGetStream = async (
     }
 
     ///// rive
-    await getRiveStream(tmdbId, episode, season, type, streams);
+    // await getRiveStream(tmdbId, episode, season, type, streams);
 
     ///// vidsrcrip
     await getVidSrcRip(tmdbId, season, episode, streams);
