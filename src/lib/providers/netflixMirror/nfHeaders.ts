@@ -1,18 +1,6 @@
 export const headers = {
-  Accept:
-    'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-  'Accept-Encoding': 'gzip, deflate',
-  'Accept-Language': 'en-US,en;q=0.9',
-  Connection: 'keep-alive',
   Cookie:
-    'HstCfa1188575=1722858787120; HstCmu1188575=1722858787120; _dtspv={"ss":"6tcf6y824c","st":1722858790.15,"sl":1722858790.15,"u1":1722858790.15,"u3":1722858790.15,"pv":1,"c":{"cc":"in","pl":"m","b":"chrome@113"}}; __dtsu=6D0017228587928C04F132747F446C6C; HstCnv1188575=2; HstCns1188575=2; HstCla1188575=1723028120961; HstPn1188575=2; HstPt1188575=4',
-  Host: 'iosmirror.cc',
-  'Sec-Fetch-Dest': 'document',
-  'Sec-Fetch-Mode': 'navigate',
-  'Sec-Fetch-Site': 'none',
-  'Sec-Fetch-User': '?1',
-  'Upgrade-Insecure-Requests': '1',
+    'hd=on; lang=hin; SE81149450=81220014; t_hash_t=0ef922dd880144760184234a679f6a5d%3A%3A271c7b007bfd59a495f9dada46e01dcd%3A%3A1725781321%3A%3Ani; SE81707950=81726576; t_hash=969e1e9bd2212c1e411b13f29cf86b58%3A%3A1725966315%3A%3Ani; SE81285617=81285624; recentplay=SE81285617-81282732-SE81707950-70213514-235527-SE81149450',
   'User-Agent':
-    'Mozilla/5.0 (Linux; Android 14; sdk_gphone64_x86_64 Build/UE1A.230829.036.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/113.0.5672.136 Mobile Safari/537.36 /OS.Gatu v1.0',
-  'X-Requested-With': 'com.example.netflixmirror',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0',
 };

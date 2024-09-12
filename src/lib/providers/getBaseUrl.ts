@@ -1,7 +1,7 @@
 import {MmmkvCache} from '../Mmkv';
 
-// 12 hours
-const expireTime = 43200000;
+// 1 hour
+const expireTime = 60 * 60 * 1000;
 
 export const getBaseUrl = async (providerValue: string) => {
   try {

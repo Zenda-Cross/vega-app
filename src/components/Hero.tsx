@@ -11,17 +11,29 @@ import {HomeStackParamList, SearchStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
-import {MmmkvCache} from '../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../lib/Mmkv';
 import {manifest} from '../lib/Manifest';
 import {Info} from '../lib/providers/types';
 import {Feather} from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import {DrawerLayout} from 'react-native-gesture-handler';
 
-function Hero() {
+function Hero({
+  isDrawerOpen,
+  drawerRef,
+}: {
+  isDrawerOpen: boolean;
+  drawerRef: React.RefObject<DrawerLayout>;
+}) {
   const [post, setPost] = useState<any>();
   const [loading, setLoading] = useState(true);
   const [searchActive, setSearchActive] = useState(false);
   const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
+  const [showHamburgerMenu] = useState(
+    MMKV.getBool('showHamburgerMenu') || false,
+  );
+  const [isDrawerDisabled] = useState(MMKV.getBool('disableDrawer') || false);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const searchNavigation =
@@ -74,7 +86,23 @@ function Hero() {
   });
   return (
     <View className="relative">
-      <View className="absolute w-full top-6 p-2 z-30 justify-center items-center">
+      <View className="absolute w-full top-6 px-2 mt-2 z-30 flex-row justify-between items-center">
+        {!searchActive && (
+          <View
+            className={`${
+              showHamburgerMenu && !isDrawerDisabled
+                ? 'opacity-100'
+                : 'opacity-0'
+            }`}>
+            <Pressable
+              className={`${isDrawerOpen ? 'opacity-0' : 'opacity-100'}`}
+              onPress={() => {
+                drawerRef.current?.openDrawer();
+              }}>
+              <Ionicons name="menu-sharp" size={27} color="white" />
+            </Pressable>
+          </View>
+        )}
         {searchActive && (
           <MotiView
             from={{opacity: 0, scale: 0.5}}
@@ -105,13 +133,12 @@ function Hero() {
           </MotiView>
         )}
         {!searchActive && (
-          <Pressable
-            className="w-full items-end absolute right-3 top-3"
-            onPress={() => setSearchActive(true)}>
+          <Pressable className="" onPress={() => setSearchActive(true)}>
             <Feather name="search" size={24} color="white" />
           </Pressable>
         )}
       </View>
+
       <Skeleton show={loading} colorMode="dark">
         <Image
           source={{
