@@ -23,6 +23,7 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
         type: 'm3u8',
         headers: {
           Referer: baseUrl,
+          origin: baseUrl,
         },
       });
     });
