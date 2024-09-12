@@ -40,6 +40,10 @@ const Preferences = () => {
     MMKV.getBool('showMediaControls') || true,
   );
 
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState<boolean>(
+    MMKV.getBool('showHamburgerMenu') || false,
+  );
+
   return (
     <ScrollView className="w-full h-full bg-black">
       <Text className="text-white mt-10 ml-4 font-bold text-2xl">
@@ -151,6 +155,28 @@ const Preferences = () => {
           />
         </View>
 
+        {/* show hamburger menu */}
+        {!disableDrawer && (
+          <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+            <Text className="text-white font-semibold">
+              Show Hamburger Menu
+            </Text>
+            <View className="w-20" />
+            <Switch
+              thumbColor={showHamburgerMenu ? primary : 'gray'}
+              value={showHamburgerMenu}
+              onValueChange={() => {
+                MMKV.setBool('showHamburgerMenu', !showHamburgerMenu);
+                setShowHamburgerMenu(!showHamburgerMenu);
+                ToastAndroid.show(
+                  'Restart App to Apply Changes',
+                  ToastAndroid.SHORT,
+                );
+              }}
+            />
+          </View>
+        )}
+
         {/* show media controls */}
         <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
@@ -179,6 +205,10 @@ const Preferences = () => {
             onValueChange={() => {
               MMKV.setBool('showRecentlyWatched', !showRecentlyWatched);
               setShowRecentlyWatched(!showRecentlyWatched);
+              ToastAndroid.show(
+                'Restart App to Apply Changes',
+                ToastAndroid.SHORT,
+              );
             }}
           />
         </View>
