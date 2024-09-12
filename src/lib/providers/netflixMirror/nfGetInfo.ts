@@ -34,7 +34,7 @@ export const nfGetInfo = async function (link: string): Promise<Info> {
     } else {
       linkList.push({
         title: meta.title,
-        directLinks: [{link: link, title: 'Movie', type: 'movie'}],
+        directLinks: [{link: id, title: 'Movie', type: 'movie'}],
       });
     }
 
