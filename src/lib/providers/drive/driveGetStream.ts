@@ -30,7 +30,10 @@ export const driveGetStream = async (
     const hubcloudLink = $('.fa-file-download').parent().attr('href');
     console.log('hubcloudLink', hubcloudLink);
 
-    return await hubcloudExtracter(hubcloudLink!, signal);
+    return await hubcloudExtracter(
+      hubcloudLink?.includes('https://hubcloud') ? hubcloudLink : redirectUrl,
+      signal,
+    );
   } catch (err) {
     console.error(err);
     return [];

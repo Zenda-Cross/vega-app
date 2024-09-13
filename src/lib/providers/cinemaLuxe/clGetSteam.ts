@@ -24,8 +24,11 @@ export const clGetStream = async (
     }
     const res2 = await axios.get(newLink, {signal});
     const data2 = res2.data;
-    newLink = data2.match(/location\.replace\('([^']+)'/)?.[1] || newLink;
-    const hubCloudLinks = await hubcloudExtracter(newLink, signal);
+    const hcLink = data2.match(/location\.replace\('([^']+)'/)?.[1] || newLink;
+    const hubCloudLinks = await hubcloudExtracter(
+      hcLink.includes('https://hubcloud') ? hcLink : newLink,
+      signal,
+    );
     return hubCloudLinks;
   } catch (err) {
     console.error(err);
