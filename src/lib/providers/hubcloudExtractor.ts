@@ -57,6 +57,9 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
       if (link?.includes('cloudflarestorage')) {
         streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
+      if (link?.includes('fastdl')) {
+        streamLinks.push({server: 'fastDl', link: link, type: 'mkv'});
+      }
     }
     return streamLinks;
   } catch (error) {

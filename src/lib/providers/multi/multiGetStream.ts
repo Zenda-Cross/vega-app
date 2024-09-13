@@ -42,8 +42,11 @@ export const multiGetStream = async (
     console.log('ifameUrl', ifameUrl);
     if (!ifameUrl.includes('multimovies')) {
       const iframeRes = await axios.get(ifameUrl, {headers});
+      // console.log('iframeRes', iframeRes.data);
       const $$ = cheerio.load(iframeRes.data);
-      let newIframeUrl = $$('.linkserver').first().attr('data-video');
+      let newIframeUrl =
+        $$('.linkserver').first().attr('data-video') ||
+        $$('#videoLinks').children().first().attr('data-link');
       console.log('newIframeUrl', newIframeUrl);
       if (newIframeUrl) {
         ifameUrl = newIframeUrl;
