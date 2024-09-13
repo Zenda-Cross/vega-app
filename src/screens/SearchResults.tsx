@@ -127,6 +127,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
               }
               filter={route.params.filter}
               providerValue={item.value}
+              isSearch={true}
             />
           ))}
         </View>
