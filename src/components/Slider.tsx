@@ -18,12 +18,14 @@ export default function Slider({
   posts,
   filter,
   providerValue,
+  isSearch = false,
 }: {
   isLoading: boolean;
   title: string;
   posts: Post[];
   filter: string;
   providerValue?: string;
+  isSearch?: boolean;
 }): JSX.Element {
   const {provider} = useContentStore(state => state);
   const {primary} = useThemeStore(state => state);
@@ -45,7 +47,7 @@ export default function Slider({
                 title: title,
                 filter: filter,
                 providerValue: providerValue,
-                isSearch: false,
+                isSearch: isSearch,
               })
             }>
             <Text className="text-white text-sm">more</Text>
