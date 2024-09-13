@@ -86,7 +86,7 @@ function Hero({
   });
   return (
     <View className="relative">
-      <View className="absolute w-full top-6 px-2 mt-2 z-30 flex-row justify-between items-center">
+      <View className="absolute w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
         {!searchActive && (
           <View
             className={`${
