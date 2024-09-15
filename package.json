@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -23,6 +23,7 @@
     "cheerio": "^1.0.0-rc.12",
     "expo": "^51.0.0",
     "expo-blur": "~13.0.2",
+    "expo-build-properties": "~0.12.5",
     "expo-intent-launcher": "~11.0.1",
     "expo-system-ui": "~3.0.4",
     "ffmpeg-kit-react-native": "^6.0.2",
