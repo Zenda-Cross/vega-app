@@ -10,8 +10,10 @@ export const dcGetPosts = async function (
   providerValue: string,
   signal: AbortSignal,
 ): Promise<Post[]> {
+  console.log('dcGetPosts', filter, page);
   const baseUrl = await getBaseUrl('dc');
   const url = `${baseUrl + filter}?page=${page}`;
+  console.log('dcUrl', url);
   return posts(url, signal);
 };
 

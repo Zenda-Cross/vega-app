@@ -10,7 +10,7 @@ export async function getRiveStream(
   type: string,
   Streams: Stream[],
 ) {
-  const servers = ['vidcloud', 'upcloud', 'nova'];
+  const servers = ['hydrax', 'filmecho', 'upcloud', 'nova'];
   const baseUrl = await getBaseUrl('rive');
   const cors = 'aHR0cHM6Ly9jcnMuMXByb3h5LndvcmtlcnMuZGV2Lz91cmw9';
   const route =
