@@ -11,7 +11,9 @@ export const uhdGetPosts = async (
   signal: AbortSignal,
 ): Promise<Post[]> => {
   const baseUrl = await getBaseUrl('UhdMovies');
-  const url = `${baseUrl + filter}/page/${page}/`;
+  const url =
+    page === 1 ? `${baseUrl}/${filter}/` : `${baseUrl + filter}/page/${page}/`;
+  console.log('url', url);
 
   return posts(baseUrl, url, signal);
 };
