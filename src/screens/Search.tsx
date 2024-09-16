@@ -18,7 +18,7 @@ const Search = () => {
   const handleSearch = () => {
     if (searchText.trim()) {
       navigation.navigate('SearchResults', {
-        filter: searchText,
+        filter: searchText.trim(),
       });
     }
   };
