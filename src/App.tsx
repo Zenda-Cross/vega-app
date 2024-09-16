@@ -80,7 +80,14 @@ export type SettingsStackParamList = {
   About: undefined;
   Preferences: undefined;
 };
-const Tab = createBottomTabNavigator();
+
+export type TabStackParamList = {
+  HomeStack: undefined;
+  SearchStack: undefined;
+  WatchList: undefined;
+  SettingsStack: undefined;
+};
+const Tab = createBottomTabNavigator<TabStackParamList>();
 const App = () => {
   LogBox.ignoreLogs(['You have passed a style to FlashList']);
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -167,6 +174,7 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           headerShown: false,
+          freezeOnBlur: true,
           tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {backgroundColor: 'black'},
@@ -199,7 +207,7 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="Watch List"
+          name="WatchList"
           component={WatchListStackScreen}
           options={{
             unmountOnBlur: true,
