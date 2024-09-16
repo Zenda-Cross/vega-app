@@ -28,6 +28,8 @@ import {
   VideoTrack,
   TextTracks,
   TextTrackType,
+  SelectedTrack,
+  SelectedTrackType,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -57,12 +59,14 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTabs>('audio');
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
-  const [selectedAudioTrack, setSelectedAudioTrack] =
-    useState<SelectedAudioTrack>({type: 'index', value: '0'});
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState<SelectedTrack>({
+    type: SelectedTrackType.INDEX,
+    value: 0,
+  });
   const [textTracks, setTextTracks] = useState<TextTrack[]>([]);
-  const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
-    {type: 'language', value: 'off'},
-  );
+  const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTrack>({
+    type: SelectedTrackType.DISABLED,
+  });
   const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
   const [selectedTextTrackIndex, setSelectedTextTrackIndex] = useState(1000);
   const [selectedQualityIndex, setSelectedQualityIndex] = useState(1000);
@@ -345,13 +349,11 @@ const Player = ({route}: Props): React.JSX.Element => {
           setShowControls(true);
         }}
         resizeMode={resizeMode}
-        //@ts-ignore
         selectedAudioTrack={selectedAudioTrack}
         onAudioTracks={e => {
           console.log('audioTracks', e.audioTracks);
           setAudioTracks(e.audioTracks);
         }}
-        //@ts-ignore
         selectedTextTrack={selectedTextTrack}
         onTextTracks={e => {
           setTextTracks(e.textTracks);
@@ -497,7 +499,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       key={i}
                       onPress={() => {
                         setSelectedAudioTrack({
-                          type: 'language',
+                          type: SelectedTrackType.LANGUAGE,
                           value: track.language,
                         });
                         setSelectedAudioTrackIndex(i);
@@ -542,7 +544,9 @@ const Player = ({route}: Props): React.JSX.Element => {
                     <TouchableOpacity
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       onPress={() => {
-                        setSelectedTextTrack({type: 'language', value: 'off'});
+                        setSelectedTextTrack({
+                          type: SelectedTrackType.DISABLED,
+                        });
                         setSelectedTextTrackIndex(1000);
                       }}>
                       <Text className="text-base font-semibold text-white">
@@ -602,7 +606,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       }
                       onPress={() => {
                         setSelectedTextTrack({
-                          type: 'index',
+                          type: SelectedTrackType.INDEX,
                           value: track.index,
                         });
                         setSelectedTextTrackIndex(track.index);
