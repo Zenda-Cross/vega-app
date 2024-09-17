@@ -24,6 +24,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   const {primary} = useThemeStore(state => state);
   // const [refreshing, setRefreshing] = useState(false);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
+  const [emptyResults, setEmptyResults] = useState<SearchPageData[]>([]);
   const trueLoading = providersList.map(item => {
     return {name: item.name, value: item.value, isLoading: true};
   });
@@ -47,17 +48,31 @@ const SearchResults = ({route}: Props): React.ReactElement => {
             signal,
           );
 
-          setSearchData(prev => [
-            ...prev,
-            {
-              title: item.name,
-              Posts: data,
-              filter: route.params.filter,
-              providerValue: item.value,
-              value: item.value,
-              name: item.name,
-            },
-          ]);
+          if (data.length > 0) {
+            setSearchData(prev => [
+              ...prev,
+              {
+                title: item.name,
+                Posts: data,
+                filter: route.params.filter,
+                providerValue: item.value,
+                value: item.value,
+                name: item.name,
+              },
+            ]);
+          } else {
+            setEmptyResults(prev => [
+              ...prev,
+              {
+                title: item.name,
+                Posts: data,
+                filter: route.params.filter,
+                providerValue: item.value,
+                value: item.value,
+                name: item.name,
+              },
+            ]);
+          }
 
           setLoading(prev =>
             prev.map(i =>
@@ -104,13 +119,22 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         {/* <Text className="text-white text-2xl font-semibold px-4 mt-3 ">
           Search Results
         </Text> */}
-        <View className="mt-14 px-4">
-          <Text className="text-white text-xl font-semibold ">
-            Search Results for{' '}
-            <Text style={{color: primary}}>
-              "{route?.params?.filter?.replace('searchQuery=', '')}"
-            </Text>
+        <View className="mt-14 px-4 flex flex-row justify-between items-center gap-x-3">
+          <Text className="text-white text-2xl font-semibold ">
+            {loading?.every(i => !i.isLoading)
+              ? 'Searched for'
+              : 'Searching for'}{' '}
+            <Text style={{color: primary}}>"{route?.params?.filter}"</Text>
           </Text>
+          {!loading?.every(i => !i.isLoading) && (
+            <View className="flex justify-center items-center h-20">
+              <ActivityIndicator
+                size="small"
+                color={primary}
+                animating={true}
+              />
+            </View>
+          )}
         </View>
 
         <View className="px-4">
@@ -130,12 +154,23 @@ const SearchResults = ({route}: Props): React.ReactElement => {
               isSearch={true}
             />
           ))}
+          {emptyResults?.map((item, index) => (
+            <Slider
+              isLoading={
+                loading?.find(i => i.value === item.value)?.isLoading || false
+              }
+              key={index}
+              title={item.name}
+              posts={
+                emptyResults?.find(i => i.providerValue === item.value)
+                  ?.Posts || []
+              }
+              filter={route.params.filter}
+              providerValue={item.value}
+              isSearch={true}
+            />
+          ))}
         </View>
-        {!loading?.every(i => !i.isLoading) && (
-          <View className="flex justify-center items-center h-20">
-            <ActivityIndicator size="large" color={primary} animating={true} />
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
