@@ -8,15 +8,26 @@ import {TextInput} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import {manifest} from '../lib/Manifest';
 import useContentStore from '../lib/zustand/contentStore';
+import {MMKV} from '../lib/Mmkv';
 
 const Search = () => {
   const {provider} = useContentStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [searchText, setSearchText] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>(
+    MMKV.getArray<string>('searchHistory') || [],
+  );
 
   const handleSearch = () => {
     if (searchText.trim()) {
+      const prevSearches = MMKV.getArray('searchHistory') || [];
+      console.log('prev', prevSearches);
+      if (!prevSearches.includes(searchText.trim())) {
+        MMKV.setArray('searchHistory', [...prevSearches, searchText.trim()]);
+        setSearchHistory((prev: string[]) => [...prev, searchText.trim()]);
+      }
       navigation.navigate('SearchResults', {
         filter: searchText.trim(),
       });
@@ -30,15 +41,61 @@ const Search = () => {
           autoFocus={true}
           onChangeText={setSearchText}
           value={searchText}
+          keyboardType="web-search"
+          returnKeyType="search"
           onSubmitEditing={handleSearch}
           placeholderTextColor={'white'}
           placeholder="Search..."
+          onFocus={() => setIsSearching(true)}
+          onBlur={() => setTimeout(() => setIsSearching(false), 100)}
           className="bg-gray-800 p-2 rounded-md w-[90%] placeholder-white text-white"
         />
         <TouchableOpacity onPress={handleSearch}>
           <Ionicons name="search" size={25} color="white" />
         </TouchableOpacity>
       </View>
+      {(isSearching || manifest[provider.value].genres.length === 0) && (
+        // search history
+        <View className="w-full mt-4">
+          {searchHistory?.map((search, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => {
+                navigation.navigate('SearchResults', {
+                  filter: search,
+                });
+              }}
+              className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-between">
+              <Text className="text-white font-semibold ">{search}</Text>
+              <Ionicons
+                name="close"
+                size={20}
+                color="white"
+                onPress={() => {
+                  const newSearches = MMKV.getArray<string>(
+                    'searchHistory',
+                  ).filter(item => item !== search);
+                  MMKV.setArray('searchHistory', newSearches);
+                  setSearchHistory(newSearches);
+                }}
+              />
+            </TouchableOpacity>
+          ))}
+          {searchHistory.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                MMKV.setArray('searchHistory', []);
+                setSearchHistory([]);
+              }}
+              className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
+              <Ionicons name="trash-sharp" size={18} color="pink" />
+              <Text className="text-white font-semibold mt-1">
+                Clear History
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -48,20 +105,21 @@ const Search = () => {
           gap: 5,
         }}
         className="w-full h-full mt-4 ">
-        {manifest[provider.value].genres.map(genre => (
-          <TouchableOpacity
-            key={genre.filter}
-            onPress={() => {
-              navigation.navigate('ScrollList', {
-                filter: genre.filter,
-                title: genre.title,
-                isSearch: false,
-              });
-            }}
-            className="h-24 w-40 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
-            <Text className="text-white font-semibold ">{genre.title}</Text>
-          </TouchableOpacity>
-        ))}
+        {!isSearching &&
+          manifest[provider.value].genres.map(genre => (
+            <TouchableOpacity
+              key={genre.filter}
+              onPress={() => {
+                navigation.navigate('ScrollList', {
+                  filter: genre.filter,
+                  title: genre.title,
+                  isSearch: false,
+                });
+              }}
+              className="h-24 w-40 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
+              <Text className="text-white font-semibold ">{genre.title}</Text>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
     </View>
   );
