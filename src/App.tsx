@@ -24,6 +24,7 @@ import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import useThemeStore from './lib/zustand/themeStore';
 import {LogBox} from 'react-native';
+import {EpisodeLink} from './lib/providers/types';
 
 enableScreens(true);
 enableFreeze(true);
@@ -43,7 +44,8 @@ export type HomeStackParamList = {
 export type RootStackParamList = {
   TabStack: undefined;
   Player: {
-    link: string;
+    linkIndex: number;
+    episodeList: EpisodeLink[];
     type: string;
     primaryTitle?: string;
     secondaryTitle?: string;

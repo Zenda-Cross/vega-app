@@ -105,11 +105,12 @@ const SeasonList = ({
   }, [ActiveSeason, refreshing]);
 
   type playHandlerProps = {
-    link: string;
+    linkIndex: number;
     type: string;
     primaryTitle: string;
     secondaryTitle?: string;
-    file: string;
+    seasonTitle: string;
+    episodeList: EpisodeLink[] | Link['directLinks'];
   };
   // handle external player playback
   const handleExternalPlayer = async (link: string, type: string) => {
@@ -138,11 +139,12 @@ const SeasonList = ({
   };
 
   const playHandler = async ({
-    link,
+    linkIndex,
     type,
     primaryTitle,
     secondaryTitle,
-    file,
+    seasonTitle,
+    episodeList,
   }: playHandlerProps) => {
     addItem({
       link: routeParams.link,
@@ -150,6 +152,15 @@ const SeasonList = ({
       image: poster.poster || '',
       provider: providerValue,
     });
+    if (!episodeList || episodeList.length === 0) {
+      return;
+    }
+    const link = episodeList[linkIndex].link;
+    const file = (
+      metaTitle +
+      seasonTitle +
+      episodeList[linkIndex].title
+    ).replaceAll(/[^a-zA-Z0-9]/g, '_');
     const externalPlayer = MMKV.getBool('useExternalPlayer');
     const downloaded = await ifExists(file);
     if (externalPlayer && !downloaded) {
@@ -158,11 +169,11 @@ const SeasonList = ({
     }
 
     navigation.navigate('Player', {
-      link: link,
+      linkIndex,
+      episodeList,
       type: type,
       primaryTitle: primaryTitle,
-      secondaryTitle: secondaryTitle,
-      file: file,
+      secondaryTitle: seasonTitle,
       poster: poster,
       providerValue: providerValue,
     });
@@ -239,15 +250,12 @@ const SeasonList = ({
                       className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-1 flex-row gap-x-2 relative ${titleSide}`}
                       onPress={() =>
                         playHandler({
-                          link: item.link,
+                          linkIndex: index,
                           type: 'series',
                           primaryTitle: metaTitle,
                           secondaryTitle: item.title,
-                          file: (
-                            metaTitle +
-                            ActiveSeason.title +
-                            item.title
-                          ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
+                          seasonTitle: ActiveSeason.title,
+                          episodeList: episodeList,
                         })
                       }
                       onLongPress={() =>
@@ -310,15 +318,12 @@ const SeasonList = ({
                           className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleSide}`}
                           onPress={() =>
                             playHandler({
-                              link: item.link,
+                              linkIndex: index,
                               type: item.type || 'series',
                               primaryTitle: metaTitle,
                               secondaryTitle: item.title,
-                              file: (
-                                metaTitle +
-                                ActiveSeason.title +
-                                item.title
-                              ).replaceAll(/[^a-zA-Z0-9]/g, '_'),
+                              seasonTitle: ActiveSeason.title,
+                              episodeList: ActiveSeason.directLinks,
                             })
                           }
                           onLongPress={() =>
