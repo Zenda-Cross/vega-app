@@ -22,11 +22,15 @@ const Search = () => {
 
   const handleSearch = () => {
     if (searchText.trim()) {
-      const prevSearches = MMKV.getArray('searchHistory') || [];
+      const prevSearches = MMKV.getArray<string>('searchHistory') || [];
       console.log('prev', prevSearches);
       if (!prevSearches.includes(searchText.trim())) {
-        MMKV.setArray('searchHistory', [...prevSearches, searchText.trim()]);
-        setSearchHistory((prev: string[]) => [...prev, searchText.trim()]);
+        const newSearches: string[] = [searchText.trim(), ...prevSearches];
+        if (newSearches.length > 15) {
+          newSearches.pop();
+        }
+        MMKV.setArray('searchHistory', newSearches);
+        setSearchHistory(newSearches);
       }
       navigation.navigate('SearchResults', {
         filter: searchText.trim(),
