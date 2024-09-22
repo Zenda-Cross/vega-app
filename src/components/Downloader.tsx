@@ -199,7 +199,7 @@ const DownloadComponent = ({
           data={servers}
           loading={serverLoading}
           title="Select Server To Download"
-          onPress={(server: Stream) => {
+          onPressVideo={(server: Stream) => {
             downloadManager({
               title: title,
               url: server.link,
@@ -212,9 +212,21 @@ const DownloadComponent = ({
               deleteDownload: deleteDownload,
             });
           }}
+          onPressSubs={(sub: {link: string; type: string; title: string}) => {
+            downloadManager({
+              title: title + ' ' + sub.title + ' Subtitle ',
+              url: sub.link,
+              fileName: fileName + '-' + sub.title,
+              fileType: sub.type,
+              downloadStore: downloadStore,
+              setAlreadyDownloaded: () => {},
+              setDownloadId: setDownloadId,
+              deleteDownload: () => {},
+            });
+          }}
         />
         {/* long press modal */}
-        <DownloadBottomSheet
+        {/* <DownloadBottomSheet
           setModal={setLongPressModal}
           showModal={longPressModal}
           data={servers}
@@ -223,7 +235,7 @@ const DownloadComponent = ({
           onPress={(server: Stream) => {
             longPressDownload(server.link);
           }}
-        />
+        /> */}
       </View>
       {cancelModal && downloadId && (
         <Pressable
