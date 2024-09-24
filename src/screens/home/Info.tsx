@@ -10,7 +10,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -40,7 +40,11 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [threeDotsMenuOpen, setThreeDotsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
+  const threeDotsRef = useRef<any>();
+
   const [inLibrary, setInLibrary] = useState(
     MMKV.getArray('watchlist')?.some(
       (item: any) => item.link === route.params.link,
@@ -49,6 +53,24 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const {provider} = useContentStore(state => state);
 
+  const openThreeDotsMenu = () => {
+    const menuPosition = threeDotsRef.current;
+    if (menuPosition) {
+      menuPosition.measure(
+        (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          pageX: number,
+          pageY: number,
+        ) => {
+          setMenuPosition({top: pageY - 35, right: 35});
+          setThreeDotsMenuOpen(true);
+        },
+      );
+    }
+  };
   const handleScroll = (event: any) => {
     setBackgroundColor(
       event.nativeEvent.contentOffset.y > 150 ? 'black' : 'transparent',
@@ -324,7 +346,8 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       />
                     )}
                     <TouchableOpacity
-                      onPress={() => setThreeDotsMenuOpen(!threeDotsMenuOpen)}>
+                      onPress={() => openThreeDotsMenu()}
+                      ref={threeDotsRef}>
                       <MaterialCommunityIcons
                         name="dots-vertical"
                         size={25}
@@ -342,7 +365,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                         <Pressable
                           onPress={() => setThreeDotsMenuOpen(false)}
                           className="flex-1 bg-opacity-50">
-                          <View className="rounded-md p-2 w-48 bg-quaternary absolute right-10 top-[330px]">
+                          <View
+                            className="rounded-md p-2 w-48 bg-quaternary absolute right-10 top-[330px]"
+                            style={{
+                              top: menuPosition.top,
+                              right: menuPosition.right,
+                            }}>
                             <TouchableOpacity
                               className="flex-row items-center gap-2"
                               onPress={async () => {
