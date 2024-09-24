@@ -6,10 +6,16 @@ import {
   RefreshControl,
   FlatList,
   Linking,
+  TouchableOpacity,
+  Modal,
+  Pressable,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {HomeStackParamList} from '../../App';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
+import {HomeStackParamList, TabStackParamList} from '../../App';
 import type {Info} from '../../lib/providers/types';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
@@ -23,14 +29,22 @@ import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {manifest} from '../../lib/Manifest';
 import {BlurView} from 'expo-blur';
 import useThemeStore from '../../lib/zustand/themeStore';
+import {useNavigation} from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
+  const searchNavigation =
+    useNavigation<NativeStackNavigationProp<TabStackParamList>>();
   const {primary} = useThemeStore(state => state);
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const [threeDotsMenuOpen, setThreeDotsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
+  const threeDotsRef = useRef<any>();
+
   const [inLibrary, setInLibrary] = useState(
     MMKV.getArray('watchlist')?.some(
       (item: any) => item.link === route.params.link,
@@ -39,6 +53,24 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const {provider} = useContentStore(state => state);
 
+  const openThreeDotsMenu = () => {
+    const menuPosition = threeDotsRef.current;
+    if (menuPosition) {
+      menuPosition.measure(
+        (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          pageX: number,
+          pageY: number,
+        ) => {
+          setMenuPosition({top: pageY - 35, right: 35});
+          setThreeDotsMenuOpen(true);
+        },
+      );
+    }
+  };
   const handleScroll = (event: any) => {
     setBackgroundColor(
       event.nativeEvent.contentOffset.y > 150 ? 'black' : 'transparent',
@@ -160,8 +192,10 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         </View>
         {manifest[route.params.provider || provider.value].blurImage && (
           <BlurView
-            intensity={100}
-            tint="dark"
+            intensity={4}
+            blurReductionFactor={1}
+            experimentalBlurMethod="dimezisBlurView"
+            tint="default"
             style={{
               position: 'absolute',
               top: 0,
@@ -282,7 +316,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       </Text>
                     </View>
                   </Skeleton>
-                  <View className="flex-row items-center gap-6 mb-1">
+                  <View className="flex-row items-center gap-4 mb-1">
                     {meta?.trailers && meta?.trailers.length > 0 && (
                       <MaterialCommunityIcons
                         name="movie-open"
@@ -296,16 +330,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                         }
                       />
                     )}
-                    <MaterialCommunityIcons
-                      name="web"
-                      size={25}
-                      color="rgb(156 163 175)"
-                      onPress={async () => {
-                        navigation.navigate('Webview', {
-                          link: route.params.link,
-                        });
-                      }}
-                    />
                     {inLibrary ? (
                       <Ionicons
                         name="bookmark"
@@ -321,6 +345,73 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                         onPress={() => addLibrary()}
                       />
                     )}
+                    <TouchableOpacity
+                      onPress={() => openThreeDotsMenu()}
+                      ref={threeDotsRef}>
+                      <MaterialCommunityIcons
+                        name="dots-vertical"
+                        size={25}
+                        color="rgb(156 163 175)"
+                      />
+                    </TouchableOpacity>
+                    {
+                      <Modal
+                        animationType="none"
+                        transparent={true}
+                        visible={threeDotsMenuOpen}
+                        onRequestClose={() => {
+                          setThreeDotsMenuOpen(false);
+                        }}>
+                        <Pressable
+                          onPress={() => setThreeDotsMenuOpen(false)}
+                          className="flex-1 bg-opacity-50">
+                          <View
+                            className="rounded-md p-2 w-48 bg-quaternary absolute right-10 top-[330px]"
+                            style={{
+                              top: menuPosition.top,
+                              right: menuPosition.right,
+                            }}>
+                            <TouchableOpacity
+                              className="flex-row items-center gap-2"
+                              onPress={async () => {
+                                navigation.navigate('Webview', {
+                                  link: route.params.link,
+                                });
+                              }}>
+                              <MaterialCommunityIcons
+                                name="web"
+                                size={21}
+                                color="rgb(156 163 175)"
+                              />
+                              <Text className="text-white text-base">
+                                Open in Web
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              className="flex-row items-center gap-2 mt-1"
+                              onPress={async () => {
+                                setThreeDotsMenuOpen(false);
+                                //@ts-ignore
+                                searchNavigation.navigate('SearchStack', {
+                                  screen: 'SearchResults',
+                                  params: {
+                                    filter: `${meta?.name || info?.title}`,
+                                  },
+                                });
+                              }}>
+                              <Ionicons
+                                name="search"
+                                size={21}
+                                color="rgb(156 163 175)"
+                              />
+                              <Text className="text-white text-base">
+                                Search Title
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </Pressable>
+                      </Modal>
+                    }
                   </View>
                 </View>
                 <Skeleton show={infoLoading} colorMode="dark" height={20}>

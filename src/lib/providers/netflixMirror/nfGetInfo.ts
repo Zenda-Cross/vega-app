@@ -1,11 +1,11 @@
-import axios from 'axios';
 import {Info, Link} from '../types';
-import {headers} from './nfHeaders';
+import {getNfHeaders} from './nfHeaders';
 
 export const nfGetInfo = async function (link: string): Promise<Info> {
   try {
     const url = link;
     console.log('nfifo', url);
+    const headers = await getNfHeaders();
     const res = await fetch(url, {
       headers,
       credentials: 'omit',

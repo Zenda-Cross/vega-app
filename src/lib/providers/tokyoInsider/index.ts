@@ -11,4 +11,5 @@ export const tokyoInsider: ProviderType = {
   GetHomePosts: tokyoGetPosts,
   GetStream: tokyoGetStream,
   GetSearchPosts: tokyoGetPostsSearch,
+  blurImage: true,
 };

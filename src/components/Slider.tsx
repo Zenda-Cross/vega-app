@@ -35,7 +35,7 @@ export default function Slider({
   const {removeItem} = useWatchHistoryStore(state => state);
 
   return (
-    <Pressable onPress={() => setSelected('')} className="gap-3 mt-7">
+    <Pressable onPress={() => setSelected('')} className="gap-3 mt-3">
       <View className="flex flex-row items-center justify-between px-2">
         <Text className="text-2xl font-semibold" style={{color: primary}}>
           {title}
@@ -129,7 +129,7 @@ export default function Slider({
           )}
           ListFooterComponent={
             !isLoading && posts.length === 0 ? (
-              <View className="flex flex-row w-96 h-16 justify-center items-center">
+              <View className="flex flex-row w-96 justify-center h-10 items-center">
                 <Text className="text-whiter text-center">
                   No content found
                 </Text>

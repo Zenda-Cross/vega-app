@@ -1,6 +1,5 @@
-import axios from 'axios';
 import {Stream} from '../types';
-import {headers} from './nfHeaders';
+import {getNfHeaders} from './nfHeaders';
 import {getBaseUrl} from '../getBaseUrl';
 
 export const nfGetStream = async (id: string): Promise<Stream[]> => {
@@ -9,8 +8,9 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
     const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
       new Date().getTime() / 1000,
     )}`;
+    const headers = await getNfHeaders();
     const res = await fetch(url, {
-      headers: headers,
+      headers,
       credentials: 'omit',
     });
     const resJson = await res.json();
