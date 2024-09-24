@@ -20,14 +20,14 @@ import {
   VideoRef,
   AudioTrack,
   TextTrack,
-  SelectedAudioTrack,
-  SelectedTextTrack,
   SelectedVideoTrack,
   SelectedVideoTrackType,
   ResizeMode,
   VideoTrack,
   TextTracks,
   TextTrackType,
+  SelectedTrack,
+  SelectedTrackType,
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import {manifest} from '../../lib/Manifest';
@@ -48,6 +48,13 @@ type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
+  const [activeEpisode, setActiveEpisode] = useState(
+    route.params.episodeList[route.params.linkIndex],
+  );
+  const [videoPosition, setVideoPosition] = useState({
+    position: 0,
+    duration: 0,
+  });
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
   const [selectedStream, setSelectedStream] = useState<Stream>(stream[0]);
@@ -57,12 +64,14 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTabs>('audio');
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
-  const [selectedAudioTrack, setSelectedAudioTrack] =
-    useState<SelectedAudioTrack>({type: 'index', value: '0'});
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState<SelectedTrack>({
+    type: SelectedTrackType.INDEX,
+    value: 0,
+  });
   const [textTracks, setTextTracks] = useState<TextTrack[]>([]);
-  const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTextTrack>(
-    {type: 'language', value: 'off'},
-  );
+  const [selectedTextTrack, setSelectedTextTrack] = useState<SelectedTrack>({
+    type: SelectedTrackType.DISABLED,
+  });
   const [selectedAudioTrackIndex, setSelectedAudioTrackIndex] = useState(0);
   const [selectedTextTrackIndex, setSelectedTextTrackIndex] = useState(1000);
   const [selectedQualityIndex, setSelectedQualityIndex] = useState(1000);
@@ -123,8 +132,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   ];
   const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
 
-  const watchedDuration = MmmkvCache.getString(route?.params?.link)
-    ? JSON.parse(MmmkvCache.getString(route?.params?.link) as string).position
+  const watchedDuration = MmmkvCache.getString(activeEpisode?.link)
+    ? JSON.parse(MmmkvCache.getString(activeEpisode?.link) as string).position
     : 0;
   console.log('watchedDuration', watchedDuration);
 
@@ -165,12 +174,19 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // get stream
   useEffect(() => {
+    setSelectedStream({server: '', link: '', type: ''});
     const controller = new AbortController();
+    console.log('activeEpisode', activeEpisode);
     const fetchStream = async () => {
       setLoading(true);
       // check if downloaded
-      if (route.params.file) {
-        const exists = await ifExists(route.params.file);
+      if (route.params.primaryTitle && route.params.secondaryTitle) {
+        const file = (
+          route.params?.primaryTitle +
+          route.params?.secondaryTitle +
+          activeEpisode.title
+        ).replaceAll(/[^a-zA-Z0-9]/g, '_');
+        const exists = await ifExists(file);
         if (exists) {
           setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
           setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
@@ -180,7 +196,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
       const data = await manifest[
         route.params.providerValue || provider.value
-      ].GetStream(route.params.link, route.params.type, controller.signal);
+      ].GetStream(activeEpisode.link, route.params.type, controller.signal);
       const streamAbleServers = data.filter(
         // filter out non streamable servers
         stream =>
@@ -218,7 +234,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     return () => {
       controller.abort();
     };
-  }, [route.params.link]);
+  }, [activeEpisode]);
 
   // exit fullscreen on back
   useEffect(() => {
@@ -266,21 +282,25 @@ const Player = ({route}: Props): React.JSX.Element => {
           headers: selectedStream?.headers,
           metadata: {
             title: route.params.primaryTitle,
-            subtitle: route.params.secondaryTitle,
-            artist: route.params.secondaryTitle,
-            description: route.params.secondaryTitle,
+            subtitle: activeEpisode.title,
+            artist: activeEpisode.title,
+            description: activeEpisode.title,
             imageUri: route.params.poster.poster,
           },
         }}
         textTracks={externalSubs}
         onProgress={e => {
           MmmkvCache.setString(
-            route.params.link,
+            activeEpisode.link,
             JSON.stringify({
               position: e.currentTime,
               duration: e.seekableDuration,
             }),
           );
+          setVideoPosition({
+            position: e.currentTime,
+            duration: e.seekableDuration,
+          });
           // console.log('watchedDuration', e.currentTime);
         }}
         onLoad={() => {
@@ -307,7 +327,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         }}
         title={{
           primary: route.params.primaryTitle || '',
-          secondary: route.params.secondaryTitle,
+          secondary: activeEpisode.title,
         }}
         navigator={navigation}
         seekColor={primary}
@@ -345,13 +365,11 @@ const Player = ({route}: Props): React.JSX.Element => {
           setShowControls(true);
         }}
         resizeMode={resizeMode}
-        //@ts-ignore
         selectedAudioTrack={selectedAudioTrack}
         onAudioTracks={e => {
           console.log('audioTracks', e.audioTracks);
           setAudioTracks(e.audioTracks);
         }}
-        //@ts-ignore
         selectedTextTrack={selectedTextTrack}
         onTextTracks={e => {
           setTextTracks(e.textTracks);
@@ -408,7 +426,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         animate={{translateY: showControls ? 0 : 150}}
         //@ts-ignore
         transition={{type: 'timing', duration: 250}}
-        className="absolute bottom-4 right-6 opacity-60">
+        className="absolute bottom-3 right-6 opacity-60">
         <TouchableOpacity
           onPress={() => {
             setResizeMode(
@@ -425,6 +443,35 @@ const Player = ({route}: Props): React.JSX.Element => {
           <MaterialIcons name="fullscreen" size={28} color="white" />
         </TouchableOpacity>
       </MotiView>
+
+      {/* next episode button */}
+      {route.params.episodeList.indexOf(activeEpisode) <
+        route.params.episodeList.length - 1 &&
+        videoPosition.position / videoPosition.duration > 0.8 && (
+          <MotiView
+            from={{translateY: 0}}
+            animate={{translateY: showControls ? 0 : 150}}
+            //@ts-ignore
+            transition={{type: 'timing', duration: 250}}
+            className="absolute bottom-3 right-20 opacity-60">
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={() => {
+                const nextEpisodeIndex =
+                  route.params.episodeList.indexOf(activeEpisode);
+                if (nextEpisodeIndex < route.params.episodeList.length - 1) {
+                  setActiveEpisode(
+                    route.params.episodeList[nextEpisodeIndex + 1],
+                  );
+                } else {
+                  ToastAndroid.show('No more episodes', ToastAndroid.SHORT);
+                }
+              }}>
+              <Text className="text-white text-base">Next</Text>
+              <MaterialIcons name="skip-next" size={28} color="white" />
+            </TouchableOpacity>
+          </MotiView>
+        )}
 
       {/* message toast   */}
       <MotiView
@@ -497,7 +544,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       key={i}
                       onPress={() => {
                         setSelectedAudioTrack({
-                          type: 'language',
+                          type: SelectedTrackType.LANGUAGE,
                           value: track.language,
                         });
                         setSelectedAudioTrackIndex(i);
@@ -542,7 +589,9 @@ const Player = ({route}: Props): React.JSX.Element => {
                     <TouchableOpacity
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       onPress={() => {
-                        setSelectedTextTrack({type: 'language', value: 'off'});
+                        setSelectedTextTrack({
+                          type: SelectedTrackType.DISABLED,
+                        });
                         setSelectedTextTrackIndex(1000);
                       }}>
                       <Text className="text-base font-semibold text-white">
@@ -602,7 +651,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       }
                       onPress={() => {
                         setSelectedTextTrack({
-                          type: 'index',
+                          type: SelectedTrackType.INDEX,
                           value: track.index,
                         });
                         setSelectedTextTrackIndex(track.index);

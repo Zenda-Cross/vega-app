@@ -6,61 +6,69 @@ export async function getVidSrcRip(
   episode: string,
   stream: Stream[],
 ) {
-  const sources = ['flixhq', 'vidsrcuk', 'vidsrcicu'];
-  const baseUrl = 'aHR0cHM6Ly92aWRzcmMucmlw';
-  await Promise.all(
-    sources.map(async source => {
-      const apiUrl = await useVRF(source, tmdbId, season, episode);
-      const response = await fetch(atob(baseUrl) + apiUrl);
-      const data = await response.json();
-      if (data.sources?.length > 0) {
-        stream.push({
-          server: source,
-          type: data?.sources[0].file.includes('.mp4') ? 'mp4' : 'm3u8',
-          link: data?.sources[0].file,
-        });
-      }
-    }),
-  );
+  try {
+    const sources = ['flixhq', 'vidsrcuk', 'vidsrcicu'];
+    const baseUrl = 'aHR0cHM6Ly92aWRzcmMucmlw';
+    await Promise.all(
+      sources.map(async source => {
+        const apiUrl = await useVRF(source, tmdbId, season, episode);
+        const response = await fetch(atob(baseUrl) + apiUrl);
+        const data = await response.json();
+        if (data.sources?.length > 0) {
+          stream.push({
+            server: source,
+            type: data?.sources[0].file.includes('.mp4') ? 'mp4' : 'm3u8',
+            link: data?.sources[0].file,
+          });
+        }
+      }),
+    );
+  } catch (e) {
+    console.log('vidsrcRip error', e);
+  }
 }
 
 async function generateVRF(sourceIdentifier: string, tmdbId: string) {
-  // Helper function to fetch key from image
-  async function fetchKeyFromImage() {
-    const response = await fetch('https://vidsrc.rip/images/skip-button.png');
-    const data = await response.text();
-    console.log('Fetched data from image:', data);
-    return data;
-  }
-
-  // XOR encryption/decryption function
-  function xorEncryptDecrypt(key: any, data: any) {
-    const keyChars = Array.from(key, char => char.charCodeAt(0));
-    const dataChars = Array.from(data, char => char.charCodeAt(0));
-    const result = [];
-    for (let i = 0; i < dataChars.length; i++) {
-      result.push(dataChars[i] ^ keyChars[i % keyChars.length]);
+  try {
+    // Helper function to fetch key from image
+    async function fetchKeyFromImage() {
+      const response = await fetch('https://vidsrc.rip/images/skip-button.png');
+      const data = await response.text();
+      console.log('Fetched data from image:', data);
+      return data;
     }
-    return String.fromCharCode.apply(null, result);
+
+    // XOR encryption/decryption function
+    function xorEncryptDecrypt(key: any, data: any) {
+      const keyChars = Array.from(key, char => char.charCodeAt(0));
+      const dataChars = Array.from(data, char => char.charCodeAt(0));
+      const result = [];
+      for (let i = 0; i < dataChars.length; i++) {
+        result.push(dataChars[i] ^ keyChars[i % keyChars.length]);
+      }
+      return String.fromCharCode.apply(null, result);
+    }
+
+    // Fetch the key
+    const key = await fetchKeyFromImage();
+    console.log('Fetched key:', key);
+
+    // Construct the input string
+    const input = `/api/source/${sourceIdentifier}/${tmdbId}`;
+
+    // Decode the input string
+    const decodedInput = decodeURIComponent(input);
+
+    // Perform XOR encryption
+    const xorResult = xorEncryptDecrypt(key, decodedInput);
+
+    // Base64 encode and URL encode the result
+    const vrf = encodeURIComponent(btoa(xorResult));
+
+    return vrf;
+  } catch (e) {
+    console.log('error gernerating vrf vidsrcRip', e);
   }
-
-  // Fetch the key
-  const key = await fetchKeyFromImage();
-  console.log('Fetched key:', key);
-
-  // Construct the input string
-  const input = `/api/source/${sourceIdentifier}/${tmdbId}`;
-
-  // Decode the input string
-  const decodedInput = decodeURIComponent(input);
-
-  // Perform XOR encryption
-  const xorResult = xorEncryptDecrypt(key, decodedInput);
-
-  // Base64 encode and URL encode the result
-  const vrf = encodeURIComponent(btoa(xorResult));
-
-  return vrf;
 }
 
 // Usage example
