@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {headers} from './nfHeaders';
+import {getNfHeaders} from './nfHeaders';
 import {Post} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 
@@ -20,6 +20,7 @@ export const nfGetPost = async function (
 
     const url = `${baseUrl + filter}`;
     // console.log(url);
+    const headers = await getNfHeaders();
     const res = await fetch(url, {headers, signal, credentials: 'omit'});
     const data = await res.text();
     const $ = cheerio.load(data);
@@ -62,6 +63,7 @@ export const nfGetPostsSearch = async function (
     const baseUrl = await getBaseUrl('nfMirror');
     const url = `${baseUrl + '/search.php?s=' + encodeURI(searchQuery)}`;
     // console.log('search', url);
+    const headers = await getNfHeaders();
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
     data?.searchResult.map((result: any) => {
