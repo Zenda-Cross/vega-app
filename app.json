@@ -21,12 +21,12 @@
       ]
     ],
     "slug": "vega",
-    "version": "2.4.5",
+    "version": "2.4.6",
     "sdkVersion": "51.0.0",
     "android": {
       "minSdkVersion": 24,
       "package": "com.vega",
-      "versionCode": 58
+      "versionCode": 59
     },
     "platforms": ["ios", "android"]
   }
