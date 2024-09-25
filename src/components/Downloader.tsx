@@ -106,11 +106,11 @@ const DownloadComponent = ({
   }, [downloadModal, longPressModal]);
 
   // on holdPress external downloader
-  const longPressDownload = async (link: string) => {
+  const longPressDownload = async (link: string, type?: string) => {
     try {
       await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
         data: link,
-        type: 'video/*',
+        type: type || 'video/*',
       });
     } catch (error) {
       console.log(error);
@@ -226,16 +226,19 @@ const DownloadComponent = ({
           }}
         />
         {/* long press modal */}
-        {/* <DownloadBottomSheet
+        <DownloadBottomSheet
           setModal={setLongPressModal}
           showModal={longPressModal}
           data={servers}
           loading={serverLoading}
           title="Select Server To Open"
-          onPress={(server: Stream) => {
+          onPressVideo={(server: Stream) => {
             longPressDownload(server.link);
           }}
-        /> */}
+          onPressSubs={(sub: {link: string; type: string; title: string}) => {
+            longPressDownload(sub.link, 'text/vtt');
+          }}
+        />
       </View>
       {cancelModal && downloadId && (
         <Pressable
