@@ -29,10 +29,15 @@ export const pwGetStream = async (
       const res2 = await axios.head(url.id, {headers});
       const location = res2.request?.responseURL.replace('/f/', '/e/');
 
-      const res3 = await axios.get(location, {headers});
+      const res3 = await axios.get(location, {
+        headers: {
+          ...headers,
+          referer: 'https://mixdrop.ps',
+        },
+      });
       const data3 = res3.data;
 
-      // let MDCore: any = {};
+      let MDCore: any = {};
       // Step 1: Extract the function parameters and the encoded string
       var functionRegex =
         /eval\(function\((.*?)\)\{.*?return p\}.*?\('(.*?)'\.split/;
@@ -100,6 +105,7 @@ export const pwGetStream = async (
         const wurl = decoded.match(/MDCore\.wurl="([^"]+)"/)?.[1];
         console.log('wurl:', wurl);
         const streamUrl = 'https:' + wurl;
+        console.log('streamUrl:', streamUrl);
         streamLinks.push({
           server: 'Mixdrop ' + url.size,
           link: streamUrl,

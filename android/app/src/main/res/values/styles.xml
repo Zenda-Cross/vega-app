@@ -1,5 +1,4 @@
-<resources>
-
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <!-- Customize your theme here. -->
@@ -7,7 +6,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item> 
+       <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item> 
         <item name="android:forceDarkAllowed">true</item>   
     </style>
      <style name="BootTheme" parent="Theme.BootSplash.EdgeToEdge">
