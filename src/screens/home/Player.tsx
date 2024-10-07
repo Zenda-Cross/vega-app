@@ -16,7 +16,7 @@ import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
 import {ifExists} from '../../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import {
+import Video, {
   VideoRef,
   AudioTrack,
   TextTrack,
@@ -40,6 +40,7 @@ import DocumentPicker, {isCancel} from 'react-native-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
+import FullScreenChz from 'react-native-fullscreen-chz';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -239,7 +240,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   // exit fullscreen on back
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
-      playerRef?.current?.dismissFullscreenPlayer();
+      // playerRef?.current?.dismissFullscreenPlayer();
+      FullScreenChz.disable();
     });
     return unsubscribe;
   }, [navigation]);
@@ -280,6 +282,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           shouldCache: true,
           ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
+          textTracks: externalSubs,
           metadata: {
             title: route.params.primaryTitle,
             subtitle: activeEpisode.title,
@@ -288,7 +291,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             imageUri: route.params.poster.poster,
           },
         }}
-        textTracks={externalSubs}
+        // textTracks={externalSubs}
         onProgress={e => {
           MmmkvCache.setString(
             activeEpisode.link,
@@ -307,6 +310,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           playerRef?.current?.seek(watchedDuration);
           playerRef?.current?.resume();
           setPlaybackRate(1);
+          FullScreenChz.enable();
         }}
         videoRef={playerRef}
         rate={playbackRate}
@@ -333,7 +337,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         seekColor={primary}
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
-        fullscreen={true}
+        // fullscreen={true}
         fullscreenOrientation="landscape"
         fullscreenAutorotate={true}
         onShowControls={() => setShowControls(true)}
@@ -344,7 +348,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableVolume={true}
         showHours={true}
         progressUpdateInterval={1000}
-        showNotificationControls={showMediaControls}
+        // showNotificationControls={showMediaControls}
         bufferConfig={{backBufferDurationMs: 30000}}
         onError={e => {
           const serverIndex = stream.indexOf(selectedStream);
@@ -382,7 +386,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedVideoTrack={selectedVideoTrack}
         style={{flex: 1, zIndex: 100}}
       />
-
       {/* // cast button */}
       {loading === false && !Platform.isTV && (
         <MotiView
