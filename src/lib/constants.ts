@@ -86,6 +86,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'AnimeRulz',
+    value: 'animeRulz',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'FlixHQ',
     value: 'flixhq',
     type: 'english',
