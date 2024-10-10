@@ -52,6 +52,7 @@ const SearchSubtitles = ({
     {name: 'Norwegian', id: 'nor'},
     {name: 'Finnish', id: 'fin'},
     {name: 'Vietnamese', id: 'vie'},
+    {name: 'Indonesian', id: 'ind'},
   ];
 
   const searchSubtitles = async () => {
