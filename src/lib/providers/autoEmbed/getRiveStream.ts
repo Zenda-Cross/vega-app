@@ -10,8 +10,16 @@ export async function getRiveStream(
   type: string,
   Streams: Stream[],
 ) {
-  const secret = generateSecretKey();
-  const servers = ['hydrax', 'filmecho', 'upcloud', 'nova', 'vidcloud'];
+  const secret = generateSecretKey(Number(tmdId));
+  const servers = [
+    'hydrax',
+    'filmecho',
+    'upcloud',
+    'nova',
+    'vidcloud',
+    'ee3',
+    'filmxyz',
+  ];
   const baseUrl = await getBaseUrl('rive');
   const cors = 'aHR0cHM6Ly9jcnMuMXByb3h5LndvcmtlcnMuZGV2Lz91cmw9';
   const route =
@@ -55,6 +63,7 @@ export async function getRiveStream(
   );
 }
 
+// The two arrays used in key generation
 const u = [
   'D0G31EK54',
   '0vwtC',
@@ -108,14 +117,73 @@ const u = [
   'IXvEKywghM',
 ];
 
-function generateSecretKey(date = new Date()) {
-  // Extract UTC components
+const c = [
+  'N',
+  '1y',
+  'R',
+  'efH',
+  'bR',
+  'CY',
+  'HF',
+  'JL',
+  '5',
+  'A',
+  'mh',
+  '4',
+  'F7g',
+  'GzH',
+  '7cb',
+  'gfg',
+  'f',
+  'Q',
+  '8',
+  'c',
+  'YP',
+  'I',
+  'KL',
+  'CzW',
+  'YTL',
+  '4',
+  'u',
+  '3',
+  'Vlg',
+  '9q',
+  'NzG',
+  '9CK',
+  'AbS',
+  'jUG',
+  'Fd',
+  'c3S',
+  'VWx',
+  'wp',
+  'bgx',
+  'V',
+  'o1H',
+  'Pa',
+  'yk',
+  'a',
+  'KJ',
+  'VnV',
+  'O',
+  'm',
+  'ihF',
+  'x',
+];
+
+export function generateSecretKey(optionalId: number) {
+  // Get current UTC date components
+  let date = new Date();
+  date.getUTCHours(); // This is called in the original code but not used
   let day = date.getUTCDate();
   let month = date.getUTCMonth();
   let year = date.getUTCFullYear();
 
-  // Generate the key exactly as in the original code
-  const key = u[day % u.length] + u[month % u.length] + u[year % u.length];
-  console.log(key);
-  return key;
+  // Generate the key
+  // If optionalId is provided, use it for the first part, otherwise use the day
+  let firstPart =
+    optionalId !== undefined ? c[optionalId % c.length] : c[day % c.length];
+
+  return (
+    firstPart + u[day % u.length] + u[month % u.length] + u[year % u.length]
+  );
 }

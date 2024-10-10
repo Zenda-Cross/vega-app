@@ -40,22 +40,113 @@ export const world4uGetStream = async (
       console.log('fastilinksLink', fastilinksLink);
       url = fastilinksLink || url;
     }
+    console.log('world4uGetStream', type, url);
+
+    if (url.includes('photolinx')) {
+      console.log('photolinx', url);
+      const photolinxBaseUrl = url.split('/').slice(0, 3).join('/');
+      const photolinxRes = await axios.get(url, {headers});
+      const photolinxData = photolinxRes.data;
+      const $$$ = cheerio.load(photolinxData);
+      const access_token = $$$('#generate_url').attr('data-token');
+      const uid = $$$('#generate_url').attr('data-uid');
+      const body = {
+        type: 'DOWNLOAD_GENERATE',
+        payload: {
+          access_token,
+          uid,
+        },
+      };
+      console.log('photolinxData', JSON.stringify(body));
+
+      const photolinxRes2 = await fetch('https://photolinx.shop/action', {
+        headers: {
+          'sec-fetch-site': 'same-origin',
+          'x-requested-with': 'xmlhttprequest',
+          cookie: 'PHPSESSID=9a8d855c700cf0711831c04960c2e2b4',
+          Referer: 'https://photolinx.shop/download/5mPkrBD0D2x',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+        },
+        body: JSON.stringify(body),
+        method: 'POST',
+      });
+      const photolinxData2 = await photolinxRes2.json();
+      console.log('photolinxData2', photolinxData2);
+      const dwUrl = photolinxData2?.download_url;
+      if (dwUrl) {
+        const streamLinks = [
+          {
+            server: 'Photolinx',
+            link: dwUrl,
+            type: 'mkv',
+          },
+        ];
+        return streamLinks;
+      }
+    }
 
     const res = await axios.get(url, {headers});
-    console.log('world4uGetStream', type, url);
     const html = res.data;
-    const key = html.match(/formData\.append\('key',\s*'(\d+)'\);/)?.[1] || '';
-    console.log('key', key);
     const streamLinks: Stream[] = [];
-    const formData = new FormData();
-    formData.append('key', key);
-    const streamRes = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: formData,
-    });
+    let data = {download: ''};
+    try {
+      const key =
+        html.match(/formData\.append\('key',\s*'(\d+)'\);/)?.[1] || '';
+      console.log('key', key);
+      const formData = new FormData();
+      formData.append('key', key);
+      const streamRes = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+      });
+      data = await streamRes.json();
+    } catch (err) {
+      console.log('error in world4uGetStream', err);
+    }
 
-    const data = await streamRes.json();
+    // console.log('streamRes', streamRes);
+    let $ = cheerio.load(html);
+    const mediafireUrl = $('h1:contains("Download")').find('a').attr('href');
+    console.log('mediafireUrl', mediafireUrl);
+    if (mediafireUrl) {
+      const directUrl = await axios.head(mediafireUrl);
+      const urlContentType = directUrl.headers['content-type'];
+      console.log('mfcontentType', urlContentType);
+      if (urlContentType && urlContentType.includes('video')) {
+        streamLinks.push({
+          server: 'Mediafire',
+          link: mediafireUrl,
+          type: 'mkv',
+        });
+        return streamLinks;
+      } else {
+        const repairRes = await axios.get(mediafireUrl, {
+          headers: {
+            Referer: url,
+          },
+        });
+        const repairHtml = repairRes.data;
+
+        // Regex to match the window.location.href assignment in the script content
+        const hrefRegex = /window\.location\.href\s*=\s*['"]([^'"]+)['"]/;
+        const match = repairHtml.match(hrefRegex);
+
+        // If a match is found, return the URL; otherwise return null
+        let downloadLInk = match ? match[1] : null;
+        console.log('downloadLInk', downloadLInk);
+
+        if (downloadLInk) {
+          streamLinks.push({
+            server: 'Mediafire',
+            link: downloadLInk,
+            type: 'mkv',
+          });
+        }
+        return streamLinks;
+      }
+    }
+
     const requireRepairRes = await axios.head(data.download);
     const contentType = requireRepairRes.headers['content-type'];
     console.log('contentType', contentType);
