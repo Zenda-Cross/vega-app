@@ -73,6 +73,36 @@ export const animeRulzGetStream = async (link: string): Promise<Stream[]> => {
           'Cache-Control': 'no-cache',
         },
       });
+    } else {
+      const embedBaseUrl = embededUrl.split('/').slice(0, 3).join('/');
+      // console.log('embedBaseUrl', embedBaseUrl);
+      // console.log('data2', data2);
+      const streamId =
+        data2.match(/sniff\(\s*["'][^"']+["']\s*,\s*["']([^"']+)["']/)?.[1] ||
+        '';
+      console.log('streamId', streamId);
+      const videoUrl = `${embedBaseUrl}/m3u8/${streamId}/master.txt?s=1&lang=&cache=1`;
+
+      console.log('videoUrl', videoUrl);
+
+      streams.push({
+        server: 'AwsStream ',
+        type: 'm3u8',
+        link: videoUrl,
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0',
+          Referer: embededUrl,
+          Origin: embedBaseUrl,
+          Accept: '*/*',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site',
+          Pragma: 'no-cache',
+          'Cache-Control': 'no-cache',
+        },
+      });
     }
 
     return streams;
