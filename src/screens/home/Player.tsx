@@ -7,7 +7,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
@@ -40,6 +40,7 @@ import DocumentPicker, {isCancel} from 'react-native-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
+import FullScreenChz from 'react-native-fullscreen-chz';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -51,10 +52,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [activeEpisode, setActiveEpisode] = useState(
     route.params.episodeList[route.params.linkIndex],
   );
-  const [videoPosition, setVideoPosition] = useState({
-    position: 0,
-    duration: 0,
-  });
+  const videoPositionRef = useRef({position: 0, duration: 0});
+  const lastSavedPositionRef = useRef(0);
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
   const [selectedStream, setSelectedStream] = useState<Stream>(stream[0]);
@@ -239,7 +238,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   // exit fullscreen on back
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
-      playerRef?.current?.dismissFullscreenPlayer();
+      // playerRef?.current?.dismissFullscreenPlayer();
+      FullScreenChz.disable();
     });
     return unsubscribe;
   }, [navigation]);
@@ -261,6 +261,33 @@ const Player = ({route}: Props): React.JSX.Element => {
       setShowToast(false);
     }, duration);
   };
+
+  // handle progress
+  const handleProgress = useCallback(
+    (e: {currentTime: number; seekableDuration: number}) => {
+      const {currentTime, seekableDuration} = e;
+      videoPositionRef.current = {
+        position: currentTime,
+        duration: seekableDuration,
+      };
+
+      // Save position every 5 seconds or if there's a significant change
+      if (
+        Math.abs(currentTime - lastSavedPositionRef.current) > 5 ||
+        currentTime - lastSavedPositionRef.current > 5
+      ) {
+        MmmkvCache.setString(
+          activeEpisode.link,
+          JSON.stringify({
+            position: currentTime,
+            duration: seekableDuration,
+          }),
+        );
+        lastSavedPositionRef.current = currentTime;
+      }
+    },
+    [activeEpisode.link],
+  );
 
   return (
     <SafeAreaView
@@ -289,24 +316,12 @@ const Player = ({route}: Props): React.JSX.Element => {
           },
         }}
         textTracks={externalSubs}
-        onProgress={e => {
-          MmmkvCache.setString(
-            activeEpisode.link,
-            JSON.stringify({
-              position: e.currentTime,
-              duration: e.seekableDuration,
-            }),
-          );
-          setVideoPosition({
-            position: e.currentTime,
-            duration: e.seekableDuration,
-          });
-          // console.log('watchedDuration', e.currentTime);
-        }}
+        onProgress={handleProgress}
         onLoad={() => {
           playerRef?.current?.seek(watchedDuration);
           playerRef?.current?.resume();
           setPlaybackRate(1);
+          FullScreenChz.enable();
         }}
         videoRef={playerRef}
         rate={playbackRate}
@@ -324,6 +339,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             TextTrackType.VTT
               ? 50
               : 0,
+          subtitlesFollowVideo: false,
         }}
         title={{
           primary: route.params.primaryTitle || '',
@@ -333,7 +349,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         seekColor={primary}
         showDuration={true}
         toggleResizeModeOnFullscreen={false}
-        fullscreen={true}
+        // fullscreen={true}
         fullscreenOrientation="landscape"
         fullscreenAutorotate={true}
         onShowControls={() => setShowControls(true)}
@@ -382,7 +398,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedVideoTrack={selectedVideoTrack}
         style={{flex: 1, zIndex: 100}}
       />
-
       {/* // cast button */}
       {loading === false && !Platform.isTV && (
         <MotiView
@@ -447,7 +462,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       {/* next episode button */}
       {route.params.episodeList.indexOf(activeEpisode) <
         route.params.episodeList.length - 1 &&
-        videoPosition.position / videoPosition.duration > 0.8 && (
+        videoPositionRef.current.position / videoPositionRef.current.duration >
+          0.8 && (
           <MotiView
             from={{translateY: 0}}
             animate={{translateY: showControls ? 0 : 150}}

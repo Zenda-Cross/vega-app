@@ -67,43 +67,7 @@ export const allGetStream = async (
     }
 
     // whvx orion
-    const whvxStreamOrion = await getWhvxStream(
-      imdbId,
-      tmdbId,
-      season,
-      episode,
-      title,
-      type,
-      year,
-      'orion',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    const subtitlesOrion: TextTracks = [];
-    for (const caption in whvxStreamOrion?.captions) {
-      subtitlesOrion.push({
-        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStreamOrion?.captions?.[caption]?.url,
-        type:
-          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    if (whvxStreamOrion?.playlist) {
-      streams.push({
-        server: 'Orion',
-        link: whvxStreamOrion?.playlist,
-        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesOrion,
-        headers: {
-          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-        },
-      });
-    }
-    // console.log('whvxorion', whvxStreamOrion?.playlist);
-
-    // const whvxStreamAstra = await getWhvxStream(
+    // const whvxStreamOrion = await getWhvxStream(
     //   imdbId,
     //   tmdbId,
     //   season,
@@ -111,13 +75,35 @@ export const allGetStream = async (
     //   title,
     //   type,
     //   year,
-    //   'astra',
+    //   'orion',
     //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     // );
-    // console.log('whvxastra', whvxStreamAstra?.playlist);
+    // const subtitlesOrion: TextTracks = [];
+    // for (const caption in whvxStreamOrion?.captions) {
+    //   subtitlesOrion.push({
+    //     language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+    //     uri: whvxStreamOrion?.captions?.[caption]?.url,
+    //     type:
+    //       whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+    //         ? TextTrackType.SUBRIP
+    //         : TextTrackType.VTT,
+    //     title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+    //   });
+    // }
+    // if (whvxStreamOrion?.playlist) {
+    //   streams.push({
+    //     server: 'Orion',
+    //     link: whvxStreamOrion?.playlist,
+    //     type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+    //     subtitles: subtitlesOrion,
+    //     headers: {
+    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+    //     },
+    //   });
+    // }
+    // console.log('whvxorion', whvxStreamOrion?.playlist);
 
-    ///// nsbx
-    const nsbxStream = await getWhvxStream(
+    const whvxStreamAstra = await getWhvxStream(
       imdbId,
       tmdbId,
       season,
@@ -125,32 +111,46 @@ export const allGetStream = async (
       title,
       type,
       year,
-      'alpha',
-      'aHR0cHM6Ly9uc2J4LndhZmZsZWhhY2tlci5pbw==',
+      'astra',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     );
-    const subtitlesNsbx: TextTracks = [];
-    for (const caption in nsbxStream?.captions) {
-      subtitlesNsbx.push({
-        language: nsbxStream?.captions?.[caption]?.language || 'Undefined',
-        uri: nsbxStream?.captions?.[caption]?.url,
-        type:
-          nsbxStream?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: nsbxStream?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    if (nsbxStream?.playlist) {
-      streams.push({
-        server: 'Nsbx',
-        link: nsbxStream?.playlist,
-        type: nsbxStream?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesNsbx,
-        headers: {
-          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-        },
-      });
-    }
+    console.log('whvxastra', whvxStreamAstra?.playlist);
+
+    ///// nsbx
+    // const nsbxStream = await getWhvxStream(
+    //   imdbId,
+    //   tmdbId,
+    //   season,
+    //   episode,
+    //   title,
+    //   type,
+    //   year,
+    //   'alpha',
+    //   'aHR0cHM6Ly9uc2J4LndhZmZsZWhhY2tlci5pbw==',
+    // );
+    // const subtitlesNsbx: TextTracks = [];
+    // for (const caption in nsbxStream?.captions) {
+    //   subtitlesNsbx.push({
+    //     language: nsbxStream?.captions?.[caption]?.language || 'Undefined',
+    //     uri: nsbxStream?.captions?.[caption]?.url,
+    //     type:
+    //       nsbxStream?.captions?.[caption]?.type === 'srt'
+    //         ? TextTrackType.SUBRIP
+    //         : TextTrackType.VTT,
+    //     title: nsbxStream?.captions?.[caption]?.language || 'Undefined',
+    //   });
+    // }
+    // if (nsbxStream?.playlist) {
+    //   streams.push({
+    //     server: 'Nsbx',
+    //     link: nsbxStream?.playlist,
+    //     type: nsbxStream?.type === 'hls' ? 'm3u8' : 'mp4',
+    //     subtitles: subtitlesNsbx,
+    //     headers: {
+    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+    //     },
+    //   });
+    // }
 
     ///// rive
     await getRiveStream(tmdbId, episode, season, type, streams);

@@ -29,8 +29,27 @@ export const pwGetStream = async (
       const res2 = await axios.head(url.id, {headers});
       const location = res2.request?.responseURL.replace('/f/', '/e/');
 
-      const res3 = await axios.get(location, {headers});
-      const data3 = res3.data;
+      const res3 = await fetch(location, {
+        credentials: 'include',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0',
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'iframe',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'same-origin',
+          Pragma: 'no-cache',
+          'Cache-Control': 'no-cache',
+          referer: res2.request?.responseURL,
+        },
+        referrer: res2.request?.responseURL,
+        method: 'GET',
+        mode: 'cors',
+      });
+      const data3 = await res3.text();
 
       let MDCore: any = {};
       // Step 1: Extract the function parameters and the encoded string
@@ -41,16 +60,17 @@ export const pwGetStream = async (
       if (match) {
         // var params = match[1].split(',').map(param => param.trim());
         var encodedString = match[2];
+        console.log('Encoded String:', encodedString);
 
         // console.log('Parameters:', params);
         // console.log('Encoded String:', encodedString.split("',36,")[0], '🔥🔥');
 
         const base = Number(
-          encodedString.split(",'MDCore")[0].split(',')[
-            encodedString.split(",'MDCore")[0].split(',').length - 1
+          encodedString.split(",'|MDCore|")[0].split(',')[
+            encodedString.split(",'|MDCore|")[0].split(',').length - 1
           ],
         );
-        // console.log('Base:', base);
+        console.log('Base:', base);
 
         p = encodedString.split(`',${base},`)?.[0].trim();
         let a = base;
@@ -100,10 +120,25 @@ export const pwGetStream = async (
         const wurl = decoded.match(/MDCore\.wurl="([^"]+)"/)?.[1];
         console.log('wurl:', wurl);
         const streamUrl = 'https:' + wurl;
+        console.log('streamUrl:', streamUrl);
         streamLinks.push({
           server: 'Mixdrop ' + url.size,
           link: streamUrl,
           type: 'mp4',
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0',
+            Accept:
+              'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'iframe',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            Pragma: 'no-cache',
+            'Cache-Control': 'no-cache',
+            referer: res2.request?.responseURL,
+          },
         });
       } else {
         console.log('No match found');
