@@ -360,7 +360,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         disableVolume={true}
         showHours={true}
         progressUpdateInterval={1000}
-        // showNotificationControls={showMediaControls}
+        showNotificationControls={showMediaControls}
         bufferConfig={{backBufferDurationMs: 30000}}
         onError={e => {
           const serverIndex = stream.indexOf(selectedStream);
