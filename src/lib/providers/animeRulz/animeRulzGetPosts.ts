@@ -23,8 +23,30 @@ export const animeRulzGetPostsSearch = async function (
   signal: AbortSignal,
 ): Promise<Post[]> {
   const baseUrl = await getBaseUrl('animerulz');
-  const url = `${baseUrl}/search/${searchQuery}/page/${page}/`;
-  return posts(url, signal);
+  if (page > 1) {
+    return [];
+  }
+  const url = `${baseUrl}/wp-json/kiranime/v1/anime/search?query=${searchQuery}&_locale=user`;
+  console.log('Rz url ', url);
+  const res = await axios.get(url, {headers, signal});
+  const data = res.data?.result;
+  console.log('Rz data ', data);
+  const $ = cheerio.load(data);
+  const catalog: Post[] = [];
+
+  $('a').map((i, element) => {
+    const title = $(element).find('h3').text() || '';
+    const link = $(element).attr('href') || '';
+    const image = $(element).find('img').attr('src') || '';
+    if (title && link) {
+      catalog.push({
+        title: title.trim(),
+        link: link,
+        image: image,
+      });
+    }
+  });
+  return catalog;
 };
 
 async function posts(url: string, signal: AbortSignal): Promise<Post[]> {

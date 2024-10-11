@@ -31,12 +31,13 @@ export const animeRulzGetInfo = async function (link: string): Promise<Info> {
     const totalEpisodes = Number(
       $('a:contains("Ep ")').text().replace(/\D/g, ''),
     );
+    const episodeLink = $('a:contains("Ep ")').attr('href') || '';
     console.log('total episodes', totalEpisodes);
     for (let i = 1; i <= totalEpisodes; i++) {
       const episode = {
         title: `Episode ${i}`,
         link: `${
-          url.replace('/anime/', '/watch/').slice(0, -1) + '-episode-' + i
+          episodeLink.replace(totalEpisodes.toString(), i.toString()) || ''
         }`,
       };
       episodes.push(episode);
