@@ -23,8 +23,9 @@ import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import useThemeStore from './lib/zustand/themeStore';
-import {LogBox} from 'react-native';
+import {LogBox, TouchableOpacity} from 'react-native';
 import {EpisodeLink} from './lib/providers/types';
+import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 
 enableScreens(true);
 enableFreeze(true);
@@ -169,7 +170,6 @@ const App = () => {
       </SettingsStack.Navigator>
     );
   }
-
   function TabStack() {
     return (
       <Tab.Navigator
@@ -181,6 +181,24 @@ const App = () => {
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {backgroundColor: 'black'},
           tabBarHideOnKeyboard: true,
+          tabBarButton: props => {
+            return (
+              <TouchableOpacity
+                {...props}
+                onPress={e => {
+                  if (props.onPress) {
+                    props.onPress(e);
+                  }
+                  if (!props?.accessibilityState?.selected) {
+                    RNReactNativeHapticFeedback.trigger('effectTick', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                  }
+                }}
+              />
+            );
+          },
         }}>
         <Tab.Screen
           name="HomeStack"
