@@ -26,6 +26,8 @@ import {vadapavProvider} from './providers/vadapav';
 import {netflixMirror} from './providers/netflixMirror';
 import {kissKhProvider} from './providers/kissKh';
 import {cinemaLuxe} from './providers/cinemaLuxe';
+import {animeRulzProvider} from './providers/animeRulz';
+import {moviesApi} from './providers/moviesApi';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -84,4 +86,6 @@ export const manifest: Manifest = {
   vadapav: vadapavProvider,
   kissKh: kissKhProvider,
   cinemaLuxe: cinemaLuxe,
+  animeRulz: animeRulzProvider,
+  moviesApi: moviesApi,
 };
