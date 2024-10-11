@@ -92,6 +92,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'MoviesApi',
+    value: 'moviesApi',
+    type: 'english',
+    flag: '🇬🇧',
+  },
+  {
     name: 'FlixHQ',
     value: 'flixhq',
     type: 'english',
