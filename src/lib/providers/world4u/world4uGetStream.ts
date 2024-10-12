@@ -23,7 +23,7 @@ export const world4uGetStream = async (
       const fastilinksKey = $$(
         'input[name="_csrf_token_645a83a41868941e4692aa31e7235f2"]',
       ).attr('value');
-      // console.log('fastilinksKey', fastilinksKey);
+      console.log('fastilinksKey', fastilinksKey);
       const fastilinksFormData = new FormData();
       fastilinksFormData.append(
         '_csrf_token_645a83a41868941e4692aa31e7235f2',
@@ -35,8 +35,11 @@ export const world4uGetStream = async (
         body: fastilinksFormData,
       });
       const fastilinksHtml = await fastilinksRes2.text();
+      // console.log('fastilinksHtml', fastilinksHtml);
       const $$$ = cheerio.load(fastilinksHtml);
-      const fastilinksLink = $$$('a:contains("wlinkfast")').attr('href');
+      const fastilinksLink =
+        $$$('a:contains("mediafire")').attr('href') ||
+        $$$('a:contains("photolinx")').attr('href');
       console.log('fastilinksLink', fastilinksLink);
       url = fastilinksLink || url;
     }
@@ -107,7 +110,10 @@ export const world4uGetStream = async (
 
     // console.log('streamRes', streamRes);
     let $ = cheerio.load(html);
-    const mediafireUrl = $('h1:contains("Download")').find('a').attr('href');
+    // console.log('data', html);
+    const mediafireUrl =
+      $('h1:contains("Download")').find('a').attr('href') ||
+      $('.input.popsok').attr('href');
     console.log('mediafireUrl', mediafireUrl);
     if (mediafireUrl) {
       const directUrl = await axios.head(mediafireUrl);
