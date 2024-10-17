@@ -63,7 +63,5 @@ Dev
 Build apk/aab
 https://reactnative.dev/docs/signed-apk-android
 
-
-![Untitled](https://github.com/user-attachments/assets/d871afcf-0ded-49e2-92c8-88ac8dbf79af)
-
-
+## Note
+Vega App does not store any media files on our servers and is not directly linked to the media. Third-party services host all media, and Vega App merely provides a search and web scraping tool that indexes publicly available data. We are not responsible for the content or availability of the media, as we do not host or control any of it.
