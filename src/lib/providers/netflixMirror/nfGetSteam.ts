@@ -1,6 +1,6 @@
 import {Stream} from '../types';
-import {getNfHeaders} from './nfHeaders';
 import {getBaseUrl} from '../getBaseUrl';
+import {nfGetCookie} from './nfGetCookie';
 
 export const nfGetStream = async (id: string): Promise<Stream[]> => {
   try {
@@ -8,9 +8,11 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
     const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
       new Date().getTime() / 1000,
     )}`;
-    const headers = await getNfHeaders();
+    const cookies = (await nfGetCookie()) + '  hd=on;';
     const res = await fetch(url, {
-      headers,
+      headers: {
+        cookie: cookies,
+      },
       credentials: 'omit',
     });
     const resJson = await res.json();
