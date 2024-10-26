@@ -7,9 +7,9 @@ export async function getVidSrcRip(
   stream: Stream[],
 ) {
   try {
-    const sources = ['flixhq', 'vidsrcuk', 'vidsrcicu'];
+    const sources = ['flixhq', 'vidsrcuk'];
     const baseUrl = 'aHR0cHM6Ly92aWRzcmMucmlw';
-    const timeout = 4000;
+    const timeout = 3000;
 
     await Promise.all(
       sources.map(async source => {

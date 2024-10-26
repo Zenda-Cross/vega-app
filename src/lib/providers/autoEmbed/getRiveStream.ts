@@ -13,20 +13,21 @@ export async function getRiveStream(
   const secret = generateSecretKey(Number(tmdId));
   const servers = [
     'hydrax',
+    'fastx',
     'filmecho',
-    'upcloud',
     'nova',
     'vidcloud',
     'ee3',
-    'filmxyz',
+    'showbox',
   ];
   const baseUrl = await getBaseUrl('rive');
-  const cors = 'aHR0cHM6Ly9jcnMuMXByb3h5LndvcmtlcnMuZGV2Lz91cmw9';
+  const cors = process.env.CORS_PRXY ? process.env.CORS_PRXY + '?url=' : '';
+  console.log('CORS: ' + cors);
   const route =
     type === 'series'
       ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&secretKey=${secret}&service=`
       : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&secretKey=${secret}&service=`;
-  const url = atob(cors) + encodeURIComponent(baseUrl + route);
+  const url = cors + encodeURIComponent(baseUrl + route);
   await Promise.all(
     servers.map(async server => {
       console.log('Rive: ' + url + server);
@@ -63,61 +64,7 @@ export async function getRiveStream(
   );
 }
 
-// The two arrays used in key generation
-const u = [
-  'D0G31EK54',
-  '0vwtC',
-  'evM2jk',
-  'KE4nt7LQxI',
-  'Y6VBqEMmu',
-  '0uwcxC7b',
-  'X25Fcc',
-  'lhwA3NQJX',
-  'UFFQPgYD',
-  'FGKgLaVsi',
-  'q9lOrp',
-  'ITrWAb',
-  'DexH4FG9',
-  'mF5ax0',
-  'O3OHy5To',
-  'VXrxDC8iVA',
-  'oqJ2ncnyl',
-  'YICvj9lbu6',
-  'GAJGmOTC',
-  'O5AYHZO',
-  'FAnry5Oi',
-  'UH585HY',
-  'hPnHeR',
-  'HnsKLNZiU',
-  'dAWyV42NI',
-  'WlaLe57sT',
-  'qv1GGA4ZWd',
-  'ajS3vkQ',
-  '8dktWPYp',
-  'n1DHcQWq',
-  'zKScZgxbas',
-  '7WP5qZrx',
-  'KFSPp8W6UK',
-  'ON0Gm',
-  'nf3Jm',
-  'eOJ49mY',
-  'bAoo3v',
-  'y0RraCS1TS',
-  'xeUce',
-  'EtuFJ63',
-  'ydB3UlP3',
-  'BcNhJEpwW',
-  'wxn4ZoS6w',
-  'Y34Jcz',
-  '0v58PuP',
-  'PAsuN',
-  '4qvwGFL7pX',
-  'bIELEk',
-  'cYa7Xq',
-  'IXvEKywghM',
-];
-
-const c = [
+const secretChars = [
   'N',
   '1y',
   'R',
@@ -170,20 +117,10 @@ const c = [
   'x',
 ];
 
-export function generateSecretKey(optionalId: number) {
-  // Get current UTC date components
-  let date = new Date();
-  date.getUTCHours(); // This is called in the original code but not used
-  let day = date.getUTCDate();
-  let month = date.getUTCMonth();
-  let year = date.getUTCFullYear();
-
-  // Generate the key
-  // If optionalId is provided, use it for the first part, otherwise use the day
-  let firstPart =
-    optionalId !== undefined ? c[optionalId % c.length] : c[day % c.length];
-
-  return (
-    firstPart + u[day % u.length] + u[month % u.length] + u[year % u.length]
-  );
+// Function to get secret key based on input
+function generateSecretKey(id: number) {
+  if (id === undefined) {
+    return 'rive';
+  }
+  return secretChars[id % secretChars.length];
 }
