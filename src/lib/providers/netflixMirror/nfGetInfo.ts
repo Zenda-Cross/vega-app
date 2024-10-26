@@ -1,13 +1,15 @@
 import {Info, Link} from '../types';
-import {getNfHeaders} from './nfHeaders';
+import {nfGetCookie} from './nfGetCookie';
 
 export const nfGetInfo = async function (link: string): Promise<Info> {
   try {
     const url = link;
     console.log('nfifo', url);
-    const headers = await getNfHeaders();
+    const cookies = await nfGetCookie();
     const res = await fetch(url, {
-      headers,
+      headers: {
+        cookie: cookies,
+      },
       credentials: 'omit',
     });
     const data = await res.json();

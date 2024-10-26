@@ -115,6 +115,29 @@ export const allGetStream = async (
       'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     );
     console.log('whvxastra', whvxStreamAstra?.playlist);
+    const subtitlesOrion: TextTracks = [];
+    for (const caption in whvxStreamAstra?.captions) {
+      subtitlesOrion.push({
+        language: whvxStreamAstra?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStreamAstra?.captions?.[caption]?.url,
+        type:
+          whvxStreamAstra?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStreamAstra?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    if (whvxStreamAstra?.playlist) {
+      streams.push({
+        server: 'Astra',
+        link: whvxStreamAstra?.playlist,
+        type: whvxStreamAstra?.type === 'hls' ? 'm3u8' : 'mp4',
+        subtitles: subtitlesOrion,
+        headers: {
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+        },
+      });
+    }
 
     ///// nsbx
     // const nsbxStream = await getWhvxStream(

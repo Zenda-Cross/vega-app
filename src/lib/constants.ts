@@ -25,12 +25,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: '🌏',
   },
-  {
-    name: 'MultiMovies',
-    value: 'multi',
-    type: 'global',
-    flag: '🌏',
-  },
+  // {
+  //   name: 'MultiMovies',
+  //   value: 'multi',
+  //   type: 'global',
+  //   flag: '🌏',
+  // },
   {
     name: 'World4uFree',
     value: 'world4u',

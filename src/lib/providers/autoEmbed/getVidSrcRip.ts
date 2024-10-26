@@ -7,19 +7,37 @@ export async function getVidSrcRip(
   stream: Stream[],
 ) {
   try {
-    const sources = ['flixhq', 'vidsrcuk', 'vidsrcicu'];
+    const sources = ['flixhq', 'vidsrcuk'];
     const baseUrl = 'aHR0cHM6Ly92aWRzcmMucmlw';
+    const timeout = 3000;
+
     await Promise.all(
       sources.map(async source => {
-        const apiUrl = await useVRF(source, tmdbId, season, episode);
-        const response = await fetch(atob(baseUrl) + apiUrl);
-        const data = await response.json();
-        if (data.sources?.length > 0) {
-          stream.push({
-            server: source,
-            type: data?.sources[0].file.includes('.mp4') ? 'mp4' : 'm3u8',
-            link: data?.sources[0].file,
-          });
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+          try {
+            const apiUrl = await useVRF(source, tmdbId, season, episode);
+            const response = await fetch(atob(baseUrl) + apiUrl, {
+              signal: controller.signal,
+            });
+            const data = await response.json();
+
+            if (data.sources?.length > 0) {
+              stream.push({
+                server: source,
+                type: data?.sources[0].file.includes('.mp4') ? 'mp4' : 'm3u8',
+                link: data?.sources[0].file,
+              });
+            }
+          } finally {
+            clearTimeout(timeoutId); // Clean up the timeout
+          }
+        } catch (error) {
+          // Handle individual source errors
+          console.log(`Error fetching from ${source}:`, error);
+          // Don't rethrow - allow other sources to continue
         }
       }),
     );
