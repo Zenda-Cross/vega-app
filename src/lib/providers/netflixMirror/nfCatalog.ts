@@ -5,11 +5,11 @@ export const nfCatalog = [
   },
   {
     title: 'Series',
-    filter: '/series?app=1',
+    filter: '/series',
   },
   {
     title: 'Movies',
-    filter: '/movies?app=1',
+    filter: '/movies',
   },
 ];
 
