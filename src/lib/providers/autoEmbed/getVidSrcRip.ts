@@ -7,7 +7,7 @@ export async function getVidSrcRip(
   stream: Stream[],
 ) {
   try {
-    const sources = ['flixhq', 'vidsrcuk'];
+    const sources = ['flixhq'];
     const baseUrl = 'aHR0cHM6Ly92aWRzcmMucmlw';
     const timeout = 3000;
 

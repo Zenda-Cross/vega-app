@@ -33,11 +33,11 @@ export const animeRulzGetStream = async (link: string): Promise<Stream[]> => {
 
     // Extract the encrypted content
     const contents =
-      data2.match(/const\s+Contents\s*=\s*['"]({.*})['"]/)?.[1] || '';
+      data2.match(/const\s+Encrypted\s*=\s*['"]({.*})['"]/)?.[1] || '';
     // console.log(contents);
     if (embededUrl && embededUrl.includes('vidstreaming')) {
       const res2 = await fetch(
-        'https://ext.8man.me/api/decrypt?passphrase=1FHuaQhhcsKgpTRB',
+        'https://ext.8man.me/api/decrypt?passphrase==JV[t}{trEV=Ilh5',
         {
           method: 'POST',
           body: contents,
