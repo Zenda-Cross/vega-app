@@ -56,18 +56,18 @@ export const mpGetStream = async (
 
     // Extract the encrypted content
     const contents =
-      data2.match(/const\s+Contents\s*=\s*['"]({.*})['"]/)?.[1] || '';
+      data2.match(/const\s+Encrypted\s*=\s*['"]({.*})['"]/)?.[1] || '';
     console.log(contents);
     if (embededUrl) {
       const res2 = await fetch(
-        'https://ext.8man.me/api/decrypt?passphrase=1FHuaQhhcsKgpTRB',
+        'https://ext.8man.me/api/decrypt?passphrase==JV[t}{trEV=Ilh5',
         {
           method: 'POST',
           body: contents,
         },
       );
       const finalData = await res2.json();
-      console.log('data2', finalData);
+      console.log('finaldata', finalData);
       const subtitle: TextTracks = finalData?.subtitles?.map((sub: any) => ({
         title: sub?.label || 'Unknown',
         language: sub?.label as string,

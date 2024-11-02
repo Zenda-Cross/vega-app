@@ -8,7 +8,8 @@ export const nfGetStream = async (id: string): Promise<Stream[]> => {
     const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
       new Date().getTime() / 1000,
     )}`;
-    const cookies = (await nfGetCookie()) + '  hd=on;';
+    const cookies = (await nfGetCookie()) + ' hd=on;';
+    console.log('nfGetStream', cookies);
     const res = await fetch(url, {
       headers: {
         cookie: cookies,
