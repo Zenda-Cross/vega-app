@@ -5131,10 +5131,10 @@ expo-modules-autolinking@>=0.8.1, expo-modules-autolinking@1.11.3:
     require-from-string "^2.0.2"
     resolve-from "^5.0.0"
 
-expo-modules-core@1.12.25:
-  version "1.12.25"
-  resolved "https://registry.npmjs.org/expo-modules-core/-/expo-modules-core-1.12.25.tgz"
-  integrity sha512-HB2LS2LEM41Xq1bG+Jtzqm6XgPaa+mM9BAvCdX1lDGMQ9Ay9vMTL/GVEs2gpsINPofICopjBRwD+wftyCbVrzg==
+expo-modules-core@1.12.26:
+  version "1.12.26"
+  resolved "https://registry.npmjs.org/expo-modules-core/-/expo-modules-core-1.12.26.tgz"
+  integrity sha512-y8yDWjOi+rQRdO+HY+LnUlz8qzHerUaw/LUjKPU/mX8PRXP4UUPEEp5fjAwBU44xjNmYSHWZDwet4IBBE+yQUA==
   dependencies:
     invariant "^2.2.4"
 
@@ -5147,9 +5147,9 @@ expo-system-ui@~3.0.4:
     debug "^4.3.2"
 
 expo@*, expo@^51.0.0:
-  version "51.0.37"
-  resolved "https://registry.npmjs.org/expo/-/expo-51.0.37.tgz"
-  integrity sha512-zMdfTiGNgNWG0HOOFA3zRreS94iQ7fDxxgEIR6wdQCbncTpbeYj+5mscTAlHE9JJ+oBkcNyJXrLSjE/YVbFERg==
+  version "51.0.38"
+  resolved "https://registry.npmjs.org/expo/-/expo-51.0.38.tgz"
+  integrity sha512-/B9npFkOPmv6WMIhdjQXEY0Z9k/67UZIVkodW8JxGIXwKUZAGHL+z1R5hTtWimpIrvVhyHUFU3f8uhfEKYhHNQ==
   dependencies:
     "@babel/runtime" "^7.20.0"
     "@expo/cli" "0.18.30"
@@ -5163,7 +5163,7 @@ expo@*, expo@^51.0.0:
     expo-font "~12.0.10"
     expo-keep-awake "~13.0.2"
     expo-modules-autolinking "1.11.3"
-    expo-modules-core "1.12.25"
+    expo-modules-core "1.12.26"
     fbemitter "^3.0.0"
     whatwg-url-without-unicode "8.0.0-3"
 
@@ -8627,6 +8627,11 @@ react-native-svg@15.2.0:
   dependencies:
     css-select "^5.1.0"
     css-tree "^1.1.3"
+
+react-native-system-setting@^1.7.6:
+  version "1.7.6"
+  resolved "https://registry.npmjs.org/react-native-system-setting/-/react-native-system-setting-1.7.6.tgz"
+  integrity sha512-nBnIK5Xnyu8XRRA3BMzRI54oYlSBKc0oOTQdZOCEeOvn4ltS1nk2shj/vtMQe6khXvuhai3vIc+g7DcsOcr5+w==
 
 react-native-video@^6.5.0:
   version "6.5.0"
