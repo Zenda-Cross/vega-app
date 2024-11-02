@@ -44,6 +44,10 @@ const Preferences = () => {
     MMKV.getBool('showHamburgerMenu') || false,
   );
 
+  const [hideSeekButtons, setHideSeekButtons] = useState<boolean>(
+    MMKV.getBool('hideSeekButtons') || false,
+  );
+
   return (
     <ScrollView className="w-full h-full bg-black">
       <Text className="text-white mt-10 ml-4 font-bold text-2xl">
@@ -189,6 +193,20 @@ const Preferences = () => {
             onValueChange={() => {
               MMKV.setBool('showMediaControls', !showMediaControls);
               setShowMediaControls(!showMediaControls);
+            }}
+          />
+        </View>
+
+        {/* hide seek buttons */}
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">Hide Seek Buttons</Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={hideSeekButtons ? primary : 'gray'}
+            value={hideSeekButtons}
+            onValueChange={() => {
+              MMKV.setBool('hideSeekButtons', !hideSeekButtons);
+              setHideSeekButtons(!hideSeekButtons);
             }}
           />
         </View>

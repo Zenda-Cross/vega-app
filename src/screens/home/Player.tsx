@@ -130,6 +130,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     },
   ];
   const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
+  const hideSeekButtons = MMKV.getBool('hideSeekButtons') || false;
 
   const watchedDuration = MmmkvCache.getString(activeEpisode?.link)
     ? JSON.parse(MmmkvCache.getString(activeEpisode?.link) as string).position
@@ -302,6 +303,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       <OrientationLocker orientation={LANDSCAPE} />
       {/* // video player */}
       <VideoPlayer
+        doubleTapTime={200}
+        disableSeekButtons={hideSeekButtons}
         source={{
           uri: selectedStream?.link || '',
           shouldCache: true,
