@@ -65,3 +65,11 @@ https://reactnative.dev/docs/signed-apk-android
 
 ## Note
 Vega App does not store any media files on our servers and is not directly linked to the media. Third-party services host all media, and Vega App merely provides a search and web scraping tool that indexes publicly available data. We are not responsible for the content or availability of the media, as we do not host or control any of it.
+
+## Stars
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Zenda-Cross/vega-app&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Zenda-Cross/vega-app&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Zenda-Cross/vega-app&type=Date" />
+ </picture>
+</a>
