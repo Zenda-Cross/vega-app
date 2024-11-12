@@ -10,7 +10,6 @@ import React, {useState} from 'react';
 import {MMKV} from '../../lib/Mmkv';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import {themes} from '../../lib/constants';
@@ -26,7 +25,6 @@ const Preferences = () => {
   const [disableDrawer, setDisableDrawer] = useState(
     MMKV.getBool('disableDrawer') || false,
   );
-  const {clearHistory} = useWatchHistoryStore(state => state);
 
   const [ExcludedQualities, setExcludedQualities] = useState(
     MMKV.getArray('ExcludedQualities') || [],
@@ -229,26 +227,6 @@ const Preferences = () => {
               );
             }}
           />
-        </View>
-
-        {/* clear watch history */}
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold">Clear Watch History</Text>
-          <TouchableOpacity
-            className="bg-[#343434] w-12 items-center p-2 rounded-md"
-            onPress={() => {
-              RNReactNativeHapticFeedback.trigger('virtualKey', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
-              clearHistory();
-            }}>
-            <MaterialCommunityIcons
-              name="delete-outline"
-              size={20}
-              color="white"
-            />
-          </TouchableOpacity>
         </View>
 
         {/* Excluded qualities */}
