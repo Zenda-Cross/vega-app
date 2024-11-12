@@ -19,55 +19,8 @@ export const allGetStream = async (
 
     ///// whvx
 
-    const whvxStream = await getWhvxStream(
-      imdbId,
-      tmdbId,
-      season,
-      episode,
-      title,
-      type,
-      year,
-      'nova',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    // whvx nova
-    const subtitles: TextTracks = [];
-    for (const caption in whvxStream?.captions) {
-      subtitles.push({
-        language: whvxStream?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStream?.captions?.[caption]?.url,
-        type:
-          whvxStream?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStream?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    for (const quality in whvxStream?.qualities) {
-      streams.push({
-        server: 'Nova-' + quality,
-        link: whvxStream?.qualities?.[quality]?.url,
-        type: whvxStream?.qualities?.[quality]?.type || 'mp4',
-        subtitles: subtitles,
-        quality: quality as any,
-      });
-    }
-
-    ///// flimxy
-    const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    if (flimxyStream) {
-      for (const quality in flimxyStream?.qualities) {
-        streams.push({
-          server: 'Flimxy-' + quality,
-          link: flimxyStream?.qualities?.[quality]?.url,
-          type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-          quality: quality as any,
-        });
-      }
-    }
-
-    // whvx orion
-    // const whvxStreamOrion = await getWhvxStream(
+    ///// nova
+    // const whvxStream = await getWhvxStream(
     //   imdbId,
     //   tmdbId,
     //   season,
@@ -75,32 +28,79 @@ export const allGetStream = async (
     //   title,
     //   type,
     //   year,
-    //   'orion',
+    //   'nova',
     //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     // );
-    // const subtitlesOrion: TextTracks = [];
-    // for (const caption in whvxStreamOrion?.captions) {
-    //   subtitlesOrion.push({
-    //     language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-    //     uri: whvxStreamOrion?.captions?.[caption]?.url,
+    // const subtitles: TextTracks = [];
+    // for (const caption in whvxStream?.captions) {
+    //   subtitles.push({
+    //     language: whvxStream?.captions?.[caption]?.language || 'Undefined',
+    //     uri: whvxStream?.captions?.[caption]?.url,
     //     type:
-    //       whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+    //       whvxStream?.captions?.[caption]?.type === 'srt'
     //         ? TextTrackType.SUBRIP
     //         : TextTrackType.VTT,
-    //     title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+    //     title: whvxStream?.captions?.[caption]?.language || 'Undefined',
     //   });
     // }
-    // if (whvxStreamOrion?.playlist) {
+    // for (const quality in whvxStream?.qualities) {
     //   streams.push({
-    //     server: 'Orion',
-    //     link: whvxStreamOrion?.playlist,
-    //     type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-    //     subtitles: subtitlesOrion,
-    //     headers: {
-    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-    //     },
+    //     server: 'Nova-' + quality,
+    //     link: whvxStream?.qualities?.[quality]?.url,
+    //     type: whvxStream?.qualities?.[quality]?.type || 'mp4',
+    //     subtitles: subtitles,
+    //     quality: quality as any,
     //   });
     // }
+
+    ///// flimxy
+    // const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
+    // if (flimxyStream) {
+    //   for (const quality in flimxyStream?.qualities) {
+    //     streams.push({
+    //       server: 'Flimxy-' + quality,
+    //       link: flimxyStream?.qualities?.[quality]?.url,
+    //       type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
+    //       quality: quality as any,
+    //     });
+    //   }
+    // }
+
+    // whvx orion
+    const whvxStreamOrion = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      year,
+      'orion',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    );
+    const subtitlesOrion: TextTracks = [];
+    for (const caption in whvxStreamOrion?.captions) {
+      subtitlesOrion.push({
+        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStreamOrion?.captions?.[caption]?.url,
+        type:
+          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    if (whvxStreamOrion?.playlist) {
+      streams.push({
+        server: 'Orion',
+        link: whvxStreamOrion?.playlist,
+        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
+        subtitles: subtitlesOrion,
+        headers: {
+          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
+        },
+      });
+    }
     // console.log('whvxorion', whvxStreamOrion?.playlist);
 
     const whvxStreamAstra = await getWhvxStream(
@@ -115,9 +115,9 @@ export const allGetStream = async (
       'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
     );
     console.log('whvxastra', whvxStreamAstra?.playlist);
-    const subtitlesOrion: TextTracks = [];
+    const subtitlesAstra: TextTracks = [];
     for (const caption in whvxStreamAstra?.captions) {
-      subtitlesOrion.push({
+      subtitlesAstra.push({
         language: whvxStreamAstra?.captions?.[caption]?.language || 'Undefined',
         uri: whvxStreamAstra?.captions?.[caption]?.url,
         type:
@@ -132,7 +132,7 @@ export const allGetStream = async (
         server: 'Astra',
         link: whvxStreamAstra?.playlist,
         type: whvxStreamAstra?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesOrion,
+        subtitles: subtitlesAstra,
         headers: {
           origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
         },
@@ -228,6 +228,7 @@ export const allGetStream = async (
         type: 'm3u8',
       });
     });
+
     return streams;
   } catch (err) {
     console.error(err);

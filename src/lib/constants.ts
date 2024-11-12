@@ -163,6 +163,12 @@ export const providersList: ProvidersList[] = [
     type: 'india',
     flag: '🇮🇳',
   },
+  {
+    name: 'GuardaHD',
+    value: 'guardahd',
+    type: 'italy',
+    flag: '🇮🇹',
+  },
 ];
 
 export const downloadFolder = RNFS.DownloadDirectoryPath + '/vega';
