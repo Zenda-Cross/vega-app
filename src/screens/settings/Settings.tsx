@@ -26,6 +26,7 @@ import {
 } from '@expo/vector-icons';
 import {ScrollView} from 'react-native';
 import useThemeStore from '../../lib/zustand/themeStore';
+import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -36,6 +37,7 @@ const Settings = ({navigation}: Props) => {
   );
 
   const {provider, setProvider} = useContentStore(state => state);
+  const {clearHistory} = useWatchHistoryStore(state => state);
 
   const onDownloadFolderPress = async () => {
     if (await requestStoragePermission()) {
@@ -203,6 +205,26 @@ const Settings = ({navigation}: Props) => {
               ignoreAndroidSystemSettings: false,
             });
             MmmkvCache.clearStore();
+          }}>
+          <MaterialCommunityIcons
+            name="delete-outline"
+            size={20}
+            color="white"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* clear watch history */}
+      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+        <Text className="text-white font-semibold">Clear Watch History</Text>
+        <TouchableOpacity
+          className="bg-[#343434] w-12 items-center p-2 rounded-md"
+          onPress={() => {
+            ReactNativeHapticFeedback.trigger('virtualKey', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
+            clearHistory();
           }}>
           <MaterialCommunityIcons
             name="delete-outline"
