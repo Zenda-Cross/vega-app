@@ -185,20 +185,20 @@ export const allGetStream = async (
     ///// autoembed
     // server1
 
-    // const server1Url =
-    //   type === 'movie'
-    //     ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
-    //     : `https://${atob(
-    //         autoembed,
-    //       )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
-    // const links = await multiExtractor(server1Url);
-    // links.forEach(({lang, url}) => {
-    //   streams.push({
-    //     server: 'Multi' + (lang ? `-${lang}` : ''),
-    //     link: url,
-    //     type: 'm3u8',
-    //   });
-    // });
+    const server1Url =
+      type === 'movie'
+        ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
+        : `https://${atob(
+            autoembed,
+          )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
+    const links = await multiExtractor(server1Url);
+    links.forEach(({lang, url}) => {
+      streams.push({
+        server: 'Multi' + (lang ? `-${lang}` : ''),
+        link: url,
+        type: 'm3u8',
+      });
+    });
 
     // server 2
 
