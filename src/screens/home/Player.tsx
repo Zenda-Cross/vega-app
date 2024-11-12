@@ -499,8 +499,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         //@ts-ignore
         transition={{type: 'timing', duration: 150}}
         pointerEvents="none"
-        className="absolute w-full top-12 justify-center items-center">
-        <Text className="text-white bg-black/50 p-2 rounded-md text-base">
+        className="absolute w-full top-12 justify-center items-center px-2">
+        <Text className="text-white bg-black/50 p-2 rounded-full text-base">
           {toastMessage}
         </Text>
       </MotiView>

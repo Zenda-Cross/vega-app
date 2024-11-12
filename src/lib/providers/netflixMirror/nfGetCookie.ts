@@ -1,16 +1,38 @@
 import axios from 'axios';
 import {getBaseUrl} from '../getBaseUrl';
+import * as cheerio from 'cheerio';
 
 export async function nfGetCookie() {
   try {
     const baseUrl = await getBaseUrl('nfMirror');
-    const res = await axios.head(baseUrl + '/home', {withCredentials: false});
-    const cookie = res.headers['set-cookie'];
-    // console.log('nfCookie', cookie);
-    // get addhash value from cookie
-    const addhash = cookie?.[0].split(';')[0].split('=')[1];
-    // console.log('addhash', addhash);
-    const addRes = await axios.get(baseUrl + '/v.php?hash=' + addhash);
+    const res = await axios.get(baseUrl + '/home', {withCredentials: false});
+    const $ = cheerio.load(res.data);
+    // console.log('nf cookie html', res.data);
+    const addhash = $('body').attr('data-addhash');
+    console.log('nf addhash', addhash);
+    try {
+      const addRes = await fetch(
+        baseUrl + '/v.php?hash=' + addhash + '&t=' + Math.random(),
+        {
+          credentials: 'omit',
+        },
+      );
+    } catch (err) {
+      console.log('nf addhash error ', err);
+    }
+    try {
+      const addRes = await fetch(
+        'https://userverify.netmirror.app/verify?vhf=' +
+          addhash +
+          '&t=' +
+          Math.random(),
+        {
+          credentials: 'omit',
+        },
+      );
+    } catch (err) {
+      console.log('nf addhash error ', err);
+    }
     const form = new FormData();
     form.append('verify', addhash);
     const res2 = await fetch(baseUrl + '/verify2.php', {
@@ -18,11 +40,11 @@ export async function nfGetCookie() {
       body: form,
       credentials: 'omit',
     });
-    const cookie2 = await res2.headers.get('set-cookie');
-    // console.log('nfCookie2', cookie2.split(';')[0]);
+    const cookie2 = res2.headers.get('set-cookie');
+    console.log('nfCookie2', cookie2);
     return cookie2?.split(';')[0] + ';' || '';
   } catch (err) {
-    console.error('nf error ', err);
+    console.error('nf cookie error: ', err);
     return '';
   }
 }
