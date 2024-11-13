@@ -10,7 +10,7 @@ export const allGetPost = async function (
 ): Promise<Post[]> {
   try {
     const catalog: Post[] = [];
-    const url = 'https://cyberflix.elfhosted.com' + filter;
+    const url = 'https://cinemeta-catalogs.strem.io' + filter;
     console.log('allGetPostUrl', url);
     const res = await axios.get(url, {headers, signal});
     const data = res.data;
