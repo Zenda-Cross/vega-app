@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@8man/react-native-media-console@^2.2.4-alpha.10":
-  version "2.2.4-alpha.10"
-  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4-alpha.10.tgz"
-  integrity sha512-Dy9Ld0eozEZi50uWpv7+g7J4OgVDwbrwBJSdYY1cR/XYtA69OaJVNB/i/MtoZPuACBB4+J4Z2kHGicofUt4mQQ==
+"@8man/react-native-media-console@^2.2.4-alpha.14":
+  version "2.2.4-alpha.14"
+  resolved "https://registry.npmjs.org/@8man/react-native-media-console/-/react-native-media-console-2.2.4-alpha.14.tgz"
+  integrity sha512-larW7yJixgJT7LEMPDMYFGXQXdVLRz2JaRg8mkYOUp1PzAm2CayA9mp3L4ApX64XHjUZ0+UcrOEDZIUr+QL2HA==
 
 "@aashutoshrathi/word-wrap@^1.2.3":
   version "1.2.6"
