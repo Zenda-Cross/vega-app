@@ -290,6 +290,8 @@ const Player = ({route}: Props): React.JSX.Element => {
     [activeEpisode.link],
   );
 
+  const [isTextVisible, setIsTextVisible] = useState(false);
+
   return (
     <SafeAreaView
       edges={{
@@ -401,6 +403,50 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedVideoTrack={selectedVideoTrack}
         style={{flex: 1, zIndex: 100}}
       />
+      {loading === false && !Platform.isTV && (
+        <TouchableOpacity
+          onLongPress={() => {
+            setPlaybackRate(2);
+            setIsTextVisible(true);
+          }}
+          onPressOut={() => {
+            setPlaybackRate(1);
+            setIsTextVisible(false);
+          }}
+          style={{
+            position: 'absolute',
+            top: '20%',
+            bottom: 0,
+            right: 0,
+            width: '25%',
+            height: '60%', // Adjust as per your requirement
+            backgroundColor: 'transparent',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          {isTextVisible && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: 'white',
+                paddingHorizontal: 5,
+                paddingVertical:2,
+                borderRadius: 5,
+              }}>
+              <MaterialIcons name="fast-forward" size={40} color="black" />
+              <Text
+                style={{
+                  color: 'black',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                }}>
+                2x
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
       {/* // cast button */}
       {loading === false && !Platform.isTV && (
         <MotiView
