@@ -403,6 +403,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedVideoTrack={selectedVideoTrack}
         style={{flex: 1, zIndex: 100}}
       />
+      {/*2x speed gesture*/}
       {loading === false && !Platform.isTV && (
         <TouchableOpacity
           onLongPress={() => {
