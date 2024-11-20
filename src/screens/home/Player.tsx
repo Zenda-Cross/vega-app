@@ -7,6 +7,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import {Easing} from 'react-native-reanimated';
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
@@ -94,6 +95,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [twoxgesture,setTwoxgesture]=useState(false);
 
   // constants
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
@@ -404,7 +406,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         style={{flex: 1, zIndex: 100}}
       />
       {/*2x speed gesture*/}
-      {loading === false && !Platform.isTV && (
+      {loading === false && !Platform.isTV && twoxgesture && (
         <TouchableOpacity
           onLongPress={() => {
             setPlaybackRate(2);
@@ -419,7 +421,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             top: '20%',
             bottom: 0,
             right: 0,
-            width: '25%',
+            width: '20%',
             height: '60%', // Adjust as per your requirement
             backgroundColor: 'transparent',
             justifyContent: 'center',
@@ -432,10 +434,19 @@ const Player = ({route}: Props): React.JSX.Element => {
                 alignItems: 'center',
                 backgroundColor: 'white',
                 paddingHorizontal: 5,
-                paddingVertical:2,
+                paddingVertical: 2,
                 borderRadius: 5,
               }}>
-              <MaterialIcons name="fast-forward" size={40} color="black" />
+              <MotiView
+                animate={{opacity: [1, 0, 1]}}
+                transition={{
+                  repeat: Infinity,
+                  duration: 300,
+                  loop: true,
+                  easing: Easing.inOut(Easing.ease),
+                }}>
+                <MaterialIcons name="fast-forward" size={40} color="black" />
+              </MotiView>
               <Text
                 style={{
                   color: 'black',
@@ -455,10 +466,23 @@ const Player = ({route}: Props): React.JSX.Element => {
           animate={{translateY: showControls ? 0 : -300}}
           //@ts-ignore
           transition={{type: 'timing', duration: 190}}
-          className="absolute top-5 right-20">
+          className="absolute top-5 right-20 flex-row items-center">
           <CastButton
             style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
           />
+          {/* Button to set playback rate to 2 */}
+          <TouchableOpacity
+            onPress={() => setTwoxgesture(!twoxgesture)}
+            className={`${
+              twoxgesture ? 'bg-white' : 'bg-black'
+            } ml-2 px-4 py-1 rounded`}>
+            <Text
+              className={`${
+                twoxgesture ? 'text-black' : 'text-white'
+              } font-semibold}`}>
+              {twoxgesture ? '2x-Disable' : '2x-Enable'}
+            </Text>
+          </TouchableOpacity>
         </MotiView>
       )}
 
@@ -862,5 +886,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     </SafeAreaView>
   );
 };
+
+export default Player;
 
 export default Player;
