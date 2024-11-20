@@ -25,7 +25,7 @@ export const multiGetPostsSearch = async function (
 ): Promise<Post[]> {
   const baseUrl = await getBaseUrl('multi');
   // console.log(baseUrl);
-  const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
+  const url = `${baseUrl}/?s=${searchQuery}`;
   console.log('multiUrl', url);
 
   return posts(url, signal);
@@ -42,7 +42,9 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
       .map((i, element) => {
         const title = $(element).find('.poster').find('img').attr('alt');
         const link = $(element).find('.poster').find('a').attr('href');
-        const image = $(element).find('.poster').find('img').attr('src');
+        const image =
+          $(element).find('.poster').find('img').attr('data-src') ||
+          $(element).find('.poster').find('img').attr('src');
         if (title && link && image) {
           catalog.push({
             title: title,
@@ -54,8 +56,11 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
     $('.result-item').map((i, element) => {
       const title = $(element).find('.thumbnail').find('img').attr('alt');
       const link = $(element).find('.thumbnail').find('a').attr('href');
-      const image = $(element).find('.thumbnail').find('img').attr('src');
-      if (title && link && image) {
+      const image =
+        $(element).find('.thumbnail').find('img').attr('data-src') ||
+        $(element).find('.thumbnail').find('img').attr('src') ||
+        '';
+      if (title && link) {
         catalog.push({
           title: title,
           link: link,
