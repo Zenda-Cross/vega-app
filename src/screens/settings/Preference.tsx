@@ -45,16 +45,20 @@ const Preferences = () => {
   const [hideSeekButtons, setHideSeekButtons] = useState<boolean>(
     MMKV.getBool('hideSeekButtons') || false,
   );
+  const [enable2xGesture, setEnable2xGesture] = useState<boolean>(
+    MMKV.getBool('enable2xGesture') || false,
+  );
 
   return (
     <ScrollView className="w-full h-full bg-black">
-      <Text className="text-white mt-10 ml-4 font-bold text-2xl">
+      <Text className="text-white mt-10 ml-3 font-bold text-2xl">
         Preference
       </Text>
+      <View className="p-2 space-y-2">
+        <Text className="text-white ml-2 mt-5 font-bold text-xl">General</Text>
 
-      <View className="mt-2 p-2">
         {/* Themes */}
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+        <View className=" flex-row items-center px-4 justify-between bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold">Themes</Text>
           {isCustom ? (
             <View className="w-36 flex-row items-center justify-around">
@@ -142,7 +146,7 @@ const Preferences = () => {
         </View>
 
         {/* disable drawer */}
-        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
             Disable Drawer at Home Screen
           </Text>
@@ -159,7 +163,7 @@ const Preferences = () => {
 
         {/* show hamburger menu */}
         {!disableDrawer && (
-          <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+          <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
             <Text className="text-white font-semibold">
               Show Hamburger Menu
             </Text>
@@ -179,38 +183,8 @@ const Preferences = () => {
           </View>
         )}
 
-        {/* show media controls */}
-        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
-          <Text className="text-white font-semibold">
-            Show Video Controls in Notification
-          </Text>
-          <View className="w-20" />
-          <Switch
-            thumbColor={showMediaControls ? primary : 'gray'}
-            value={showMediaControls}
-            onValueChange={() => {
-              MMKV.setBool('showMediaControls', !showMediaControls);
-              setShowMediaControls(!showMediaControls);
-            }}
-          />
-        </View>
-
-        {/* hide seek buttons */}
-        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
-          <Text className="text-white font-semibold">Hide Seek Buttons</Text>
-          <View className="w-20" />
-          <Switch
-            thumbColor={hideSeekButtons ? primary : 'gray'}
-            value={hideSeekButtons}
-            onValueChange={() => {
-              MMKV.setBool('hideSeekButtons', !hideSeekButtons);
-              setHideSeekButtons(!hideSeekButtons);
-            }}
-          />
-        </View>
-
         {/* show recentlyWatched */}
-        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-3 rounded-md">
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
             Show Recently Watched
           </Text>
@@ -228,9 +202,57 @@ const Preferences = () => {
             }}
           />
         </View>
+      </View>
+      <View className="p-2 space-y-2">
+        <Text className="text-white ml-2 font-bold text-xl">Player</Text>
+        {/* show media controls */}
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Show Video Controls in Notification
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={showMediaControls ? primary : 'gray'}
+            value={showMediaControls}
+            onValueChange={() => {
+              MMKV.setBool('showMediaControls', !showMediaControls);
+              setShowMediaControls(!showMediaControls);
+            }}
+          />
+        </View>
+
+        {/* hide seek buttons */}
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">Hide Seek Buttons</Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={hideSeekButtons ? primary : 'gray'}
+            value={hideSeekButtons}
+            onValueChange={() => {
+              MMKV.setBool('hideSeekButtons', !hideSeekButtons);
+              setHideSeekButtons(!hideSeekButtons);
+            }}
+          />
+        </View>
+
+        {/* enable 2x gesture */}
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Hold to 2x playback speed
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={enable2xGesture ? primary : 'gray'}
+            value={enable2xGesture}
+            onValueChange={() => {
+              MMKV.setBool('enable2xGesture', !enable2xGesture);
+              setEnable2xGesture(!enable2xGesture);
+            }}
+          />
+        </View>
 
         {/* Excluded qualities */}
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+        <View className=" flex-row items-center px-4 justify-between bg-tertiary p-2 rounded-md">
           <Text className="text-white font-semibold">Excluded qualities</Text>
           <View className="flex flex-row flex-wrap">
             {['360p', '480p', '720p'].map((quality, index) => (

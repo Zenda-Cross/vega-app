@@ -210,7 +210,9 @@ const SeasonList = ({
             fontWeight: 'bold',
           }}
           labelField={'title'}
-          valueField={LinkList[0]?.episodesLink ? 'episodesLink' : 'directLinks'}
+          valueField={
+            LinkList[0]?.episodesLink ? 'episodesLink' : 'directLinks'
+          }
           onChange={item => {
             setActiveSeason(item);
             MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
@@ -220,7 +222,7 @@ const SeasonList = ({
           style={{
             overflow: 'hidden',
             borderWidth: 1,
-            borderColor: 'gray',
+            borderColor: '#2f302f',
             paddingHorizontal: 12,
             borderRadius: 8,
             backgroundColor: 'black',

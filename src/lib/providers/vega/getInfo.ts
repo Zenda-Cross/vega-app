@@ -7,7 +7,13 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
   try {
     const url = link;
     console.log('url', url);
-    const response = await axios.get(url, {headers});
+    const baseUrl = url.split('/').slice(0, 3).join('/');
+    const response = await axios.get(url, {
+      headers: {
+        ...headers,
+        Referer: baseUrl,
+      },
+    });
     const $ = cheerio.load(response.data);
     const infoContainer = $('.entry-content');
     const heading = infoContainer?.find('h3');

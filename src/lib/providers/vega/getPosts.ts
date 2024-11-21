@@ -15,7 +15,7 @@ export const vegaGetPosts = async (
   console.log('vegaGetPosts baseUrl:', providerValue, baseUrl);
   const url = `${baseUrl}/${filter}/page/${page}/`;
   console.log('vegaGetPosts url:', url);
-  return posts(url, signal);
+  return posts(baseUrl, url, signal);
 };
 
 export const vegaGetPostsSearch = async (
@@ -30,12 +30,22 @@ export const vegaGetPostsSearch = async (
   const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
   console.log('vegaGetPosts url:', url);
 
-  return posts(url, signal);
+  return posts(baseUrl, url, signal);
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts(
+  baseUrl: string,
+  url: string,
+  signal: AbortSignal,
+): Promise<Post[]> {
   try {
-    const urlRes = await axios.get(url, {headers, signal});
+    const urlRes = await axios.get(url, {
+      headers: {
+        ...headers,
+        Referer: baseUrl,
+      },
+      signal,
+    });
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
     $('.blog-items')
