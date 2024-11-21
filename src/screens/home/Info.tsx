@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -287,35 +288,51 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       Cast
                     </Text>
                     <View className="flex-row gap-1 flex-wrap">
-                      {meta?.cast?.slice(0, 3).map((actor: string, index: number) => (
-                        <Text
-                          key={actor}
-                          className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0 ? 'text-red-500' : index % 3 === 1 ? 'text-blue-500' : 'text-green-500'}`}>
-                          {actor}
-                        </Text>
-                      ))}
-                      {info?.cast?.slice(0, 3).map((actor: string, index: number) => (
-                        <Text
-                          key={actor}
-                          className={`text-xs bg-tertiary p-1 px-2 rounded-md ${index % 3 === 0 ? 'text-red-500' : index % 3 === 1 ? 'text-blue-500' : 'text-green-500'}`}>
-                          {actor}
-                        </Text>
-                      ))}
+                      {meta?.cast
+                        ?.slice(0, 3)
+                        .map((actor: string, index: number) => (
+                          <Text
+                            key={actor}
+                            className={`text-xs bg-tertiary p-1 px-2 rounded-md ${
+                              index % 3 === 0
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                ? 'text-blue-500'
+                                : 'text-green-500'
+                            }`}>
+                            {actor}
+                          </Text>
+                        ))}
+                      {info?.cast
+                        ?.slice(0, 3)
+                        .map((actor: string, index: number) => (
+                          <Text
+                            key={actor}
+                            className={`text-xs bg-tertiary p-1 px-2 rounded-md ${
+                              index % 3 === 0
+                                ? 'text-red-500'
+                                : index % 3 === 1
+                                ? 'text-blue-500'
+                                : 'text-green-500'
+                            }`}>
+                            {actor}
+                          </Text>
+                        ))}
                     </View>
                   </View>
                 )}
                 {/* synopsis */}
                 <View className="mb-2 w-full flex-row items-center justify-between">
-                  {/* <Skeleton show={infoLoading} colorMode="dark" width={180}> */}
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-white text-lg font-semibold">
-                      Synopsis
-                    </Text>
-                    <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
-                      {route.params.provider || provider.value}
-                    </Text>
-                  </View>
-                  {/* </Skeleton> */}
+                  <Skeleton show={infoLoading} colorMode="dark" width={180}>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-white text-lg font-semibold">
+                        Synopsis
+                      </Text>
+                      <Text className="text-white text-xs bg-tertiary p-1 px-2 rounded-md">
+                        {route.params.provider || provider.value}
+                      </Text>
+                    </View>
+                  </Skeleton>
                   <View className="flex-row items-center gap-4 mb-1">
                     {meta?.trailers && meta?.trailers.length > 0 && (
                       <MaterialCommunityIcons
@@ -414,17 +431,17 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     }
                   </View>
                 </View>
-                {/* <Skeleton show={infoLoading} colorMode="dark" height={20}> */}
-                <Text className="text-gray-200 text-sm px-2 py-1 bg-tertiary rounded-md">
-                  {meta?.description
-                    ? meta?.description.length > 180
-                      ? meta?.description.slice(0, 180) + '...'
-                      : meta?.description
-                    : info?.synopsis?.length! > 180
-                    ? info?.synopsis.slice(0, 180) + '...'
-                    : info?.synopsis || 'No synopsis available'}
-                </Text>
-                {/* </Skeleton> */}
+                <Skeleton show={infoLoading} colorMode="dark" height={40}>
+                  <Text className="text-gray-200 text-sm px-2 py-1 bg-tertiary rounded-md">
+                    {meta?.description
+                      ? meta?.description.length > 180
+                        ? meta?.description.slice(0, 180) + '...'
+                        : meta?.description
+                      : info?.synopsis?.length! > 180
+                      ? info?.synopsis.slice(0, 180) + '...'
+                      : info?.synopsis || 'No synopsis available'}
+                  </Text>
+                </Skeleton>
                 {/* cast */}
               </View>
               <View className="p-4 bg-black">
