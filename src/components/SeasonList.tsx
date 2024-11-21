@@ -201,29 +201,53 @@ const SeasonList = ({
 
   return (
     <View>
-      <Dropdown
-        selectedTextStyle={{color: primary, overflow: 'hidden', height: 22}}
-        labelField={'title'}
-        valueField={LinkList[0]?.episodesLink ? 'episodesLink' : 'directLinks'}
-        onChange={item => {
-          setActiveSeason(item);
-          MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
-        }}
-        value={ActiveSeason}
-        data={LinkList}
-        style={{overflow: 'hidden'}}
-        containerStyle={{borderColor: 'black'}}
-        renderItem={item => {
-          return (
-            <View
-              className={`p-2 bg-black text-white flex-row justify-start gap-2 items-center border border-b border-gray-500 text-center ${
-                ActiveSeason === item ? 'bg-quaternary' : ''
-              }`}>
-              <Text className=" text-white">{item.title}</Text>
-            </View>
-          );
-        }}
-      />
+      {LinkList.length > 1 ? (
+        <Dropdown
+          selectedTextStyle={{
+            color: primary,
+            overflow: 'hidden',
+            height: 20,
+            fontWeight: 'bold',
+          }}
+          labelField={'title'}
+          valueField={LinkList[0]?.episodesLink ? 'episodesLink' : 'directLinks'}
+          onChange={item => {
+            setActiveSeason(item);
+            MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
+          }}
+          value={ActiveSeason}
+          data={LinkList}
+          style={{
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: 'gray',
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            backgroundColor: 'black',
+          }}
+          containerStyle={{
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: 'gray',
+            borderRadius: 8,
+            backgroundColor: 'black',
+          }}
+          renderItem={item => {
+            return (
+              <View
+                className={`px-3 py-2 bg-black text-white flex-row justify-start items-center  border-b border-gray-500 text-center ${
+                  ActiveSeason === item ? 'bg-quaternary' : ''
+                }`}>
+                <Text className="text-white">{item.title}</Text>
+              </View>
+            );
+          }}
+        />
+      ) : (
+        <Text className="text-red-600 text-lg font-semibold px-2">
+          {LinkList[0]?.title}
+        </Text>
+      )}
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
         {/* episodesLinks */}
         {episodeList.length > 0 && !episodeLoading && (
