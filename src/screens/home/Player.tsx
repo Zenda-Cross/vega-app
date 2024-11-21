@@ -95,7 +95,6 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [twoxgesture,setTwoxgesture]=useState(false);
 
   // constants
   const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
@@ -133,6 +132,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   ];
   const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
   const hideSeekButtons = MMKV.getBool('hideSeekButtons') || false;
+  const enable2xGesture = MMKV.getBool('enable2xGesture') || false;
 
   const watchedDuration = MmmkvCache.getString(activeEpisode?.link)
     ? JSON.parse(MmmkvCache.getString(activeEpisode?.link) as string).position
@@ -406,37 +406,22 @@ const Player = ({route}: Props): React.JSX.Element => {
         style={{flex: 1, zIndex: 100}}
       />
       {/*2x speed gesture*/}
-      {loading === false && !Platform.isTV && twoxgesture && (
+      {loading === false && !Platform.isTV && enable2xGesture && (
         <TouchableOpacity
           onLongPress={() => {
             setPlaybackRate(2);
             setIsTextVisible(true);
+            setToastMessage(' 2x Speed ');
+            setShowToast(true);
           }}
           onPressOut={() => {
             setPlaybackRate(1);
             setIsTextVisible(false);
+            setShowToast(false);
           }}
-          style={{
-            position: 'absolute',
-            top: '20%',
-            bottom: 0,
-            right: 0,
-            width: '20%',
-            height: '60%', // Adjust as per your requirement
-            backgroundColor: 'transparent',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+          className="absolute top-[20%] right-[10%] w-[15%] h-[60%] justify-center items-center">
           {isTextVisible && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: 'white',
-                paddingHorizontal: 5,
-                paddingVertical: 2,
-                borderRadius: 5,
-              }}>
+            <View className="flex flex-row items-center bg-white p-2 rounded-full">
               <MotiView
                 animate={{opacity: [1, 0, 1]}}
                 transition={{
@@ -447,14 +432,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                 }}>
                 <MaterialIcons name="fast-forward" size={40} color="black" />
               </MotiView>
-              <Text
-                style={{
-                  color: 'black',
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                }}>
-                2x
-              </Text>
             </View>
           )}
         </TouchableOpacity>
@@ -470,19 +447,6 @@ const Player = ({route}: Props): React.JSX.Element => {
           <CastButton
             style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
           />
-          {/* Button to set playback rate to 2 */}
-          <TouchableOpacity
-            onPress={() => setTwoxgesture(!twoxgesture)}
-            className={`${
-              twoxgesture ? 'bg-white' : 'bg-black'
-            } ml-2 px-4 py-1 rounded`}>
-            <Text
-              className={`${
-                twoxgesture ? 'text-black' : 'text-white'
-              } font-semibold}`}>
-              {twoxgesture ? '2x-Disable' : '2x-Enable'}
-            </Text>
-          </TouchableOpacity>
         </MotiView>
       )}
 
@@ -524,8 +488,8 @@ const Player = ({route}: Props): React.JSX.Element => {
                 : ResizeMode.NONE,
             );
             setToast(
-              'Resize Mode: ' +
-                (resizeMode === ResizeMode.NONE ? 'Cover' : 'None'),
+              ' Resize Mode: ' +
+                (resizeMode === ResizeMode.NONE ? 'Cover ' : 'None '),
               2000,
             );
           }}>
@@ -886,7 +850,5 @@ const Player = ({route}: Props): React.JSX.Element => {
     </SafeAreaView>
   );
 };
-
-export default Player;
 
 export default Player;
