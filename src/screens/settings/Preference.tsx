@@ -237,7 +237,9 @@ const Preferences = () => {
 
         {/* enable 2x gesture */}
         <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
-          <Text className="text-white font-semibold">Enable 2x Gesture</Text>
+          <Text className="text-white font-semibold">
+            Hold to 2x playback speed
+          </Text>
           <View className="w-20" />
           <Switch
             thumbColor={enable2xGesture ? primary : 'gray'}
