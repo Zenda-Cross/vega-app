@@ -90,14 +90,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   // search subtitles
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [showMediaControls] = useState(
-    MMKV.getBool('showMediaControls') || true,
-  );
-
   const [playbackRate, setPlaybackRate] = useState(1);
 
   // constants
-  const playbacks = [0.25, 0.5, 1, 1.25, 1.5, 1.75, 2];
+  const playbacks = [0.25, 0.5, 1, 1.25, 1.35, 1.5, 1.75, 2];
   const settings:
     | {
         title: string;
@@ -133,6 +129,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
   const hideSeekButtons = MMKV.getBool('hideSeekButtons') || false;
   const enable2xGesture = MMKV.getBool('enable2xGesture') || false;
+  const enableSwipeGesture =
+    MMKV.getBool('enableSwipeGesture') === false ? false : true;
+  const showMediaControls =
+    MMKV.getBool('showMediaControls') === false ? false : true;
 
   const watchedDuration = MmmkvCache.getString(activeEpisode?.link)
     ? JSON.parse(MmmkvCache.getString(activeEpisode?.link) as string).position
@@ -307,6 +307,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       <OrientationLocker orientation={LANDSCAPE} />
       {/* // video player */}
       <VideoPlayer
+        disableGesture={!enableSwipeGesture}
         doubleTapTime={200}
         disableSeekButtons={hideSeekButtons}
         source={{
@@ -445,7 +446,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           transition={{type: 'timing', duration: 190}}
           className="absolute top-5 right-20 flex-row items-center">
           <CastButton
-            style={{width: 40, height: 40, opacity: 0.7, tintColor: 'white'}}
+            style={{width: 40, height: 40, opacity: 0.5, tintColor: 'white'}}
           />
         </MotiView>
       )}
