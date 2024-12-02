@@ -43,6 +43,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
 
   const [threeDotsMenuOpen, setThreeDotsMenuOpen] = useState(false);
+  const [readMore, setReadMore] = useState(false);
   const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
   const threeDotsRef = useRef<any>();
 
@@ -163,6 +164,9 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     MMKV.setArray('watchlist', newLibrary);
     setInLibrary(false);
   };
+  const synopsis = meta?.description
+    ? meta?.description
+    : info?.synopsis || 'No synopsis available';
   return (
     <View className="h-full w-full">
       <StatusBar
@@ -388,9 +392,11 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                               top: menuPosition.top,
                               right: menuPosition.right,
                             }}>
+                            {/* open in web  */}
                             <TouchableOpacity
                               className="flex-row items-center gap-2"
                               onPress={async () => {
+                                setThreeDotsMenuOpen(false);
                                 navigation.navigate('Webview', {
                                   link: route.params.link,
                                 });
@@ -404,6 +410,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                                 Open in Web
                               </Text>
                             </TouchableOpacity>
+                            {/* search */}
                             <TouchableOpacity
                               className="flex-row items-center gap-2 mt-1"
                               onPress={async () => {
@@ -431,15 +438,18 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     }
                   </View>
                 </View>
-                <Skeleton show={infoLoading} colorMode="dark" height={40}>
+                <Skeleton show={infoLoading} colorMode="dark" height={85}>
                   <Text className="text-gray-200 text-sm px-2 py-1 bg-tertiary rounded-md">
-                    {meta?.description
-                      ? meta?.description.length > 180
-                        ? meta?.description.slice(0, 180) + '...'
-                        : meta?.description
-                      : info?.synopsis?.length! > 180
-                      ? info?.synopsis.slice(0, 180) + '...'
-                      : info?.synopsis || 'No synopsis available'}
+                    {synopsis.length > 180 && !readMore
+                      ? synopsis.slice(0, 180) + '... '
+                      : synopsis}
+                    {synopsis.length > 180 && !readMore && (
+                      <Text
+                        onPress={() => setReadMore(!readMore)}
+                        className="text-white font-extrabold text-xs px-2 bg-tertiary rounded-md">
+                        read more
+                      </Text>
+                    )}
                   </Text>
                 </Skeleton>
                 {/* cast */}
