@@ -92,7 +92,7 @@ export class NetMirrorCookieFetcher {
   ): Promise<void> {
     try {
       await fetch(
-        `https://userverify.netmirror.app/verify?dp1=${addhash}&a=y&t=${Math.random()}`,
+        `https://userverify.netmirror.app/verify?vhfd=${addhash}&a=y&t=${Math.random()}`,
         {credentials: 'omit'},
       );
     } catch (err) {
