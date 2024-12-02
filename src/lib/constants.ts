@@ -50,7 +50,7 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
-    name: 'ModMovies',
+    name: 'MoviesMod',
     value: 'mod',
     type: 'global',
     flag: '🌏',
@@ -88,6 +88,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'AnimeRulz',
     value: 'animeRulz',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
+    name: 'ToonStream',
+    value: 'toonstream',
     type: 'global',
     flag: '🌏',
   },
@@ -158,7 +164,7 @@ export const providersList: ProvidersList[] = [
     flag: '🇮🇳',
   },
   {
-    name: 'LuxMovies',
+    name: 'RogMovies',
     value: 'lux',
     type: 'india',
     flag: '🇮🇳',
