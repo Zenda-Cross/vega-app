@@ -91,12 +91,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: '🌏',
   },
-  {
-    name: 'ToonStream',
-    value: 'toonstream',
-    type: 'global',
-    flag: '🌏',
-  },
+  // {
+  //   name: 'ToonStream',
+  //   value: 'toonstream',
+  //   type: 'global',
+  //   flag: '🌏',
+  // },
   // {
   //   name: 'MoviesApi',
   //   value: 'moviesApi',
