@@ -104,6 +104,12 @@ export const providersList: ProvidersList[] = [
   //   flag: '🇬🇧',
   // },
   {
+    name: 'RidoMovies',
+    value: 'ridoMovies',
+    type: 'english',
+    flag: '🇬🇧',
+  },
+  {
     name: 'FlixHQ',
     value: 'flixhq',
     type: 'english',
