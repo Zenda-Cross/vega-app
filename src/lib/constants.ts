@@ -50,7 +50,7 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
-    name: 'ModMovies',
+    name: 'MoviesMod',
     value: 'mod',
     type: 'global',
     flag: '🌏',
@@ -92,11 +92,23 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   // {
+  //   name: 'ToonStream',
+  //   value: 'toonstream',
+  //   type: 'global',
+  //   flag: '🌏',
+  // },
+  // {
   //   name: 'MoviesApi',
   //   value: 'moviesApi',
   //   type: 'english',
   //   flag: '🇬🇧',
   // },
+  {
+    name: 'RidoMovies',
+    value: 'ridoMovies',
+    type: 'english',
+    flag: '🇬🇧',
+  },
   {
     name: 'FlixHQ',
     value: 'flixhq',
@@ -158,7 +170,7 @@ export const providersList: ProvidersList[] = [
     flag: '🇮🇳',
   },
   {
-    name: 'LuxMovies',
+    name: 'RogMovies',
     value: 'lux',
     type: 'india',
     flag: '🇮🇳',

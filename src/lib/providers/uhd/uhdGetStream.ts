@@ -4,10 +4,7 @@ import * as cheerio from 'cheerio';
 import {Stream} from '../types';
 import {headers} from './header';
 
-export const uhdGetStream = async (
-  url: string,
-  type: string,
-): Promise<Stream[]> => {
+export const uhdGetStream = async (url: string): Promise<Stream[]> => {
   try {
     const wpHttp = url.split('sid=')[1];
     var bodyFormData0 = new FormData();
@@ -121,7 +118,7 @@ export const uhdGetStream = async (
       const $cfWorkers = cheerio.load(cfWorkersHtml);
       const cfWorkersStream = $cfWorkers('.btn-success');
       cfWorkersStream.each((i, el) => {
-        const link = $(el).attr('href');
+        const link = el.attribs.href;
         if (link) {
           ServerLinks.push({
             server: 'Cf Worker 1.' + i,
@@ -142,7 +139,7 @@ export const uhdGetStream = async (
       const $cfWorkers = cheerio.load(cfWorkersHtml);
       const cfWorkersStream = $cfWorkers('.btn-success');
       cfWorkersStream.each((i, el) => {
-        const link = $(el).attr('href');
+        const link = el.attribs.href;
         if (link) {
           ServerLinks.push({
             server: 'Cf Worker 2.' + i,

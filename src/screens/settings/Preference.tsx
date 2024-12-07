@@ -35,7 +35,7 @@ const Preferences = () => {
   );
 
   const [showMediaControls, setShowMediaControls] = useState<boolean>(
-    MMKV.getBool('showMediaControls') || true,
+    MMKV.getBool('showMediaControls') === false ? false : true,
   );
 
   const [showHamburgerMenu, setShowHamburgerMenu] = useState<boolean>(
@@ -48,6 +48,11 @@ const Preferences = () => {
   const [enable2xGesture, setEnable2xGesture] = useState<boolean>(
     MMKV.getBool('enable2xGesture') || false,
   );
+
+  const [enableSwipeGesture, setEnableSwipeGesture] = useState<boolean>(
+    MMKV.getBool('enableSwipeGesture') === false ? false : true,
+  );
+  console.log('gesture', enableSwipeGesture);
 
   return (
     <ScrollView className="w-full h-full bg-black">
@@ -231,6 +236,22 @@ const Preferences = () => {
             onValueChange={() => {
               MMKV.setBool('hideSeekButtons', !hideSeekButtons);
               setHideSeekButtons(!hideSeekButtons);
+            }}
+          />
+        </View>
+
+        {/* enable volume and brightness gesture  */}
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">
+            Enable Swipe Gestures
+          </Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={enableSwipeGesture ? primary : 'gray'}
+            value={enableSwipeGesture}
+            onValueChange={() => {
+              MMKV.setBool('enableSwipeGesture', !enableSwipeGesture);
+              setEnableSwipeGesture(!enableSwipeGesture);
             }}
           />
         </View>
