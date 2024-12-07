@@ -415,7 +415,7 @@ const SeasonList = ({
         )}
         {LinkList?.length === 0 && (
           <Text className="text-white text-lg font-semibold min-h-20">
-            No streams found
+            No stream found
           </Text>
         )}
       </View>

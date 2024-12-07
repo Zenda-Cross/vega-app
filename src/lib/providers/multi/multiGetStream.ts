@@ -46,7 +46,7 @@ export const multiGetStream = async (
       const $$ = cheerio.load(iframeRes.data);
       let newIframeUrl =
         $$('.linkserver').first().attr('data-video') ||
-        $$('#videoLinks').children().first().attr('data-link');
+        $$('[data-sourcekey=smwh]').attr('data-link');
       console.log('newIframeUrl', newIframeUrl);
       if (newIframeUrl) {
         ifameUrl = newIframeUrl;

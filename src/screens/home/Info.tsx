@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  ScrollView,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -43,6 +42,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
 
   const [threeDotsMenuOpen, setThreeDotsMenuOpen] = useState(false);
+  const [readMore, setReadMore] = useState(false);
   const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
   const threeDotsRef = useRef<any>();
 
@@ -103,10 +103,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           route.params.provider || provider.value
         ].GetMetaData(route.params.link, provider);
 
-        if (data.linkList?.length === 0) {
-          setInfoLoading(false);
-          return;
-        }
         try {
           const metaRes = await axios.get(
             `https://v3-cinemeta.strem.io/meta/${data?.type}/${data?.imdbId}.json`,
@@ -120,6 +116,10 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           }
         } catch (e) {
           console.log('meta error', e);
+        }
+        if (data.linkList?.length === 0) {
+          setInfoLoading(false);
+          return;
         }
         setInfo(data);
         MmmkvCache.setString(route.params.link, JSON.stringify(data));
@@ -163,6 +163,9 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     MMKV.setArray('watchlist', newLibrary);
     setInLibrary(false);
   };
+  const synopsis = meta?.description
+    ? meta?.description
+    : info?.synopsis || 'No synopsis available';
   return (
     <View className="h-full w-full">
       <StatusBar
@@ -388,9 +391,11 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                               top: menuPosition.top,
                               right: menuPosition.right,
                             }}>
+                            {/* open in web  */}
                             <TouchableOpacity
                               className="flex-row items-center gap-2"
                               onPress={async () => {
+                                setThreeDotsMenuOpen(false);
                                 navigation.navigate('Webview', {
                                   link: route.params.link,
                                 });
@@ -404,6 +409,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                                 Open in Web
                               </Text>
                             </TouchableOpacity>
+                            {/* search */}
                             <TouchableOpacity
                               className="flex-row items-center gap-2 mt-1"
                               onPress={async () => {
@@ -431,21 +437,24 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     }
                   </View>
                 </View>
-                <Skeleton show={infoLoading} colorMode="dark" height={40}>
+                <Skeleton show={infoLoading} colorMode="dark" height={85}>
                   <Text className="text-gray-200 text-sm px-2 py-1 bg-tertiary rounded-md">
-                    {meta?.description
-                      ? meta?.description.length > 180
-                        ? meta?.description.slice(0, 180) + '...'
-                        : meta?.description
-                      : info?.synopsis?.length! > 180
-                      ? info?.synopsis.slice(0, 180) + '...'
-                      : info?.synopsis || 'No synopsis available'}
+                    {synopsis.length > 180 && !readMore
+                      ? synopsis.slice(0, 180) + '... '
+                      : synopsis}
+                    {synopsis.length > 180 && !readMore && (
+                      <Text
+                        onPress={() => setReadMore(!readMore)}
+                        className="text-white font-extrabold text-xs px-2 bg-tertiary rounded-md">
+                        read more
+                      </Text>
+                    )}
                   </Text>
                 </Skeleton>
                 {/* cast */}
               </View>
               <View className="p-4 bg-black">
-                {infoLoading || !info?.linkList ? (
+                {infoLoading ? (
                   <View className="gap-y-3 items-start mb-4 p-3">
                     <Skeleton
                       show={true}

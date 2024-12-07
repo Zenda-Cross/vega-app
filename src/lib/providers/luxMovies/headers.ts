@@ -13,7 +13,7 @@ export const headers = {
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
   Cookie:
-    'cf_clearance=zre97fLPyk9GTUfuqbfZvXPU5zDN4BE3nnkMxE7767Y-1723609417-1.0.1.1-YD4.GJqqAhcctS4bOpgW8ZmD9pLzASAaHbUl9ROEN.SmbMhisTm8nf8PO6T9wfy59UE0ozdWr0BGTF7F7UdvrA',
+    'ext_name=ojplmecpdpgccookcobabopnaifgidhf; cf_clearance=gaIhTNzqSvp27JCVf7qiEUfYRfwyj0Jx9rcsn774BbE-1732694853-1.2.1.1-QKgYJvmrEz08gM9qbAp70diztE2.hseO2NNi.0imIUk_gkuWUcr7U8t5Zn_z4Ov30sIGPBES1PBgMUEa.s8e8QTkQoZjgziFmoC7YdX7s2Jnt.tYCxE_s5mMLQQBYbz_94A89IYe93Y6kyLQm_L.dvUKPPiGjn_sH3qRD0g4p9oOl0SPvH0T2W_EaD0r6mVBasbgro9dAROt_6CxshXOEGeMOnoWR.ID699FKldjMUhbXJbATAffdOY6kf2sD_iwrSl4bcetTlDHd4gusTVfxSS1pL5qNjyTU9wa38soPl1wZoqFHkEGOPWz6S7FD5ikHxX0bArFem9hiDeJXctYfWz5e_Lkc6lH7nW0Rm2XS3gxCadQSg21RkSReN6kDAEecqjgJSE4zUomkWAxFZ98TSShgGWC0ridPTpdQizPDZQ; _lscache_vary=c1d682536aea2d88fbb2574666e1f0aa',
   'Upgrade-Insecure-Requests': '1',
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',

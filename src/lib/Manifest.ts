@@ -29,6 +29,8 @@ import {cinemaLuxe} from './providers/cinemaLuxe';
 import {animeRulzProvider} from './providers/animeRulz';
 import {moviesApi} from './providers/moviesApi';
 import {guardahd} from './providers/guardahd';
+import {toonstream} from './providers/toonstream';
+import {ridoMovies} from './providers/ridoMovies';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -90,4 +92,6 @@ export const manifest: Manifest = {
   animeRulz: animeRulzProvider,
   moviesApi: moviesApi,
   guardahd: guardahd,
+  toonstream: toonstream,
+  ridoMovies: ridoMovies,
 };

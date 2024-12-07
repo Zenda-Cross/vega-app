@@ -122,7 +122,7 @@ export const modGetStream = async (
       const $cfWorkers = cheerio.load(cfWorkersHtml);
       const cfWorkersStream = $cfWorkers('.btn-success');
       cfWorkersStream.each((i, el) => {
-        const link = $(el).attr('href');
+        const link = el.attribs.href;
         if (link) {
           servers.push({
             server: 'Cf Worker 1.' + i,
@@ -143,7 +143,7 @@ export const modGetStream = async (
       const $cfWorkers = cheerio.load(cfWorkersHtml);
       const cfWorkersStream = $cfWorkers('.btn-success');
       cfWorkersStream.each((i, el) => {
-        const link = $(el).attr('href');
+        const link = el.attribs.href;
         if (link) {
           servers.push({
             server: 'Cf Worker 2.' + i,

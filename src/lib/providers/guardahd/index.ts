@@ -1,6 +1,7 @@
 import {guardahdCatalog, guardahdGenresList} from './guardahdCatalog';
 import {allGetInfo} from '../autoEmbed/allGetInfo';
-import {allGetPost, allGetSearchPosts} from '../autoEmbed/allGetPost';
+import {allGetPost} from '../autoEmbed/allGetPost';
+import {guardahdGetSearchPosts} from './guardahdGetPosts';
 import {ProviderType} from '../../Manifest';
 import {GuardahdGetStream} from './GetGuardahdStream';
 
@@ -10,5 +11,5 @@ export const guardahd: ProviderType = {
   GetMetaData: allGetInfo,
   GetHomePosts: allGetPost,
   GetStream: GuardahdGetStream,
-  GetSearchPosts: allGetSearchPosts,
+  GetSearchPosts: guardahdGetSearchPosts,
 };
