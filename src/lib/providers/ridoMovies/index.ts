@@ -1,6 +1,7 @@
 import {ProviderType} from '../../Manifest';
 import {guardahdCatalog, guardahdGenresList} from '../guardahd/guardahdCatalog';
-import {allGetPost, allGetSearchPosts} from '../autoEmbed/allGetPost';
+import {allGetPost} from '../autoEmbed/allGetPost';
+import {guardahdGetSearchPosts} from '../guardahd/guardahdGetPosts';
 import {ridoGetInfo} from './ridoGetMeta';
 import {ridoGetStream} from './ridoGetSream';
 
@@ -10,5 +11,5 @@ export const ridoMovies: ProviderType = {
   GetMetaData: ridoGetInfo,
   GetHomePosts: allGetPost,
   GetStream: ridoGetStream,
-  GetSearchPosts: allGetSearchPosts,
+  GetSearchPosts: guardahdGetSearchPosts,
 };
