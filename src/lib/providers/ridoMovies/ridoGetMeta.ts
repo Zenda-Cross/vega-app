@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {EpisodeLink, Info, Link} from '../types';
+import {getBaseUrl} from '../getBaseUrl';
 
 export const ridoGetInfo = async function (link: string): Promise<Info> {
   try {
@@ -14,17 +15,32 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
       type: data?.meta?.type || 'movie',
     };
 
-    const baseUrl = 'https://ridomovies.tv';
-    const res2 = await axios.get(baseUrl + '/core/api/search?q=' + meta.imdbId);
-    const data2 = res2.data;
-    console.log('all', data2);
-    const slug = data2?.data?.items[0]?.fullSlug;
-    if (!slug || meta?.type === 'series') {
+    const baseUrl = await getBaseUrl('ridomovies');
+    let slug = '';
+    try {
+      const res2 = await axios.get(
+        baseUrl + '/core/api/search?q=' + meta.imdbId,
+      );
+      const data2 = res2.data;
+      console.log('all', data2);
+      slug = data2?.data?.items[0]?.fullSlug;
+      if (!slug || meta?.type === 'series') {
+        return {
+          title: '',
+          synopsis: '',
+          image: '',
+          imdbId: data?.meta?.imdb_id || '',
+          type: meta?.type || 'movie',
+          linkList: [],
+        };
+      }
+    } catch (err) {
+      console.error('ridoGetInfo', err);
       return {
         title: '',
         synopsis: '',
         image: '',
-        imdbId: data?.meta?.imdb_id || '',
+        imdbId: meta?.imdbId || '',
         type: meta?.type || 'movie',
         linkList: [],
       };
