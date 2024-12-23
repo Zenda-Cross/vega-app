@@ -62,6 +62,12 @@ export const providersList: ProvidersList[] = [
     flag: '🌏',
   },
   {
+    name: 'ProtonMovies',
+    value: 'protonMovies',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
     name: 'CinemaLuxe',
     value: 'cinemaLuxe',
     type: 'global',
@@ -133,12 +139,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: '🇬🇧',
   },
-  {
-    name: 'AE Anime',
-    value: 'AEAnime',
-    type: 'english',
-    flag: '🇬🇧',
-  },
+  // {
+  //   name: 'AE Anime',
+  //   value: 'AEAnime',
+  //   type: 'english',
+  //   flag: '🇬🇧',
+  // },
   {
     name: 'TokyoInsider',
     value: 'tokyoInsider',
@@ -157,12 +163,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: '🇬🇧',
   },
-  {
-    name: 'AE Drama',
-    value: 'AEDrama',
-    type: 'english',
-    flag: '🇬🇧',
-  },
+  // {
+  //   name: 'AE Drama',
+  //   value: 'AEDrama',
+  //   type: 'english',
+  //   flag: '🇬🇧',
+  // },
   {
     name: 'Dooflix',
     value: 'dooflix',
