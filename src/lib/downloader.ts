@@ -142,7 +142,7 @@ export const downloadManager = async ({
             onlyAlertOnce: true,
             progress: {
               max: 100,
-              current: Math.abs(progress) * 100,
+              current: Math.abs(progress) * 100 > 100 ? 100 : progress * 100,
               indeterminate: false,
             },
             pressAction: {
