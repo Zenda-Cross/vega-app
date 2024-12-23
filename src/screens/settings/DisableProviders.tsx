@@ -51,6 +51,7 @@ const DisableProviders = () => {
           </View>
         ))}
       </View>
+      <View className="h-16" />
     </ScrollView>
   );
 };

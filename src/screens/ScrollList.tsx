@@ -93,20 +93,23 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         <FlashList
           estimatedItemSize={300}
           ListFooterComponent={
-            isLoading && viewType === 1 ? (
-              <View className="flex flex-row gap-1 flex-wrap justify-center items-center mb-16">
-                {[...Array(6)].map((_, i) => (
-                  <View
-                    className="mx-3 gap-0 flex mb-3 justify-center items-center"
-                    key={i}>
-                    <SkeletonLoader height={150} width={100} />
-                    <SkeletonLoader height={12} width={97} />
-                  </View>
-                ))}
-              </View>
-            ) : (
+            <>
+              {isLoading && viewType === 1 ? (
+                <View className="flex flex-row gap-1 flex-wrap justify-center items-center mb-16">
+                  {[...Array(6)].map((_, i) => (
+                    <View
+                      className="mx-3 gap-0 flex mb-3 justify-center items-center"
+                      key={i}>
+                      <SkeletonLoader height={150} width={100} />
+                      <SkeletonLoader height={12} width={97} />
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View className="h-32" />
+              )}
               <View className="h-16" />
-            )
+            </>
           }
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
