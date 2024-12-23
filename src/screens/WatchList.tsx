@@ -1,19 +1,18 @@
 import {View, Text, ScrollView} from 'react-native';
-import React, {useState} from 'react';
-import {MMKV} from '../lib/Mmkv';
+import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
+import useWatchListStore from '../lib/zustand/watchListStore';
 
 const Library = () => {
   const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
-  const [library] = useState(MMKV.getArray('watchlist') || []);
-
+  const {watchList} = useWatchListStore(state => state);
   return (
     <ScrollView
       className="h-full w-full bg-black p-2"
@@ -23,7 +22,7 @@ const Library = () => {
       </Text>
       <View className="w-[400px] flex-row justify-center">
         <View className="flex-row flex-wrap gap-3 mb-5 mt-3 w-[340px]">
-          {library.map((item: any, index: number) => {
+          {watchList.map((item: any, index: number) => {
             return (
               <View className="flex flex-col m-" key={item.link + index}>
                 <TouchableOpacity
@@ -50,7 +49,7 @@ const Library = () => {
           })}
         </View>
       </View>
-      {library.length === 0 && (
+      {watchList.length === 0 && (
         <Text className="text-white text-center mt-5">
           No items in Watch List
         </Text>
