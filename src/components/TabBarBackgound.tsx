@@ -6,13 +6,20 @@ import LinearGradient from 'react-native-linear-gradient';
 const TabBarBackgound = () => {
   return (
     <>
-      <BlurView style={StyleSheet.absoluteFill} intensity={100} tint="dark" />
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        experimentalBlurMethod="dimezisBlurView"
+        intensity={30}
+        blurReductionFactor={3}
+        tint="dark"
+      />
       <LinearGradient
         colors={[
           'rgba(0, 0, 0, 0.0)',
+          'rgba(0, 0, 0, 0.3)',
           'rgba(0, 0, 0, 0.5)',
-          'rgba(0, 0, 0, 0.7)',
-          'rgba(0, 0, 0, 9)',
+          'rgba(0, 0, 0, 0.8)',
+          'rgba(0, 0, 0, 1)',
         ]}
         style={StyleSheet.absoluteFill}
         start={{x: 0, y: 0}}

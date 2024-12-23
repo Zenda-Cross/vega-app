@@ -110,7 +110,7 @@ const App = () => {
       <HomeStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -127,7 +127,7 @@ const App = () => {
       <SearchStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -144,7 +144,7 @@ const App = () => {
       <WatchListStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -159,7 +159,7 @@ const App = () => {
       <SettingsStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -178,6 +178,9 @@ const App = () => {
       <Tab.Navigator
         detachInactiveScreens={true}
         screenOptions={{
+          animation: 'shift',
+          popToTopOnBlur: true,
+          tabBarPosition: 'bottom',
           headerShown: false,
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
@@ -185,7 +188,7 @@ const App = () => {
           tabBarShowLabel: showTabBarLables,
           tabBarStyle: {
             position: 'absolute',
-            bottom: 3,
+            bottom: 0,
             height: 65,
             borderRadius: 0,
             // backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -200,6 +203,7 @@ const App = () => {
           tabBarButton: props => {
             return (
               <TouchableOpacity
+                className="bg-red-500"
                 {...props}
                 onPress={e => {
                   if (props.onPress) {
@@ -247,7 +251,6 @@ const App = () => {
           component={WatchListStackScreen}
           options={{
             title: 'Watch List',
-            unmountOnBlur: true,
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
                 <Entypo name="folder-video" color={color} size={size} />
@@ -288,6 +291,24 @@ const App = () => {
     <NavigationContainer
       onReady={() => BootSplash.hide({fade: true})}
       theme={{
+        fonts: {
+          regular: {
+            fontFamily: 'Inter_400Regular',
+            fontWeight: '400',
+          },
+          medium: {
+            fontFamily: 'Inter_500Medium',
+            fontWeight: '500',
+          },
+          bold: {
+            fontFamily: 'Inter_700Bold',
+            fontWeight: '700',
+          },
+          heavy: {
+            fontFamily: 'Inter_800ExtraBold',
+            fontWeight: '800',
+          },
+        },
         dark: true,
         colors: {
           background: 'transparent',
@@ -301,7 +322,7 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
           contentStyle: {backgroundColor: 'transparent'},
