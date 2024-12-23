@@ -26,6 +26,7 @@ import useThemeStore from './lib/zustand/themeStore';
 import {LogBox, TouchableOpacity} from 'react-native';
 import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import TabBarBackgound from './components/TabBarBackgound';
 
 enableScreens(true);
 enableFreeze(true);
@@ -87,7 +88,7 @@ export type SettingsStackParamList = {
 export type TabStackParamList = {
   HomeStack: undefined;
   SearchStack: undefined;
-  WatchList: undefined;
+  WatchListStack: undefined;
   SettingsStack: undefined;
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
@@ -99,6 +100,8 @@ const App = () => {
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
   const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
   const {primary} = useThemeStore(state => state);
+
+  const showTabBarLables = MMKV.getBool('showTabBarLables') || false;
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -178,8 +181,21 @@ const App = () => {
           headerShown: false,
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: {backgroundColor: 'black'},
+          tabBarInactiveTintColor: '#dadde3',
+          tabBarShowLabel: showTabBarLables,
+          tabBarStyle: {
+            position: 'absolute',
+            bottom: 3,
+            height: 65,
+            borderRadius: 0,
+            // backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            overflow: 'hidden',
+            elevation: 0,
+            borderTopWidth: 0,
+            paddingHorizontal: 0,
+            paddingTop: 5,
+          },
+          tabBarBackground: () => <TabBarBackgound />,
           tabBarHideOnKeyboard: true,
           tabBarButton: props => {
             return (
@@ -227,9 +243,10 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="WatchList"
+          name="WatchListStack"
           component={WatchListStackScreen}
           options={{
+            title: 'Watch List',
             unmountOnBlur: true,
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
@@ -273,7 +290,7 @@ const App = () => {
       theme={{
         dark: true,
         colors: {
-          background: 'black',
+          background: 'transparent',
           card: 'black',
           primary: primary,
           text: 'white',
@@ -284,9 +301,10 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: primary,
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios',
+          animationDuration: 200,
+          freezeOnBlur: true,
+          contentStyle: {backgroundColor: 'transparent'},
         }}>
         <Stack.Screen name="TabStack" component={TabStack} />
         <Stack.Screen

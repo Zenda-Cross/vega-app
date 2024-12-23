@@ -22,7 +22,7 @@ const Library = () => {
         Watch List
       </Text>
       <View className="w-[400px] flex-row justify-center">
-        <View className="flex-row flex-wrap gap-3 mt-3 w-[340px]">
+        <View className="flex-row flex-wrap gap-3 mb-5 mt-3 w-[340px]">
           {library.map((item: any, index: number) => {
             return (
               <View className="flex flex-col m-" key={item.link + index}>
@@ -55,6 +55,7 @@ const Library = () => {
           No items in Watch List
         </Text>
       )}
+      <View className="h-16" />
     </ScrollView>
   );
 };

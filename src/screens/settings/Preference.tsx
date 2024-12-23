@@ -52,7 +52,10 @@ const Preferences = () => {
   const [enableSwipeGesture, setEnableSwipeGesture] = useState<boolean>(
     MMKV.getBool('enableSwipeGesture') === false ? false : true,
   );
-  console.log('gesture', enableSwipeGesture);
+
+  const [showTabBarLables, setShowTabBarLables] = useState<boolean>(
+    MMKV.getBool('showTabBarLables') || false,
+  );
 
   return (
     <ScrollView className="w-full h-full bg-black">
@@ -188,6 +191,24 @@ const Preferences = () => {
           </View>
         )}
 
+        {/* show tab bar labels */}
+        <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+          <Text className="text-white font-semibold">Show Tab Bar Labels</Text>
+          <View className="w-20" />
+          <Switch
+            thumbColor={showTabBarLables ? primary : 'gray'}
+            value={showTabBarLables}
+            onValueChange={() => {
+              MMKV.setBool('showTabBarLables', !showTabBarLables);
+              setShowTabBarLables(!showTabBarLables);
+              ToastAndroid.show(
+                'Restart App to Apply Changes',
+                ToastAndroid.SHORT,
+              );
+            }}
+          />
+        </View>
+
         {/* show recentlyWatched */}
         <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">
@@ -315,6 +336,7 @@ const Preferences = () => {
           </View>
         </View>
       </View>
+      <View className="h-16" />
     </ScrollView>
   );
 };

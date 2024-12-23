@@ -210,6 +210,7 @@ const Home = ({}: Props) => {
                     />
                   ))}
             </View>
+            <View className="h-16" />
           </ScrollView>
         </DrawerLayout>
       </SafeAreaView>
