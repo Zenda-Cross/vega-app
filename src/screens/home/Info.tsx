@@ -30,12 +30,14 @@ import {manifest} from '../../lib/Manifest';
 import {BlurView} from 'expo-blur';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {useNavigation} from '@react-navigation/native';
+import useWatchListStore from '../../lib/zustand/watchListStore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
   const searchNavigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
   const {primary} = useThemeStore(state => state);
+  const {addItem, removeItem} = useWatchListStore(state => state);
   const [info, setInfo] = useState<Info>();
   const [meta, setMeta] = useState<any>();
   const [infoLoading, setInfoLoading] = useState(true);
@@ -139,14 +141,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       enableVibrateFallback: true,
       ignoreAndroidSystemSettings: false,
     });
-    const library = MMKV.getArray('watchlist') || [];
-    library.push({
+    addItem({
       title: meta?.name || info?.title,
       poster: meta?.poster || route.params.poster || info?.image,
       link: route.params.link,
       provider: route.params.provider || provider.value,
     });
-    MMKV.setArray('watchlist', library);
     setInLibrary(true);
   };
 
@@ -156,11 +156,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       enableVibrateFallback: true,
       ignoreAndroidSystemSettings: false,
     });
-    const library = MMKV.getArray('watchlist') || [];
-    const newLibrary = library.filter(
-      (item: any) => item.link !== route.params.link,
-    );
-    MMKV.setArray('watchlist', newLibrary);
+    removeItem(route.params.link);
     setInLibrary(false);
   };
   const synopsis = meta?.description
