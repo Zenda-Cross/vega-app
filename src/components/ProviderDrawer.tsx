@@ -40,6 +40,7 @@ const ProviderDrawer = ({
             </Text>
           </TouchableOpacity>
         ))}
+        <View className="h-16" />
       </ScrollView>
     </View>
   );

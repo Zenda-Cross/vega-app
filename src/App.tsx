@@ -26,6 +26,7 @@ import useThemeStore from './lib/zustand/themeStore';
 import {LogBox, TouchableOpacity} from 'react-native';
 import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import TabBarBackgound from './components/TabBarBackgound';
 
 enableScreens(true);
 enableFreeze(true);
@@ -87,7 +88,7 @@ export type SettingsStackParamList = {
 export type TabStackParamList = {
   HomeStack: undefined;
   SearchStack: undefined;
-  WatchList: undefined;
+  WatchListStack: undefined;
   SettingsStack: undefined;
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
@@ -100,6 +101,8 @@ const App = () => {
   const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
   const {primary} = useThemeStore(state => state);
 
+  const showTabBarLables = MMKV.getBool('showTabBarLables') || false;
+
   SystemUI.setBackgroundColorAsync('black');
 
   function HomeStackScreen() {
@@ -107,7 +110,7 @@ const App = () => {
       <HomeStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -124,7 +127,7 @@ const App = () => {
       <SearchStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -141,7 +144,7 @@ const App = () => {
       <WatchListStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -156,7 +159,7 @@ const App = () => {
       <SettingsStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: 'ios',
+          animation: 'ios_from_right',
           animationDuration: 200,
           freezeOnBlur: true,
         }}>
@@ -175,15 +178,32 @@ const App = () => {
       <Tab.Navigator
         detachInactiveScreens={true}
         screenOptions={{
+          animation: 'shift',
+          popToTopOnBlur: true,
+          tabBarPosition: 'bottom',
           headerShown: false,
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: {backgroundColor: 'black'},
+          tabBarInactiveTintColor: '#dadde3',
+          tabBarShowLabel: showTabBarLables,
+          tabBarStyle: {
+            position: 'absolute',
+            bottom: 0,
+            height: 65,
+            borderRadius: 0,
+            // backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            overflow: 'hidden',
+            elevation: 0,
+            borderTopWidth: 0,
+            paddingHorizontal: 0,
+            paddingTop: 5,
+          },
+          tabBarBackground: () => <TabBarBackgound />,
           tabBarHideOnKeyboard: true,
           tabBarButton: props => {
             return (
               <TouchableOpacity
+                className="bg-red-500"
                 {...props}
                 onPress={e => {
                   if (props.onPress) {
@@ -227,10 +247,10 @@ const App = () => {
           }}
         />
         <Tab.Screen
-          name="WatchList"
+          name="WatchListStack"
           component={WatchListStackScreen}
           options={{
-            unmountOnBlur: true,
+            title: 'Watch List',
             tabBarIcon: ({focused, color, size}) =>
               focused ? (
                 <Entypo name="folder-video" color={color} size={size} />
@@ -271,9 +291,27 @@ const App = () => {
     <NavigationContainer
       onReady={() => BootSplash.hide({fade: true})}
       theme={{
+        fonts: {
+          regular: {
+            fontFamily: 'Inter_400Regular',
+            fontWeight: '400',
+          },
+          medium: {
+            fontFamily: 'Inter_500Medium',
+            fontWeight: '500',
+          },
+          bold: {
+            fontFamily: 'Inter_700Bold',
+            fontWeight: '700',
+          },
+          heavy: {
+            fontFamily: 'Inter_800ExtraBold',
+            fontWeight: '800',
+          },
+        },
         dark: true,
         colors: {
-          background: 'black',
+          background: 'transparent',
           card: 'black',
           primary: primary,
           text: 'white',
@@ -284,9 +322,10 @@ const App = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          headerBlurEffect: 'light',
-          headerTintColor: primary,
-          headerStyle: {backgroundColor: '#171717'},
+          animation: 'ios_from_right',
+          animationDuration: 200,
+          freezeOnBlur: true,
+          contentStyle: {backgroundColor: 'transparent'},
         }}>
         <Stack.Screen name="TabStack" component={TabStack} />
         <Stack.Screen

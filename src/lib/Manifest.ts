@@ -31,6 +31,7 @@ import {moviesApi} from './providers/moviesApi';
 import {guardahd} from './providers/guardahd';
 import {toonstream} from './providers/toonstream';
 import {ridoMovies} from './providers/ridoMovies';
+import {protonMovies} from './providers/protonMovies';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -94,4 +95,5 @@ export const manifest: Manifest = {
   guardahd: guardahd,
   toonstream: toonstream,
   ridoMovies: ridoMovies,
+  protonMovies: protonMovies,
 };
