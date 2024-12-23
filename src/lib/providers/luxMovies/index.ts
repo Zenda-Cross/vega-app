@@ -2,7 +2,7 @@ import {luxGetPosts, luxGetPostsSearch} from './luxGetPosts';
 import {vegaGetInfo} from '../vega/getInfo';
 import {vegaGetStream} from '../vega/getStream';
 import {vegaGetEpisodeLinks} from '../vega/getEpisodesLink';
-import {homeList, genresList} from '../vega/catalog';
+import {homeList, genresList} from './luxCatalog';
 import {ProviderType} from '../../Manifest';
 
 export const luxMovies: ProviderType = {

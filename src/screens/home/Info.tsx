@@ -509,6 +509,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
               </View>
             </>
           }
+          ListFooterComponent={<View className="h-16" />}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}

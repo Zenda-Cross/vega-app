@@ -5,6 +5,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  ToastAndroid,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -28,6 +29,7 @@ const SearchSubtitles = ({
   const [season, setSeason] = useState('');
   const [episode, setEpisode] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [subId, setSubId] = useState('eng');
 
@@ -56,23 +58,46 @@ const SearchSubtitles = ({
   ];
 
   const searchSubtitles = async () => {
-    setLoading(true);
-    const response = await fetch(
-      `https://rest.opensubtitles.org/search${
-        (searchQuery?.startsWith('tt') ? '/imdbid-' : '/query-') + searchQuery
-      }${season ? '/season-' + season : ''}${
-        episode ? '/episode-' + episode : ''
-      }${subId ? '/sublanguageid-' + subId : ''}`,
-      {
-        method: 'GET',
-        headers: {
-          'x-user-agent': 'VLSub 0.10.2',
+    try {
+      setLoading(true);
+      console.log(
+        'openSubtitles',
+        `https://rest.opensubtitles.org/search${
+          (searchQuery?.startsWith('tt') ? '/imdbid-' : '/query-') +
+          encodeURIComponent(searchQuery.toLocaleLowerCase())
+        }${season ? '/season-' + season : ''}${
+          episode ? '/episode-' + episode : ''
+        }${subId ? '/sublanguageid-' + subId : ''}`,
+      );
+      const response = await fetch(
+        `https://rest.opensubtitles.org/search${
+          (searchQuery?.startsWith('tt') ? '/imdbid-' : '/query-') +
+          encodeURIComponent(searchQuery.toLocaleLowerCase())
+        }${season ? '/season-' + season : ''}${
+          episode ? '/episode-' + episode : ''
+        }${subId ? '/sublanguageid-' + subId : ''}`,
+        {
+          method: 'GET',
+          headers: {
+            'x-user-agent': 'VLSub 0.10.2',
+          },
         },
-      },
-    );
-    const data = await response.json();
-    setLoading(false);
-    setSearchResults(data);
+      );
+      console.log('openSubtitles', response);
+      const data = await response.json();
+      setLoading(false);
+      if (data?.length === 0) {
+        setError('No Results Found');
+        setSearchResults([]);
+        return;
+      }
+      setSearchResults(data);
+    } catch (e: any) {
+      console.log('openSubtitles err', e);
+      setLoading(false);
+      setError(e?.message);
+      ToastAndroid.show('Error fetching subtitles', ToastAndroid.SHORT);
+    }
   };
   return (
     <View>
@@ -213,6 +238,13 @@ const SearchSubtitles = ({
                   </Text>
                 </TouchableOpacity>
               ))
+            )}
+            {searchResults.length === 0 && !loading && (
+              <View className="w-full h-full justify-center items-center">
+                <Text className="text-red-700 text-lg font-semibold">
+                  {error}
+                </Text>
+              </View>
             )}
           </ScrollView>
         </SafeAreaView>

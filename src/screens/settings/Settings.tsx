@@ -260,6 +260,7 @@ const Settings = ({navigation}: Props) => {
           <MaterialIcons name="discord" size={27} color="white" />
         </TouchableOpacity>
       </View>
+      <View className="h-16" />
     </ScrollView>
   );
 };

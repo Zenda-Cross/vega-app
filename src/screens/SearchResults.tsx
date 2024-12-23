@@ -171,6 +171,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
             />
           ))}
         </View>
+        <View className="h-16" />
       </ScrollView>
     </SafeAreaView>
   );
