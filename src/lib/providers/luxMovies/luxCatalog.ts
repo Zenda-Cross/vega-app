@@ -5,15 +5,15 @@ export const homeList = [
   },
   {
     title: 'Netflix',
-    filter: '/web-series/netflix',
+    filter: 'category/web-series/netflix',
   },
   {
     title: 'Amazon Prime',
-    filter: '/web-series/amazon-prime-video',
+    filter: 'category/web-series/amazon-prime-video',
   },
   {
     title: '4K Movies',
-    filter: '/movies-by-quality/2160p',
+    filter: 'category/movies-by-quality/2160p',
   },
 ];
 
