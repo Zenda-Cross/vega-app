@@ -203,7 +203,6 @@ const App = () => {
           tabBarButton: props => {
             return (
               <TouchableOpacity
-                className="bg-red-500"
                 {...props}
                 onPress={e => {
                   if (props.onPress) {
