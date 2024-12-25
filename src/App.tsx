@@ -23,10 +23,13 @@ import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import useThemeStore from './lib/zustand/themeStore';
-import {LogBox, TouchableOpacity} from 'react-native';
+import {LogBox, ViewStyle} from 'react-native';
 import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
+import {TouchableOpacity} from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {StyleProp} from 'react-native';
 
 enableScreens(true);
 enableFreeze(true);
@@ -203,19 +206,20 @@ const App = () => {
           tabBarButton: props => {
             return (
               <TouchableOpacity
-                {...props}
+                accessibilityRole="button"
+                accessibilityState={props.accessibilityState}
+                style={props.style as StyleProp<ViewStyle>}
                 onPress={e => {
-                  if (props.onPress) {
-                    props.onPress(e);
-                  }
+                  props.onPress && props.onPress(e);
                   if (!props?.accessibilityState?.selected) {
                     RNReactNativeHapticFeedback.trigger('effectTick', {
                       enableVibrateFallback: true,
                       ignoreAndroidSystemSettings: false,
                     });
                   }
-                }}
-              />
+                }}>
+                {props.children}
+              </TouchableOpacity>
             );
           },
         }}>
@@ -287,55 +291,59 @@ const App = () => {
   }, []);
 
   return (
-    <NavigationContainer
-      onReady={() => BootSplash.hide({fade: true})}
-      theme={{
-        fonts: {
-          regular: {
-            fontFamily: 'Inter_400Regular',
-            fontWeight: '400',
-          },
-          medium: {
-            fontFamily: 'Inter_500Medium',
-            fontWeight: '500',
-          },
-          bold: {
-            fontFamily: 'Inter_700Bold',
-            fontWeight: '700',
-          },
-          heavy: {
-            fontFamily: 'Inter_800ExtraBold',
-            fontWeight: '800',
-          },
-        },
-        dark: true,
-        colors: {
-          background: 'transparent',
-          card: 'black',
-          primary: primary,
-          text: 'white',
-          border: 'black',
-          notification: primary,
-        },
-      }}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: 'ios_from_right',
-          animationDuration: 200,
-          freezeOnBlur: true,
-          contentStyle: {backgroundColor: 'transparent'},
-        }}>
-        <Stack.Screen name="TabStack" component={TabStack} />
-        <Stack.Screen
-          options={{
-            orientation: 'landscape',
-          }}
-          name="Player"
-          component={Player}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <SafeAreaView edges={{top: 'off', bottom: 'additive'}} style={{flex: 1}}>
+        <NavigationContainer
+          onReady={() => BootSplash.hide({fade: true})}
+          theme={{
+            fonts: {
+              regular: {
+                fontFamily: 'Inter_400Regular',
+                fontWeight: '400',
+              },
+              medium: {
+                fontFamily: 'Inter_500Medium',
+                fontWeight: '500',
+              },
+              bold: {
+                fontFamily: 'Inter_700Bold',
+                fontWeight: '700',
+              },
+              heavy: {
+                fontFamily: 'Inter_800ExtraBold',
+                fontWeight: '800',
+              },
+            },
+            dark: true,
+            colors: {
+              background: 'transparent',
+              card: 'black',
+              primary: primary,
+              text: 'white',
+              border: 'black',
+              notification: primary,
+            },
+          }}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              animation: 'ios_from_right',
+              animationDuration: 200,
+              freezeOnBlur: true,
+              contentStyle: {backgroundColor: 'transparent'},
+            }}>
+            <Stack.Screen name="TabStack" component={TabStack} />
+            <Stack.Screen
+              options={{
+                orientation: 'landscape',
+              }}
+              name="Player"
+              component={Player}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
