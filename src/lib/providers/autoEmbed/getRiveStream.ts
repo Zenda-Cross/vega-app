@@ -18,7 +18,8 @@ export async function getRiveStream(
     'nova',
     'vidcloud',
     'ee3',
-    'showbox',
+    'ghost',
+    'asiacloud',
   ];
   const baseUrl = await getBaseUrl('rive');
   const cors = process.env.CORS_PRXY ? process.env.CORS_PRXY + '?url=' : '';
