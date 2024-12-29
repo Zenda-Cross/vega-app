@@ -41,13 +41,32 @@ export const multiGetStream = async (
       playerData?.embed_url;
     console.log('ifameUrl', ifameUrl);
     if (!ifameUrl.includes('multimovies')) {
-      const iframeRes = await axios.get(ifameUrl, {headers});
-      // console.log('iframeRes', iframeRes.data);
-      const $$ = cheerio.load(iframeRes.data);
-      let newIframeUrl =
-        $$('.linkserver').first().attr('data-video') ||
-        $$('[data-sourcekey=smwh]').attr('data-link');
-      console.log('newIframeUrl', newIframeUrl);
+      let playerBaseUrl = ifameUrl.split('/').slice(0, 3).join('/');
+      const newPlayerBaseUrl = await axios.head(playerBaseUrl, {headers});
+      if (newPlayerBaseUrl) {
+        playerBaseUrl = newPlayerBaseUrl.request?.responseURL
+          ?.split('/')
+          .slice(0, 3)
+          .join('/');
+      }
+      const playerId = ifameUrl.split('/').pop();
+      const NewformData = new FormData();
+      NewformData.append('sid', playerId);
+      console.log(
+        'NewformData',
+        playerBaseUrl + '/embedhelper.php',
+        NewformData,
+      );
+      const playerRes = await fetch(`${playerBaseUrl}/embedhelper.php`, {
+        headers: headers,
+        body: NewformData,
+        method: 'POST',
+      });
+      const playerData = await playerRes.json();
+      // console.log('playerData', playerData);
+      const siteUrl = playerData?.siteUrls?.smwh;
+      const siteId = playerData?.mresult?.smwh;
+      const newIframeUrl = siteUrl + siteId;
       if (newIframeUrl) {
         ifameUrl = newIframeUrl;
       }

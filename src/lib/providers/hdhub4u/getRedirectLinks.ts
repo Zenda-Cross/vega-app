@@ -82,7 +82,7 @@ export async function getRedirectLinks(link: string, signal: AbortSignal) {
     // console.log('vcloudLink', vcloudLink?.[1]);
     return blogLink || link;
   } catch (err) {
-    console.error(err);
+    console.log('Error in getRedirectLinks', err);
     return link;
   }
 }
