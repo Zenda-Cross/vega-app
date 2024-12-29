@@ -28,6 +28,9 @@ export class NetMirrorCookieFetcher {
         'Getting cookie, please wait 20 sec...',
         ToastAndroid.SHORT,
       );
+      setTimeout(() => {
+        ToastAndroid.show('waiting for 10 more sec...', ToastAndroid.SHORT);
+      }, 10000);
 
       // Fetch new cookie with retry mechanism
       return await this.fetchFreshCookie();
@@ -65,13 +68,17 @@ export class NetMirrorCookieFetcher {
     const res = await axios.get(`${baseUrl}/home`, {withCredentials: false});
     const $ = cheerio.load(res.data);
     const addhash = $('body').attr('data-addhash');
+    const cookieUrl = res.data.match(
+      /^(?![\s]*\/\/).*window\.open\('([^']+)'/m,
+    )?.[1];
+    console.log('cookieUrl', cookieUrl);
 
     if (!addhash) {
       throw new Error('Unable to extract addhash');
     }
 
     // Preliminary verification
-    await this.performPreliminaryVerification(addhash);
+    await this.performPreliminaryVerification(cookieUrl, addhash);
 
     // Cookie verification with retry logic
     const cookie = await this.verifyCookie(baseUrl, addhash);
@@ -88,13 +95,13 @@ export class NetMirrorCookieFetcher {
    * @param addhash Verification hash
    */
   private static async performPreliminaryVerification(
+    cookieUrl: string,
     addhash: string,
   ): Promise<void> {
     try {
-      await fetch(
-        `https://userverify.netmirror.app/verify?vhfd=${addhash}&a=y&t=${Math.random()}`,
-        {credentials: 'omit'},
-      );
+      await fetch(`${cookieUrl}${addhash}&a=y&t=${Math.random()}`, {
+        credentials: 'omit',
+      });
     } catch (err) {
       console.warn('Preliminary verification failed:', err);
     }
