@@ -19,10 +19,19 @@ export const driveGetStream = async (
     }
     console.log('driveGetStream', type, url);
     const res = await axios.get(url, {headers});
-    const redirectUrl = res.data.match(
+    // console.log('res', res);
+    let redirectUrl = res.data.match(
       /<meta\s+http-equiv="refresh"\s+content="[^"]*?;\s*url=([^"]+)"\s*\/?>/i,
-    )[1];
+    )?.[1];
+    if (url.includes('/archives/')) {
+      redirectUrl = res.data.match(
+        /<a\s+[^>]*href="(https:\/\/hubcloud\.[^\/]+\/[^"]+)"/i,
+      )?.[1];
+    }
     console.log('redirectUrl', redirectUrl);
+    if (!redirectUrl) {
+      return await hubcloudExtracter(url, signal);
+    }
     const res2 = await axios.get(redirectUrl, {headers});
     const data = res2.data;
     // console.log('data', data);
@@ -35,7 +44,7 @@ export const driveGetStream = async (
       signal,
     );
   } catch (err) {
-    console.error(err);
+    console.error('Movies Drive err', err);
     return [];
   }
 };
