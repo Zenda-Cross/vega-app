@@ -1,9 +1,9 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
-import {ToastAndroid} from 'react-native';
 import {hubcloudExtracter} from '../hubcloudExtractor';
 import {getRedirectLinks} from './getRedirectLinks';
+import {decodeString} from './decoder';
 
 export async function hdhub4uGetStream(
   link: string,
@@ -19,9 +19,15 @@ export async function hdhub4uGetStream(
     hubdriveLink =
       $('.btn.btn-primary.btn-user.btn-success1.m-1').attr('href') || link;
   } else {
-    if (link.includes('hdhub4u')) {
-      link = 'https://max.offerboom.top/?id=' + link.split('id=')[1];
-    }
+    const res = await axios.get(link, {headers, signal});
+    const text = res.data;
+    const encryptedString = text.split("s('o','")?.[1]?.split("',180")?.[0];
+    console.log('encryptedString', encryptedString);
+    const decodedString: any = decodeString(encryptedString);
+    console.log('decodedString', decodedString);
+    link = atob(decodedString?.o);
+    console.log('new link', link);
+
     const redirectLink = await getRedirectLinks(link, signal);
     console.log('redirectLink', redirectLink);
 
@@ -48,20 +54,12 @@ export async function hdhub4uGetStream(
   const hubcloudLink =
     hubcloudText.match(
       /<META HTTP-EQUIV="refresh" content="0; url=([^"]+)">/i,
-    ) || [];
+    )?.[1] || hubdriveLink;
   // console.log('hubcloudLink', hubcloudLink[1]);
   try {
-    return await hubcloudExtracter(hubcloudLink[1], signal);
+    return await hubcloudExtracter(hubcloudLink, signal);
   } catch (error: any) {
-    console.log('getStream error: ', error);
-    if (error.message.includes('Aborted')) {
-      // ToastAndroid.show('Request Aborted', ToastAndroid.SHORT);
-    } else {
-      ToastAndroid.show(
-        `Error getting stream links ${error.message}`,
-        ToastAndroid.SHORT,
-      );
-    }
+    console.log('hd hub 4 getStream error: ', error);
     return [];
   }
 }
