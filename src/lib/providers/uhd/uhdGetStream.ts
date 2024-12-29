@@ -48,7 +48,7 @@ export const uhdGetStream = async (url: string): Promise<Stream[]> => {
 
     // console.log(downloadLink.data);
 
-    const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)[1];
+    const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)?.[1] || url;
 
     console.log('ddl', ddl);
     // console.log(ddl);

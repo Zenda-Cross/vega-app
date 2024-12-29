@@ -30,6 +30,7 @@ import TabBarBackgound from './components/TabBarBackgound';
 import {TouchableOpacity} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
+import Animated from 'react-native-reanimated';
 
 enableScreens(true);
 enableFreeze(true);
@@ -228,12 +229,18 @@ const App = () => {
           component={HomeStackScreen}
           options={{
             title: 'Home',
-            tabBarIcon: ({focused, color, size}) =>
-              focused ? (
-                <Ionicons name="home" color={color} size={size} />
-              ) : (
-                <Ionicons name="home-outline" color={color} size={size} />
-              ),
+            tabBarIcon: ({focused, color, size}) => (
+              <Animated.View
+                style={{
+                  transform: [{scale: focused ? 1.2 : 1}],
+                }}>
+                {focused ? (
+                  <Ionicons name="home" color={color} size={size} />
+                ) : (
+                  <Ionicons name="home-outline" color={color} size={size} />
+                )}
+              </Animated.View>
+            ),
           }}
         />
         <Tab.Screen
@@ -241,12 +248,18 @@ const App = () => {
           component={SearchStackScreen}
           options={{
             title: 'Search',
-            tabBarIcon: ({focused, color, size}) =>
-              focused ? (
-                <Ionicons name="search" color={color} size={size} />
-              ) : (
-                <Ionicons name="search-outline" color={color} size={size} />
-              ),
+            tabBarIcon: ({focused, color, size}) => (
+              <Animated.View
+                style={{
+                  transform: [{scale: focused ? 1.2 : 1}],
+                }}>
+                {focused ? (
+                  <Ionicons name="search" color={color} size={size} />
+                ) : (
+                  <Ionicons name="search-outline" color={color} size={size} />
+                )}
+              </Animated.View>
+            ),
           }}
         />
         <Tab.Screen
@@ -254,12 +267,18 @@ const App = () => {
           component={WatchListStackScreen}
           options={{
             title: 'Watch List',
-            tabBarIcon: ({focused, color, size}) =>
-              focused ? (
-                <Entypo name="folder-video" color={color} size={size} />
-              ) : (
-                <Entypo name="folder-video" color={color} size={size} />
-              ),
+            tabBarIcon: ({focused, color, size}) => (
+              <Animated.View
+                style={{
+                  transform: [{scale: focused ? 1.2 : 1}],
+                }}>
+                {focused ? (
+                  <Entypo name="folder-video" color={color} size={size} />
+                ) : (
+                  <Entypo name="folder-video" color={color} size={size} />
+                )}
+              </Animated.View>
+            ),
           }}
         />
         <Tab.Screen
@@ -267,18 +286,23 @@ const App = () => {
           component={SettingsStackScreen}
           options={{
             title: 'Settings',
-            tabBarIcon: ({focused, color, size}) =>
-              focused ? (
-                <Ionicons name="settings" color={color} size={size} />
-              ) : (
-                <Ionicons name="settings-outline" color={color} size={size} />
-              ),
+            tabBarIcon: ({focused, color, size}) => (
+              <Animated.View
+                style={{
+                  transform: [{scale: focused ? 1.2 : 1}],
+                }}>
+                {focused ? (
+                  <Ionicons name="settings" color={color} size={size} />
+                ) : (
+                  <Ionicons name="settings-outline" color={color} size={size} />
+                )}
+              </Animated.View>
+            ),
           }}
         />
       </Tab.Navigator>
     );
   }
-
   useEffect(() => {
     if (MMKV.getBool('autoCheckUpdate') !== false) {
       checkForUpdate(
