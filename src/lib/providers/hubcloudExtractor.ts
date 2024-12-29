@@ -13,18 +13,22 @@ const decode = function (value: string) {
 export async function hubcloudExtracter(link: string, signal: AbortSignal) {
   try {
     console.log('hubcloudExtracter', link);
+    const baseUrl = link.split('/').slice(0, 3).join('/');
     const streamLinks: Stream[] = [];
     const vLinkRes = await axios(`${link}`, {headers, signal});
     const vLinkText = vLinkRes.data;
     const $vLink = cheerio.load(vLinkText);
     const vLinkRedirect = vLinkText.match(/var\s+url\s*=\s*'([^']+)';/) || [];
-    const vcloudLink =
+    let vcloudLink =
       decode(vLinkRedirect[1]?.split('r=')?.[1]) ||
       vLinkRedirect[1] ||
       $vLink('.fa-file-download.fa-lg').parent().attr('href') ||
       link;
     console.log('vcloudLink', vcloudLink);
-
+    if (vcloudLink?.startsWith('/')) {
+      vcloudLink = `${baseUrl}${vcloudLink}`;
+      console.log('New vcloudLink', vcloudLink);
+    }
     const vcloudRes = await fetch(vcloudLink, {
       headers,
       signal,
@@ -65,6 +69,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
         streamLinks.push({server: 'fastDl', link: link, type: 'mkv'});
       }
     }
+    console.log('streamLinks', streamLinks);
     return streamLinks;
   } catch (error) {
     console.log('hubcloudExtracter error: ', error);
