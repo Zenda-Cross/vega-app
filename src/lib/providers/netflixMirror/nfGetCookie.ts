@@ -30,7 +30,7 @@ export class NetMirrorCookieFetcher {
       );
       setTimeout(() => {
         ToastAndroid.show('waiting for 10 more sec...', ToastAndroid.SHORT);
-      }, 10000);
+      }, 15000);
 
       // Fetch new cookie with retry mechanism
       return await this.fetchFreshCookie();
