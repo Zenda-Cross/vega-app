@@ -44,12 +44,6 @@ export const providersList: ProvidersList[] = [
   //   flag: '🌏',
   // },
   {
-    name: 'ExtraMovies',
-    value: 'extraMovies',
-    type: 'global',
-    flag: '🌏',
-  },
-  {
     name: 'MoviesMod',
     value: 'mod',
     type: 'global',
@@ -82,6 +76,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'HdHub4u',
     value: 'hdhub4u',
+    type: 'global',
+    flag: '🌏',
+  },
+  {
+    name: 'ExtraMovies',
+    value: 'extraMovies',
     type: 'global',
     flag: '🌏',
   },
