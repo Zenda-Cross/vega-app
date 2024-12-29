@@ -1,15 +1,17 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {headers} from '../headers';
 import {Info, Link} from '../types';
+import {hdbHeaders} from './hdbHeaders';
 
 export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
   try {
     const url = link;
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url, {headers: hdbHeaders});
+    console.log('hdhub4uGetInfo', url);
+    // console.log('hdhub4uGetInfo', res.data);
     const data = res.data;
     const $ = cheerio.load(data);
-    const container = $('.code-block.code-block-1');
+    const container = $('.page-body');
     const imdbId =
       container
         .find('a[href*="imdb.com/title/tt"]:not([href*="imdb.com/title/tt/"])')
@@ -29,6 +31,8 @@ export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
       .text()
       .replace('DESCRIPTION:', '');
     const image = container.find('img[decoding="async"]').attr('src') || '';
+
+    console.log('hdhub4uGetInfo', title, imdbId, type, synopsis, image);
 
     // Links
     const links: Link[] = [];
