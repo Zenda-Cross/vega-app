@@ -320,7 +320,9 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView edges={{top: 'off', bottom: 'additive'}} style={{flex: 1}}>
+      <SafeAreaView
+        edges={{left: 'off', right: 'off', top: 'off', bottom: 'additive'}}
+        style={{flex: 1}}>
         <NavigationContainer
           onReady={() => BootSplash.hide({fade: true})}
           theme={{
