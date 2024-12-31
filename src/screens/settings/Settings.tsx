@@ -27,6 +27,7 @@ import {
 import {ScrollView} from 'react-native';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import {SvgUri} from 'react-native-svg';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -91,10 +92,16 @@ const Settings = ({navigation}: Props) => {
                   <View
                     className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 rounded-s-md border-b border-white/10 border rounded-md ${
                       provider.value === item.value ? 'bg-quaternary' : ''
-                    } ${item.value === 'lux' ? 'pb-1' : 'pb-3'}`}>
+                    } ${item.value === 'guardahd' ? 'pb-1' : 'pb-3'}`}>
+                    <SvgUri
+                      className="mb-2"
+                      width={20}
+                      height={20}
+                      uri={item.flag}
+                    />
                     <Text className=" text-white mb-2">
-                      {item.flag}
-                      &nbsp; &nbsp;
+                      {/* {item.flag}
+                      &nbsp; &nbsp; */}
                       {item.name}
                     </Text>
                   </View>
