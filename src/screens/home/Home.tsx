@@ -139,7 +139,7 @@ const Home = ({}: Props) => {
           drawerPosition="left"
           drawerWidth={200}
           drawerLockMode={disableDrawer ? 'locked-closed' : 'unlocked'}
-          drawerType="slide"
+          drawerType="front"
           edgeWidth={70}
           useNativeAnimations={false}
           // onDrawerOpen={() => setIsDrawerOpen(true)}
@@ -152,7 +152,7 @@ const Home = ({}: Props) => {
           //   }
           // }}
           ref={drawer}
-          drawerBackgroundColor={'black'}
+          drawerBackgroundColor={'transparent'}
           renderNavigationView={() =>
             !disableDrawer && <ProviderDrawer drawerRef={drawer} />
           }>
