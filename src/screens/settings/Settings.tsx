@@ -4,20 +4,16 @@ import {
   Linking,
   TouchableOpacity,
   TouchableNativeFeedback,
-  Switch,
 } from 'react-native';
 import React from 'react';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
-import {useState} from 'react';
+import {MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
-import {downloadFolder, providersList, socialLinks} from '../../lib/constants';
+import {providersList, socialLinks} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import RNFS from 'react-native-fs';
 import {SettingsStackParamList} from '../../App';
-import requestStoragePermission from '../../lib/file/getStoragePermission';
 import {
   MaterialCommunityIcons,
   AntDesign,
@@ -33,25 +29,9 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
   const {primary} = useThemeStore(state => state);
-  const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
-    MMKV.getBool('useExternalPlayer', () => false),
-  );
 
   const {provider, setProvider} = useContentStore(state => state);
   const {clearHistory} = useWatchHistoryStore(state => state);
-
-  const onDownloadFolderPress = async () => {
-    if (await requestStoragePermission()) {
-      try {
-        await RNFS.mkdir(downloadFolder);
-        await Linking.openURL(
-          'content://com.android.externalstorage.documents/document/primary%3ADownload%2Fvega',
-        );
-      } catch (e) {
-        console.log(e);
-      }
-    }
-  };
 
   return (
     <ScrollView className="w-full h-full bg-black p-4">
@@ -112,32 +92,10 @@ const Settings = ({navigation}: Props) => {
         </View>
       }
 
-      {/* open in external player */}
-      <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <View className="flex-row items-center gap-1">
-          <MaterialCommunityIcons name="motion-play" size={18} color="white" />
-          <Text className="text-white font-semibold">
-            Open in External player
-          </Text>
-        </View>
-        <Switch
-          thumbColor={OpenExternalPlayer ? primary : 'gray'}
-          value={OpenExternalPlayer}
-          onValueChange={async val => {
-            MMKV.setBool('useExternalPlayer', val);
-            setOpenExternalPlayer(val);
-          }}
-        />
-      </View>
-
       {/* download folder shortcut */}
-      {/* <TouchableNativeFeedback
+      <TouchableNativeFeedback
         onPress={async () => {
-          ReactNativeHapticFeedback.trigger('virtualKey', {
-            enableVibrateFallback: true,
-            ignoreAndroidSystemSettings: false,
-          });
-          onDownloadFolderPress();
+          navigation.navigate('Downloads');
         }}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
         <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
@@ -151,7 +109,7 @@ const Settings = ({navigation}: Props) => {
           </View>
           <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </TouchableNativeFeedback> */}
+      </TouchableNativeFeedback>
 
       {/* Subtitle Style  */}
       <TouchableNativeFeedback
