@@ -31,6 +31,7 @@ import {TouchableOpacity} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
+import Downloads from './screens/settings/Downloads';
 
 enableScreens(true);
 enableFreeze(true);
@@ -52,6 +53,7 @@ export type RootStackParamList = {
   Player: {
     linkIndex: number;
     episodeList: EpisodeLink[];
+    directUrl?: string;
     type: string;
     primaryTitle?: string;
     secondaryTitle?: string;
@@ -87,6 +89,7 @@ export type SettingsStackParamList = {
   DisableProviders: undefined;
   About: undefined;
   Preferences: undefined;
+  Downloads: undefined;
 };
 
 export type TabStackParamList = {
@@ -174,6 +177,7 @@ const App = () => {
         />
         <SettingsStack.Screen name="About" component={About} />
         <SettingsStack.Screen name="Preferences" component={Preferences} />
+        <SettingsStack.Screen name="Downloads" component={Downloads} />
       </SettingsStack.Navigator>
     );
   }
