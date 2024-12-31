@@ -40,6 +40,7 @@ const isVideoFile = (filename: string): boolean => {
 const Downloads = () => {
   const [files, setFiles] = useState<FileSystem.FileInfo[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
 
   const {primary} = useThemeStore(state => state);
 
@@ -49,8 +50,10 @@ const Downloads = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  // Load files from the download folder on initial render
   useEffect(() => {
     const getFiles = async () => {
+      setLoading(true);
       const granted = await requestStoragePermission();
       if (granted) {
         try {
@@ -77,8 +80,10 @@ const Downloads = () => {
           );
           MmmkvCache.setString('downloadFiles', JSON.stringify(filesInfo));
           setFiles(filesInfo);
+          setLoading(false);
         } catch (error) {
           console.error('Error reading files:', error);
+          setLoading(false);
         }
       }
     };
@@ -103,6 +108,7 @@ const Downloads = () => {
     }
   }
 
+  // Generate thumbnails for each file
   useEffect(() => {
     const getThumbnails = async () => {
       try {
@@ -133,6 +139,7 @@ const Downloads = () => {
     }
   }, [files]);
 
+  // Load files and thumbnails from cache on initial render
   useEffect(() => {
     const downloadFiles = MmmkvCache.getString('downloadFiles');
     if (downloadFiles) {
@@ -296,6 +303,12 @@ const Downloads = () => {
           );
         })}
       </View>
+      {
+        // Show a message if no files are available
+        files.length === 0 && !loading && (
+          <Text className="text-center mt-10 text-lg">Looks Empty Here!</Text>
+        )
+      }
       <View className="h-20" />
     </ScrollView>
   );
