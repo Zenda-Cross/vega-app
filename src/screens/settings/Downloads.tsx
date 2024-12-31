@@ -4,9 +4,7 @@ import {
   Image,
   Platform,
   TouchableOpacity,
-  Pressable,
-  PermissionsAndroid,
-  Alert,
+  ScrollView,
 } from 'react-native';
 import requestStoragePermission from '../../lib/file/getStoragePermission';
 import * as FileSystem from 'expo-file-system';
@@ -182,22 +180,21 @@ const Downloads = () => {
   };
 
   return (
-    <Pressable
-      className="mt-14 px-3 min-h-full"
-      onPress={() => setGroupSelected([])}>
+    <ScrollView className="mt-14 px-2 w-full h-full">
       <View className="flex-row justify-between items-center">
         <Text className="text-2xl">Downloads</Text>
-        <View className="flex-row gap-x-3 items-center">
-          {/* {isSelecting && (
-            <Text
-              style={{color: primary}}
+        <View className="flex-row gap-x-7 items-center">
+          {isSelecting && (
+            <MaterialCommunityIcons
+              name="close"
+              size={28}
+              color={primary}
               onPress={() => {
                 setGroupSelected([]);
                 setIsSelecting(false);
-              }}>
-              Cancel
-            </Text>
-          )} */}
+              }}
+            />
+          )}
           {isSelecting && groupSelected.length > 0 && (
             <MaterialCommunityIcons
               name="delete-outline"
@@ -209,7 +206,7 @@ const Downloads = () => {
         </View>
       </View>
       <View className="flex flex-wrap mt-7">
-        {files.map((file, index) => {
+        {files.map(file => {
           const fileName = file.uri
             .split('/')
             .pop()
@@ -218,7 +215,7 @@ const Downloads = () => {
             .replace('.mkv', '');
           return (
             <TouchableOpacity
-              className={`flex-row gap-x-3 h-[100px] justify-center items-center ${
+              className={`flex-row w-full h-[90px] mb-1 items-center rounded-md px-1 ${
                 groupSelected.includes(file.uri) && 'bg-quaternary'
               }`}
               key={file.uri}
@@ -242,8 +239,12 @@ const Downloads = () => {
                   } else {
                     setGroupSelected([...groupSelected, file.uri]);
                   }
-                  if (groupSelected.length === 0) {
+                  if (
+                    groupSelected.length === 1 &&
+                    groupSelected[0] === file.uri
+                  ) {
                     setIsSelecting(false);
+                    setGroupSelected([]);
                   }
                 } else {
                   try {
@@ -262,7 +263,7 @@ const Downloads = () => {
                 }
               }}>
               <View
-                className={`relative ${
+                className={`relative border mr-3 ${
                   groupSelected.includes(file.uri) && 'bg-quaternary'
                 }`}>
                 {thumbnails[file.uri] ? (
@@ -286,12 +287,17 @@ const Downloads = () => {
                   }}
                 />
               </View>
-              <Text className="w-[69%] whitespace-pre-wrap">{fileName}</Text>
+              <View className="h-[70px] flex-row items-start overflow-hidden">
+                <Text className="w-[83%] text-[13.5px] whitespace-pre-wrap">
+                  {fileName}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
         })}
       </View>
-    </Pressable>
+      <View className="h-20" />
+    </ScrollView>
   );
 };
 
