@@ -169,6 +169,9 @@ export const downloadManager = async ({
         title: 'Download complete',
         body: title,
         android: {
+          pressAction: {
+            id: 'default',
+          },
           smallIcon: 'ic_notification',
           channelId,
           color: primary,
@@ -191,6 +194,9 @@ export const downloadManager = async ({
         title: 'Download failed',
         body: title,
         android: {
+          pressAction: {
+            id: 'default',
+          },
           smallIcon: 'ic_notification',
           channelId,
           color: primary,
