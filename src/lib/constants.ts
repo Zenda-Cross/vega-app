@@ -98,12 +98,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  {
-    name: 'AnimeRulz',
-    value: 'animeRulz',
-    type: 'global',
-    flag: FLAGS.GLOBAL,
-  },
+  // {
+  //   name: 'AnimeRulz',
+  //   value: 'animeRulz',
+  //   type: 'global',
+  //   flag: FLAGS.GLOBAL,
+  // },
   // {
   //   name: 'ToonStream',
   //   value: 'toonstream',
