@@ -232,7 +232,7 @@ const App = () => {
             tabBarIcon: ({focused, color, size}) => (
               <Animated.View
                 style={{
-                  transform: [{scale: focused ? 1.2 : 1}],
+                  transform: [{scale: focused ? 1.1 : 1}],
                 }}>
                 {focused ? (
                   <Ionicons name="home" color={color} size={size} />
@@ -251,7 +251,7 @@ const App = () => {
             tabBarIcon: ({focused, color, size}) => (
               <Animated.View
                 style={{
-                  transform: [{scale: focused ? 1.2 : 1}],
+                  transform: [{scale: focused ? 1.1 : 1}],
                 }}>
                 {focused ? (
                   <Ionicons name="search" color={color} size={size} />
@@ -270,7 +270,7 @@ const App = () => {
             tabBarIcon: ({focused, color, size}) => (
               <Animated.View
                 style={{
-                  transform: [{scale: focused ? 1.2 : 1}],
+                  transform: [{scale: focused ? 1.1 : 1}],
                 }}>
                 {focused ? (
                   <Entypo name="folder-video" color={color} size={size} />
@@ -289,7 +289,7 @@ const App = () => {
             tabBarIcon: ({focused, color, size}) => (
               <Animated.View
                 style={{
-                  transform: [{scale: focused ? 1.2 : 1}],
+                  transform: [{scale: focused ? 1.1 : 1}],
                 }}>
                 {focused ? (
                   <Ionicons name="settings" color={color} size={size} />
