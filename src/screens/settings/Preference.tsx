@@ -39,7 +39,7 @@ const Preferences = () => {
   );
 
   const [showHamburgerMenu, setShowHamburgerMenu] = useState<boolean>(
-    MMKV.getBool('showHamburgerMenu') || false,
+    MMKV.getBool('showHamburgerMenu') === false ? false : true,
   );
 
   const [hideSeekButtons, setHideSeekButtons] = useState<boolean>(
@@ -55,6 +55,10 @@ const Preferences = () => {
 
   const [showTabBarLables, setShowTabBarLables] = useState<boolean>(
     MMKV.getBool('showTabBarLables') || false,
+  );
+
+  const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
+    MMKV.getBool('useExternalPlayer', () => false),
   );
 
   return (
@@ -229,8 +233,27 @@ const Preferences = () => {
           />
         </View>
       </View>
+
+      {/* Player */}
       <View className="p-2 space-y-2">
         <Text className="text-white ml-2 font-bold text-xl">Player</Text>
+        {/* open in external player */}
+        <View className="flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
+          <View className="flex-row items-center gap-1">
+            <Text className="text-white font-semibold">
+              Always use External Player
+            </Text>
+          </View>
+          <Switch
+            thumbColor={OpenExternalPlayer ? primary : 'gray'}
+            value={OpenExternalPlayer}
+            onValueChange={async val => {
+              MMKV.setBool('useExternalPlayer', val);
+              setOpenExternalPlayer(val);
+            }}
+          />
+        </View>
+
         {/* show media controls */}
         <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
           <Text className="text-white font-semibold">

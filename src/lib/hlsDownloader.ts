@@ -68,6 +68,9 @@ export const hlsDownloader = async ({
             title: 'Download completed',
             body: `Downloaded ${title}`,
             android: {
+              pressAction: {
+                id: 'default',
+              },
               color: primary,
               smallIcon: 'ic_notification',
               channelId,
@@ -82,6 +85,9 @@ export const hlsDownloader = async ({
             title: 'Download failed',
             body: `Failed to download ${title}`,
             android: {
+              pressAction: {
+                id: 'default',
+              },
               color: primary,
               smallIcon: 'ic_notification',
               channelId,
@@ -110,6 +116,9 @@ export const hlsDownloader = async ({
             id: fileName,
             data: {fileName, jobId: log.getSessionId()},
             android: {
+              pressAction: {
+                id: 'default',
+              },
               smallIcon: 'ic_notification',
               onlyAlertOnce: true,
               progress: {
@@ -140,6 +149,9 @@ export const hlsDownloader = async ({
       title: 'Download failed',
       body: `Failed to download ${fileName}`,
       android: {
+        pressAction: {
+          id: 'default',
+        },
         color: primary,
         smallIcon: 'ic_notification',
         channelId,
