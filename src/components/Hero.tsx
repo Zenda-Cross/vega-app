@@ -31,7 +31,7 @@ function Hero({
   const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
   const [showHamburgerMenu] = useState(
-    MMKV.getBool('showHamburgerMenu') || false,
+    MMKV.getBool('showHamburgerMenu') === false ? false : true,
   );
   const [isDrawerDisabled] = useState(MMKV.getBool('disableDrawer') || false);
   const navigation =

@@ -39,7 +39,7 @@ const Preferences = () => {
   );
 
   const [showHamburgerMenu, setShowHamburgerMenu] = useState<boolean>(
-    MMKV.getBool('showHamburgerMenu') || false,
+    MMKV.getBool('showHamburgerMenu') === false ? false : true,
   );
 
   const [hideSeekButtons, setHideSeekButtons] = useState<boolean>(
