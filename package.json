@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.5.10",
+  "version": "2.5.11",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -26,6 +26,7 @@
     "expo-build-properties": "~0.12.5",
     "expo-intent-launcher": "~11.0.1",
     "expo-system-ui": "~3.0.4",
+    "expo-video-thumbnails": "~8.0.0",
     "ffmpeg-kit-react-native": "^6.0.2",
     "moti": "^0.28.1",
     "nativewind": "^2.0.11",

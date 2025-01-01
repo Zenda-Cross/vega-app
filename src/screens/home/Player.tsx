@@ -51,7 +51,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
   const [activeEpisode, setActiveEpisode] = useState(
-    route.params.episodeList[route.params.linkIndex],
+    route.params.episodeList?.[route.params.linkIndex],
   );
   const videoPositionRef = useRef({position: 0, duration: 0});
   const lastSavedPositionRef = useRef(0);
@@ -181,6 +181,18 @@ const Player = ({route}: Props): React.JSX.Element => {
     console.log('activeEpisode', activeEpisode);
     const fetchStream = async () => {
       setLoading(true);
+      if (route.params?.directUrl) {
+        setStream([
+          {server: 'direct', link: route.params?.directUrl, type: 'mp4'},
+        ]);
+        setSelectedStream({
+          server: 'Downloaded',
+          link: route.params?.directUrl,
+          type: 'mp4',
+        });
+        setLoading(false);
+        return;
+      }
       // check if downloaded
       if (route.params.primaryTitle && route.params.secondaryTitle) {
         const file = (
@@ -317,8 +329,8 @@ const Player = ({route}: Props): React.JSX.Element => {
           headers: selectedStream?.headers,
           metadata: {
             title: route.params.primaryTitle,
-            subtitle: activeEpisode.title,
-            artist: activeEpisode.title,
+            subtitle: activeEpisode?.title,
+            artist: activeEpisode?.title,
             description: activeEpisode.title,
             imageUri: route.params.poster.poster,
           },
@@ -350,7 +362,10 @@ const Player = ({route}: Props): React.JSX.Element => {
           subtitlesFollowVideo: false,
         }}
         title={{
-          primary: route.params.primaryTitle || '',
+          primary:
+            route.params.primaryTitle && route.params.primaryTitle?.length > 70
+              ? route.params.primaryTitle.slice(0, 70) + '...'
+              : route.params.primaryTitle || '',
           secondary: activeEpisode.title,
         }}
         navigator={navigation}
@@ -499,8 +514,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       </MotiView>
 
       {/* next episode button */}
-      {route.params.episodeList.indexOf(activeEpisode) <
-        route.params.episodeList.length - 1 &&
+      {route.params.episodeList?.indexOf(activeEpisode) <
+        route.params.episodeList?.length - 1 &&
         videoPositionRef.current.position / videoPositionRef.current.duration >
           0.8 && (
           <MotiView
