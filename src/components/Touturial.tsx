@@ -4,6 +4,7 @@ import {MMKV} from '../lib/Mmkv';
 import {useState} from 'react';
 import {providersList} from '../lib/constants';
 import useContentStore from '../lib/zustand/contentStore';
+import {SvgUri} from 'react-native-svg';
 
 const Touturial = () => {
   const [showTouturial, setShowTouturial] = useState<boolean>(
@@ -18,29 +19,31 @@ const Touturial = () => {
             <Text className="text-white text-xl my-7 font-semibold">
               Select a provider to start watching
             </Text>
-            <ScrollView
-              contentContainerStyle={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'space-around',
-                width: 384,
-                height: '90%',
-              }}>
-              {providersList.map(provider => (
-                <Pressable
-                  key={provider.value}
-                  className="bg-quaternary p-3 m-3 w-32 flex items-center flex-row rounded-md"
-                  onPress={() => {
-                    setProvider(provider);
-                    MMKV.setBool('showTouturial', false);
-                    setShowTouturial(false);
-                  }}>
-                  <Text className="text-white mr-3">{provider.flag}</Text>
-                  <Text className="text-white">{provider.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+            <View className="h-[85%]">
+              <ScrollView
+                contentContainerStyle={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-around',
+                  width: 384,
+                  height: 'auto',
+                }}>
+                {providersList.map(provider => (
+                  <Pressable
+                    key={provider.value}
+                    className="bg-quaternary p-3 m-3 w-[130px] flex items-center rounded-md flex-row"
+                    onPress={() => {
+                      setProvider(provider);
+                      MMKV.setBool('showTouturial', false);
+                      setShowTouturial(false);
+                    }}>
+                    <SvgUri width="27" height="24" uri={provider.flag} />
+                    <Text className="text-white ml-2">{provider.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
           </View>
         </Modal>
       </View>
