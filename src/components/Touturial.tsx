@@ -8,7 +8,7 @@ import {SvgUri} from 'react-native-svg';
 
 const Touturial = () => {
   const [showTouturial, setShowTouturial] = useState<boolean>(
-    MMKV.getBool('showTouturials') ?? true,
+    MMKV.getBool('showTouturial') ?? true,
   );
   const {setProvider} = useContentStore(state => state);
   return (
