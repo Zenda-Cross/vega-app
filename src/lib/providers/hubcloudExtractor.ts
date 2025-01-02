@@ -67,7 +67,8 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
       }
       if (link?.includes('fastdl')) {
         streamLinks.push({server: 'FastDl', link: link, type: 'mkv'});
-      } else {
+      }
+      if (link.includes('hubcdn')) {
         streamLinks.push({
           server: 'HubCdn',
           link: link,
