@@ -32,13 +32,13 @@ const Touturial = () => {
                 {providersList.map(provider => (
                   <Pressable
                     key={provider.value}
-                    className="bg-quaternary p-3 m-3 w-32 flex items-center rounded-md flex-row"
+                    className="bg-quaternary p-3 m-3 w-[130px] flex items-center rounded-md flex-row"
                     onPress={() => {
                       setProvider(provider);
                       MMKV.setBool('showTouturial', false);
                       setShowTouturial(false);
                     }}>
-                    <SvgUri width="24" height="24" uri={provider.flag} />
+                    <SvgUri width="27" height="24" uri={provider.flag} />
                     <Text className="text-white ml-2">{provider.name}</Text>
                   </Pressable>
                 ))}
