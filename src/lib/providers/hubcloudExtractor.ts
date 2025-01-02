@@ -50,7 +50,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
           const baseUrl = link.split('/').slice(0, -2).join('/');
           link = `${baseUrl}/api/file/${token}?download`;
         }
-        streamLinks.push({server: 'pixeldrain', link: link, type: 'mkv'});
+        streamLinks.push({server: 'Pixeldrain', link: link, type: 'mkv'});
       }
       if (link?.includes('hubcloud') || link?.includes('/?id=')) {
         try {
@@ -66,7 +66,13 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
         streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
       if (link?.includes('fastdl')) {
-        streamLinks.push({server: 'fastDl', link: link, type: 'mkv'});
+        streamLinks.push({server: 'FastDl', link: link, type: 'mkv'});
+      } else {
+        streamLinks.push({
+          server: 'HubCdn',
+          link: link,
+          type: 'mkv',
+        });
       }
     }
     console.log('streamLinks', streamLinks);
