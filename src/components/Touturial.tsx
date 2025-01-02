@@ -32,7 +32,7 @@ const Touturial = () => {
                 {providersList.map(provider => (
                   <Pressable
                     key={provider.value}
-                    className="bg-quaternary p-3 m-3 w-32 flex items-center rounded-md flex-row justify-center"
+                    className="bg-quaternary p-3 m-3 w-32 flex items-center rounded-md flex-row"
                     onPress={() => {
                       setProvider(provider);
                       MMKV.setBool('showTouturial', false);
