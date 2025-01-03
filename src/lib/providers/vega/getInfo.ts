@@ -15,7 +15,7 @@ export const vegaGetInfo = async (link: string): Promise<Info> => {
       },
     });
     const $ = cheerio.load(response.data);
-    const infoContainer = $('.entry-content');
+    const infoContainer = $('.entry-content,.post-inner');
     const heading = infoContainer?.find('h3');
     const imdbId =
       heading?.next('p')?.find('a')?.[0]?.attribs?.href?.match(/tt\d+/g)?.[0] ||
