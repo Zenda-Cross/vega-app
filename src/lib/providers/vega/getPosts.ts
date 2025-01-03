@@ -48,13 +48,13 @@ async function posts(
     });
     const $ = cheerio.load(urlRes.data);
     const posts: Post[] = [];
-    $('.blog-items')
+    $('.blog-items,.post-link')
       ?.children('article')
       ?.each((index, element) => {
         const post = {
           title:
             $(element)
-              ?.find('a')
+              ?.find('a img')
               ?.attr('title')
               ?.replace('Download', '')
               ?.match(/^(.*?)\s*\((\d{4})\)|^(.*?)\s*\((Season \d+)\)/)?.[0] ||
