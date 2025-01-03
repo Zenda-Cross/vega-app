@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.5.12",
+  "version": "2.5.13",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
