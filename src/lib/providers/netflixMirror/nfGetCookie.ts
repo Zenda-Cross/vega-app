@@ -68,9 +68,9 @@ export class NetMirrorCookieFetcher {
     const res = await axios.get(`${baseUrl}/home`, {withCredentials: false});
     const $ = cheerio.load(res.data);
     const addhash = $('body').attr('data-addhash');
-    const cookieUrl = res.data.match(
-      /^(?![\s]*\/\/).*window\.open\('([^']+)'/m,
-    )?.[1];
+    const vSite = res.data.match(/var\s+Vsite\s*=\s*"([^"]+)"/)?.[1];
+    const params = res.data.match(/Vsite\s*\+\s*'([^']+)'/)?.[1];
+    const cookieUrl = `${vSite}${params}`;
     console.log('cookieUrl', cookieUrl);
 
     if (!addhash) {
