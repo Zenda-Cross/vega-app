@@ -193,21 +193,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         setLoading(false);
         return;
       }
-      // check if downloaded
-      if (route.params?.primaryTitle && route.params?.secondaryTitle) {
-        const file = (
-          route.params?.primaryTitle +
-          route.params?.secondaryTitle +
-          activeEpisode?.title
-        ).replaceAll(/[^a-zA-Z0-9]/g, '_');
-        const exists = await ifExists(file);
-        if (exists) {
-          setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
-          setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
-          setLoading(false);
-          return;
-        }
-      }
+
       const data = await manifest[
         route.params?.providerValue || provider?.value
       ].GetStream(activeEpisode.link, route.params?.type, controller.signal);
