@@ -71,39 +71,6 @@ const SeasonList = ({
 
   const {addItem} = useWatchHistoryStore(state => state);
 
-  useEffect(() => {
-    const fetchList = async () => {
-      if (!ActiveSeason?.episodesLink) {
-        return;
-      }
-      setEpisodeLoading(true);
-      try {
-        const cacheEpisodes = await MmmkvCache.getItem(
-          ActiveSeason.episodesLink,
-        );
-        if (cacheEpisodes) {
-          setEpisodeList(JSON.parse(cacheEpisodes as string));
-          // console.log('cache', JSON.parse(cacheEpisodes as string));
-          setEpisodeLoading(false);
-        }
-        const episodes = manifest[providerValue].GetEpisodeLinks
-          ? await manifest[providerValue].GetEpisodeLinks(
-              ActiveSeason.episodesLink,
-            )
-          : [];
-        if (episodes.length === 0) return;
-        MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
-        // console.log(episodes);
-        setEpisodeList(episodes);
-        setEpisodeLoading(false);
-      } catch (e) {
-        console.log(e);
-        setEpisodeLoading(false);
-      }
-    };
-    fetchList();
-  }, [ActiveSeason, refreshing]);
-
   type playHandlerProps = {
     linkIndex: number;
     type: string;
@@ -162,8 +129,15 @@ const SeasonList = ({
       episodeList[linkIndex].title
     ).replaceAll(/[^a-zA-Z0-9]/g, '_');
     const externalPlayer = MMKV.getBool('useExternalPlayer');
-    const downloaded = await ifExists(file);
-    if (externalPlayer && !downloaded) {
+    const dwFile = await ifExists(file);
+    if (externalPlayer) {
+      if (dwFile) {
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: dwFile,
+          type: 'video/*',
+        });
+        return;
+      }
       handleExternalPlayer(link, type);
       return;
     }
@@ -172,6 +146,7 @@ const SeasonList = ({
       linkIndex,
       episodeList,
       type: type,
+      directUrl: dwFile || '',
       primaryTitle: primaryTitle,
       secondaryTitle: seasonTitle,
       poster: poster,
@@ -199,6 +174,38 @@ const SeasonList = ({
     setStickyMenu({active: active, link: link, type: type});
   };
 
+  useEffect(() => {
+    const fetchList = async () => {
+      if (!ActiveSeason?.episodesLink) {
+        return;
+      }
+      setEpisodeLoading(true);
+      try {
+        const cacheEpisodes = await MmmkvCache.getItem(
+          ActiveSeason.episodesLink,
+        );
+        if (cacheEpisodes) {
+          setEpisodeList(JSON.parse(cacheEpisodes as string));
+          // console.log('cache', JSON.parse(cacheEpisodes as string));
+          setEpisodeLoading(false);
+        }
+        const episodes = manifest[providerValue].GetEpisodeLinks
+          ? await manifest[providerValue].GetEpisodeLinks(
+              ActiveSeason.episodesLink,
+            )
+          : [];
+        if (episodes.length === 0) return;
+        MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
+        // console.log(episodes);
+        setEpisodeList(episodes);
+        setEpisodeLoading(false);
+      } catch (e) {
+        console.log(e);
+        setEpisodeLoading(false);
+      }
+    };
+    fetchList();
+  }, [ActiveSeason, refreshing]);
   return (
     <View>
       {LinkList.length > 1 ? (
