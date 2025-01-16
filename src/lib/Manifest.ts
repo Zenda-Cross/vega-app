@@ -5,7 +5,7 @@ import {Content} from './zustand/contentStore';
 import {dooflixProvider} from './providers/dooflix';
 import {autoEmbedDrama} from './providers/autoEmbedDrama';
 import {AEAnime} from './providers/autoEmbedAnime';
-import {dramacool} from './providers/dramacool';
+import {dramacoolConsumet} from './providers/dramacoolConsumet';
 import {vegaMovies} from './providers/vega';
 import {luxMovies} from './providers/luxMovies';
 import {modMovies} from './providers/mod';
@@ -32,6 +32,7 @@ import {guardahd} from './providers/guardahd';
 import {toonstream} from './providers/toonstream';
 import {ridoMovies} from './providers/ridoMovies';
 import {protonMovies} from './providers/protonMovies';
+import {dramacool} from './providers/dramacool';
 
 export interface ProviderType {
   searchFilter?: string;
