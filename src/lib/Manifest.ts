@@ -33,6 +33,7 @@ import {toonstream} from './providers/toonstream';
 import {ridoMovies} from './providers/ridoMovies';
 import {protonMovies} from './providers/protonMovies';
 import {dramacool} from './providers/dramacool';
+import {ringz} from './providers/ringz';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -97,4 +98,5 @@ export const manifest: Manifest = {
   toonstream: toonstream,
   ridoMovies: ridoMovies,
   protonMovies: protonMovies,
+  ringz: ringz,
 };
