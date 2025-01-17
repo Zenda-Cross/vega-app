@@ -1,14 +1,14 @@
+import {aedGetInfo} from '../autoEmbedDrama/aedGetInfo';
+import {dramacoolGetPosts, dramacoolGetSearchPosts} from './dramacoolGetPosts';
+import {aedCatalog, aedGenresList} from '../autoEmbedDrama/aedCatalog';
 import {ProviderType} from '../../Manifest';
-import {dcGetInfo} from './dcGetInfo';
-import {dcGetPosts, dcGetSearchPost} from './dcGetPosts';
-import {dcGetStream} from './dcGetStream';
-import {dcCatalog, dcGenresList} from './dcCatalog';
+import {dramacoolGetStream} from './dramacoolGetStream';
 
 export const dramacool: ProviderType = {
-  catalog: dcCatalog,
-  genres: dcGenresList,
-  GetMetaData: dcGetInfo,
-  GetHomePosts: dcGetPosts,
-  GetStream: dcGetStream,
-  GetSearchPosts: dcGetSearchPost,
+  catalog: aedCatalog,
+  genres: aedGenresList,
+  GetMetaData: aedGetInfo,
+  GetHomePosts: dramacoolGetPosts,
+  GetStream: dramacoolGetStream,
+  GetSearchPosts: dramacoolGetSearchPosts,
 };
