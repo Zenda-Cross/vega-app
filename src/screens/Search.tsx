@@ -60,31 +60,33 @@ const Search = () => {
       </View>
       {(isSearching || manifest[provider.value].genres.length === 0) && (
         // search history
-        <View className="w-full mt-4">
-          {searchHistory?.map((search, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => {
-                navigation.navigate('SearchResults', {
-                  filter: search,
-                });
-              }}
-              className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-between">
-              <Text className="text-white font-semibold ">{search}</Text>
-              <Ionicons
-                name="close"
-                size={20}
-                color="white"
+        <View className="w-full h-[80%] mt-4">
+          <ScrollView className="w-full ">
+            {searchHistory?.map((search, index) => (
+              <TouchableOpacity
+                key={index}
                 onPress={() => {
-                  const newSearches = MMKV.getArray<string>(
-                    'searchHistory',
-                  ).filter(item => item !== search);
-                  MMKV.setArray('searchHistory', newSearches);
-                  setSearchHistory(newSearches);
+                  navigation.navigate('SearchResults', {
+                    filter: search,
+                  });
                 }}
-              />
-            </TouchableOpacity>
-          ))}
+                className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-between">
+                <Text className="text-white font-semibold ">{search}</Text>
+                <Ionicons
+                  name="close"
+                  size={20}
+                  color="white"
+                  onPress={() => {
+                    const newSearches = MMKV.getArray<string>(
+                      'searchHistory',
+                    ).filter(item => item !== search);
+                    MMKV.setArray('searchHistory', newSearches);
+                    setSearchHistory(newSearches);
+                  }}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           {searchHistory.length > 0 && (
             <TouchableOpacity
               onPress={() => {

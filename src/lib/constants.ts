@@ -75,6 +75,12 @@ export const providersList: ProvidersList[] = [
     flag: FLAGS.GLOBAL,
   },
   {
+    name: 'Ringz',
+    value: 'ringz',
+    type: 'global',
+    flag: FLAGS.GLOBAL,
+  },
+  {
     name: 'NetflixMirror',
     value: 'netflixMirror',
     type: 'global',
@@ -185,6 +191,12 @@ export const providersList: ProvidersList[] = [
   {
     name: 'RogMovies',
     value: 'lux',
+    type: 'india',
+    flag: FLAGS.INDIA,
+  },
+  {
+    name: 'TopMovies',
+    value: 'topMovies',
     type: 'india',
     flag: FLAGS.INDIA,
   },

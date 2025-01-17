@@ -5,7 +5,7 @@ import {Content} from './zustand/contentStore';
 import {dooflixProvider} from './providers/dooflix';
 import {autoEmbedDrama} from './providers/autoEmbedDrama';
 import {AEAnime} from './providers/autoEmbedAnime';
-import {dramacool} from './providers/dramacool';
+import {dramacoolConsumet} from './providers/dramacoolConsumet';
 import {vegaMovies} from './providers/vega';
 import {luxMovies} from './providers/luxMovies';
 import {modMovies} from './providers/mod';
@@ -32,6 +32,9 @@ import {guardahd} from './providers/guardahd';
 import {toonstream} from './providers/toonstream';
 import {ridoMovies} from './providers/ridoMovies';
 import {protonMovies} from './providers/protonMovies';
+import {dramacool} from './providers/dramacool';
+import {ringz} from './providers/ringz';
+import {topMovies} from './providers/topmovies';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -96,4 +99,6 @@ export const manifest: Manifest = {
   toonstream: toonstream,
   ridoMovies: ridoMovies,
   protonMovies: protonMovies,
+  ringz: ringz,
+  topMovies: topMovies,
 };
