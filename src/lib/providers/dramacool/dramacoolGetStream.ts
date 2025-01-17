@@ -2,7 +2,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {Stream} from '../types';
 import {headers} from '../headers';
-import {stableExtractor} from '../autoEmbed/stableExtractor';
 import {getQualityLinks} from '../../m3u8Parcer';
 import {superVideoExtractor} from '../superVideoExtractor';
 
@@ -14,14 +13,18 @@ export const dramacoolGetStream = async (
   try {
     console.log('dramacool', url);
     // const baseUrl = url.split('/').slice(0, 3).join('/');
-    const res = await axios.get(url, {headers, signal});
-    const html = res.data;
+    const res = await fetch(url, {signal});
+    const html = await res.text();
     const $ = cheerio.load(html);
     const stream: Stream[] = [];
     const iframeUrl1 = $('iframe').attr('src') || '';
-    console.log('iframeUrl1', 'http:' + iframeUrl1);
-    const iframe1Res = await axios.get('http:' + iframeUrl1, {headers, signal});
-    const iframe1Html = iframe1Res.data;
+    console.log('iframeUrl1', 'https:' + iframeUrl1);
+    const iframeUr2 = !iframeUrl1?.startsWith('https')
+      ? `https:${iframeUrl1}`
+      : iframeUrl1;
+
+    const iframe1Res = await fetch(iframeUr2, {signal});
+    const iframe1Html = await iframe1Res.text();
     const $1 = cheerio.load(iframe1Html);
 
     try {
@@ -72,7 +75,7 @@ export const dramacoolGetStream = async (
     }
     console.log('stream', stream);
     return stream;
-  } catch (err) {
+  } catch (err: any) {
     console.error('AED get stream error', err);
     return [];
   }
