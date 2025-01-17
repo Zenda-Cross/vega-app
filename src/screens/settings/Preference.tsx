@@ -62,11 +62,13 @@ const Preferences = () => {
   );
 
   return (
-    <View className="w-full h-full bg-black">
+    <View className="w-full h-full bg-black p-3">
       <Text className="text-white mt-10 ml-3 font-bold text-2xl">
         Preference
       </Text>
-      <ScrollView className="w-full h-full bg-black p-4">
+      <ScrollView
+        showsHorizontalScrollIndicator={false}
+        className="w-full h-full bg-black">
         {/* General */}
         <View className="p-2 space-y-2">
           <Text className="text-white ml-2 font-bold text-xl">General</Text>
@@ -260,7 +262,7 @@ const Preferences = () => {
           {/* show media controls */}
           <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
             <Text className="text-white font-semibold">
-              Show Video Controls in Notification
+              Media Session Controls
             </Text>
             <View className="w-20" />
             <Switch
