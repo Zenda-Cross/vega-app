@@ -195,6 +195,12 @@ export const providersList: ProvidersList[] = [
     flag: FLAGS.INDIA,
   },
   {
+    name: 'TopMovies',
+    value: 'topMovies',
+    type: 'india',
+    flag: FLAGS.INDIA,
+  },
+  {
     name: 'GuardaHD',
     value: 'guardahd',
     type: 'italy',
