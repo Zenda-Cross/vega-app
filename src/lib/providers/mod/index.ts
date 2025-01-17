@@ -12,6 +12,6 @@ export const modMovies: ProviderType = {
   GetHomePosts: modGetPosts,
   GetStream: modGetStream,
   GetEpisodeLinks: modGetEpisodeLinks,
-  nonStreamableServer: ['Gdrive-Instant'],
+  // nonStreamableServer: ['Gdrive-Instant'],
   GetSearchPosts: modGetPostsSearch,
 };
