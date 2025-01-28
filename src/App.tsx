@@ -142,6 +142,7 @@ const App = () => {
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
         <SearchStack.Screen name="SearchResults" component={SearchResults} />
+        <HomeStack.Screen name="Webview" component={WebView} />
       </SearchStack.Navigator>
     );
   }
