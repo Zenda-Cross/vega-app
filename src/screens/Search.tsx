@@ -46,6 +46,7 @@ const Search = () => {
           onChangeText={setSearchText}
           value={searchText}
           keyboardType="web-search"
+          keyboardAppearance="dark"
           returnKeyType="search"
           onSubmitEditing={handleSearch}
           placeholderTextColor={'white'}
@@ -61,7 +62,7 @@ const Search = () => {
       {(isSearching || manifest[provider.value].genres.length === 0) && (
         // search history
         <View className="w-full h-[80%] mt-4">
-          <ScrollView className="w-full ">
+          <ScrollView keyboardShouldPersistTaps="handled" className="w-full ">
             {searchHistory?.map((search, index) => (
               <TouchableOpacity
                 key={index}
@@ -103,6 +104,7 @@ const Search = () => {
         </View>
       )}
       <ScrollView
+        keyboardShouldPersistTaps={'handled'}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           flexDirection: 'row',
