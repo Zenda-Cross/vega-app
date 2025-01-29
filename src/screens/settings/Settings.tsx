@@ -219,11 +219,11 @@ const Settings = ({navigation}: Props) => {
           onPress={() => Linking.openURL(socialLinks.github)}>
           <AntDesign name="github" size={22} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           className="flex-row items-center justify-center "
           onPress={() => Linking.openURL(socialLinks.discord)}>
           <MaterialIcons name="discord" size={27} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <View className="h-16" />
     </ScrollView>
