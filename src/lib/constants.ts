@@ -44,12 +44,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  // {
-  //   name: 'KatMoviesHd',
-  //   value: 'katmovies',
-  //   type: 'global',
-  //   flag: FLAGS.GLOBAL,
-  // },
+  {
+    name: 'KatMoviesHd',
+    value: 'katmovies',
+    type: 'global',
+    flag: FLAGS.GLOBAL,
+  },
   {
     name: 'MoviesMod',
     value: 'mod',
