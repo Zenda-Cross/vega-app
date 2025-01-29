@@ -2,6 +2,7 @@ import axios from 'axios';
 import {Stream} from '../types';
 import {hubcloudExtracter} from '../hubcloudExtractor';
 import {gdFlixExtracter} from '../gdflixExtractor';
+import * as cheerio from 'cheerio';
 
 export const clGetStream = async (
   link: string,
@@ -10,13 +11,28 @@ export const clGetStream = async (
 ): Promise<Stream[]> => {
   try {
     let newLink = link;
-    if (!link.includes('hubcloud') && !link.includes('gdflix')) {
-      console.log('link', link);
+    console.log('link', link);
+    if (link.includes('luxedrive')) {
       const res = await axios.get(link);
-      const data = res.data;
-      const encodedLink = data.match(/"link":"([^"]+)"/)[1];
-      newLink = encodedLink ? atob(encodedLink) : link;
+      const $ = cheerio.load(res.data);
+      const hubcloudLink = $('a.btn.hubcloud').attr('href');
+      console.log('hubcloudLink', hubcloudLink);
+      if (hubcloudLink) {
+        newLink = hubcloudLink;
+      } else {
+        const gdFlixLink = $('a.btn.gdflix').attr('href');
+        if (gdFlixLink) {
+          newLink = gdFlixLink;
+        }
+      }
     }
+    // if (!link.includes('hubcloud') && !link.includes('gdflix')) {
+    //   console.log('link', link);
+    //   const res = await axios.get(link);
+    //   const data = res.data;
+    //   const encodedLink = data.match(/"link":"([^"]+)"/)[1];
+    //   newLink = encodedLink ? atob(encodedLink) : link;
+    // }
     console.log('newLink', newLink);
     if (newLink.includes('gdflix')) {
       const sreams = await gdFlixExtracter(newLink, signal);
