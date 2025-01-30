@@ -325,7 +325,7 @@ const App = () => {
         edges={{left: 'off', right: 'off', top: 'off', bottom: 'additive'}}
         style={{flex: 1}}>
         <NavigationContainer
-          onReady={() => BootSplash.hide({fade: true})}
+          onReady={async () => await BootSplash.hide({fade: true})}
           theme={{
             fonts: {
               regular: {
