@@ -1,18 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
-       <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item> 
-        <item name="android:forceDarkAllowed">true</item>   
-    </style>
-     <style name="BootTheme" parent="Theme.BootSplash.EdgeToEdge">
+  <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+    <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item>
+    <item name="android:forceDarkAllowed">true</item>
+  </style>
+  <style name="BootTheme" parent="Theme.BootSplash.EdgeToEdge">
+    <item name="postBootSplashTheme">@style/AppTheme</item>
     <item name="bootSplashBackground">@color/bootsplash_background</item>
     <item name="bootSplashLogo">@drawable/bootsplash_logo</item>
-    <item name="postBootSplashTheme">@style/AppTheme</item>
   </style>
-
 </resources>

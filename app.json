@@ -8,6 +8,7 @@
       "exclude": ["expo-splash-screen"]
     },
     "plugins": [
+      ["react-native-bootsplash", {"assetsDir": "assets/bootsplash"}],
       [
         "expo-build-properties",
         {
