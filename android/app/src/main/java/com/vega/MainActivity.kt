@@ -26,7 +26,10 @@ class MainActivity : ReactActivity() {
   
    override fun onCreate(savedInstanceState: Bundle?) {
     RNBootSplash.init(this, R.style.BootTheme) // ⬅️ initialize the splash screen
-    super.onCreate(savedInstanceState)
+    // @generated begin bootsplash-init - expo prebuild (DO NOT MODIFY) sync-f0f7dbc46f1d82498f47676b4197e1949dc7790f
+    RNBootSplash.init(this, R.style.BootTheme)
+    // @generated end bootsplash-init
+    super.onCreate(null)
     WindowCompat.setDecorFitsSystemWindows(window, false)
   }
 }
