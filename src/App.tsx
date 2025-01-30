@@ -188,7 +188,7 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           animation: 'shift',
-          popToTopOnBlur: true,
+          popToTopOnBlur: false,
           tabBarPosition: 'bottom',
           headerShown: false,
           freezeOnBlur: true,
