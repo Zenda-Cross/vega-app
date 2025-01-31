@@ -215,9 +215,10 @@ const Settings = ({navigation}: Props) => {
       </TouchableNativeFeedback>
       <View className="flex-row items-center justify-center gap-4 mt-12">
         <TouchableOpacity
-          className="flex-row items-center justify-center "
+          className="flex-col items-center justify-center "
           onPress={() => Linking.openURL(socialLinks.github)}>
           <AntDesign name="github" size={22} color="white" />
+          <Text className="text-[11px] ml-2">Give a Star ⭐</Text>
         </TouchableOpacity>
         {/* <TouchableOpacity
           className="flex-row items-center justify-center "
