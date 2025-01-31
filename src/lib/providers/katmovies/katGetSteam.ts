@@ -4,6 +4,7 @@ import {headers} from '../headers';
 import {Stream} from '../types';
 import {hubcloudExtracter} from '../hubcloudExtractor';
 import {extractKmhdLink} from './katGetEpsodes';
+import {gdFlixExtracter} from '../gdflixExtractor';
 
 export async function katGetStream(
   link: string,
@@ -13,6 +14,10 @@ export async function katGetStream(
   const streamLinks: Stream[] = [];
   console.log('katGetStream', link);
   try {
+    if (link.includes('gdflix')) {
+      const gdflixRes = await gdFlixExtracter(link, signal);
+      return gdflixRes;
+    }
     if (link.includes('kmhd')) {
       const hubcloudLink = await extractKmhdLink(link);
       const stereams = await hubcloudExtracter(hubcloudLink, signal);

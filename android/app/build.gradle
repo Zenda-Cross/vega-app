@@ -81,13 +81,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.vega"
+    namespace 'com.vega'
     defaultConfig {
-        applicationId "com.vega"
+        applicationId 'com.vega'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 100
-        versionName "2.5.14"
+        versionCode 104
+        versionName "2.6.0"
     }
     signingConfigs {
         release {

@@ -46,7 +46,7 @@ export const katGetInfo = async function (link: string): Promise<Info> {
             .attr('href') || '';
         const dlTitle = $(element).find('span').text();
 
-        if (link.trim().length > 0 && dlTitle) {
+        if (link.trim().length > 0 && dlTitle.includes('Episode ')) {
           directLink.push({
             title: dlTitle,
             link: dlLink,
