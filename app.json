@@ -8,6 +8,7 @@
       "exclude": ["expo-splash-screen"]
     },
     "plugins": [
+      ["react-native-bootsplash", {"assetsDir": "assets/bootsplash"}],
       [
         "expo-build-properties",
         {
@@ -21,12 +22,12 @@
       ]
     ],
     "slug": "vega",
-    "version": "2.5.14",
+    "version": "2.6.0",
     "sdkVersion": "51.0.0",
     "android": {
       "minSdkVersion": 24,
       "package": "com.vega",
-      "versionCode": 100
+      "versionCode": 104
     },
     "platforms": ["ios", "android"]
   }

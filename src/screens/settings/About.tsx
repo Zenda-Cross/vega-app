@@ -109,7 +109,7 @@ export const checkForUpdate = async (
     const remoteVersion = Number(
       data.tag_name.replace('v', '')?.split('.').join(''),
     );
-    if (remoteVersion > localVersion) {
+    if (compareVersions(pkg.version, data.tag_name.replace('v', ''))) {
       ToastAndroid.show('New update available', ToastAndroid.SHORT);
       Alert.alert(`Update v${pkg.version} -> ${data.tag_name}`, data.body, [
         {text: 'Cancel'},
@@ -251,3 +251,37 @@ const About = () => {
 };
 
 export default About;
+
+function compareVersions(localVersion: string, remoteVersion: string): boolean {
+  try {
+    // Split versions into arrays and convert to numbers
+    const local = localVersion.split('.').map(Number);
+    const remote = remoteVersion.split('.').map(Number);
+
+    // Compare major version
+    if (remote[0] > local[0]) {
+      return true;
+    }
+    if (remote[0] < local[0]) {
+      return false;
+    }
+
+    // Compare minor version
+    if (remote[1] > local[1]) {
+      return true;
+    }
+    if (remote[1] < local[1]) {
+      return false;
+    }
+
+    // Compare patch version
+    if (remote[2] > local[2]) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Invalid version format');
+    return false;
+  }
+}

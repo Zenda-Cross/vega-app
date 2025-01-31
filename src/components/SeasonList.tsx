@@ -146,7 +146,6 @@ const SeasonList = ({
       linkIndex,
       episodeList,
       type: type,
-      directUrl: dwFile || '',
       primaryTitle: primaryTitle,
       secondaryTitle: seasonTitle,
       poster: poster,

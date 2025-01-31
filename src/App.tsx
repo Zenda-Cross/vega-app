@@ -142,6 +142,7 @@ const App = () => {
         <SearchStack.Screen name="ScrollList" component={ScrollList} />
         <SearchStack.Screen name="Info" component={Info} />
         <SearchStack.Screen name="SearchResults" component={SearchResults} />
+        <HomeStack.Screen name="Webview" component={WebView} />
       </SearchStack.Navigator>
     );
   }
@@ -187,7 +188,7 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           animation: 'shift',
-          popToTopOnBlur: true,
+          popToTopOnBlur: false,
           tabBarPosition: 'bottom',
           headerShown: false,
           freezeOnBlur: true,
@@ -324,7 +325,7 @@ const App = () => {
         edges={{left: 'off', right: 'off', top: 'off', bottom: 'additive'}}
         style={{flex: 1}}>
         <NavigationContainer
-          onReady={() => BootSplash.hide({fade: true})}
+          onReady={async () => await BootSplash.hide({fade: true})}
           theme={{
             fonts: {
               regular: {
