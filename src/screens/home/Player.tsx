@@ -41,6 +41,7 @@ import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
+import {ifExists} from '../../lib/file/ifExists';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -145,8 +146,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   useEffect(() => {
     setSelectedStream({server: '', link: '', type: ''});
     const controller = new AbortController();
-    console.log('activeEpisode', activeEpisode);
     const fetchStream = async () => {
+      console.log('activeEpisode', activeEpisode);
       setLoading(true);
       if (route.params?.directUrl) {
         setStream([
@@ -160,7 +161,20 @@ const Player = ({route}: Props): React.JSX.Element => {
         setLoading(false);
         return;
       }
-
+      if (route.params?.primaryTitle && route.params?.secondaryTitle) {
+        const file = (
+          route.params?.primaryTitle +
+          route.params?.secondaryTitle +
+          activeEpisode?.title
+        ).replaceAll(/[^a-zA-Z0-9]/g, '_');
+        const exists = await ifExists(file);
+        if (exists) {
+          setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
+          setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
+          setLoading(false);
+          return;
+        }
+      }
       const data = await manifest[
         route.params?.providerValue || provider?.value
       ].GetStream(activeEpisode.link, route.params?.type, controller.signal);
@@ -376,16 +390,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         selectedTextTrack={selectedTextTrack}
         onTextTracks={e => {
           console.log('textTracks', e.textTracks);
-          const uniqueMap = new Map();
-          const uniqueTextTracks = e.textTracks.filter(track => {
-            const key = `${track.type}-${track.title}-${track.language}`;
-            if (!uniqueMap.has(key)) {
-              uniqueMap.set(key, true);
-              return true;
-            }
-            return false;
-          });
-          setTextTracks(uniqueTextTracks);
+          setTextTracks(e.textTracks);
         }}
         onVideoTracks={e => {
           console.log('videoTracks', e.videoTracks);
