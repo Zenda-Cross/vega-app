@@ -215,7 +215,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     return () => {
       controller.abort();
     };
-  }, [activeEpisode]);
+  }, [activeEpisode, route.params?.directUrl, route.params?.episodeList]);
 
   // exit fullscreen on back
   useEffect(() => {
