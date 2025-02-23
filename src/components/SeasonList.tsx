@@ -166,10 +166,12 @@ const SeasonList = ({
 
   // onLongPress
   const onLongPressHandler = (active: boolean, link: string, type?: string) => {
-    RNReactNativeHapticFeedback.trigger('effectTick', {
-      enableVibrateFallback: true,
-      ignoreAndroidSystemSettings: false,
-    });
+    if (MMKV.getBool('hapticFeedback') !== false) {
+      RNReactNativeHapticFeedback.trigger('effectTick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
     setStickyMenu({active: active, link: link, type: type});
   };
 

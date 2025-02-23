@@ -11,6 +11,7 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
+import {MMKV} from '../lib/Mmkv';
 
 export default function Slider({
   isLoading,
@@ -80,10 +81,12 @@ export default function Slider({
                   e.stopPropagation();
                   if (filter === 'recent') {
                     console.log('long press', filter);
-                    ReactNativeHapticFeedback.trigger('effectClick', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
+                    if (MMKV.getBool('hapticFeedback') !== false) {
+                      ReactNativeHapticFeedback.trigger('effectClick', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
                     setSelected(item.link);
                   }
                 }}

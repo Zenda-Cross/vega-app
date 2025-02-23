@@ -16,6 +16,7 @@ import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Clipboard} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import {TextTrackType} from 'react-native-video';
+import {MMKV} from '../lib/Mmkv';
 
 type Props = {
   data: Stream[];
@@ -120,10 +121,12 @@ const DownloadBottomSheet = ({
                         className="p-2 bg-white/30 rounded-md my-1"
                         key={item.link}
                         onLongPress={() => {
-                          RNReactNativeHapticFeedback.trigger('effectTick', {
-                            enableVibrateFallback: true,
-                            ignoreAndroidSystemSettings: false,
-                          });
+                          if (MMKV.getBool('hapticFeedback') !== false) {
+                            RNReactNativeHapticFeedback.trigger('effectTick', {
+                              enableVibrateFallback: true,
+                              ignoreAndroidSystemSettings: false,
+                            });
+                          }
                           Clipboard.setString(item.link);
                           ToastAndroid.show('Link copied', ToastAndroid.SHORT);
                         }}
@@ -141,10 +144,15 @@ const DownloadBottomSheet = ({
                           className="p-2 bg-white/30 rounded-md my-1"
                           key={item.uri}
                           onLongPress={() => {
-                            RNReactNativeHapticFeedback.trigger('effectTick', {
-                              enableVibrateFallback: true,
-                              ignoreAndroidSystemSettings: false,
-                            });
+                            if (MMKV.getBool('hapticFeedback') !== false) {
+                              RNReactNativeHapticFeedback.trigger(
+                                'effectTick',
+                                {
+                                  enableVibrateFallback: true,
+                                  ignoreAndroidSystemSettings: false,
+                                },
+                              );
+                            }
                             Clipboard.setString(item.uri);
                             ToastAndroid.show(
                               'Link copied',

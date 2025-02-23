@@ -5,6 +5,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Skeleton} from 'moti/skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
+import {MMKV} from '../lib/Mmkv';
 
 const StreamModal = ({
   downloadModal,
@@ -37,10 +38,12 @@ const StreamModal = ({
                       downloadFile(server.link);
                     }}
                     onLongPress={() => {
-                      ReactNativeHapticFeedback.trigger('effectHeavyClick', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
+                      if (MMKV.getBool('hapticFeedback') !== false) {
+                        ReactNativeHapticFeedback.trigger('effectHeavyClick', {
+                          enableVibrateFallback: true,
+                          ignoreAndroidSystemSettings: false,
+                        });
+                      }
                       Clipboard.setString(server.link);
                       ToastAndroid.show(
                         'Link copied to clipboard',

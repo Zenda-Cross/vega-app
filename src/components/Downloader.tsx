@@ -16,6 +16,7 @@ import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
+import {MMKV} from '../lib/Mmkv';
 
 const DownloadComponent = ({
   link,
@@ -152,10 +153,12 @@ const DownloadComponent = ({
               setDownloadModal(true);
             }}
             onLongPress={() => {
-              ReactNativeHapticFeedback.trigger('effectHeavyClick', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
+              if (MMKV.getBool('hapticFeedback') !== false) {
+                ReactNativeHapticFeedback.trigger('effectHeavyClick', {
+                  enableVibrateFallback: true,
+                  ignoreAndroidSystemSettings: false,
+                });
+              }
               setLongPressModal(true);
             }}
             className="mx-2">
