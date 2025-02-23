@@ -12,7 +12,7 @@ import {downloadFolder} from '../../lib/constants';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import React, {useState, useEffect} from 'react';
 import Entypo from '@expo/vector-icons/Entypo';
-import {MmmkvCache} from '../../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import useThemeStore from '../../lib/zustand/themeStore';
 import RNFS from 'react-native-fs';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -228,15 +228,17 @@ const Downloads = () => {
                 }`}
                 key={file.uri}
                 onLongPress={() => {
-                  RNReactNativeHapticFeedback.trigger('effectTick', {
-                    enableVibrateFallback: true,
-                    ignoreAndroidSystemSettings: false,
-                  });
+                  if (MMKV.getBool('hapticFeedback') !== false) {
+                    RNReactNativeHapticFeedback.trigger('effectTick', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                  }
                   setGroupSelected([...groupSelected, file.uri]);
                   setIsSelecting(true);
                 }}
                 onPress={() => {
-                  if (isSelecting) {
+                  if (isSelecting && MMKV.getBool('hapticFeedback') !== false) {
                     RNReactNativeHapticFeedback.trigger('effectTick', {
                       enableVibrateFallback: true,
                       ignoreAndroidSystemSettings: false,

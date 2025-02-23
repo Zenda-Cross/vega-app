@@ -152,10 +152,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
 
   // remove from library
   const removeLibrary = () => {
-    ReactNativeHapticFeedback.trigger('effectClick', {
-      enableVibrateFallback: true,
-      ignoreAndroidSystemSettings: false,
-    });
+    if (MMKV.getBool('hapticFeedback') !== false) {
+      if (MMKV.getBool('hapticFeedback') !== false) {
+        ReactNativeHapticFeedback.trigger('effectClick', {
+          enableVibrateFallback: true,
+          ignoreAndroidSystemSettings: false,
+        });
+      }
+    }
     removeItem(route.params.link);
     setInLibrary(false);
   };
