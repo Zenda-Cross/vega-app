@@ -8,12 +8,14 @@ export const clsEpisodeLinks = async function (
 ): Promise<EpisodeLink[]> {
   try {
     console.log('clsEpisodeLinks', url);
-    // if (!url.includes('luxelinks')) {
-    //   const res = await axios.get(url, {headers});
-    //   const data = res.data;
-    //   const encodedLink = data.match(/"link":"([^"]+)"/)[1];
-    //   url = encodedLink ? atob(encodedLink) : url;
-    // }
+    if (!url.includes('luxelinks') || url.includes('luxecinema')) {
+      const res = await axios.get(url, {headers});
+      const data = res.data;
+      // console.log('data', data);
+      const encodedLink = data.match(/"link":"([^"]+)"/)[1];
+      console.log('encodedLink', atob(encodedLink));
+      url = encodedLink ? atob(encodedLink) : url;
+    }
     const res = await axios.get(url, {headers});
     const html = res.data;
     let $ = cheerio.load(html);
@@ -26,7 +28,7 @@ export const clsEpisodeLinks = async function (
       return episodeLinks;
     }
 
-    $('a.maxbutton-4,.maxbutton-hubcloud').map((i, element) => {
+    $('a.maxbutton-4,a.maxbutton,.maxbutton-hubcloud').map((i, element) => {
       console.log('element', $(element).text());
       const title = $(element).text();
       const link = $(element).attr('href');

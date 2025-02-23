@@ -35,6 +35,7 @@ import {protonMovies} from './providers/protonMovies';
 import {dramacool} from './providers/dramacool';
 import {ringz} from './providers/ringz';
 import {topMovies} from './providers/topmovies';
+import {primeMirror} from './providers/primeMirror';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -101,4 +102,5 @@ export const manifest: Manifest = {
   protonMovies: protonMovies,
   ringz: ringz,
   topMovies: topMovies,
+  primeMirror: primeMirror,
 };

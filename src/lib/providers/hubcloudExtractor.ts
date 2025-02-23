@@ -44,7 +44,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
       if (link?.includes('.dev') && !link?.includes('/?id=')) {
         streamLinks.push({server: 'Cf Worker', link: link, type: 'mkv'});
       }
-      if (link?.includes('pixel')) {
+      if (link?.includes('pixeld')) {
         if (!link?.includes('api')) {
           const token = link.split('/').pop();
           const baseUrl = link.split('/').slice(0, -2).join('/');

@@ -61,6 +61,10 @@ const Preferences = () => {
     MMKV.getBool('useExternalPlayer', () => false),
   );
 
+  const [hapticFeedback, setHapticFeedback] = useState(
+    MMKV.getBool('hapticFeedback') === false ? false : true,
+  );
+
   return (
     <View className="w-full h-full bg-black p-3">
       <Text className="text-white mt-10 ml-3 font-bold text-2xl">
@@ -159,6 +163,20 @@ const Preferences = () => {
                 />
               </View>
             )}
+          </View>
+
+          {/* haptic feedback */}
+          <View className="flex-row items-center px-4 justify-between bg-tertiary p-3 rounded-md">
+            <Text className="text-white font-semibold">Haptic Feedback</Text>
+            <View className="w-20" />
+            <Switch
+              thumbColor={hapticFeedback ? primary : 'gray'}
+              value={hapticFeedback}
+              onValueChange={() => {
+                MMKV.setBool('hapticFeedback', !hapticFeedback);
+                setHapticFeedback(!hapticFeedback);
+              }}
+            />
           </View>
 
           {/* disable drawer */}
@@ -335,10 +353,12 @@ const Preferences = () => {
                       : '#343434',
                   }}
                   onPress={() => {
-                    RNReactNativeHapticFeedback.trigger('effectTick', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
+                    if (MMKV.getBool('hapticFeedback') !== false) {
+                      RNReactNativeHapticFeedback.trigger('effectTick', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
                     if (ExcludedQualities.includes(quality)) {
                       setExcludedQualities(prev =>
                         prev.filter(q => q !== quality),

@@ -4,12 +4,17 @@ import {getNfHeaders} from './nfHeaders';
 import {getBaseUrl} from '../getBaseUrl';
 
 export const nfGetEpisodes = async function (
+  providerValue: string,
   link: string,
 ): Promise<EpisodeLink[]> {
   try {
     const baseUrl = await getBaseUrl('nfMirror');
     const url =
-      `${baseUrl}/episodes.php?s=` +
+      `${baseUrl}${
+        providerValue === 'netflixMirror'
+          ? '/episodes.php?s='
+          : '/pv/episodes.php?s='
+      }` +
       link +
       '&t=' +
       Math.round(new Date().getTime() / 1000);

@@ -21,7 +21,9 @@ export const nfGetPost = async function (
 
     const url = `${baseUrl + filter}`;
     // console.log(url);
-    const cookie = (await nfGetCookie()) + ' hd=on; ott=nf;';
+    const cookie =
+      (await nfGetCookie()) +
+      `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
     console.log('nfCookie', cookie);
     const res = await fetch(url, {
       headers: {
@@ -56,14 +58,18 @@ export const nfGetPost = async function (
     $('a.post-data').map((i, element) => {
       const title = '';
       const id = $(element).attr('data-post');
-      console.log('id', id);
+      // console.log('id', id);
       const image = $(element).find('img').attr('data-src') || '';
       if (id) {
         catalog.push({
           title: title,
           link:
             baseUrl +
-            '/post.php?id=' +
+            `${
+              providerValue === 'netflixMirror'
+                ? '/post.php?id='
+                : '/pv/post.php?id='
+            }` +
             id +
             '&t=' +
             Math.round(new Date().getTime() / 1000),
@@ -71,7 +77,7 @@ export const nfGetPost = async function (
         });
       }
     });
-    console.log(catalog);
+    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('nf error ', err);
@@ -99,13 +105,20 @@ export const nfGetPostsSearch = async function (
     data?.searchResult.map((result: any) => {
       const title = result?.t;
       const id = result?.id;
-      const image = `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`;
+      const image =
+        providerValue === 'netflixMirror'
+          ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
+          : '';
       if (id) {
         catalog.push({
           title: title,
           link:
             baseUrl +
-            '/post.php?id=' +
+            `${
+              providerValue === 'netflixMirror'
+                ? '/post.php?id='
+                : '/pv/post.php?id='
+            }` +
             id +
             '&t=' +
             Math.round(new Date().getTime() / 1000),
