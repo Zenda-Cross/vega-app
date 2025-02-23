@@ -190,6 +190,10 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     'https://placehold.jp/24/363636/ffffff/500x500.png?text=Vega',
                 }}
                 className=" h-[256] w-full"
+                onError={e => {
+                  console.log('error', e);
+                  setMeta({...meta, background: route.params.poster});
+                }}
               />
             }
           </Skeleton>
