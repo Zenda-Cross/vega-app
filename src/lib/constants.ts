@@ -87,6 +87,12 @@ export const providersList: ProvidersList[] = [
     flag: FLAGS.GLOBAL,
   },
   {
+    name: 'PrimeMirror',
+    value: 'primeMirror',
+    type: 'global',
+    flag: FLAGS.GLOBAL,
+  },
+  {
     name: 'HdHub4u',
     value: 'hdhub4u',
     type: 'global',
