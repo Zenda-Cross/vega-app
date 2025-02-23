@@ -2,17 +2,24 @@ import {Stream} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 import {nfGetCookie} from './nfGetCookie';
 
-export const nfGetStream = async (id: string): Promise<Stream[]> => {
+export const nfGetStream = async (
+  providerValue: string,
+  id: string,
+): Promise<Stream[]> => {
   try {
     const baseUrl = await getBaseUrl('nfMirror');
-    const url = `${baseUrl}/playlist.php?id=${id}&t=${Math.round(
-      new Date().getTime() / 1000,
-    )}`;
-    const cookies = (await nfGetCookie()) + ' hd=on;';
+    const url = `${baseUrl}${
+      providerValue === 'netflixMirror'
+        ? '/playlist.php?id='
+        : '/pv/playlist.php?id='
+    }${id}&t=${Math.round(new Date().getTime() / 1000)}`;
+    const cookies = await nfGetCookie();
     console.log('nfGetStream', cookies);
     const res = await fetch(url, {
       headers: {
-        cookie: cookies,
+        cookie:
+          cookies +
+          `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`,
       },
       credentials: 'omit',
     });

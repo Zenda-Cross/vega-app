@@ -8,9 +8,9 @@ import {ProviderType} from '../../Manifest';
 export const netflixMirror: ProviderType = {
   catalog: nfCatalog,
   genres: nfGenresList,
-  GetMetaData: nfGetInfo,
+  GetMetaData: (link: string) => nfGetInfo('netflixMirror', link),
   GetHomePosts: nfGetPost,
-  GetStream: nfGetStream,
-  GetEpisodeLinks: nfGetEpisodes,
+  GetStream: (id: string) => nfGetStream('netflixMirror', id),
+  GetEpisodeLinks: (link: string) => nfGetEpisodes('netflixMirror', link),
   GetSearchPosts: nfGetPostsSearch,
 };

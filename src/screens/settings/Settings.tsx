@@ -6,7 +6,7 @@ import {
   TouchableNativeFeedback,
 } from 'react-native';
 import React from 'react';
-import {MmmkvCache} from '../../lib/Mmkv';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -114,10 +114,12 @@ const Settings = ({navigation}: Props) => {
       {/* Subtitle Style  */}
       <TouchableNativeFeedback
         onPress={async () => {
-          ReactNativeHapticFeedback.trigger('virtualKey', {
-            enableVibrateFallback: true,
-            ignoreAndroidSystemSettings: false,
-          });
+          if (MMKV.getBool('hapticFeedback') !== false) {
+            ReactNativeHapticFeedback.trigger('virtualKey', {
+              enableVibrateFallback: true,
+              ignoreAndroidSystemSettings: false,
+            });
+          }
           await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
         }}
         background={TouchableNativeFeedback.Ripple('gray', false)}>
@@ -165,10 +167,12 @@ const Settings = ({navigation}: Props) => {
         <TouchableOpacity
           className="bg-[#343434] w-12 items-center p-2 rounded-md"
           onPress={() => {
-            ReactNativeHapticFeedback.trigger('virtualKey', {
-              enableVibrateFallback: true,
-              ignoreAndroidSystemSettings: false,
-            });
+            if (MMKV.getBool('hapticFeedback') !== false) {
+              ReactNativeHapticFeedback.trigger('virtualKey', {
+                enableVibrateFallback: true,
+                ignoreAndroidSystemSettings: false,
+              });
+            }
             MmmkvCache.clearStore();
           }}>
           <MaterialCommunityIcons
@@ -185,10 +189,12 @@ const Settings = ({navigation}: Props) => {
         <TouchableOpacity
           className="bg-[#343434] w-12 items-center p-2 rounded-md"
           onPress={() => {
-            ReactNativeHapticFeedback.trigger('virtualKey', {
-              enableVibrateFallback: true,
-              ignoreAndroidSystemSettings: false,
-            });
+            if (MMKV.getBool('hapticFeedback') !== false) {
+              ReactNativeHapticFeedback.trigger('virtualKey', {
+                enableVibrateFallback: true,
+                ignoreAndroidSystemSettings: false,
+              });
+            }
             clearHistory();
           }}>
           <MaterialCommunityIcons

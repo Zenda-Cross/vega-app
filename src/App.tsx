@@ -217,7 +217,10 @@ const App = () => {
                 style={props.style as StyleProp<ViewStyle>}
                 onPress={e => {
                   props.onPress && props.onPress(e);
-                  if (!props?.accessibilityState?.selected) {
+                  if (
+                    !props?.accessibilityState?.selected &&
+                    MMKV.getBool('hapticFeedback') !== false
+                  ) {
                     RNReactNativeHapticFeedback.trigger('effectTick', {
                       enableVibrateFallback: true,
                       ignoreAndroidSystemSettings: false,

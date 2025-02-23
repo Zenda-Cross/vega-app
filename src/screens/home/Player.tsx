@@ -215,7 +215,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     return () => {
       controller.abort();
     };
-  }, [activeEpisode]);
+  }, [activeEpisode, route.params?.directUrl, route.params?.episodeList]);
 
   // exit fullscreen on back
   useEffect(() => {
@@ -495,15 +495,13 @@ const Player = ({route}: Props): React.JSX.Element => {
             className="flex flex-row gap-x-1 items-center">
             <MaterialIcons
               style={{opacity: 0.6}}
-              name={
-                selectedTextTrackIndex === 1000 ? 'subtitles-off' : 'subtitles'
-              }
+              name={'subtitles'}
               size={24}
               color="white"
             />
             <Text className="text-xs opacity-100 capitalize">
               {selectedTextTrackIndex === 1000
-                ? 'off'
+                ? 'none'
                 : textTracks[selectedTextTrackIndex]?.language}
             </Text>
           </TouchableOpacity>
