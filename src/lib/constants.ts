@@ -80,12 +80,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  // {
-  //   name: 'NetflixMirror',
-  //   value: 'netflixMirror',
-  //   type: 'global',
-  //   flag: FLAGS.GLOBAL,
-  // },
+  {
+    name: 'NetflixMirror',
+    value: 'netflixMirror',
+    type: 'global',
+    flag: FLAGS.GLOBAL,
+  },
   {
     name: 'HdHub4u',
     value: 'hdhub4u',
