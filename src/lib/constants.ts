@@ -98,12 +98,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  {
-    name: 'VadaPav',
-    value: 'vadapav',
-    type: 'global',
-    flag: FLAGS.GLOBAL,
-  },
+  // {
+  //   name: 'VadaPav',
+  //   value: 'vadapav',
+  //   type: 'global',
+  //   flag: FLAGS.GLOBAL,
+  // },
   // {
   //   name: 'AnimeRulz',
   //   value: 'animeRulz',
