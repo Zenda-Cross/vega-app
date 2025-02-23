@@ -1,14 +1,19 @@
 import {Info, Link} from '../types';
 import {nfGetCookie} from './nfGetCookie';
 
-export const nfGetInfo = async function (link: string): Promise<Info> {
+export const nfGetInfo = async function (
+  providerValue: string,
+  link: string,
+): Promise<Info> {
   try {
     const url = link;
     console.log('nfifo', url);
     const cookies = await nfGetCookie();
     const res = await fetch(url, {
       headers: {
-        cookie: cookies,
+        cookie:
+          cookies +
+          `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`,
       },
       credentials: 'omit',
     });
