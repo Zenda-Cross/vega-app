@@ -12,7 +12,9 @@ interface ApiResponse {
 
 export async function nfGetCookie(): Promise<string> {
   try {
-    const response = await axios.get<ApiResponse>('https://anshu78780.github.io/json/data.json');
+    const response = await axios.get<ApiResponse>(
+      'https://anshu78780.github.io/json/cookie.json',
+    );
     if (response.data?.netflixCookie?.cookie) {
       return response.data.netflixCookie.cookie;
     }
