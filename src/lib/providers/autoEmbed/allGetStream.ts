@@ -21,38 +21,38 @@ export const allGetStream = async (
     ///// whvx
 
     ///// nova
-    // const whvxStream = await getWhvxStream(
-    //   imdbId,
-    //   tmdbId,
-    //   season,
-    //   episode,
-    //   title,
-    //   type,
-    //   year,
-    //   'nova',
-    //   'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    // );
-    // const subtitles: TextTracks = [];
-    // for (const caption in whvxStream?.captions) {
-    //   subtitles.push({
-    //     language: whvxStream?.captions?.[caption]?.language || 'Undefined',
-    //     uri: whvxStream?.captions?.[caption]?.url,
-    //     type:
-    //       whvxStream?.captions?.[caption]?.type === 'srt'
-    //         ? TextTrackType.SUBRIP
-    //         : TextTrackType.VTT,
-    //     title: whvxStream?.captions?.[caption]?.language || 'Undefined',
-    //   });
-    // }
-    // for (const quality in whvxStream?.qualities) {
-    //   streams.push({
-    //     server: 'Nova-' + quality,
-    //     link: whvxStream?.qualities?.[quality]?.url,
-    //     type: whvxStream?.qualities?.[quality]?.type || 'mp4',
-    //     subtitles: subtitles,
-    //     quality: quality as any,
-    //   });
-    // }
+    const whvxStream = await getWhvxStream(
+      imdbId,
+      tmdbId,
+      season,
+      episode,
+      title,
+      type,
+      year,
+      'nova',
+      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+    );
+    const subtitles: TextTracks = [];
+    for (const caption in whvxStream?.captions) {
+      subtitles.push({
+        language: whvxStream?.captions?.[caption]?.language || 'Undefined',
+        uri: whvxStream?.captions?.[caption]?.url,
+        type:
+          whvxStream?.captions?.[caption]?.type === 'srt'
+            ? TextTrackType.SUBRIP
+            : TextTrackType.VTT,
+        title: whvxStream?.captions?.[caption]?.language || 'Undefined',
+      });
+    }
+    for (const quality in whvxStream?.qualities) {
+      streams.push({
+        server: 'Nova-' + quality,
+        link: whvxStream?.qualities?.[quality]?.url,
+        type: whvxStream?.qualities?.[quality]?.type || 'mp4',
+        subtitles: subtitles,
+        quality: quality as any,
+      });
+    }
 
     ///// flimxy
     // const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
