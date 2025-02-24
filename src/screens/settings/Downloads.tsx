@@ -31,6 +31,31 @@ const isVideoFile = (filename: string): boolean => {
   return VIDEO_EXTENSIONS.includes(extension);
 };
 
+// Add this interface after the existing imports
+interface MediaGroup {
+  title: string;
+  episodes: FileSystem.FileInfo[];
+  thumbnail?: string;
+  isMovie: boolean;
+}
+
+const getBaseName = (fileName: string): string => {
+  // Remove episode numbers and extensions to get base name
+  return fileName
+    .replace(/\.(mp4|mkv|avi|mov)$/i, '')  // remove extension
+    .replace(/[\s-]*(?:episode|ep)[\s-]*\d+/gi, '') // remove episode indicators
+    .replace(/\s*-\s*\d+/, '')  // remove trailing numbers
+    .replace(/\s*\d+\s*$/, '')  // remove ending numbers
+    .trim();
+};
+
+const getEpisodeNumber = (fileName: string): number => {
+  const match = 
+    fileName.match(/(?:episode|ep)[\s-]*(\d+)/i) ||
+    fileName.match(/[\s-](\d+)(?:\s*$|\s*\.)/);
+  return match ? parseInt(match[1]) : 0;
+};
+
 const Downloads = () => {
   const [files, setFiles] = useState<FileSystem.FileInfo[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
@@ -180,6 +205,50 @@ const Downloads = () => {
     }
   };
 
+  // Add this function to group files by series name
+  const groupMediaFiles = (): MediaGroup[] => {
+    const groups: Record<string, MediaGroup> = {};
+    
+    // First pass: Group by base name
+    files.forEach(file => {
+      const fileName = file.uri.split('/').pop() || '';
+      const baseName = getBaseName(fileName);
+      
+      if (!groups[baseName]) {
+        groups[baseName] = {
+          title: baseName,
+          episodes: [],
+          thumbnail: thumbnails[file.uri],
+          isMovie: true // We'll update this in second pass
+        };
+      }
+      groups[baseName].episodes.push(file);
+    });
+
+    // Second pass: Determine if each group is a movie or series
+    Object.values(groups).forEach(group => {
+      // Check if any file in the group has episode indicators
+      const hasEpisodeIndicators = group.episodes.some(file => {
+        const fileName = file.uri.split('/').pop() || '';
+        return getEpisodeNumber(fileName) > 0;
+      });
+
+      // Mark as series if multiple episodes or has episode indicators
+      group.isMovie = !(group.episodes.length > 1 || hasEpisodeIndicators);
+      
+      // Sort episodes by episode number if it's a series
+      if (!group.isMovie) {
+        group.episodes.sort((a, b) => {
+          const aName = a.uri.split('/').pop() || '';
+          const bName = b.uri.split('/').pop() || '';
+          return getEpisodeNumber(aName) - getEpisodeNumber(bName);
+        });
+      }
+    });
+
+    return Object.values(groups);
+  };
+
   return (
     <View className="mt-14 px-2 w-full h-full">
       <View className="flex-row justify-between items-center mb-4">
@@ -208,7 +277,7 @@ const Downloads = () => {
       </View>
 
       <FlashList
-        data={files}
+        data={groupMediaFiles()}
         numColumns={3}
         estimatedItemSize={150}
         ListEmptyComponent={() => (
@@ -218,77 +287,86 @@ const Downloads = () => {
             </View>
           )
         )}
-        renderItem={({item}) => {
-          const fileName = item.uri
-            .split('/')
-            .pop()
-            ?.replaceAll('_', ' ')
-            .replace('.mp4', '')
-            .replace('.mkv', '');
-
-          return (
-            <TouchableOpacity
-              className={`flex-1 m-0.5 rounded-lg overflow-hidden ${
-                groupSelected.includes(item.uri) ? 'bg-quaternary' : 'bg-tertiary'
-              }`}
-              onLongPress={() => {
+        renderItem={({item}) => (
+          <TouchableOpacity
+            className={`flex-1 m-0.5 rounded-lg overflow-hidden ${
+              isSelecting && groupSelected.includes(item.episodes[0].uri)
+                ? 'bg-quaternary'
+                : 'bg-tertiary'
+            }`}
+            onLongPress={() => {
+              if (MMKV.getBool('hapticFeedback') !== false) {
+                RNReactNativeHapticFeedback.trigger('effectTick', {
+                  enableVibrateFallback: true,
+                  ignoreAndroidSystemSettings: false,
+                });
+              }
+              setGroupSelected(item.episodes.map(ep => ep.uri));
+              setIsSelecting(true);
+            }}
+            onPress={() => {
+              if (isSelecting) {
                 if (MMKV.getBool('hapticFeedback') !== false) {
                   RNReactNativeHapticFeedback.trigger('effectTick', {
                     enableVibrateFallback: true,
                     ignoreAndroidSystemSettings: false,
                   });
                 }
-                setGroupSelected([...groupSelected, item.uri]);
-                setIsSelecting(true);
-              }}
-              onPress={() => {
-                if (isSelecting) {
-                  if (MMKV.getBool('hapticFeedback') !== false) {
-                    RNReactNativeHapticFeedback.trigger('effectTick', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                  }
-                  if (groupSelected.includes(item.uri)) {
-                    setGroupSelected(groupSelected.filter(f => f !== item.uri));
-                  } else {
-                    setGroupSelected([...groupSelected, item.uri]);
-                  }
-                  if (groupSelected.length === 1 && groupSelected[0] === item.uri) {
-                    setIsSelecting(false);
-                    setGroupSelected([]);
-                  }
+                if (groupSelected.includes(item.episodes[0].uri)) {
+                  setGroupSelected(groupSelected.filter(f => f !== item.episodes[0].uri));
                 } else {
+                  setGroupSelected([...groupSelected, item.episodes[0].uri]);
+                }
+                if (groupSelected.length === 1 && groupSelected[0] === item.episodes[0].uri) {
+                  setIsSelecting(false);
+                  setGroupSelected([]);
+                }
+              } else {
+                // Direct play for movies, navigate to episodes for series
+                if (item.isMovie) {
+                  const file = item.episodes[0];
+                  const fileName = file.uri.split('/').pop() || '';
                   navigation.navigate('Player', {
-                    episodeList: [{title: fileName || '', link: item.uri}],
+                    episodeList: [{title: fileName, link: file.uri}],
                     linkIndex: 0,
                     type: '',
-                    directUrl: item.uri,
-                    primaryTitle: fileName,
+                    directUrl: file.uri,
+                    primaryTitle: item.title,
                     poster: {},
                     providerValue: 'vega',
                   });
+                } else {
+                  navigation.navigate('SeriesEpisodes', {
+                    series: item.title,
+                    episodes: item.episodes,
+                    thumbnails: thumbnails,
+                  });
                 }
-              }}>
-              <View className="relative aspect-[2/3]">
-                {thumbnails[item.uri] ? (
-                  <Image
-                    source={{uri: thumbnails[item.uri]}}
-                    className="w-full h-full rounded-t-lg"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View className="w-full h-full bg-quaternary rounded-t-lg" />
-                )}
-                <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
-                  <Text className="text-white text-xs" numberOfLines={1}>
-                    {fileName}
+              }
+            }}>
+            <View className="relative aspect-[2/3]">
+              {item.thumbnail ? (
+                <Image
+                  source={{uri: item.thumbnail}}
+                  className="w-full h-full rounded-t-lg"
+                  resizeMode="cover"
+                />
+              ) : (
+                <View className="w-full h-full bg-quaternary rounded-t-lg" />
+              )}
+              <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
+                <Text className="text-white text-xs" numberOfLines={1}>
+                  {item.title}
+                </Text>
+                {!item.isMovie && (
+                  <Text className="text-white text-xs opacity-70">
+                    {item.episodes.length} episodes
                   </Text>
-                </View>
+                )}
               </View>
-            </TouchableOpacity>
-          );
-        }}
+            </View>
+          </TouchableOpacity>
+        )}
       />
     </View>
   );
