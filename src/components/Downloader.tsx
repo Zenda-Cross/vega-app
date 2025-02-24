@@ -120,38 +120,31 @@ const DownloadComponent = ({
 
   return (
     <>
-      <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
+      <View className="flex items-center justify-center">
         {downloadStore.activeDownloads.find(
           item => item.fileName === fileName,
         ) ? (
-          <MotiView
-            style={{
-              marginHorizontal: 4,
+          <TouchableOpacity
+            onPress={() => {
+              setCancelModal(prev => !prev);
             }}
-            // animate opacity to opacity while downloding
-            from={{opacity: 1}}
-            animate={{opacity: 0.5}}
-            //@ts-ignore
-            transition={{type: 'timing', duration: 500, loop: true}}>
-            <TouchableOpacity
-              onPress={() => {
-                setCancelModal(prev => !prev);
-                console.log('pressed');
-              }}>
-              <MaterialIcons name="downloading" size={27} color={primary} />
-            </TouchableOpacity>
-          </MotiView>
+            className="bg-white/10 p-2 rounded-lg">
+            <MotiView
+              from={{opacity: 1}}
+              animate={{opacity: 0.5}}
+              transition={{type: 'timing', duration: 500, loop: true}}>
+              <MaterialIcons name="downloading" size={24} color={primary} />
+            </MotiView>
+          </TouchableOpacity>
         ) : alreadyDownloaded ? (
           <TouchableOpacity
-            onPress={() => setDeleteModal(true)}
-            className="mx-1">
-            <MaterialIcons name="delete-outline" size={27} color="#c1c4c9" />
+            onPress={() => setDeleteModal(true)} 
+            className="bg-white/10 p-2 rounded-lg">
+            <MaterialIcons name="check-circle" size={24} color={primary} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            onPress={() => {
-              setDownloadModal(true);
-            }}
+            onPress={() => setDownloadModal(true)}
             onLongPress={() => {
               if (MMKV.getBool('hapticFeedback') !== false) {
                 ReactNativeHapticFeedback.trigger('effectHeavyClick', {
@@ -161,41 +154,36 @@ const DownloadComponent = ({
               }
               setLongPressModal(true);
             }}
-            className="mx-2">
-            <Octicons name="download" size={25} color="#c1c4c9" />
+            className="bg-white/10 p-2 rounded-lg">
+            <MaterialIcons name="download" size={24} color={primary} />
           </TouchableOpacity>
         )}
-        {/* delete modal */}
-        {
-          <Modal animationType="fade" visible={deleteModal} transparent={true}>
-            <View className="flex-1 bg-black/10 justify-center items-center p-4">
-              <View className="bg-tertiary p-3 w-80 rounded-md justify-center items-center">
-                <Text className="text-2xl font-semibold my-3 text-white">
-                  Confirm to delete
-                </Text>
-                <View className="flex-row items-center justify-evenly w-full my-5">
-                  <TouchableOpacity
-                    onPress={deleteDownload}
-                    className="p-2 rounded-md m-1 px-3"
-                    style={{backgroundColor: primary}}>
-                    <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
-                      Yes
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setDeleteModal(false)}
-                    className="p-2 px-4 rounded-md m-1"
-                    style={{backgroundColor: primary}}>
-                    <Text className="text-white font-semibold text-base rounded-md capitalize px-1">
-                      No
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+
+        {/* Delete confirmation modal */}
+        <Modal animationType="fade" visible={deleteModal} transparent={true}>
+          <View className="flex-1 bg-black/50 justify-center items-center p-4">
+            <View className="bg-[#1a1a1a] p-4 rounded-lg w-[80%] max-w-xs">
+              <Text className="text-white text-lg font-semibold text-center mb-4">
+                Delete Download?
+              </Text>
+              <View className="flex-row justify-center gap-4">
+                <TouchableOpacity
+                  onPress={deleteDownload}
+                  className="px-4 py-2 rounded-lg"
+                  style={{backgroundColor: primary}}>
+                  <Text className="text-white">Yes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDeleteModal(false)}
+                  className="px-4 py-2 bg-gray-600 rounded-lg">
+                  <Text className="text-white">No</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
-        }
-        {/* download modal */}
+          </View>
+        </Modal>
+
+        {/* Rest of existing modals */}
         <DownloadBottomSheet
           setModal={setDownloadModal}
           showModal={downloadModal}
@@ -228,7 +216,6 @@ const DownloadComponent = ({
             });
           }}
         />
-        {/* long press modal */}
         <DownloadBottomSheet
           setModal={setLongPressModal}
           showModal={longPressModal}
@@ -267,8 +254,8 @@ const DownloadComponent = ({
               console.log('Error cancelling download', error);
             }
           }}
-          className="absolute right-12 bg-quaternary/80 bottom-3 rounded-md px-2">
-          <Text className="text-lg text-white">Cancel</Text>
+          className="absolute right-12 bg-red-500/80 bottom-3 rounded-md px-3 py-1">
+          <Text className="text-white font-semibold">Cancel</Text>
         </Pressable>
       )}
     </>
