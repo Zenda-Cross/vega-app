@@ -1,17 +1,9 @@
-import {
-  View,
-  Text,
-  Image,
-  Platform,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import {View, Text, Image, Platform, TouchableOpacity} from 'react-native';
 import requestStoragePermission from '../../lib/file/getStoragePermission';
 import * as FileSystem from 'expo-file-system';
 import {downloadFolder} from '../../lib/constants';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import React, {useState, useEffect} from 'react';
-import Entypo from '@expo/vector-icons/Entypo';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import useThemeStore from '../../lib/zustand/themeStore';
 import RNFS from 'react-native-fs';
@@ -20,6 +12,7 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {FlashList} from '@shopify/flash-list';
 
 // Define supported video extensions
 const VIDEO_EXTENSIONS = [
@@ -37,6 +30,7 @@ const isVideoFile = (filename: string): boolean => {
   const extension = filename.toLowerCase().slice(filename.lastIndexOf('.'));
   return VIDEO_EXTENSIONS.includes(extension);
 };
+
 const Downloads = () => {
   const [files, setFiles] = useState<FileSystem.FileInfo[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
@@ -188,7 +182,7 @@ const Downloads = () => {
 
   return (
     <View className="mt-14 px-2 w-full h-full">
-      <View className="flex-row justify-between items-center">
+      <View className="flex-row justify-between items-center mb-4">
         <Text className="text-2xl">Downloads</Text>
         <View className="flex-row gap-x-7 items-center">
           {isSelecting && (
@@ -212,110 +206,90 @@ const Downloads = () => {
           )}
         </View>
       </View>
-      <ScrollView className="mt-5 h-[80%]">
-        <View className="flex flex-wrap mt-7">
-          {files.map(file => {
-            const fileName = file.uri
-              .split('/')
-              .pop()
-              ?.replaceAll('_', ' ')
-              .replace('.mp4', '')
-              .replace('.mkv', '');
-            return (
-              <TouchableOpacity
-                className={`flex-row w-full h-[90px] mb-1 items-center rounded-md px-1 ${
-                  groupSelected.includes(file.uri) && 'bg-quaternary'
-                }`}
-                key={file.uri}
-                onLongPress={() => {
+
+      <FlashList
+        data={files}
+        numColumns={3}
+        estimatedItemSize={150}
+        ListEmptyComponent={() => (
+          !loading && (
+            <View className="flex-1 justify-center items-center mt-10">
+              <Text className="text-center text-lg">Looks Empty Here!</Text>
+            </View>
+          )
+        )}
+        renderItem={({item}) => {
+          const fileName = item.uri
+            .split('/')
+            .pop()
+            ?.replaceAll('_', ' ')
+            .replace('.mp4', '')
+            .replace('.mkv', '');
+
+          return (
+            <TouchableOpacity
+              className={`flex-1 m-0.5 rounded-lg overflow-hidden ${
+                groupSelected.includes(item.uri) ? 'bg-quaternary' : 'bg-tertiary'
+              }`}
+              onLongPress={() => {
+                if (MMKV.getBool('hapticFeedback') !== false) {
+                  RNReactNativeHapticFeedback.trigger('effectTick', {
+                    enableVibrateFallback: true,
+                    ignoreAndroidSystemSettings: false,
+                  });
+                }
+                setGroupSelected([...groupSelected, item.uri]);
+                setIsSelecting(true);
+              }}
+              onPress={() => {
+                if (isSelecting) {
                   if (MMKV.getBool('hapticFeedback') !== false) {
                     RNReactNativeHapticFeedback.trigger('effectTick', {
                       enableVibrateFallback: true,
                       ignoreAndroidSystemSettings: false,
                     });
                   }
-                  setGroupSelected([...groupSelected, file.uri]);
-                  setIsSelecting(true);
-                }}
-                onPress={() => {
-                  if (isSelecting && MMKV.getBool('hapticFeedback') !== false) {
-                    RNReactNativeHapticFeedback.trigger('effectTick', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-
-                    if (groupSelected.includes(file.uri)) {
-                      setGroupSelected(
-                        groupSelected.filter(f => f !== file.uri),
-                      );
-                    } else {
-                      setGroupSelected([...groupSelected, file.uri]);
-                    }
-                    if (
-                      groupSelected.length === 1 &&
-                      groupSelected[0] === file.uri
-                    ) {
-                      setIsSelecting(false);
-                      setGroupSelected([]);
-                    }
+                  if (groupSelected.includes(item.uri)) {
+                    setGroupSelected(groupSelected.filter(f => f !== item.uri));
                   } else {
-                    try {
-                      navigation.navigate('Player', {
-                        episodeList: [{title: fileName || '', link: file.uri}],
-                        linkIndex: 0,
-                        type: '',
-                        directUrl: file.uri,
-                        primaryTitle: fileName,
-                        poster: {},
-                        providerValue: 'vega',
-                      });
-                    } catch (error) {
-                      console.error('Error navigating to Player:', error);
-                    }
+                    setGroupSelected([...groupSelected, item.uri]);
                   }
-                }}>
-                <View
-                  className={`relative border mr-3 ${
-                    groupSelected.includes(file.uri) && 'bg-quaternary'
-                  }`}>
-                  {thumbnails[file.uri] ? (
-                    <Image
-                      className="rounded-md"
-                      source={{uri: thumbnails[file.uri]}}
-                      style={{width: 105, height: 70}}
-                    />
-                  ) : (
-                    <View className="w-[105px] h-[70px] rounded-md bg-quaternary" />
-                  )}
-                  <Entypo
-                    name="controller-play"
-                    size={24}
-                    color={'white'}
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: [{translateX: -12}, {translateY: -20}],
-                    }}
+                  if (groupSelected.length === 1 && groupSelected[0] === item.uri) {
+                    setIsSelecting(false);
+                    setGroupSelected([]);
+                  }
+                } else {
+                  navigation.navigate('Player', {
+                    episodeList: [{title: fileName || '', link: item.uri}],
+                    linkIndex: 0,
+                    type: '',
+                    directUrl: item.uri,
+                    primaryTitle: fileName,
+                    poster: {},
+                    providerValue: 'vega',
+                  });
+                }
+              }}>
+              <View className="relative aspect-[2/3]">
+                {thumbnails[item.uri] ? (
+                  <Image
+                    source={{uri: thumbnails[item.uri]}}
+                    className="w-full h-full rounded-t-lg"
+                    resizeMode="cover"
                   />
-                </View>
-                <View className="h-[70px] flex-row items-start overflow-hidden">
-                  <Text className="w-[83%] text-[13.5px] whitespace-pre-wrap">
+                ) : (
+                  <View className="w-full h-full bg-quaternary rounded-t-lg" />
+                )}
+                <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
+                  <Text className="text-white text-xs" numberOfLines={1}>
                     {fileName}
                   </Text>
                 </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        {
-          // Show a message if no files are available
-          files.length === 0 && !loading && (
-            <Text className="text-center mt-10 text-lg">Looks Empty Here!</Text>
-          )
-        }
-        <View className="h-28" />
-      </ScrollView>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+      />
     </View>
   );
 };
