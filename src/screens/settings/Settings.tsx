@@ -4,12 +4,14 @@ import {
   Linking,
   TouchableOpacity,
   TouchableNativeFeedback,
+  ScrollView,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import React from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
-import {Dropdown} from 'react-native-element-dropdown';
 import {providersList, socialLinks} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -20,219 +22,233 @@ import {
   Feather,
   MaterialIcons,
 } from '@expo/vector-icons';
-import {ScrollView} from 'react-native';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
+
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
   const {primary} = useThemeStore(state => state);
-
   const {provider, setProvider} = useContentStore(state => state);
   const {clearHistory} = useWatchHistoryStore(state => state);
 
+  const renderProviderIcon = (uri: string) => (
+    <Text>
+      <SvgUri width={28} height={28} uri={uri} />
+    </Text>
+  );
+
+  const renderProviderItem = (item: any, isSelected: boolean) => (
+    <TouchableOpacity
+      key={item.value}
+      onPress={() => {
+        setProvider(item);
+        // Add haptic feedback
+        if (MMKV.getBool('hapticFeedback') !== false) {
+          ReactNativeHapticFeedback.trigger('virtualKey', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false,
+          });
+        }
+        // Navigate to home screen
+        navigation.navigate('HomeStack');
+      }}
+      className={`mr-3 rounded-lg ${
+        isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
+      }`}
+      style={{
+        width: Dimensions.get('window').width * 0.3, // Shows 2.5 items
+        height: 65, // Increased height
+        borderWidth: 1.5,
+        borderColor: isSelected ? primary : '#333333',
+      }}>
+      <View className="flex-col items-center justify-center h-full p-2">
+        {renderProviderIcon(item.flag)}
+        <Text numberOfLines={1} className="text-white text-xs font-medium text-center mt-2">
+          {item.name}
+        </Text>
+        {isSelected && (
+          <Text style={{ position: 'absolute', top: 6, right: 6 }}>
+            <MaterialIcons name="check-circle" size={16} color={primary} />
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
-    <ScrollView className="w-full h-full bg-black p-4">
-      <Text className="text-2xl font-bold text-white mt-7">Settings</Text>
-      {/* Content provider */}
-      {
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="font-bold text-lg" style={{color: primary}}>
-            Change Provider
-          </Text>
-          <View className="w-40">
-            <Dropdown
-              selectedTextStyle={{
-                color: 'white',
-                overflow: 'hidden',
-                fontWeight: 'bold',
-                height: 23,
-              }}
-              containerStyle={{
-                borderColor: '#363636',
-                width: 160,
-                borderRadius: 5,
-                overflow: 'hidden',
-                padding: 2,
-                backgroundColor: 'black',
-                maxHeight: 450,
-              }}
-              labelField={'name'}
-              valueField={'value'}
-              placeholder="Select"
-              value={provider}
-              data={providersList}
-              onChange={async provider => {
-                setProvider(provider);
-              }}
-              renderItem={item => {
-                return (
-                  <View
-                    className={`bg-black text-white w-48 flex-row justify-start gap-2 items-center px-4 py-1 rounded-s-md border-b border-white/10 border rounded-md ${
-                      provider.value === item.value ? 'bg-quaternary' : ''
-                    } ${item.value === 'guardahd' ? 'pb-1' : 'pb-3'}`}>
-                    <SvgUri
-                      className="mb-2"
-                      width={20}
-                      height={20}
-                      uri={item.flag}
-                    />
-                    <Text className=" text-white mb-2">
-                      {/* {item.flag}
-                      &nbsp; &nbsp; */}
-                      {item.name}
-                    </Text>
-                  </View>
-                );
-              }}
-            />
+    <ScrollView 
+      className="w-full h-full bg-black" 
+      showsVerticalScrollIndicator={false}
+      bounces={true}
+      overScrollMode="always"
+      contentContainerStyle={{
+        paddingTop: StatusBar.currentHeight || 0,
+        paddingBottom: 24,
+        flexGrow: 1,  // This ensures content is scrollable even if it's shorter than screen
+      }}>
+      <View className="p-5">
+        <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
+        
+        {/* Content provider section */}
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
+          <View className="bg-[#1A1A1A] rounded-xl py-4">
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 10,
+              }}>
+              {providersList.map(item => 
+                renderProviderItem(item, provider.value === item.value)
+              )}
+            </ScrollView>
           </View>
         </View>
-      }
 
-      {/* download folder shortcut */}
-      <TouchableNativeFeedback
-        onPress={async () => {
-          navigation.navigate('Downloads');
-        }}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <View className="flex-row justify-center items-center gap-1 my-1">
-            <MaterialCommunityIcons
-              name="folder-download"
-              size={18}
-              color="white"
-            />
-            <Text className="text-white font-semibold">Downloads</Text>
+        {/* Main options section */}
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm mb-3">Options</Text>
+          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            {/* Downloads */}
+            <TouchableNativeFeedback
+              onPress={() => navigation.navigate('Downloads')}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons name="folder-download" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Downloads</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
+
+            {/* Subtitle Style */}
+            <TouchableNativeFeedback
+              onPress={async () => {
+                if (MMKV.getBool('hapticFeedback') !== false) {
+                  ReactNativeHapticFeedback.trigger('virtualKey', {
+                    enableVibrateFallback: true,
+                    ignoreAndroidSystemSettings: false,
+                  });
+                }
+                await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
+              }}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons name="subtitles" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Subtitle Style</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
+
+            {/* Disable Providers */}
+            <TouchableNativeFeedback
+              onPress={() => navigation.navigate('DisableProviders')}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                <View className="flex-row items-center">
+                  <MaterialIcons name="block" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Disable Providers in Search</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
+
+            {/* Preferences */}
+            <TouchableNativeFeedback
+              onPress={() => navigation.navigate('Preferences')}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center">
+                  <MaterialIcons name="room-preferences" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Preferences</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
           </View>
-          <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </TouchableNativeFeedback>
 
-      {/* Subtitle Style  */}
-      <TouchableNativeFeedback
-        onPress={async () => {
-          if (MMKV.getBool('hapticFeedback') !== false) {
-            ReactNativeHapticFeedback.trigger('virtualKey', {
-              enableVibrateFallback: true,
-              ignoreAndroidSystemSettings: false,
-            });
-          }
-          await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
-        }}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <View className="flex-row justify-center items-center gap-1 my-1">
-            <MaterialCommunityIcons name="subtitles" size={18} color="white" />
-            <Text className="text-white font-semibold">Subtitle Style</Text>
+        {/* Data Management section */}
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm mb-3">Data Management</Text>
+          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            {/* Clear Cache */}
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+              <Text className="text-white text-base">Clear Cache</Text>
+              <TouchableOpacity
+                className="bg-[#262626] px-4 py-2 rounded-lg"
+                onPress={() => {
+                  if (MMKV.getBool('hapticFeedback') !== false) {
+                    ReactNativeHapticFeedback.trigger('virtualKey', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                  }
+                  MmmkvCache.clearStore();
+                }}>
+                <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Clear Watch History */}
+            <View className="flex-row items-center justify-between p-4">
+              <Text className="text-white text-base">Clear Watch History</Text>
+              <TouchableOpacity
+                className="bg-[#262626] px-4 py-2 rounded-lg"
+                onPress={() => {
+                  if (MMKV.getBool('hapticFeedback') !== false) {
+                    ReactNativeHapticFeedback.trigger('virtualKey', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                  }
+                  clearHistory();
+                }}>
+                <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </TouchableNativeFeedback>
 
-      {/* disable providers in search */}
-      <TouchableNativeFeedback
-        onPress={async () => {
-          navigation.navigate('DisableProviders');
-        }}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <Text className="text-white font-semibold my-2">
-            Disable Providers in Search
-          </Text>
-          <Feather name="chevron-right" size={24} color="white" />
-        </View>
-      </TouchableNativeFeedback>
+        {/* About & GitHub section */}
+        <View className="mb-6">
+          <Text className="text-gray-400 text-sm mb-3">About</Text>
+          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            {/* About */}
+            <TouchableNativeFeedback
+              onPress={() => navigation.navigate('About')}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                <View className="flex-row items-center">
+                  <Feather name="info" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">About</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
 
-      {/* Preferences */}
-      <TouchableNativeFeedback
-        onPress={() => {
-          navigation.navigate('Preferences');
-        }}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <View className="flex-row justify-center items-center gap-1 my-1">
-            <MaterialIcons name="room-preferences" size={18} color="white" />
-            <Text className="text-white font-semibold">Preference</Text>
+            {/* GitHub */}
+            <TouchableNativeFeedback
+              onPress={() => Linking.openURL(socialLinks.github)}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center">
+                  <AntDesign name="github" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Give a star  ⭐</Text>
+                </View>
+                <Feather name="external-link" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
           </View>
-          <Feather name="chevron-right" size={24} color="white" />
         </View>
-      </TouchableNativeFeedback>
-
-      {/* clear cache */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">Clear Cache</Text>
-        <TouchableOpacity
-          className="bg-[#343434] w-12 items-center p-2 rounded-md"
-          onPress={() => {
-            if (MMKV.getBool('hapticFeedback') !== false) {
-              ReactNativeHapticFeedback.trigger('virtualKey', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
-            }
-            MmmkvCache.clearStore();
-          }}>
-          <MaterialCommunityIcons
-            name="delete-outline"
-            size={20}
-            color="white"
-          />
-        </TouchableOpacity>
       </View>
-
-      {/* clear watch history */}
-      <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold">Clear Watch History</Text>
-        <TouchableOpacity
-          className="bg-[#343434] w-12 items-center p-2 rounded-md"
-          onPress={() => {
-            if (MMKV.getBool('hapticFeedback') !== false) {
-              ReactNativeHapticFeedback.trigger('virtualKey', {
-                enableVibrateFallback: true,
-                ignoreAndroidSystemSettings: false,
-              });
-            }
-            clearHistory();
-          }}>
-          <MaterialCommunityIcons
-            name="delete-outline"
-            size={20}
-            color="white"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* About */}
-      <TouchableNativeFeedback
-        onPress={() => {
-          navigation.navigate('About');
-        }}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 rounded-md">
-          <View className="flex-row justify-center items-center gap-1 my-1">
-            <Feather name="info" size={15} color="white" />
-            <Text className="text-white font-semibold">About</Text>
-          </View>
-          <Feather name="chevron-right" size={24} color="white" />
-        </View>
-      </TouchableNativeFeedback>
-      <View className="flex-row items-center justify-center gap-4 mt-12">
-        <TouchableOpacity
-          className="flex-col items-center justify-center "
-          onPress={() => Linking.openURL(socialLinks.github)}>
-          <AntDesign name="github" size={22} color="white" />
-          <Text className="text-[11px] ml-2">Give a Star ⭐</Text>
-        </TouchableOpacity>
-        {/* <TouchableOpacity
-          className="flex-row items-center justify-center "
-          onPress={() => Linking.openURL(socialLinks.discord)}>
-          <MaterialIcons name="discord" size={27} color="white" />
-        </TouchableOpacity> */}
-      </View>
-      <View className="h-16" />
     </ScrollView>
   );
 };
