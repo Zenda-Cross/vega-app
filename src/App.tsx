@@ -32,6 +32,7 @@ import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
+import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 
 enableScreens(true);
 enableFreeze(true);
@@ -49,6 +50,8 @@ export type HomeStackParamList = {
 };
 
 export type RootStackParamList = {
+  TabNavigator: undefined;
+  WatchHistory: undefined;
   TabStack: undefined;
   Player: {
     linkIndex: number;
@@ -64,6 +67,11 @@ export type RootStackParamList = {
     };
     file?: string;
     providerValue?: string;
+  };
+  SeriesEpisodes: {
+    series: string;
+    episodes: Array<{uri: string; size: number}>;
+    thumbnails: Record<string, string>;
   };
 };
 
@@ -373,6 +381,13 @@ const App = () => {
               }}
               name="Player"
               component={Player}
+            />
+            <Stack.Screen
+              name="SeriesEpisodes"
+              component={SeriesEpisodes}
+              options={{
+                animation: 'slide_from_right',
+              }}
             />
           </Stack.Navigator>
         </NavigationContainer>
