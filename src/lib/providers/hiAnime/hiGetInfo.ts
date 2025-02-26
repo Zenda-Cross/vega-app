@@ -24,8 +24,11 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
     const linkList: Link[] = [];
     const subLinks: Link['directLinks'] = [];
     data.episodes.forEach((episode: any) => {
+      if (!episode?.isSubbed) {
+        return;
+      }
       const title = 'Episode ' + episode.number;
-      const link = episode.id;
+      const link = episode.id + '$sub';
       if (link && title) {
         subLinks.push({
           title,
@@ -42,8 +45,12 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
     if (data?.subOrDub === 'both') {
       const dubLinks: Link['directLinks'] = [];
       data.episodes.forEach((episode: any) => {
+        console.log(episode);
+        if (!episode?.isDubbed) {
+          return;
+        }
         const title = 'Episode ' + episode.number;
-        const link = episode.id?.replace('both', 'dub');
+        const link = episode.id + '$dub';
         console.log(link);
         if (link && title) {
           dubLinks.push({
