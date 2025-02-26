@@ -108,7 +108,10 @@ export type TabStackParamList = {
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
 const App = () => {
-  LogBox.ignoreLogs(['You have passed a style to FlashList']);
+  LogBox.ignoreLogs([
+    'You have passed a style to FlashList',
+    'new NativeEventEmitter()',
+  ]);
   const HomeStack = createNativeStackNavigator<HomeStackParamList>();
   const Stack = createNativeStackNavigator<RootStackParamList>();
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
