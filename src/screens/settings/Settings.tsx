@@ -79,9 +79,15 @@ const Settings = ({navigation}: Props) => {
   );
 
   return (
-    <ScrollView className="w-full h-full bg-black" 
+    <ScrollView 
+      className="w-full h-full bg-black" 
+      showsVerticalScrollIndicator={false}
+      bounces={true}
+      overScrollMode="always"
       contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0
+        paddingTop: StatusBar.currentHeight || 0,
+        paddingBottom: 24,
+        flexGrow: 1,  // This ensures content is scrollable even if it's shorter than screen
       }}>
       <View className="p-5">
         <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
@@ -211,14 +217,15 @@ const Settings = ({navigation}: Props) => {
           </View>
         </View>
 
-        {/* About section */}
+        {/* About & GitHub section */}
         <View className="mb-6">
           <Text className="text-gray-400 text-sm mb-3">About</Text>
           <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+            {/* About */}
             <TouchableNativeFeedback
               onPress={() => navigation.navigate('About')}
               background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4">
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                 <View className="flex-row items-center">
                   <Feather name="info" size={22} color={primary} />
                   <Text className="text-white ml-3 text-base">About</Text>
@@ -226,23 +233,23 @@ const Settings = ({navigation}: Props) => {
                 <Feather name="chevron-right" size={20} color="gray" />
               </View>
             </TouchableNativeFeedback>
+
+            {/* GitHub */}
+            <TouchableNativeFeedback
+              onPress={() => Linking.openURL(socialLinks.github)}
+              background={TouchableNativeFeedback.Ripple('#333333', false)}>
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center">
+                  <AntDesign name="github" size={22} color={primary} />
+                  <Text className="text-white ml-3 text-base">Give a star  ⭐</Text>
+                </View>
+                <Feather name="external-link" size={20} color="gray" />
+              </View>
+            </TouchableNativeFeedback>
           </View>
         </View>
-
-        {/* Social Links - Moved up and adjusted spacing */}
-        <View className="flex-row items-center justify-center mt-2 mb-4">
-        <TouchableOpacity
-          className="flex-col items-center justify-center"
-          onPress={() => Linking.openURL(socialLinks.github)}>
-          <AntDesign name="github" size={24} color="white" />
-          <Text className="text-white text-xs mt-2">
-            Give a Star <Text>⭐</Text>
-          </Text>
-     </TouchableOpacity>
-        </View>
       </View>
-
-   </ScrollView>
+    </ScrollView>
   );
 };
 
