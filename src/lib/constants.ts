@@ -98,12 +98,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  {
-    name: 'ExtraMovies',
-    value: 'extraMovies',
-    type: 'global',
-    flag: FLAGS.GLOBAL,
-  },
+  // {
+  //   name: 'ExtraMovies',
+  //   value: 'extraMovies',
+  //   type: 'global',
+  //   flag: FLAGS.GLOBAL,
+  // },
   // {
   //   name: 'VadaPav',
   //   value: 'vadapav',
@@ -152,12 +152,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  {
-    name: 'GogoAnime',
-    value: 'gogo',
-    type: 'english',
-    flag: FLAGS.ENGLISH,
-  },
+  // {
+  //   name: 'GogoAnime',
+  //   value: 'gogo',
+  //   type: 'english',
+  //   flag: FLAGS.ENGLISH,
+  // },
   // {
   //   name: 'AE Anime',
   //   value: 'AEAnime',
@@ -176,12 +176,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  {
-    name: 'DramaCool',
-    value: 'dramaCool',
-    type: 'english',
-    flag: FLAGS.ENGLISH,
-  },
+  // {
+  //   name: 'DramaCool',
+  //   value: 'dramaCool',
+  //   type: 'english',
+  //   flag: FLAGS.ENGLISH,
+  // },
   // {
   //   name: 'AE Drama',
   //   value: 'AEDrama',
