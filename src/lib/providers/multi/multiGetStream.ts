@@ -65,8 +65,11 @@ export const multiGetStream = async (
       const playerData = await playerRes.json();
       // console.log('playerData', playerData);
       const siteUrl = playerData?.siteUrls?.smwh;
-      const siteId = playerData?.mresult?.smwh;
+      const siteId =
+        JSON.parse(atob(playerData?.mresult))?.smwh ||
+        playerData?.mresult?.smwh;
       const newIframeUrl = siteUrl + siteId;
+      console.log('newIframeUrl', newIframeUrl);
       if (newIframeUrl) {
         ifameUrl = newIframeUrl;
       }
