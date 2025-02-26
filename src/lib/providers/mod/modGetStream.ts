@@ -16,56 +16,12 @@ export const modGetStream = async (
       url = servers[0].link || url;
     }
 
-    let downloadLink: any = '';
-    try {
-      const wpHttp = url.split('sid=')[1];
-      var bodyFormData0 = new FormData();
-      bodyFormData0.append('_wp_http', wpHttp);
-      const res = await fetch(url.split('?')[0], {
-        method: 'POST',
-        body: bodyFormData0,
-      });
-      const data = await res.text();
-      // console.log('', data);
-      const html = data;
-      const $ = cheerio.load(html);
+    let downloadLink = await modExtractor(url);
 
-      // find input with name="_wp_http2"
-      const wpHttp2 = $('input').attr('name', '_wp_http2').val();
-
-      // console.log('wpHttp2', wpHttp2);
-
-      // form data
-      var bodyFormData = new FormData();
-      bodyFormData.append('_wp_http2', wpHttp2);
-
-      const res2 = await fetch(
-        `${url.split('?')[0]}/quantum-computer-speed-how-quick-is-it/`,
-        {
-          method: 'POST',
-          body: bodyFormData,
-        },
-      );
-      const html2: any = await res2.text();
-      const link = html2.match(/setAttribute\("href",\s*"(.*?)"/)[1];
-      // console.log(link);
-      const cookie = link.split('=')[1];
-
-      downloadLink = await axios.get(link, {
-        headers: {
-          Referer: `${
-            url.split('?')[0]
-          }/quantum-computer-speed-how-quick-is-it/`,
-          Cookie: `${cookie}=${wpHttp2}`,
-        },
-      });
-    } catch (err) {
-      console.log('modGetStream error', err);
-    }
     // console.log(downloadLink.data);
 
     const ddl = downloadLink?.data?.match(/content="0;url=(.*?)"/)?.[1] || url;
-    console.log('ddl', url);
+    // console.log('ddl', url);
 
     // console.log(ddl);
     // console.log(ddl);
@@ -209,3 +165,50 @@ const isDriveLink = async (ddl: string) => {
     return ddl;
   }
 };
+
+export async function modExtractor(url: string) {
+  try {
+    const wpHttp = url.split('sid=')[1];
+    var bodyFormData0 = new FormData();
+    bodyFormData0.append('_wp_http', wpHttp);
+    const res = await fetch(url.split('?')[0], {
+      method: 'POST',
+      body: bodyFormData0,
+    });
+    const data = await res.text();
+    // console.log('', data);
+    const html = data;
+    const $ = cheerio.load(html);
+
+    // find input with name="_wp_http2"
+    const wpHttp2 = $('input').attr('name', '_wp_http2').val();
+
+    // console.log('wpHttp2', wpHttp2);
+
+    // form data
+    var bodyFormData = new FormData();
+    bodyFormData.append('_wp_http2', wpHttp2);
+    const formUrl1 = $('form').attr('action');
+    const formUrl = formUrl1 || url.split('?')[0];
+
+    const res2 = await fetch(formUrl, {
+      method: 'POST',
+      body: bodyFormData,
+    });
+    const html2: any = await res2.text();
+    const link = html2.match(/setAttribute\("href",\s*"(.*?)"/)[1];
+    console.log(link);
+    const cookie = link.split('=')[1];
+    console.log('cookie', cookie);
+
+    const downloadLink = await axios.get(link, {
+      headers: {
+        Referer: formUrl,
+        Cookie: `${cookie}=${wpHttp2}`,
+      },
+    });
+    return downloadLink;
+  } catch (err) {
+    console.log('modGetStream error', err);
+  }
+}

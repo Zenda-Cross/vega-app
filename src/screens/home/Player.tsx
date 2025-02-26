@@ -271,6 +271,18 @@ const Player = ({route}: Props): React.JSX.Element => {
     [activeEpisode.link],
   );
 
+  const handelResizeMode = () => {
+    const modes = [
+      {mode: ResizeMode.NONE, name: 'None'},
+      {mode: ResizeMode.COVER, name: 'Cover'},
+      {mode: ResizeMode.STRETCH, name: 'Stretch'},
+      {mode: ResizeMode.CONTAIN, name: 'Contain'},
+    ];
+    const index = modes.findIndex(mode => mode.mode === resizeMode);
+    setResizeMode(modes[(index + 1) % modes.length].mode);
+    setToast(' Resize Mode: ' + modes[(index + 1) % modes.length].name, 2000);
+  };
+
   const [isTextVisible, setIsTextVisible] = useState(false);
 
   return (
@@ -564,18 +576,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         <View className="opacity-60">
           <TouchableOpacity
             className="flex-row gap-1 items-center"
-            onPress={() => {
-              setResizeMode(
-                resizeMode === ResizeMode.NONE
-                  ? ResizeMode.COVER
-                  : ResizeMode.NONE,
-              );
-              setToast(
-                ' Resize Mode: ' +
-                  (resizeMode === ResizeMode.NONE ? 'Cover ' : 'None '),
-                2000,
-              );
-            }}>
+            onPress={handelResizeMode}>
             <MaterialIcons name="fullscreen" size={28} color="white" />
             <Text className="text-white text-sm min-w-[38px]">
               {resizeMode === ResizeMode.NONE ? 'Fit' : 'Cover'}
