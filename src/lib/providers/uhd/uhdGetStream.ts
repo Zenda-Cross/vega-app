@@ -3,52 +3,15 @@ import FormData from 'form-data';
 import * as cheerio from 'cheerio';
 import {Stream} from '../types';
 import {headers} from './header';
+import {modExtractor} from '../mod/modGetStream';
 
 export const uhdGetStream = async (url: string): Promise<Stream[]> => {
   try {
-    const wpHttp = url.split('sid=')[1];
-    var bodyFormData0 = new FormData();
-    bodyFormData0.append('_wp_http', wpHttp);
-    const res = await fetch(url.split('?')[0], {
-      method: 'POST',
-      body: bodyFormData0,
-    });
-    const data = await res.text();
-    // console.log('', data);
-    const html = data;
-    const $ = cheerio.load(html);
-
-    // find input with name="_wp_http2"
-    const wpHttp2 = $('input').attr('name', '_wp_http2').val();
-
-    // console.log('wpHttp2', wpHttp2);
-
-    // form data
-    var bodyFormData = new FormData();
-    bodyFormData.append('_wp_http2', wpHttp2);
-
-    const res2 = await fetch(
-      `${url.split('?')[0]}/quantum-computer-speed-how-quick-is-it/`,
-      {
-        method: 'POST',
-        body: bodyFormData,
-      },
-    );
-    const html2: any = await res2.text();
-    const link = html2.match(/setAttribute\("href",\s*"(.*?)"/)[1];
-    // console.log(link);
-    const cookie = link.split('=')[1];
-
-    const downloadLink = await axios.get(link, {
-      headers: {
-        Referer: `${url.split('?')[0]}/quantum-computer-speed-how-quick-is-it/`,
-        Cookie: `${cookie}=${wpHttp2}`,
-      },
-    });
+    let downloadLink = await modExtractor(url);
 
     // console.log(downloadLink.data);
 
-    const ddl = downloadLink.data.match(/content="0;url=(.*?)"/)?.[1] || url;
+    const ddl = downloadLink?.data?.match(/content="0;url=(.*?)"/)?.[1] || url;
 
     console.log('ddl', ddl);
     // console.log(ddl);
