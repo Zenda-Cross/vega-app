@@ -84,7 +84,7 @@ export type SearchStackParamList = {
     isSearch: boolean;
   };
   Info: {link: string; provider?: string; poster?: string};
-  SearchResults: {filter: string};
+  SearchResults: {filter: string; availableProviders?: string[]};
 };
 
 export type WatchListStackParamList = {

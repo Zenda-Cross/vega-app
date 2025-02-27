@@ -134,7 +134,7 @@ const Home = ({}: Props) => {
   notifee.onForegroundEvent(actionHandler);
   return (
     <GestureHandlerRootView>
-      <SafeAreaView className="bg-black h-full w-full">
+      <SafeAreaView className="bg-black flex-1">
         <DrawerLayout
           drawerPosition="left"
           drawerWidth={200}
@@ -166,6 +166,7 @@ const Home = ({}: Props) => {
           <ScrollView
             onScroll={handleScroll}
             showsVerticalScrollIndicator={false}
+            className="bg-black"
             refreshControl={
               <RefreshControl
                 colors={[primary]}
@@ -179,13 +180,13 @@ const Home = ({}: Props) => {
               />
             }>
             <Hero drawerRef={drawer} isDrawerOpen={isDrawerOpen} />
-            <View className="p-4">
+            <View className="-mt-12 relative z-20">
               {!loading &&
                 recentlyWatched?.length > 0 &&
                 ShowRecentlyWatched && (
                   <Slider
                     isLoading={loading}
-                    title={'Recently Watched'}
+                    title={'Continue Watching'}
                     posts={recentlyWatched}
                     filter={'recent'}
                   />

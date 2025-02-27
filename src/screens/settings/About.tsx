@@ -188,64 +188,65 @@ const About = () => {
   );
 
   return (
-    <View className="w-full h-full bg-black p-4">
-      <Text className="text-2xl font-bold text-white mt-7">About</Text>
-
-      {/* version */}
-      <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold my-2">Version</Text>
-        <Text className="text-white font-semibold my-2">v{pkg.version}</Text>
-      </View>
-
-      {/* Auto Download Updates*/}
-      <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold my-2">
-          Auto Install Updates
+    <View className="flex-1 bg-black">
+      <View className="px-4 py-3 border-b border-white/10">
+        <Text className="text-2xl font-bold text-white">About</Text>
+        <Text className="text-gray-400 mt-1 text-sm">
+          App information and updates
         </Text>
-        <Switch
-          value={autoDownload}
-          onValueChange={() => {
-            setAutoDownload(!autoDownload);
-            MMKV.setBool('autoDownload', !autoDownload);
-          }}
-          thumbColor={autoDownload ? primary : 'gray'}
-        />
       </View>
 
-      {/* Auto check for updates */}
-      <View className="flex-row items-center justify-between mt-5 bg-tertiary p-2 rounded-md">
-        <Text className="text-white font-semibold my-2">
-          Check for Updates on Start
-        </Text>
-        <Switch
-          value={autoCheckUpdate}
-          onValueChange={() => {
-            setAutoCheckUpdate(!autoCheckUpdate);
-            MMKV.setBool('autoCheckUpdate', !autoCheckUpdate);
-          }}
-          thumbColor={autoCheckUpdate ? primary : 'gray'}
-        />
-      </View>
-
-      <TouchableNativeFeedback
-        onPress={() =>
-          checkForUpdate(setUpdateLoading, autoDownload, true, primary)
-        }
-        disabled={updateLoading}
-        background={TouchableNativeFeedback.Ripple('gray', false)}>
-        <View className=" flex-row items-center px-4 justify-between mt-5 bg-tertiary p-2 py-3 rounded-md">
-          <View className="flex-row items-center gap-2">
-            <MaterialCommunityIcons
-              name="update"
-              size={24}
-              color="white"
-              className=""
-            />
-            <Text className="text-white font-semibold">Check for Updates</Text>
-          </View>
-          <Feather name="chevron-right" size={20} color="white" />
+      <View className="p-4 space-y-3">
+        {/* Version */}
+        <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
+          <Text className="text-white text-base">Version</Text>
+          <Text className="text-white/70">v{pkg.version}</Text>
         </View>
-      </TouchableNativeFeedback>
+
+        {/* Auto Install Updates */}
+        <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
+          <Text className="text-white text-base">Auto Install Updates</Text>
+          <Switch
+            value={autoDownload}
+            onValueChange={() => {
+              setAutoDownload(!autoDownload);
+              MMKV.setBool('autoDownload', !autoDownload);
+            }}
+            thumbColor={autoDownload ? primary : 'gray'}
+          />
+        </View>
+
+        {/* Auto Check Updates */}
+        <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
+          <Text className="text-white text-base">Check Updates on Start</Text>
+          <Switch
+            value={autoCheckUpdate}
+            onValueChange={() => {
+              setAutoCheckUpdate(!autoCheckUpdate);
+              MMKV.setBool('autoCheckUpdate', !autoCheckUpdate);
+            }}
+            thumbColor={autoCheckUpdate ? primary : 'gray'}
+          />
+        </View>
+
+        {/* Check Updates Button */}
+        <TouchableNativeFeedback
+          onPress={() => checkForUpdate(setUpdateLoading, autoDownload, true, primary)}
+          disabled={updateLoading}
+          background={TouchableNativeFeedback.Ripple('#ffffff20', false)}>
+          <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
+            <View className="flex-row items-center space-x-3">
+              <MaterialCommunityIcons
+                name="update"
+                size={22}
+                color="white"
+              />
+              <Text className="text-white text-base">Check for Updates</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="white" />
+          </View>
+        </TouchableNativeFeedback>
+      </View>
     </View>
   );
 };
