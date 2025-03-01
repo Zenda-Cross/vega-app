@@ -12,7 +12,7 @@ export const suGetStream = async (
     const streams: Stream[] = [];
     const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
 
-    const baseUrl = await getBaseUrl('embedSu');
+    const baseUrl = await getBaseUrl('embedsu');
     const link =
       type === 'movie'
         ? `${baseUrl}/embed/movie/${tmdbId}`
@@ -25,13 +25,13 @@ export const suGetStream = async (
     });
     const text = await res.text();
     const encodedValue = text.match(/atob\(`([^`]+)`\)/)?.[1];
-    console.log('encodedValue', encodedValue);
+    // console.log('encodedValue', encodedValue);
 
     const decodedValue = encodedValue ? atob(encodedValue) : '';
     const decodedJson = JSON.parse(decodedValue);
-    console.log('decodedJson', decodedJson);
+    // console.log('decodedJson', decodedJson);
     const hash = getApiHash(decodedJson?.hash, decodedJson?.server);
-    console.log('hash', hash);
+    // console.log('hash', hash);
     if (!hash) return [];
     const streamLink = `${baseUrl}/api/e/${hash}`;
     console.log('streamJson', streamLink);
