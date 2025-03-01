@@ -1,4 +1,4 @@
-import {View, Text, ScrollView} from 'react-native';
+import {View, Text, ScrollView, Alert} from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -19,11 +19,35 @@ const Search = () => {
   const [searchHistory, setSearchHistory] = useState<string[]>(
     MMKV.getArray<string>('searchHistory') || [],
   );
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
-  const handleSearch = () => {
+  const checkProviderResults = async (searchQuery: string) => {
+    setLoadingSearch(true);
+    const availableProviders = [];
+    
+    for (const item of providersList) {
+      try {
+        const data = await manifest[item.value].GetSearchPosts(
+          searchQuery,
+          1,
+          item.value,
+          null
+        );
+        if (data && data.length > 0) {
+          availableProviders.push(item.value);
+        }
+      } catch (error) {
+        console.error(`Error checking ${item.value}:`, error);
+      }
+    }
+    setLoadingSearch(false);
+    return availableProviders;
+  };
+
+  const handleSearch = async () => {
     if (searchText.trim()) {
+      // Save to search history
       const prevSearches = MMKV.getArray<string>('searchHistory') || [];
-      console.log('prev', prevSearches);
       if (!prevSearches.includes(searchText.trim())) {
         const newSearches: string[] = [searchText.trim(), ...prevSearches];
         if (newSearches.length > 15) {
@@ -32,9 +56,19 @@ const Search = () => {
         MMKV.setArray('searchHistory', newSearches);
         setSearchHistory(newSearches);
       }
-      navigation.navigate('SearchResults', {
-        filter: searchText.trim(),
-      });
+
+      // Check available providers before navigating
+      const availableProviders = await checkProviderResults(searchText.trim());
+      
+      if (availableProviders.length > 0) {
+        navigation.navigate('SearchResults', {
+          filter: searchText.trim(),
+          availableProviders: availableProviders // Pass available providers to SearchResults
+        });
+      } else {
+        // Show a message when no results found
+        Alert.alert('No Results', 'No results found in any provider');
+      }
     }
   };
 
@@ -54,9 +88,16 @@ const Search = () => {
           onFocus={() => setIsSearching(true)}
           onBlur={() => setTimeout(() => setIsSearching(false), 100)}
           className="bg-gray-800 p-2 rounded-md w-[90%] placeholder-white text-white"
+          editable={!loadingSearch}
         />
-        <TouchableOpacity onPress={handleSearch}>
-          <Ionicons name="search" size={25} color="white" />
+        <TouchableOpacity 
+          onPress={handleSearch}
+          disabled={loadingSearch}>
+          <Ionicons 
+            name={loadingSearch ? "timer-outline" : "search"} 
+            size={25} 
+            color="white" 
+          />
         </TouchableOpacity>
       </View>
       {(isSearching || manifest[provider.value].genres.length === 0) && (

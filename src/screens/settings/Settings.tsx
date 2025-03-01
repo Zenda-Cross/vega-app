@@ -25,6 +25,7 @@ import {
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
+import { MotiView } from 'moti';
 
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
@@ -78,6 +79,19 @@ const Settings = ({navigation}: Props) => {
     </TouchableOpacity>
   );
 
+  const AnimatedSection = ({ delay, children }: { delay: number, children: React.ReactNode }) => (
+    <MotiView
+      from={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ 
+        type: 'timing',
+        duration: 500,
+        delay 
+      }}>
+      {children}
+    </MotiView>
+  );
+
   return (
     <ScrollView 
       className="w-full h-full bg-black" 
@@ -90,164 +104,177 @@ const Settings = ({navigation}: Props) => {
         flexGrow: 1,  // This ensures content is scrollable even if it's shorter than screen
       }}>
       <View className="p-5">
-        <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
+        <MotiView
+          from={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 400 }}>
+          <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
+        </MotiView>
         
         {/* Content provider section */}
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
-          <View className="bg-[#1A1A1A] rounded-xl py-4">
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 10,
-              }}>
-              {providersList.map(item => 
-                renderProviderItem(item, provider.value === item.value)
-              )}
-            </ScrollView>
+        <AnimatedSection delay={100}>
+          <View className="mb-6">
+            <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
+            <View className="bg-[#1A1A1A] rounded-xl py-4">
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingHorizontal: 10,
+                }}>
+                {providersList.map(item => 
+                  renderProviderItem(item, provider.value === item.value)
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </View>
+        </AnimatedSection>
 
         {/* Main options section */}
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm mb-3">Options</Text>
-          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-            {/* Downloads */}
-            <TouchableNativeFeedback
-              onPress={() => navigation.navigate('Downloads')}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons name="folder-download" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">Downloads</Text>
+        <AnimatedSection delay={200}>
+          <View className="mb-6">
+            <Text className="text-gray-400 text-sm mb-3">Options</Text>
+            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+              {/* Downloads */}
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('Downloads')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons name="folder-download" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">Downloads</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-                <Feather name="chevron-right" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
 
-            {/* Subtitle Style */}
-            <TouchableNativeFeedback
-              onPress={async () => {
-                if (MMKV.getBool('hapticFeedback') !== false) {
-                  ReactNativeHapticFeedback.trigger('virtualKey', {
-                    enableVibrateFallback: true,
-                    ignoreAndroidSystemSettings: false,
-                  });
-                }
-                await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
-              }}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons name="subtitles" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">Subtitle Style</Text>
+              {/* Subtitle Style */}
+              <TouchableNativeFeedback
+                onPress={async () => {
+                  if (MMKV.getBool('hapticFeedback') !== false) {
+                    ReactNativeHapticFeedback.trigger('virtualKey', {
+                      enableVibrateFallback: true,
+                      ignoreAndroidSystemSettings: false,
+                    });
+                  }
+                  await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
+                }}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons name="subtitles" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">Subtitle Style</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-                <Feather name="chevron-right" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
 
-            {/* Disable Providers */}
-            <TouchableNativeFeedback
-              onPress={() => navigation.navigate('DisableProviders')}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <View className="flex-row items-center">
-                  <MaterialIcons name="block" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">Disable Providers in Search</Text>
+              {/* Disable Providers */}
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('DisableProviders')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <View className="flex-row items-center">
+                    <MaterialIcons name="block" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">Disable Providers in Search</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-                <Feather name="chevron-right" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
 
-            {/* Preferences */}
-            <TouchableNativeFeedback
-              onPress={() => navigation.navigate('Preferences')}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center">
-                  <MaterialIcons name="room-preferences" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">Preferences</Text>
+              {/* Preferences */}
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('Preferences')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <MaterialIcons name="room-preferences" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">Preferences</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-                <Feather name="chevron-right" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
+            </View>
           </View>
-        </View>
+        </AnimatedSection>
 
         {/* Data Management section */}
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm mb-3">Data Management</Text>
-          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-            {/* Clear Cache */}
-            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-              <Text className="text-white text-base">Clear Cache</Text>
-              <TouchableOpacity
-                className="bg-[#262626] px-4 py-2 rounded-lg"
-                onPress={() => {
-                  if (MMKV.getBool('hapticFeedback') !== false) {
-                    ReactNativeHapticFeedback.trigger('virtualKey', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                  }
-                  MmmkvCache.clearStore();
-                }}>
-                <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
-              </TouchableOpacity>
-            </View>
+        <AnimatedSection delay={300}>
+          <View className="mb-6">
+            <Text className="text-gray-400 text-sm mb-3">Data Management</Text>
+            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+              {/* Clear Cache */}
+              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                <Text className="text-white text-base">Clear Cache</Text>
+                <TouchableOpacity
+                  className="bg-[#262626] px-4 py-2 rounded-lg"
+                  onPress={() => {
+                    if (MMKV.getBool('hapticFeedback') !== false) {
+                      ReactNativeHapticFeedback.trigger('virtualKey', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
+                    MmmkvCache.clearStore();
+                  }}>
+                  <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+                </TouchableOpacity>
+              </View>
 
-            {/* Clear Watch History */}
-            <View className="flex-row items-center justify-between p-4">
-              <Text className="text-white text-base">Clear Watch History</Text>
-              <TouchableOpacity
-                className="bg-[#262626] px-4 py-2 rounded-lg"
-                onPress={() => {
-                  if (MMKV.getBool('hapticFeedback') !== false) {
-                    ReactNativeHapticFeedback.trigger('virtualKey', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                  }
-                  clearHistory();
-                }}>
-                <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
-              </TouchableOpacity>
+              {/* Clear Watch History */}
+              <View className="flex-row items-center justify-between p-4">
+                <Text className="text-white text-base">Clear Watch History</Text>
+                <TouchableOpacity
+                  className="bg-[#262626] px-4 py-2 rounded-lg"
+                  onPress={() => {
+                    if (MMKV.getBool('hapticFeedback') !== false) {
+                      ReactNativeHapticFeedback.trigger('virtualKey', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
+                    clearHistory();
+                  }}>
+                  <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </AnimatedSection>
 
         {/* About & GitHub section */}
-        <View className="mb-6">
-          <Text className="text-gray-400 text-sm mb-3">About</Text>
-          <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-            {/* About */}
-            <TouchableNativeFeedback
-              onPress={() => navigation.navigate('About')}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <View className="flex-row items-center">
-                  <Feather name="info" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">About</Text>
+        <AnimatedSection delay={400}>
+          <View className="mb-6">
+            <Text className="text-gray-400 text-sm mb-3">About</Text>
+            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+              {/* About */}
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('About')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <View className="flex-row items-center">
+                    <Feather name="info" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">About</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-                <Feather name="chevron-right" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
 
-            {/* GitHub */}
-            <TouchableNativeFeedback
-              onPress={() => Linking.openURL(socialLinks.github)}
-              background={TouchableNativeFeedback.Ripple('#333333', false)}>
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center">
-                  <AntDesign name="github" size={22} color={primary} />
-                  <Text className="text-white ml-3 text-base">Give a star  ⭐</Text>
+              {/* GitHub */}
+              <TouchableNativeFeedback
+                onPress={() => Linking.openURL(socialLinks.github)}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <AntDesign name="github" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">Give a star  ⭐</Text>
+                  </View>
+                  <Feather name="external-link" size={20} color="gray" />
                 </View>
-                <Feather name="external-link" size={20} color="gray" />
-              </View>
-            </TouchableNativeFeedback>
+              </TouchableNativeFeedback>
+            </View>
           </View>
-        </View>
+        </AnimatedSection>
       </View>
     </ScrollView>
   );

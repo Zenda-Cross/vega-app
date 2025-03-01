@@ -7,8 +7,7 @@ import useThemeStore from '../lib/zustand/themeStore';
 import {TouchableOpacity} from 'react-native';
 import {DrawerLayout} from 'react-native-gesture-handler';
 import {BlurView} from 'expo-blur';
-import {Ionicons} from '@expo/vector-icons';
-import {SvgUri} from 'react-native-svg';
+import {MaterialIcons} from '@expo/vector-icons';
 
 const ProviderDrawer = ({
   drawerRef,
@@ -22,17 +21,19 @@ const ProviderDrawer = ({
     <BlurView
       intensity={90}
       experimentalBlurMethod="dimezisBlurView"
-      // renderToHardwareTextureAndroid={true}
       blurReductionFactor={5}
       tint="dark"
-      className="px-3">
-      <View className="mt-6 p-2 flex flex-row justify-center items-center gap-x-3">
-        <Ionicons name="extension-puzzle-outline" size={24} color={primary} />
-        <Text className="text-white text-2xl">Providers</Text>
+      className="flex-1">
+      <View className="mt-6 px-4 pb-4 border-b border-white/10">
+        <Text className="text-white text-2xl font-bold">Select Provider</Text>
+        <Text className="text-gray-400 mt-1 text-sm">
+          Choose your content source
+        </Text>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="mb-20 flex gap-[0.8]">
+        className="flex-1 px-2">
         {providersList.map(item => (
           <TouchableOpacity
             key={item.value}
@@ -40,15 +41,28 @@ const ProviderDrawer = ({
               setProvider(item);
               drawerRef.current?.closeDrawer();
             }}
-            className={`text-white w-44 flex-row justify-start gap-2 items-center px-3 py-1 rounded-s-md border-b border-white/10 rounded-md ${
-              provider.value === item.value ? 'bg-white/10' : ''
-            } `}>
-            <SvgUri className="mb-2" width={20} height={20} uri={item.flag} />
-            <Text className=" text-white mb-2">
-              {/* {item.flag} */}
-              {/* &nbsp; &nbsp; */}
-              {item.name}
-            </Text>
+            className={`flex-row items-center justify-between p-4 my-1 rounded-lg ${
+              provider.value === item.value 
+                ? 'bg-white/10' 
+                : 'bg-transparent'
+            }`}>
+            <View className="flex-row items-center">
+              <MaterialIcons
+                name="movie"
+                size={20}
+                color={provider.value === item.value ? primary : '#888'}
+              />
+              <Text className={`ml-3 text-base ${
+                provider.value === item.value
+                  ? 'text-white font-medium'
+                  : 'text-gray-400'
+              }`}>
+                {item.name}
+              </Text>
+            </View>
+            {provider.value === item.value && (
+              <MaterialIcons name="check" size={20} color={primary} />
+            )}
           </TouchableOpacity>
         ))}
         <View className="h-16" />
