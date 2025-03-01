@@ -129,6 +129,12 @@ export const providersList: ProvidersList[] = [
   //   flag: FLAGS.ENGLISH,
   // },
   {
+    name: 'EmbedSU',
+    value: 'embedsu',
+    type: 'english',
+    flag: FLAGS.ENGLISH,
+  },
+  {
     name: 'RidoMovies',
     value: 'ridoMovies',
     type: 'english',
