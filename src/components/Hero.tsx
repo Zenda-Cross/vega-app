@@ -85,7 +85,7 @@ function Hero({
     setSearchActive(false);
   });
   return (
-    <View className="relative h-[75vh]">
+    <View className="relative h-[65vh]">
       <View className="absolute w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
         {!searchActive && (
           <View
@@ -182,10 +182,10 @@ function Hero({
               />
             ) : (
               <Text className="text-white text-center text-4xl font-bold">
-                {post?.name || post?.title }
+                {post?.name || post?.title}
               </Text>
             )}
-            
+
             <Text className="text-white/80 text-base w-2/3">
               {post?.description?.slice(0, 150)}...
             </Text>
