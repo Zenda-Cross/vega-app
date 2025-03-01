@@ -196,7 +196,7 @@ const About = () => {
         </Text>
       </View>
 
-      <View className="p-4 space-y-3">
+      <View className="p-4 space-y-4 pb-24">
         {/* Version */}
         <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
           <Text className="text-white text-base">Version</Text>
@@ -217,8 +217,11 @@ const About = () => {
         </View>
 
         {/* Auto Check Updates */}
-        <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
-          <Text className="text-white text-base">Check Updates on Start</Text>
+        <View className="bg-white/10 p-3 rounded-lg flex-row justify-between items-center">
+          <View className="flex-1 mr-2">
+            <Text className="text-white text-base">Check Updates on Start</Text>
+            <Text className="text-gray-400 text-sm">Automatically check for updates when app starts</Text>
+          </View>
           <Switch
             value={autoCheckUpdate}
             onValueChange={() => {
