@@ -23,7 +23,7 @@ export const nfGetPost = async function (
     // console.log(url);
     const cookie =
       (await nfGetCookie()) +
-      `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
+      `ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
     console.log('nfCookie', cookie);
     const res = await fetch(url, {
       headers: {
@@ -97,28 +97,45 @@ export const nfGetPostsSearch = async function (
     }
     const catalog: Post[] = [];
     const baseUrl = await getBaseUrl('nfMirror');
-    const url = `${baseUrl + '/search.php?s=' + encodeURI(searchQuery)}`;
-    // console.log('search', url);
-    const headers = await getNfHeaders();
-    const res = await axios.get(url, {headers, signal});
-    const data = res.data;
-    data?.searchResult.map((result: any) => {
-      const title = result?.t;
+    const url = `${baseUrl}${providerValue === 'netflixMirror' ? '' : '/pv'}/search.php?s=${encodeURI(searchQuery)}`;
+    
+    const cookie = await nfGetCookie() + 
+      `ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
+
+    const res = await fetch(url, {
+      headers: {
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'en-US,en;q=0.9',
+        'cache-control': 'no-cache',
+        pragma: 'no-cache',
+        cookie: cookie,
+        'sec-ch-ua': '"Chromium";v="130", "Not?A_Brand";v="99"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'x-requested-with': 'XMLHttpRequest'
+      },
+      signal: signal,
+      method: 'GET',
+      credentials: 'omit',
+    });
+
+    const data = await res.json();
+    
+    data?.searchResult?.forEach((result: any) => {
+      const title = result?.t || '';
       const id = result?.id;
-      const image =
-        providerValue === 'netflixMirror'
-          ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
-          : '';
+      const image = providerValue === 'netflixMirror' 
+        ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
+        : '';
+
       if (id) {
         catalog.push({
           title: title,
-          link:
-            baseUrl +
-            `${
-              providerValue === 'netflixMirror'
-                ? '/post.php?id='
-                : '/pv/post.php?id='
-            }` +
+          link: baseUrl +
+            `${providerValue === 'netflixMirror' ? '/post.php?id=' : '/pv/post.php?id='}` +
             id +
             '&t=' +
             Math.round(new Date().getTime() / 1000),
@@ -126,10 +143,10 @@ export const nfGetPostsSearch = async function (
         });
       }
     });
-    // console.log('nfSearch', catalog);
+
     return catalog;
   } catch (err) {
-    console.error('nf error ', err);
+    console.error('Search error:', err);
     return [];
   }
 };

@@ -85,7 +85,7 @@ function Hero({
     setSearchActive(false);
   });
   return (
-    <View className="relative">
+    <View className="relative h-[75vh]">
       <View className="absolute w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
         {!searchActive && (
           <View
@@ -156,68 +156,70 @@ function Hero({
               };
             })
           }
-          className="h-96 w-full"
+          className="h-full w-full"
           style={{resizeMode: 'cover'}}
         />
       </Skeleton>
-      {
-        <View className="absolute bottom-0 w-full z-20 justify-center gap-3 flex items-center">
-          {!loading && (
-            <>
-              {post?.logo ? (
-                <Image
-                  onError={() => {
-                    setPost((prev: any) => {
-                      return {
-                        ...prev,
-                        logo: '',
-                      };
-                    });
-                  }}
-                  source={{uri: post?.logo}}
-                  style={{
-                    width: 200,
-                    height: 100,
-                    resizeMode: 'contain',
-                  }}
-                />
-              ) : (
-                <Text className="text-white w-80 text-2xl capitalize font-bold text-center">
-                  {post?.name || post?.title}
-                </Text>
-              )}
-              <Text className="text-white text-lg font-bold text-center">
-                {post?.genres
-                  ?.slice(0, 3)
-                  .map((genre: string) => '  • ' + genre)}
-                {post?.tags?.slice(0, 3).map((tag: string) => '  • ' + tag)}
+      <View className="absolute bottom-20 w-full z-20 px-6">
+        {!loading && (
+          <View className="gap-4">
+            {post?.logo ? (
+              <Image
+                onError={() => {
+                  setPost((prev: any) => {
+                    return {
+                      ...prev,
+                      logo: '',
+                    };
+                  });
+                }}
+                source={{uri: post?.logo}}
+                style={{
+                  width: 300,
+                  height: 150,
+                  resizeMode: 'contain',
+                }}
+              />
+            ) : (
+              <Text className="text-white text-center text-4xl font-bold">
+                {post?.name || post?.title }
               </Text>
-            </>
-          )}
-          {hero?.link && (
-            <TouchableOpacity
-              className=" bg-gray-200  pb-2 pr-2  rounded-md flex-row gap-2 items-center justify-center"
-              onPress={() => {
-                navigation.navigate('Info', {
-                  link: hero.link,
-                  provider: provider.value,
-                  poster: post?.image || post?.poster || post?.background,
-                });
-              }}>
-              <FontAwesome6 name="play" size={20} color="black" />
-              <Text className="text-black font-bold text-base">Watch</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      }
+            )}
+            
+            <Text className="text-white/80 text-base w-2/3">
+              {post?.description?.slice(0, 150)}...
+            </Text>
+
+            <View className="flex-1 items-center justify-center">
+              {hero?.link && (
+                <TouchableOpacity
+                  className="bg-white px-16 py-4 rounded-lg flex-row items-center space-x-2"
+                  onPress={() => {
+                    navigation.navigate('Info', {
+                      link: hero.link,
+                      provider: provider.value,
+                      poster: post?.image || post?.poster || post?.background,
+                    });
+                  }}>
+                  <FontAwesome6 name="play" size={24} color="black" />
+                  <Text className="text-black font-bold text-xl">Play</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+
       <LinearGradient
-        colors={['transparent', 'black']}
+        colors={['transparent', 'rgba(0,0,0,0.8)', 'black']}
+        locations={[0, 0.7, 1]}
         className="absolute h-full w-full"
       />
       {searchActive && (
         <LinearGradient
           colors={['black', 'transparent']}
-          className="absolute h-[40%] w-full"
+          locations={[0, 0.3]}
+          className="absolute h-[30%] w-full"
         />
       )}
     </View>
