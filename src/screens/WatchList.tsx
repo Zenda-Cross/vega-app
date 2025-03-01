@@ -1,96 +1,154 @@
-import {View, Text, ScrollView} from 'react-native';
-import React from 'react';
+import {View, Text, ScrollView, StatusBar, Platform, Image} from 'react-native';
+import React, {useState, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {Image} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
-import LinearGradient from 'react-native-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {MotiView} from 'moti';
-import {Feather} from '@expo/vector-icons';
+import useContentStore from '../lib/zustand/contentStore';
+import {manifest} from '../lib/Manifest';
 
 const Library = () => {
   const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const {watchList} = useWatchListStore(state => state);
-  
+  const {provider} = useContentStore(state => state);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (watchList.length === 0) {
+      // Get random items from trending/popular section
+      const trendingItems = (manifest[provider.value]?.catalog || [])
+        .find(cat => cat.title.toLowerCase().includes('trend') || cat.title.toLowerCase().includes('popular'))
+        ?.Posts || [];
+      
+      // Get 4 random items
+      const randomSuggestions = trendingItems
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 4);
+      
+      setSuggestions(randomSuggestions);
+    }
+  }, [watchList.length, provider]);
+
   return (
-    <View className="h-full w-full">
-      <LinearGradient
-        colors={['#000000', '#1a1a1a', '#000000']}
-        className="h-full w-full">
-        <ScrollView
-          className="h-full w-full p-2 pt-8"
-          contentContainerStyle={{alignItems: 'center'}}>
-          <View className="w-full px-4 py-6">
-            <Text 
-              className="text-3xl font-bold text-center mb-2" 
-              style={{color: primary}}>
-              Watch List
-            </Text>
-            <Text className="text-gray-400 text-center text-sm">
-              Your saved movies and shows
-            </Text>
-          </View>
+    <View className="flex-1 bg-black">
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
+      
+      <View 
+        className="w-full bg-black" 
+        style={{ 
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 
+        }} 
+      />
 
-          <View className="w-[400px] flex-row justify-center">
-            <View className="flex-row flex-wrap gap-4 mb-5 w-[340px]">
-              {watchList.map((item: any, index: number) => (
-                <MotiView
-                  from={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 100 }}
-                  key={item.link + index}
-                  className="flex flex-col">
-                  <TouchableOpacity
-                    onPress={() =>
-                      navigation.navigate('Info', {
-                        link: item.link,
-                        provider: item.provider,
-                        poster: item.poster,
-                      })
-                    }
-                    className="shadow-lg shadow-black">
-                    <Image
-                      className="rounded-lg"
-                      source={{uri: item.poster}}
-                      style={{width: 110, height: 165}}
-                    />
-                    <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.9)']}
-                      className="absolute bottom-0 w-full h-1/3 rounded-b-lg"
-                    />
-                  </TouchableOpacity>
-                  <Text className="text-white text-center truncate w-28 text-sm mt-2">
-                    {item?.title?.length > 20
-                      ? item.title.slice(0, 20) + '...'
-                      : item.title}
-                  </Text>
-                </MotiView>
-              ))}
+      <ScrollView 
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text className="text-white text-2xl font-bold mb-6 mt-4">Watchlist</Text>
+
+        {watchList.length > 0 ? (
+          <View className="flex-row flex-wrap gap-3">
+            {watchList.map((item: any, index: number) => (
+              <TouchableOpacity
+                key={item.link + index}
+                onPress={() =>
+                  navigation.navigate('Info', {
+                    link: item.link,
+                    provider: item.provider,
+                    poster: item.poster,
+                  })
+                }
+                className="mb-4"
+              >
+                <View className="relative">
+                  <Image
+                    className="rounded-xl"
+                    source={{uri: item.poster}}
+                    style={{width: 110, height: 165}}
+                  />
+                  <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
+                    <Text className="text-white text-xs" numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View className="flex-1">
+            <View className="items-center justify-center mt-20 mb-12">
+              <MaterialCommunityIcons 
+                name="playlist-remove" 
+                size={80} 
+                color={primary} 
+              />
+              <Text className="text-white/70 text-base mt-4 text-center">
+                Your watchlist is empty
+              </Text>
+              <Text className="text-white/50 text-sm mt-2 text-center">
+                Add shows and movies to keep track of what you want to watch
+              </Text>
             </View>
-          </View>
 
-          {watchList.length === 0 && (
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="items-center justify-center mt-20">
-              <Feather name="bookmark" size={64} color="gray" />
-              <Text className="text-gray-400 text-center mt-4 text-lg">
-                Your watch list is empty
-              </Text>
-              <Text className="text-gray-600 text-center mt-2">
-                Save movies and shows to watch later
-              </Text>
-            </MotiView>
-          )}
-          <View className="h-16" />
-        </ScrollView>
-      </LinearGradient>
+            {suggestions.length > 0 && (
+              <View className="mt-8">
+                <Text className="text-white/70 text-lg font-medium mb-4">
+                  Recommended for you
+                </Text>
+                <View className="flex-row flex-wrap gap-3">
+                  {suggestions.map((item, index) => (
+                    <MotiView
+                      key={item.link + index}
+                      from={{ opacity: 0, translateY: 20 }}
+                      animate={{ opacity: 1, translateY: 0 }}
+                      transition={{
+                        type: 'timing',
+                        duration: 500,
+                        delay: index * 100
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={() =>
+                          navigation.navigate('Info', {
+                            link: item.link,
+                            provider: provider.value,
+                            poster: item.image,
+                          })
+                        }
+                        className="mb-4"
+                      >
+                        <View className="relative">
+                          <Image
+                            className="rounded-xl"
+                            source={{uri: item.image}}
+                            style={{width: 110, height: 165}}
+                          />
+                          <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
+                            <Text className="text-white text-xs" numberOfLines={1}>
+                              {item.title}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    </MotiView>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
