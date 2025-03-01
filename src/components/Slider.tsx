@@ -11,7 +11,6 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
-import {MMKV} from '../lib/Mmkv';
 
 export default function Slider({
   isLoading,
@@ -36,9 +35,9 @@ export default function Slider({
   const {removeItem} = useWatchHistoryStore(state => state);
 
   return (
-    <Pressable onPress={() => setSelected('')} className="gap-3 mb-8">
-      <View className="flex flex-row items-center justify-between px-4 mb-2">
-        <Text className="text-xl font-medium text-white">
+    <Pressable onPress={() => setSelected('')} className="gap-3 mt-3">
+      <View className="flex flex-row items-center justify-between px-2">
+        <Text className="text-2xl font-semibold" style={{color: primary}}>
           {title}
         </Text>
         {filter !== 'recent' && (
@@ -51,15 +50,18 @@ export default function Slider({
                 isSearch: isSearch,
               })
             }>
-            <Text className="text-white/70 text-sm">See All</Text>
+            <Text className="text-white text-sm">more</Text>
           </TouchableOpacity>
         )}
       </View>
       {isLoading ? (
-        <View className="flex flex-row gap-2 overflow-hidden px-4">
+        <View className="flex flex-row gap-2 overflow-hidden">
           {Array.from({length: 5}).map((_, index) => (
-            <View key={index} className="rounded-md overflow-hidden">
-              <SkeletonLoader height={200} width={135} />
+            <View
+              className="mx-3 gap-0 flex mb-3 justify-center items-center"
+              key={index}>
+              <SkeletonLoader height={150} width={100} />
+              <SkeletonLoader height={12} width={97} />
             </View>
           ))}
         </View>
@@ -70,56 +72,60 @@ export default function Slider({
           data={posts}
           extraData={isSelected}
           horizontal
-          contentContainerStyle={{paddingHorizontal: 16}}
+          contentContainerStyle={{paddingHorizontal: 3, paddingTop: 7}}
           renderItem={({item}) => (
-            <TouchableOpacity
-              onLongPress={e => {
-                e.stopPropagation();
-                if (filter === 'recent') {
-                  console.log('long press', filter);
-                  if (MMKV.getBool('hapticFeedback') !== false) {
+            <View className="flex flex-col mx-2">
+              <TouchableOpacity
+                onLongPress={e => {
+                  e.stopPropagation();
+                  if (filter === 'recent') {
+                    console.log('long press', filter);
                     ReactNativeHapticFeedback.trigger('effectClick', {
                       enableVibrateFallback: true,
                       ignoreAndroidSystemSettings: false,
                     });
+                    setSelected(item.link);
                   }
-                  setSelected(item.link);
-                }
-              }}
-              onPress={e => {
-                e.stopPropagation();
-                setSelected('');
-                navigation.navigate('Info', {
-                  link: item.link,
-                  provider: item.provider || providerValue || provider?.value,
-                  poster: item?.image,
-                });
-              }}
-              className="mr-3">
-              <Image
-                className="rounded-md"
-                source={{
-                  uri:
-                    item?.image ||
-                    'https://placehold.jp/24/363636/ffffff/100x150.png?text=vega',
                 }}
-                style={{width: 135, height: 200}}
-              />
-              {isSelected === item.link && (
-                <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
-                  <AntDesign
-                    name="delete"
-                    size={24}
-                    color="white"
-                    onPress={() => {
-                      console.log('remove', item);
-                      setSelected('');
-                      removeItem(item);
-                    }}
-                  />
-                </View>
-              )}
-            </TouchableOpacity>
+                onPress={e => {
+                  e.stopPropagation();
+                  setSelected('');
+                  navigation.navigate('Info', {
+                    link: item.link,
+                    provider: item.provider || providerValue || provider?.value,
+                    poster: item?.image,
+                  });
+                }}>
+                <Image
+                  className="rounded-md"
+                  source={{
+                    uri:
+                      item?.image ||
+                      'https://placehold.jp/24/363636/ffffff/100x150.png?text=ScreenScape',
+                  }}
+                  style={{width: 100, height: 150}}
+                />
+                {isSelected === item.link && (
+                  <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
+                    <AntDesign
+                      name="delete"
+                      size={24}
+                      color="white"
+                      onPress={() => {
+                        console.log('remove', item);
+                        setSelected('');
+                        removeItem(item);
+                      }}
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+              <Text className="text-white text-center truncate w-24 text-xs">
+                {item.title.length > 24
+                  ? `${item.title.slice(0, 24)}...`
+                  : item.title}
+              </Text>
+            </View>
           )}
           ListFooterComponent={
             !isLoading && posts.length === 0 ? (
