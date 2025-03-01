@@ -35,8 +35,8 @@ export default function Slider({
   const {removeItem} = useWatchHistoryStore(state => state);
 
   return (
-    <Pressable onPress={() => setSelected('')} className="gap-3 mt-3">
-      <View className="flex flex-row items-center justify-between px-2">
+    <Pressable onPress={() => setSelected('')} className="gap-3 mt-3 px-2">
+      <View className="flex flex-row items-center justify-between">
         <Text className="text-2xl font-semibold" style={{color: primary}}>
           {title}
         </Text>
