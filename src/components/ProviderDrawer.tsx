@@ -26,14 +26,10 @@ const ProviderDrawer = ({
       className="flex-1">
       <View className="mt-6 px-4 pb-4 border-b border-white/10">
         <Text className="text-white text-2xl font-bold">Select Provider</Text>
-        <Text className="text-gray-400 mt-1 text-sm">
-          Choose your content source
-        </Text>
+        <Text className="text-gray-400 mt-1 text-sm">Content source</Text>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="flex-1 px-2">
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-2">
         {providersList.map(item => (
           <TouchableOpacity
             key={item.value}
@@ -42,9 +38,7 @@ const ProviderDrawer = ({
               drawerRef.current?.closeDrawer();
             }}
             className={`flex-row items-center justify-between p-4 my-1 rounded-lg ${
-              provider.value === item.value 
-                ? 'bg-white/10' 
-                : 'bg-transparent'
+              provider.value === item.value ? 'bg-white/10' : 'bg-transparent'
             }`}>
             <View className="flex-row items-center">
               <MaterialIcons
@@ -52,11 +46,12 @@ const ProviderDrawer = ({
                 size={20}
                 color={provider.value === item.value ? primary : '#888'}
               />
-              <Text className={`ml-3 text-base ${
-                provider.value === item.value
-                  ? 'text-white font-medium'
-                  : 'text-gray-400'
-              }`}>
+              <Text
+                className={`ml-3 text-base ${
+                  provider.value === item.value
+                    ? 'text-white font-medium'
+                    : 'text-gray-400'
+                }`}>
                 {item.name}
               </Text>
             </View>

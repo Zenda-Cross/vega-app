@@ -25,8 +25,7 @@ import {
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
-import { MotiView } from 'moti';
-
+import {MotiView} from 'moti';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -67,11 +66,13 @@ const Settings = ({navigation}: Props) => {
       }}>
       <View className="flex-col items-center justify-center h-full p-2">
         {renderProviderIcon(item.flag)}
-        <Text numberOfLines={1} className="text-white text-xs font-medium text-center mt-2">
+        <Text
+          numberOfLines={1}
+          className="text-white text-xs font-medium text-center mt-2">
           {item.name}
         </Text>
         {isSelected && (
-          <Text style={{ position: 'absolute', top: 6, right: 6 }}>
+          <Text style={{position: 'absolute', top: 6, right: 6}}>
             <MaterialIcons name="check-circle" size={16} color={primary} />
           </Text>
         )}
@@ -79,51 +80,57 @@ const Settings = ({navigation}: Props) => {
     </TouchableOpacity>
   );
 
-  const AnimatedSection = ({ delay, children }: { delay: number, children: React.ReactNode }) => (
+  const AnimatedSection = ({
+    delay,
+    children,
+  }: {
+    delay: number;
+    children: React.ReactNode;
+  }) => (
     <MotiView
-      from={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ 
+      from={{opacity: 0, translateY: 20}}
+      animate={{opacity: 1, translateY: 0}}
+      transition={{
         type: 'timing',
         duration: 500,
-        delay 
+        delay,
       }}>
       {children}
     </MotiView>
   );
 
   return (
-    <ScrollView 
-      className="w-full h-full bg-black" 
+    <ScrollView
+      className="w-full h-full bg-black"
       showsVerticalScrollIndicator={false}
       bounces={true}
       overScrollMode="always"
       contentContainerStyle={{
         paddingTop: StatusBar.currentHeight || 0,
         paddingBottom: 24,
-        flexGrow: 1,  // This ensures content is scrollable even if it's shorter than screen
+        flexGrow: 1, // This ensures content is scrollable even if it's shorter than screen
       }}>
       <View className="p-5">
         <MotiView
-          from={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'timing', duration: 400 }}>
+          from={{opacity: 0, scale: 0.9}}
+          animate={{opacity: 1, scale: 1}}
+          transition={{type: 'timing', duration: 400}}>
           <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
         </MotiView>
-        
+
         {/* Content provider section */}
         <AnimatedSection delay={100}>
           <View className="mb-6">
             <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
             <View className="bg-[#1A1A1A] rounded-xl py-4">
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{
                   paddingHorizontal: 10,
                 }}>
-                {providersList.map(item => 
-                  renderProviderItem(item, provider.value === item.value)
+                {providersList.map(item =>
+                  renderProviderItem(item, provider.value === item.value),
                 )}
               </ScrollView>
             </View>
@@ -141,7 +148,11 @@ const Settings = ({navigation}: Props) => {
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                   <View className="flex-row items-center">
-                    <MaterialCommunityIcons name="folder-download" size={22} color={primary} />
+                    <MaterialCommunityIcons
+                      name="folder-download"
+                      size={22}
+                      color={primary}
+                    />
                     <Text className="text-white ml-3 text-base">Downloads</Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
@@ -162,8 +173,14 @@ const Settings = ({navigation}: Props) => {
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                   <View className="flex-row items-center">
-                    <MaterialCommunityIcons name="subtitles" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Subtitle Style</Text>
+                    <MaterialCommunityIcons
+                      name="subtitles"
+                      size={22}
+                      color={primary}
+                    />
+                    <Text className="text-white ml-3 text-base">
+                      Subtitle Style
+                    </Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
                 </View>
@@ -176,7 +193,9 @@ const Settings = ({navigation}: Props) => {
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                   <View className="flex-row items-center">
                     <MaterialIcons name="block" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Disable Providers in Search</Text>
+                    <Text className="text-white ml-3 text-base">
+                      Disable Providers in Search
+                    </Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
                 </View>
@@ -188,8 +207,14 @@ const Settings = ({navigation}: Props) => {
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center">
-                    <MaterialIcons name="room-preferences" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Preferences</Text>
+                    <MaterialIcons
+                      name="room-preferences"
+                      size={22}
+                      color={primary}
+                    />
+                    <Text className="text-white ml-3 text-base">
+                      Preferences
+                    </Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
                 </View>
@@ -217,13 +242,19 @@ const Settings = ({navigation}: Props) => {
                     }
                     MmmkvCache.clearStore();
                   }}>
-                  <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+                  <MaterialCommunityIcons
+                    name="delete-outline"
+                    size={20}
+                    color={primary}
+                  />
                 </TouchableOpacity>
               </View>
 
               {/* Clear Watch History */}
               <View className="flex-row items-center justify-between p-4">
-                <Text className="text-white text-base">Clear Watch History</Text>
+                <Text className="text-white text-base">
+                  Clear Watch History
+                </Text>
                 <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={() => {
@@ -235,7 +266,11 @@ const Settings = ({navigation}: Props) => {
                     }
                     clearHistory();
                   }}>
-                  <MaterialCommunityIcons name="delete-outline" size={20} color={primary} />
+                  <MaterialCommunityIcons
+                    name="delete-outline"
+                    size={20}
+                    color={primary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -267,7 +302,24 @@ const Settings = ({navigation}: Props) => {
                 <View className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center">
                     <AntDesign name="github" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Give a star  ⭐</Text>
+                    <Text className="text-white ml-3 text-base">
+                      Give a star ⭐
+                    </Text>
+                  </View>
+                  <Feather name="external-link" size={20} color="gray" />
+                </View>
+              </TouchableNativeFeedback>
+
+              {/* sponsore */}
+              <TouchableNativeFeedback
+                onPress={() => Linking.openURL(socialLinks.sponsor)}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <AntDesign name="hearto" size={22} color={primary} />
+                    <Text className="text-white ml-3 text-base">
+                      Sponsor Project
+                    </Text>
                   </View>
                   <Feather name="external-link" size={20} color="gray" />
                 </View>

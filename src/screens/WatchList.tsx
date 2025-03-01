@@ -22,15 +22,18 @@ const Library = () => {
   useEffect(() => {
     if (watchList.length === 0) {
       // Get random items from trending/popular section
-      const trendingItems = (manifest[provider.value]?.catalog || [])
-        .find(cat => cat.title.toLowerCase().includes('trend') || cat.title.toLowerCase().includes('popular'))
-        ?.Posts || [];
-      
+      const trendingItems =
+        (manifest[provider.value]?.catalog || []).find(
+          cat =>
+            cat.title.toLowerCase().includes('trend') ||
+            cat.title.toLowerCase().includes('popular'),
+        )?.Posts || [];
+
       // Get 4 random items
       const randomSuggestions = trendingItems
         .sort(() => 0.5 - Math.random())
         .slice(0, 4);
-      
+
       setSuggestions(randomSuggestions);
     }
   }, [watchList.length, provider]);
@@ -42,19 +45,18 @@ const Library = () => {
         backgroundColor="transparent"
         barStyle="light-content"
       />
-      
-      <View 
-        className="w-full bg-black" 
-        style={{ 
-          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 
-        }} 
+
+      <View
+        className="w-full bg-black"
+        style={{
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        }}
       />
 
-      <ScrollView 
-        className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text className="text-white text-2xl font-bold mb-6 mt-4">Watchlist</Text>
+      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+        <Text className="text-white text-2xl font-bold mb-6 mt-4">
+          Watchlist
+        </Text>
 
         {watchList.length > 0 ? (
           <View className="flex-row flex-wrap gap-3">
@@ -68,8 +70,7 @@ const Library = () => {
                     poster: item.poster,
                   })
                 }
-                className="mb-4"
-              >
+                className="mb-4">
                 <View className="relative">
                   <Image
                     className="rounded-xl"
@@ -88,10 +89,10 @@ const Library = () => {
         ) : (
           <View className="flex-1">
             <View className="items-center justify-center mt-20 mb-12">
-              <MaterialCommunityIcons 
-                name="playlist-remove" 
-                size={80} 
-                color={primary} 
+              <MaterialCommunityIcons
+                name="playlist-remove"
+                size={80}
+                color={primary}
               />
               <Text className="text-white/70 text-base mt-4 text-center">
                 Your watchlist is empty
@@ -110,14 +111,13 @@ const Library = () => {
                   {suggestions.map((item, index) => (
                     <MotiView
                       key={item.link + index}
-                      from={{ opacity: 0, translateY: 20 }}
-                      animate={{ opacity: 1, translateY: 0 }}
+                      from={{opacity: 0, translateY: 20}}
+                      animate={{opacity: 1, translateY: 0}}
                       transition={{
                         type: 'timing',
                         duration: 500,
-                        delay: index * 100
-                      }}
-                    >
+                        delay: index * 100,
+                      }}>
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate('Info', {
@@ -126,8 +126,7 @@ const Library = () => {
                             poster: item.image,
                           })
                         }
-                        className="mb-4"
-                      >
+                        className="mb-4">
                         <View className="relative">
                           <Image
                             className="rounded-xl"
@@ -135,7 +134,9 @@ const Library = () => {
                             style={{width: 110, height: 165}}
                           />
                           <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
-                            <Text className="text-white text-xs" numberOfLines={1}>
+                            <Text
+                              className="text-white text-xs"
+                              numberOfLines={1}>
                               {item.title}
                             </Text>
                           </View>
