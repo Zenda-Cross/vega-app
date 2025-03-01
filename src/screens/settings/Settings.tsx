@@ -317,7 +317,9 @@ const Settings = ({navigation}: Props) => {
                 <View className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center">
                     <AntDesign name="hearto" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">Sponsor</Text>
+                    <Text className="text-white ml-3 text-base">
+                      Sponsor Project
+                    </Text>
                   </View>
                   <Feather name="external-link" size={20} color="gray" />
                 </View>
