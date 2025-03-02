@@ -52,7 +52,7 @@
     "react-native-screens": "^4.4.0",
     "react-native-svg": "15.2.0",
     "react-native-system-setting": "^1.7.6",
-    "react-native-video": "^6.10.1",
+    "react-native-video": "^6.10.2",
     "react-native-webview": "13.8.6",
     "zustand": "^4.5.2"
   },
