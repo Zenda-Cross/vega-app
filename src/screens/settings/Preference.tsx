@@ -66,8 +66,12 @@ const Preferences = () => {
     MMKV.getBool('hapticFeedback') === false ? false : true,
   );
 
+  const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
+    MMKV.getBool('alwaysExternalDownloader') || false,
+  );
+
   return (
-    <ScrollView 
+    <ScrollView
       className="w-full h-full bg-black"
       contentContainerStyle={{
         paddingTop: StatusBar.currentHeight || 0,
@@ -98,9 +102,12 @@ const Preferences = () => {
                       placeholderTextColor="gray"
                       value={customColor}
                       onChangeText={setCustomColor}
-                      onSubmitEditing={(e) => {
+                      onSubmitEditing={e => {
                         if (e.nativeEvent.text.length < 7) {
-                          ToastAndroid.show('Invalid Color', ToastAndroid.SHORT);
+                          ToastAndroid.show(
+                            'Invalid Color',
+                            ToastAndroid.SHORT,
+                          );
                           return;
                         }
                         MMKV.setString('customColor', e.nativeEvent.text);
@@ -112,7 +119,11 @@ const Preferences = () => {
                         setCustom(false);
                         setPrimary('#FF6347');
                       }}>
-                      <MaterialCommunityIcons name="close" size={20} color="gray" />
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={20}
+                        color="gray"
+                      />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -167,7 +178,69 @@ const Preferences = () => {
                 onValueChange={() => {
                   MMKV.setBool('showTabBarLables', !showTabBarLables);
                   setShowTabBarLables(!showTabBarLables);
-                  ToastAndroid.show('Restart App to Apply Changes', ToastAndroid.SHORT);
+                  ToastAndroid.show(
+                    'Restart App to Apply Changes',
+                    ToastAndroid.SHORT,
+                  );
+                }}
+              />
+            </View>
+
+            {/* Show Hamburger Menu */}
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+              <Text className="text-white text-base">Show Hamburger Menu</Text>
+              <Switch
+                thumbColor={showHamburgerMenu ? primary : 'gray'}
+                value={showHamburgerMenu}
+                onValueChange={() => {
+                  MMKV.setBool('showHamburgerMenu', !showHamburgerMenu);
+                  setShowHamburgerMenu(!showHamburgerMenu);
+                }}
+              />
+            </View>
+
+            {/* Show Recently Watched */}
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+              <Text className="text-white text-base">
+                Show Recently Watched
+              </Text>
+              <Switch
+                thumbColor={showRecentlyWatched ? primary : 'gray'}
+                value={showRecentlyWatched}
+                onValueChange={() => {
+                  MMKV.setBool('showRecentlyWatched', !showRecentlyWatched);
+                  setShowRecentlyWatched(!showRecentlyWatched);
+                }}
+              />
+            </View>
+
+            {/* Disable Drawer */}
+            <View className="flex-row items-center justify-between p-4">
+              <Text className="text-white text-base">Disable Drawer</Text>
+              <Switch
+                thumbColor={disableDrawer ? primary : 'gray'}
+                value={disableDrawer}
+                onValueChange={() => {
+                  MMKV.setBool('disableDrawer', !disableDrawer);
+                  setDisableDrawer(!disableDrawer);
+                }}
+              />
+            </View>
+
+            {/* Always Use External Downloader */}
+            <View className="flex-row items-center justify-between p-4">
+              <Text className="text-white text-base">
+                Always Use External Downloader
+              </Text>
+              <Switch
+                thumbColor={alwaysUseExternalDownload ? primary : 'gray'}
+                value={alwaysUseExternalDownload}
+                onValueChange={() => {
+                  MMKV.setBool(
+                    'alwaysExternalDownloader',
+                    !alwaysUseExternalDownload,
+                  );
+                  setAlwaysUseExternalDownload(!alwaysUseExternalDownload);
                 }}
               />
             </View>
@@ -180,7 +253,9 @@ const Preferences = () => {
           <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
             {/* External Player */}
             <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-              <Text className="text-white text-base">Use External Player</Text>
+              <Text className="text-white text-base">
+                Always Use External Player
+              </Text>
               <Switch
                 thumbColor={OpenExternalPlayer ? primary : 'gray'}
                 value={OpenExternalPlayer}
@@ -219,7 +294,9 @@ const Preferences = () => {
 
             {/* Swipe Gestures */}
             <View className="flex-row items-center justify-between p-4">
-              <Text className="text-white text-base">Enable Swipe Gestures</Text>
+              <Text className="text-white text-base">
+                Enable Swipe Gestures
+              </Text>
               <Switch
                 thumbColor={enableSwipeGesture ? primary : 'gray'}
                 value={enableSwipeGesture}
@@ -236,14 +313,16 @@ const Preferences = () => {
         <View className="mb-6">
           <Text className="text-gray-400 text-sm mb-3">Quality</Text>
           <View className="bg-[#1A1A1A] rounded-xl p-4">
-            <Text className="text-white text-base mb-3">Excluded Qualities</Text>
+            <Text className="text-white text-base mb-3">
+              Excluded Qualities
+            </Text>
             <View className="flex-row flex-wrap gap-2">
               {['360p', '480p', '720p'].map((quality, index) => (
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
                     if (MMKV.getBool('hapticFeedback') !== false) {
-                      ReactNativeHapticFeedback.trigger('effectTick');
+                      RNReactNativeHapticFeedback.trigger('effectTick');
                     }
                     const newExcluded = ExcludedQualities.includes(quality)
                       ? ExcludedQualities.filter(q => q !== quality)
