@@ -299,7 +299,7 @@ const Settings = ({navigation}: Props) => {
               <TouchableNativeFeedback
                 onPress={() => Linking.openURL(socialLinks.github)}
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                   <View className="flex-row items-center">
                     <AntDesign name="github" size={22} color={primary} />
                     <Text className="text-white ml-3 text-base">
@@ -316,7 +316,7 @@ const Settings = ({navigation}: Props) => {
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4">
                   <View className="flex-row items-center">
-                    <AntDesign name="hearto" size={22} color={primary} />
+                    <AntDesign name="heart" size={22} color="#ff69b4" />
                     <Text className="text-white ml-3 text-base">
                       Sponsor Project
                     </Text>
