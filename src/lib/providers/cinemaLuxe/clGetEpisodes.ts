@@ -18,7 +18,7 @@ export const clsEpisodeLinks = async function (
         url = encodedLink ? atob(encodedLink) : url;
       } else {
         const redirectUrlRes = await fetch(
-          'https://ext.8man.me/api/cinemaluxe',
+          'https://ext.8man.me/api/cinemaluxe', /// Full function here => https://github.com/himanshu8443/extVidstream/blob/main/cinemaLuxeDecrypt.js
           {
             method: 'POST',
             headers: {
