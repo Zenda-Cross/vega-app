@@ -14,6 +14,7 @@
     "@dominicvonk/react-native-apk-installer": "^2.2.2",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@notifee/react-native": "^7.8.2",
+    "@react-native-community/blur": "^4.4.1",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
