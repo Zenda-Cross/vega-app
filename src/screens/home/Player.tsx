@@ -273,7 +273,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const handelResizeMode = () => {
     const modes = [
-      {mode: ResizeMode.NONE, name: 'None'},
+      {mode: ResizeMode.NONE, name: 'Fit'},
       {mode: ResizeMode.COVER, name: 'Cover'},
       {mode: ResizeMode.STRETCH, name: 'Stretch'},
       {mode: ResizeMode.CONTAIN, name: 'Contain'},
@@ -579,7 +579,13 @@ const Player = ({route}: Props): React.JSX.Element => {
             onPress={handelResizeMode}>
             <MaterialIcons name="fullscreen" size={28} color="white" />
             <Text className="text-white text-sm min-w-[38px]">
-              {resizeMode === ResizeMode.NONE ? 'Fit' : 'Cover'}
+              {resizeMode === ResizeMode.NONE
+                ? 'Fit'
+                : resizeMode === ResizeMode.COVER
+                ? 'Cover'
+                : resizeMode === ResizeMode.STRETCH
+                ? 'Stretch'
+                : 'Contain'}
             </Text>
           </TouchableOpacity>
         </View>
