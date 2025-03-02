@@ -150,7 +150,11 @@ const DownloadComponent = ({
         ) : (
           <TouchableOpacity
             onPress={() => {
-              setDownloadModal(true);
+              if (MMKV.getBool('alwaysExternalDownloader') === true) {
+                setLongPressModal(true);
+              } else {
+                setDownloadModal(true);
+              }
             }}
             onLongPress={() => {
               if (MMKV.getBool('hapticFeedback') !== false) {
