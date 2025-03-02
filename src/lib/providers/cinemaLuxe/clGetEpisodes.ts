@@ -12,9 +12,25 @@ export const clsEpisodeLinks = async function (
       const res = await axios.get(url, {headers});
       const data = res.data;
       // console.log('data', data);
-      const encodedLink = data.match(/"link":"([^"]+)"/)[1];
-      console.log('encodedLink', atob(encodedLink));
-      url = encodedLink ? atob(encodedLink) : url;
+      const encodedLink = data.match(/"link":"([^"]+)"/)?.[1];
+      console.log('encodedLink', encodedLink);
+      if (encodedLink) {
+        url = encodedLink ? atob(encodedLink) : url;
+      } else {
+        const redirectUrlRes = await fetch(
+          'https://ext.8man.me/api/cinemaluxe',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({url}),
+          },
+        );
+        const redirectUrl = await redirectUrlRes.json();
+        console.log('redirectUrl', redirectUrl);
+        url = redirectUrl?.redirectUrl || url;
+      }
     }
     const res = await axios.get(url, {headers});
     const html = res.data;
