@@ -1,176 +1,163 @@
-import {View, Text, ScrollView, Alert} from 'react-native';
-import React, {useState} from 'react';
+import {View, Text, ScrollView, Alert, Dimensions} from 'react-native';
+import React, {useState, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import {MaterialIcons, Ionicons, Feather} from '@expo/vector-icons';
 import {TextInput} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import {manifest} from '../lib/Manifest';
 import useContentStore from '../lib/zustand/contentStore';
+import useThemeStore from '../lib/zustand/themeStore';
 import {MMKV} from '../lib/Mmkv';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  SlideInRight,
+  ZoomIn
+} from 'react-native-reanimated';
+
+const {width} = Dimensions.get('window');
 
 const Search = () => {
   const {provider} = useContentStore(state => state);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
+  const {primary} = useThemeStore(state => state);
+  const navigation = useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [searchText, setSearchText] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>(
-    MMKV.getArray<string>('searchHistory') || [],
+    MMKV.getArray<string>('searchHistory') || []
   );
-  const [loadingSearch, setLoadingSearch] = useState(false);
 
-  const checkProviderResults = async (searchQuery: string) => {
-    setLoadingSearch(true);
-    const availableProviders = [];
-    
-    for (const item of providersList) {
-      try {
-        const data = await manifest[item.value].GetSearchPosts(
-          searchQuery,
-          1,
-          item.value,
-          null
-        );
-        if (data && data.length > 0) {
-          availableProviders.push(item.value);
-        }
-      } catch (error) {
-        console.error(`Error checking ${item.value}:`, error);
-      }
-    }
-    setLoadingSearch(false);
-    return availableProviders;
-  };
-
-  const handleSearch = async () => {
-    if (searchText.trim()) {
+  const handleSearch = (text: string) => {
+    if (text.trim()) {
       // Save to search history
       const prevSearches = MMKV.getArray<string>('searchHistory') || [];
-      if (!prevSearches.includes(searchText.trim())) {
-        const newSearches: string[] = [searchText.trim(), ...prevSearches];
-        if (newSearches.length > 15) {
-          newSearches.pop();
-        }
+      if (!prevSearches.includes(text.trim())) {
+        const newSearches = [text.trim(), ...prevSearches].slice(0, 15);
         MMKV.setArray('searchHistory', newSearches);
         setSearchHistory(newSearches);
       }
 
-      // Check available providers before navigating
-      const availableProviders = await checkProviderResults(searchText.trim());
-      
-      if (availableProviders.length > 0) {
-        navigation.navigate('SearchResults', {
-          filter: searchText.trim(),
-          availableProviders: availableProviders // Pass available providers to SearchResults
-        });
-      } else {
-        // Show a message when no results found
-        Alert.alert('No Results', 'No results found in any provider');
-      }
+      navigation.navigate('SearchResults', {
+        filter: text.trim(),
+      });
     }
   };
 
+  const removeHistoryItem = (search: string) => {
+    const newSearches = searchHistory.filter(item => item !== search);
+    MMKV.setArray('searchHistory', newSearches);
+    setSearchHistory(newSearches);
+  };
+
+  const clearHistory = () => {
+    MMKV.setArray('searchHistory', []);
+    setSearchHistory([]);
+  };
+
   return (
-    <View className="h-full w-full bg-black p-4 items-center">
-      <View className="flex flex-row gap-1 items-center mt-7">
-        <TextInput
-          autoFocus={true}
-          onChangeText={setSearchText}
-          value={searchText}
-          keyboardType="web-search"
-          keyboardAppearance="dark"
-          returnKeyType="search"
-          onSubmitEditing={handleSearch}
-          placeholderTextColor={'white'}
-          placeholder="Search..."
-          onFocus={() => setIsSearching(true)}
-          onBlur={() => setTimeout(() => setIsSearching(false), 100)}
-          className="bg-gray-800 p-2 rounded-md w-[90%] placeholder-white text-white"
-          editable={!loadingSearch}
-        />
-        <TouchableOpacity 
-          onPress={handleSearch}
-          disabled={loadingSearch}>
-          <Ionicons 
-            name={loadingSearch ? "timer-outline" : "search"} 
-            size={25} 
-            color="white" 
-          />
-        </TouchableOpacity>
-      </View>
-      {(isSearching || manifest[provider.value].genres.length === 0) && (
-        // search history
-        <View className="w-full h-[80%] mt-4">
-          <ScrollView keyboardShouldPersistTaps="handled" className="w-full ">
-            {searchHistory?.map((search, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => {
-                  navigation.navigate('SearchResults', {
-                    filter: search,
-                  });
-                }}
-                className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-between">
-                <Text className="text-white font-semibold ">{search}</Text>
-                <Ionicons
-                  name="close"
-                  size={20}
-                  color="white"
-                  onPress={() => {
-                    const newSearches = MMKV.getArray<string>(
-                      'searchHistory',
-                    ).filter(item => item !== search);
-                    MMKV.setArray('searchHistory', newSearches);
-                    setSearchHistory(newSearches);
-                  }}
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          {searchHistory.length > 0 && (
-            <TouchableOpacity
-              onPress={() => {
-                MMKV.setArray('searchHistory', []);
-                setSearchHistory([]);
-              }}
-              className="w-full bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
-              <Ionicons name="trash-sharp" size={18} color="pink" />
-              <Text className="text-white font-semibold mt-1">
-                Clear History
-              </Text>
-            </TouchableOpacity>
-          )}
+    <SafeAreaView className="flex-1 bg-black">
+      {/* Title Section */}
+      <Animated.View 
+        entering={FadeInDown.delay(100).springify()}
+        className="px-4 pt-4 mb-2">
+        <Text className="text-white text-xl font-bold mb-3">Search</Text>
+        <View className="flex-row items-center space-x-3">
+          <View className="flex-1">
+            <View className="overflow-hidden rounded-xl bg-[#141414] shadow-lg shadow-black/50">
+              <View className="px-3 py-3">
+                <View className="flex-row items-center">
+                  <Animated.View entering={ZoomIn.delay(200)}>
+                    <MaterialIcons 
+                      name="search" 
+                      size={24}
+                      color={isFocused ? primary : "#666"} 
+                    />
+                  </Animated.View>
+                  <TextInput
+                    className="flex-1 text-white text-base ml-3"
+                    placeholder="Search anime..."
+                    placeholderTextColor="#666"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    onSubmitEditing={(e) => handleSearch(e.nativeEvent.text)}
+                    returnKeyType="search"
+                  />
+                  {searchText.length > 0 && (
+                    <Animated.View entering={FadeIn}>
+                      <TouchableOpacity 
+                        onPress={() => setSearchText('')}
+                        className="bg-gray-800/50 rounded-full p-2">
+                        <Feather name="x" size={18} color="#999" />
+                      </TouchableOpacity>
+                    </Animated.View>
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
-      )}
-      <ScrollView
-        keyboardShouldPersistTaps={'handled'}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          flexWrap: 'wrap',
-          gap: 5,
-        }}
-        className="w-full h-full mt-4 ">
-        {!isSearching &&
-          manifest[provider.value].genres.map(genre => (
-            <TouchableOpacity
-              key={genre.filter}
-              onPress={() => {
-                navigation.navigate('ScrollList', {
-                  filter: genre.filter,
-                  title: genre.title,
-                  isSearch: false,
-                });
-              }}
-              className="h-24 w-40 bg-quaternary rounded-md p-2 mt-2 flex flex-row items-center justify-center">
-              <Text className="text-white font-semibold ">{genre.title}</Text>
-            </TouchableOpacity>
-          ))}
+      </Animated.View>
+
+      <ScrollView 
+        className="px-4"
+        showsVerticalScrollIndicator={false}>
+        {/* Search History */}
+        {searchHistory.length > 0 ? (
+          <Animated.View 
+            entering={SlideInRight.delay(300).springify()}
+            className="mb-3">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-white/90 text-base font-semibold">Recent Searches</Text>
+              <TouchableOpacity
+                onPress={clearHistory}
+                className="bg-red-500/10 rounded-full px-2 py-0.5">
+                <Text className="text-red-500 text-xs">Clear All</Text>
+              </TouchableOpacity>
+            </View>
+            {searchHistory.map((search, index) => (
+              <Animated.View
+                key={index}
+                entering={FadeInDown.delay(400 + index * 100).springify()}>
+                <TouchableOpacity
+                  onPress={() => handleSearch(search)}
+                  className="bg-[#141414] rounded-lg p-3 mb-2 flex-row justify-between items-center border border-white/5">
+                  <View className="flex-row items-center space-x-2">
+                    <View className="bg-white/10 rounded-full p-1.5">
+                      <Ionicons name="time-outline" size={16} color={primary} />
+                    </View>
+                    <Text className="text-white text-sm">{search}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => removeHistoryItem(search)}
+                    className="bg-white/5 rounded-full p-1.5">
+                    <Feather name="x" size={14} color="#999" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </Animated.View>
+        ) : (
+          <Animated.View 
+            entering={FadeIn.delay(300)}
+            className="items-center justify-center mt-20">
+            <View className="bg-white/5 rounded-full p-6 mb-4">
+              <Ionicons name="search" size={32} color={primary} />
+            </View>
+            <Text className="text-white/70 text-base text-center">
+              Search for your favorite anime
+            </Text>
+            <Text className="text-white/40 text-sm text-center mt-1">
+              Your recent searches will appear here
+            </Text>
+          </Animated.View>
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

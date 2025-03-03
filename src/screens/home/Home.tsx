@@ -166,7 +166,7 @@ const Home = ({}: Props) => {
           <ScrollView
             onScroll={handleScroll}
             showsVerticalScrollIndicator={false}
-            className="bg-black"
+            className="bg-black pt-3" // Added pt-4 for top padding
             refreshControl={
               <RefreshControl
                 colors={[primary]}
