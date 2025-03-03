@@ -170,7 +170,7 @@ const Preferences = () => {
             </View>
 
             {/* Show Tab Bar Labels */}
-            <View className="flex-row items-center justify-between p-4">
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Show Tab Bar Labels</Text>
               <Switch
                 thumbColor={showTabBarLables ? primary : 'gray'}
@@ -215,7 +215,7 @@ const Preferences = () => {
             </View>
 
             {/* Disable Drawer */}
-            <View className="flex-row items-center justify-between p-4">
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
               <Text className="text-white text-base">Disable Drawer</Text>
               <Switch
                 thumbColor={disableDrawer ? primary : 'gray'}

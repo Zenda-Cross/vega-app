@@ -188,7 +188,7 @@ const About = () => {
   );
 
   return (
-    <View className="flex-1 bg-black">
+    <View className="flex-1 bg-black mt-8">
       <View className="px-4 py-3 border-b border-white/10">
         <Text className="text-2xl font-bold text-white">About</Text>
         <Text className="text-gray-400 mt-1 text-sm">
@@ -220,7 +220,9 @@ const About = () => {
         <View className="bg-white/10 p-3 rounded-lg flex-row justify-between items-center">
           <View className="flex-1 mr-2">
             <Text className="text-white text-base">Check Updates on Start</Text>
-            <Text className="text-gray-400 text-sm">Automatically check for updates when app starts</Text>
+            <Text className="text-gray-400 text-sm">
+              Automatically check for updates when app starts
+            </Text>
           </View>
           <Switch
             value={autoCheckUpdate}
@@ -234,16 +236,14 @@ const About = () => {
 
         {/* Check Updates Button */}
         <TouchableNativeFeedback
-          onPress={() => checkForUpdate(setUpdateLoading, autoDownload, true, primary)}
+          onPress={() =>
+            checkForUpdate(setUpdateLoading, autoDownload, true, primary)
+          }
           disabled={updateLoading}
           background={TouchableNativeFeedback.Ripple('#ffffff20', false)}>
-          <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
+          <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center mt-4">
             <View className="flex-row items-center space-x-3">
-              <MaterialCommunityIcons
-                name="update"
-                size={22}
-                color="white"
-              />
+              <MaterialCommunityIcons name="update" size={22} color="white" />
               <Text className="text-white text-base">Check for Updates</Text>
             </View>
             <Feather name="chevron-right" size={20} color="white" />
