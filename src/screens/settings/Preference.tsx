@@ -139,6 +139,18 @@ const Preferences = () => {
                       borderWidth: 0,
                       marginTop: 4,
                     }}
+                    itemTextStyle={{ color: 'white' }}
+                    activeColor="#3A3A3A"
+                    itemContainerStyle={{
+                      backgroundColor: '#262626',
+                      borderWidth: 0
+                    }}
+                    style={{
+                      backgroundColor: '#262626',
+                      borderWidth: 0 
+                    }}
+                    iconStyle={{ tintColor: 'white' }}
+                    placeholderStyle={{ color: 'white' }}
                     labelField="name"
                     valueField="color"
                     data={themes}
