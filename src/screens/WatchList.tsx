@@ -1,4 +1,4 @@
-import {View, Text, ScrollView, StatusBar, Platform, Image} from 'react-native';
+import {View, Text, ScrollView, StatusBar, Platform, Image, Dimensions} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
@@ -18,6 +18,13 @@ const Library = () => {
   const {watchList} = useWatchListStore(state => state);
   const {provider} = useContentStore(state => state);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+
+  const screenWidth = Dimensions.get('window').width;
+  const padding = 32; // 16 padding on each side (px-4 = 16)
+  const spacing = 12; // gap-3 = 12px
+  const numberOfTiles = 3;
+  const tileWidth = (screenWidth - padding - (spacing * (numberOfTiles - 1))) / numberOfTiles;
+  const tileHeight = tileWidth * 1.5; // maintain 1.5:1 aspect ratio
 
   useEffect(() => {
     if (watchList.length === 0) {
@@ -59,7 +66,7 @@ const Library = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <View className="flex-row flex-wrap gap-3">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
             {watchList.map((item: any, index: number) => (
               <TouchableOpacity
                 key={item.link + index}
@@ -75,7 +82,10 @@ const Library = () => {
                   <Image
                     className="rounded-xl"
                     source={{uri: item.poster}}
-                    style={{width: 110, height: 165}}
+                    style={{
+                      width: tileWidth,
+                      height: tileHeight,
+                    }}
                   />
                   <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
                     <Text className="text-white text-xs" numberOfLines={1}>
@@ -107,7 +117,7 @@ const Library = () => {
                 <Text className="text-white/70 text-lg font-medium mb-4">
                   Recommended for you
                 </Text>
-                <View className="flex-row flex-wrap gap-3">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
                   {suggestions.map((item, index) => (
                     <MotiView
                       key={item.link + index}
@@ -117,7 +127,8 @@ const Library = () => {
                         type: 'timing',
                         duration: 500,
                         delay: index * 100,
-                      }}>
+                      }}
+                      style={{ width: tileWidth }}>
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate('Info', {
@@ -131,7 +142,10 @@ const Library = () => {
                           <Image
                             className="rounded-xl"
                             source={{uri: item.image}}
-                            style={{width: 110, height: 165}}
+                            style={{
+                              width: tileWidth,
+                              height: tileHeight,
+                            }}
                           />
                           <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
                             <Text
