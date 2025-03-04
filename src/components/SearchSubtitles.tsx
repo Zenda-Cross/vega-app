@@ -63,19 +63,23 @@ const SearchSubtitles = ({
       console.log(
         'openSubtitles',
         `https://rest.opensubtitles.org/search${
+          episode ? '/episode-' + episode : ''
+        }${
           (searchQuery?.startsWith('tt') ? '/imdbid-' : '/query-') +
           encodeURIComponent(searchQuery.toLocaleLowerCase())
         }${season ? '/season-' + season : ''}${
-          episode ? '/episode-' + episode : ''
-        }${subId ? '/sublanguageid-' + subId : ''}`,
+          subId ? '/sublanguageid-' + subId : ''
+        }`,
       );
       const response = await fetch(
         `https://rest.opensubtitles.org/search${
+          episode ? '/episode-' + episode : ''
+        }${
           (searchQuery?.startsWith('tt') ? '/imdbid-' : '/query-') +
           encodeURIComponent(searchQuery.toLocaleLowerCase())
         }${season ? '/season-' + season : ''}${
-          episode ? '/episode-' + episode : ''
-        }${subId ? '/sublanguageid-' + subId : ''}`,
+          subId ? '/sublanguageid-' + subId : ''
+        }`,
         {
           method: 'GET',
           headers: {
@@ -83,7 +87,7 @@ const SearchSubtitles = ({
           },
         },
       );
-      console.log('openSubtitles', response);
+      console.log('openSubtitles⭐', response);
       const data = await response.json();
       setLoading(false);
       if (data?.length === 0) {
