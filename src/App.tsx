@@ -33,6 +33,7 @@ import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
+import WatchHistory from './screens/WatchHistory';  // Add this import
 
 enableScreens(true);
 enableFreeze(true);
@@ -378,6 +379,7 @@ const App = () => {
               contentStyle: {backgroundColor: 'transparent'},
             }}>
             <Stack.Screen name="TabStack" component={TabStack} />
+            <Stack.Screen name="WatchHistory" component={WatchHistory} />
             <Stack.Screen
               options={{
                 orientation: 'landscape',
