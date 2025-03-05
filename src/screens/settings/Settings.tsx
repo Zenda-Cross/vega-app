@@ -14,8 +14,11 @@ import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {providersList, socialLinks} from '../../lib/constants';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {SettingsStackParamList} from '../../App';
+import {
+  NativeStackScreenProps,
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
+import {SettingsStackParamList, TabStackParamList} from '../../App';
 import {
   MaterialCommunityIcons,
   AntDesign,
@@ -26,10 +29,13 @@ import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
 import {MotiView} from 'moti';
+import {useNavigation} from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
 const Settings = ({navigation}: Props) => {
+  const tabNavigation =
+    useNavigation<NativeStackNavigationProp<TabStackParamList>>();
   const {primary} = useThemeStore(state => state);
   const {provider, setProvider} = useContentStore(state => state);
   const {clearHistory} = useWatchHistoryStore(state => state);
@@ -53,7 +59,7 @@ const Settings = ({navigation}: Props) => {
           });
         }
         // Navigate to home screen
-        navigation.navigate('HomeStack');
+        tabNavigation.navigate('HomeStack');
       }}
       className={`mr-3 rounded-lg ${
         isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
@@ -203,7 +209,7 @@ const Settings = ({navigation}: Props) => {
 
               {/* Watch History */}
               <TouchableNativeFeedback
-                onPress={() => navigation.navigate('WatchHistory')}
+                onPress={() => navigation.navigate('WatchHistoryStack')}
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
                   <View className="flex-row items-center">
@@ -212,7 +218,9 @@ const Settings = ({navigation}: Props) => {
                       size={22}
                       color={primary}
                     />
-                    <Text className="text-white ml-3 text-base">Watch History</Text>
+                    <Text className="text-white ml-3 text-base">
+                      Watch History
+                    </Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
                 </View>
