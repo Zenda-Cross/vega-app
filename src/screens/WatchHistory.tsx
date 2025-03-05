@@ -1,17 +1,23 @@
-import {View, Text, TouchableOpacity, Image, StatusBar, Platform} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import React from 'react';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import {FlashList} from '@shopify/flash-list';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../App';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {WatchHistoryStackParamList} from '../App';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import useThemeStore from '../lib/zustand/themeStore';
 
-const WatchHistory = () => {
+type Props = NativeStackScreenProps<WatchHistoryStackParamList, 'WatchHistory'>;
+const WatchHistory = ({navigation}: Props) => {
   const {primary} = useThemeStore(state => state);
   const {history, clearHistory} = useWatchHistoryStore(state => state);
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Filter out duplicates by link, keeping only the most recent entry
   const uniqueHistory = React.useMemo(() => {
@@ -41,9 +47,8 @@ const WatchHistory = () => {
       navigation.navigate('Info', {
         link: linkData,
         provider: item.provider || 'multiStream',
-        poster: item.image || ''
+        poster: item.image || '',
       });
-      
     } catch (error) {
       console.error('Navigation error:', error);
     }
@@ -56,7 +61,7 @@ const WatchHistory = () => {
         backgroundColor="transparent"
         barStyle="light-content"
       />
-      
+
       <View
         className="w-full bg-black"
         style={{
@@ -69,26 +74,25 @@ const WatchHistory = () => {
       </View>
 
       <FlashList
-        data={uniqueHistory}  
+        data={uniqueHistory}
         estimatedItemSize={150}
         numColumns={3}
         ListEmptyComponent={() => (
           <View className="flex-1 justify-center items-center mt-10">
             <MaterialCommunityIcons name="history" size={80} color={primary} />
-            <Text className="text-white/70 text-base mt-4">No watch history</Text>
+            <Text className="text-white/70 text-base mt-4">
+              No watch history
+            </Text>
           </View>
         )}
         renderItem={({item}) => (
           <View className="flex-1 m-1">
-            <TouchableOpacity
-              onPress={() => handleNavigateToInfo(item)}>
+            <TouchableOpacity onPress={() => handleNavigateToInfo(item)}>
               <Image
                 source={{uri: item.image}}
                 className="w-full aspect-[2/3] rounded-lg"
               />
-              <Text 
-                numberOfLines={2} 
-                className="text-white text-sm mt-1">
+              <Text numberOfLines={2} className="text-white text-sm mt-1">
                 {item.title}
               </Text>
             </TouchableOpacity>
