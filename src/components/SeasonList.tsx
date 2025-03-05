@@ -118,6 +118,11 @@ const SeasonList = ({
       title: primaryTitle,
       image: poster.poster || '',
       provider: providerValue,
+      lastPlayed: Date.now(),
+      episodeTitle: secondaryTitle,
+      playbackRate: 1,
+      currentTime: 0,
+      duration: 1,
     });
     if (!episodeList || episodeList.length === 0) {
       return;
@@ -150,6 +155,7 @@ const SeasonList = ({
       secondaryTitle: seasonTitle,
       poster: poster,
       providerValue: providerValue,
+      infoUrl: routeParams.link,
     });
   };
 
