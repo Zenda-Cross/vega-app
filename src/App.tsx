@@ -66,6 +66,7 @@ export type RootStackParamList = {
     };
     file?: string;
     providerValue?: string;
+    infoUrl?: string;
   };
   SeriesEpisodes: {
     series: string;
