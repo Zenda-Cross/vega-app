@@ -33,6 +33,7 @@ import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
+import WatchHistory from './screens/WatchHistory';  // Add this import
 
 enableScreens(true);
 enableFreeze(true);
@@ -53,6 +54,11 @@ export type RootStackParamList = {
   TabNavigator: undefined;
   WatchHistory: undefined;
   TabStack: undefined;
+  Info: {
+    link: string | object;
+    provider?: string;
+    poster?: string;
+  };
   Player: {
     linkIndex: number;
     episodeList: EpisodeLink[];
@@ -335,66 +341,52 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView
-        edges={{left: 'off', right: 'off', top: 'off', bottom: 'additive'}}
-        style={{flex: 1}}>
-        <NavigationContainer
-          onReady={async () => await BootSplash.hide({fade: true})}
-          theme={{
-            fonts: {
-              regular: {
-                fontFamily: 'Inter_400Regular',
-                fontWeight: '400',
-              },
-              medium: {
-                fontFamily: 'Inter_500Medium',
-                fontWeight: '500',
-              },
-              bold: {
-                fontFamily: 'Inter_700Bold',
-                fontWeight: '700',
-              },
-              heavy: {
-                fontFamily: 'Inter_800ExtraBold',
-                fontWeight: '800',
-              },
+      <NavigationContainer
+        onReady={async () => await BootSplash.hide({fade: true})}
+        theme={{
+          fonts: {
+            regular: {
+              fontFamily: 'Inter_400Regular',
+              fontWeight: '400',
             },
-            dark: true,
-            colors: {
-              background: 'transparent',
-              card: 'black',
-              primary: primary,
-              text: 'white',
-              border: 'black',
-              notification: primary,
+            medium: {
+              fontFamily: 'Inter_500Medium',
+              fontWeight: '500',
             },
+            bold: {
+              fontFamily: 'Inter_700Bold',
+              fontWeight: '700',
+            },
+            heavy: {
+              fontFamily: 'Inter_800ExtraBold',
+              fontWeight: '800',
+            },
+          },
+          dark: true,
+          colors: {
+            background: 'transparent',
+            card: 'black',
+            primary: primary,
+            text: 'white',
+            border: 'black',
+            notification: primary,
+          },
+        }}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'ios_from_right',
+            animationDuration: 200,
+            freezeOnBlur: true,
+            contentStyle: {backgroundColor: 'transparent'},
           }}>
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
-              animation: 'ios_from_right',
-              animationDuration: 200,
-              freezeOnBlur: true,
-              contentStyle: {backgroundColor: 'transparent'},
-            }}>
-            <Stack.Screen name="TabStack" component={TabStack} />
-            <Stack.Screen
-              options={{
-                orientation: 'landscape',
-              }}
-              name="Player"
-              component={Player}
-            />
-            <Stack.Screen
-              name="SeriesEpisodes"
-              component={SeriesEpisodes}
-              options={{
-                animation: 'slide_from_right',
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </SafeAreaView>
+          <Stack.Screen name="TabStack" component={TabStack} />
+          <Stack.Screen name="WatchHistory" component={WatchHistory} />
+          <Stack.Screen name="Player" component={Player} options={{ orientation: 'landscape' }} />
+          <Stack.Screen name="SeriesEpisodes" component={SeriesEpisodes} options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="Info" component={Info} />
+        </Stack.Navigator>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 };

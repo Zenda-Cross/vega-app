@@ -42,6 +42,7 @@ import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
 import {ifExists} from '../../lib/file/ifExists';
+import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -50,6 +51,7 @@ type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
+  const {addItem, updatePlaybackInfo, updateItemWithInfo} = useWatchHistoryStore(); // Add updatePlaybackInfo and updateItemWithInfo here
   const [activeEpisode, setActiveEpisode] = useState(
     route.params?.episodeList?.[route.params.linkIndex],
   );
@@ -236,6 +238,28 @@ const Player = ({route}: Props): React.JSX.Element => {
     setSearchQuery(route.params?.primaryTitle || '');
   }, []);
 
+  useEffect(() => {
+    if (route.params?.primaryTitle) {
+      addItem({
+        title: route.params.primaryTitle,
+        image: route.params.poster?.poster || '',
+        link: route.params.episodeList[route.params.linkIndex].link,
+        provider: route.params?.providerValue || provider.value,
+        lastPlayed: Date.now(),
+        duration: 0,
+        currentTime: 0,
+        playbackRate: 1,
+        episodeTitle: route.params?.secondaryTitle
+      });
+
+      // Cache the info page data
+      updateItemWithInfo(route.params.episodeList[route.params.linkIndex].link, {
+        ...route.params,
+        cachedAt: Date.now()
+      });
+    }
+  }, [route.params?.primaryTitle]);
+
   const setToast = (message: string, duration: number) => {
     setToastMessage(message);
     setShowToast(true);
@@ -253,7 +277,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         duration: seekableDuration,
       };
 
-      // Save position every 5 seconds or if there's a significant change
+      // Update with correct parameters
+      updatePlaybackInfo(route.params.episodeList[route.params.linkIndex].link, {
+        currentTime,
+        duration: seekableDuration,
+        playbackRate
+      });
+
       if (
         Math.abs(currentTime - lastSavedPositionRef.current) > 5 ||
         currentTime - lastSavedPositionRef.current > 5
@@ -268,7 +298,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         lastSavedPositionRef.current = currentTime;
       }
     },
-    [activeEpisode.link],
+    [activeEpisode.link, route.params.episodeList, route.params.linkIndex, updatePlaybackInfo, playbackRate],
   );
 
   const handelResizeMode = () => {
