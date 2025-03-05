@@ -51,7 +51,7 @@ type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
-  const {addItem, updateProgress} = useWatchHistoryStore();
+  const {addItem, updatePlaybackInfo, updateItemWithInfo} = useWatchHistoryStore(); // Add updatePlaybackInfo and updateItemWithInfo here
   const [activeEpisode, setActiveEpisode] = useState(
     route.params?.episodeList?.[route.params.linkIndex],
   );
@@ -251,6 +251,12 @@ const Player = ({route}: Props): React.JSX.Element => {
         playbackRate: 1,
         episodeTitle: route.params?.secondaryTitle
       });
+
+      // Cache the info page data
+      updateItemWithInfo(route.params.episodeList[route.params.linkIndex].link, {
+        ...route.params,
+        cachedAt: Date.now()
+      });
     }
   }, [route.params?.primaryTitle]);
 
@@ -271,6 +277,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         duration: seekableDuration,
       };
 
+      // Update with correct parameters
       updatePlaybackInfo(route.params.episodeList[route.params.linkIndex].link, {
         currentTime,
         duration: seekableDuration,
@@ -291,7 +298,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         lastSavedPositionRef.current = currentTime;
       }
     },
-    [activeEpisode.link, route.params.episodeList, route.params.linkIndex],
+    [activeEpisode.link, route.params.episodeList, route.params.linkIndex, updatePlaybackInfo, playbackRate],
   );
 
   const handelResizeMode = () => {
