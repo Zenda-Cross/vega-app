@@ -51,7 +51,8 @@ type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
   const {provider} = useContentStore();
-  const {addItem, updatePlaybackInfo, updateItemWithInfo} = useWatchHistoryStore(); // Add updatePlaybackInfo and updateItemWithInfo here
+  const {addItem, updatePlaybackInfo, updateItemWithInfo} =
+    useWatchHistoryStore(); // Add updatePlaybackInfo and updateItemWithInfo here
   const [activeEpisode, setActiveEpisode] = useState(
     route.params?.episodeList?.[route.params.linkIndex],
   );
@@ -243,20 +244,23 @@ const Player = ({route}: Props): React.JSX.Element => {
       addItem({
         title: route.params.primaryTitle,
         image: route.params.poster?.poster || '',
-        link: route.params.episodeList[route.params.linkIndex].link,
+        link: route.params.infoUrl || '',
         provider: route.params?.providerValue || provider.value,
         lastPlayed: Date.now(),
         duration: 0,
         currentTime: 0,
         playbackRate: 1,
-        episodeTitle: route.params?.secondaryTitle
+        episodeTitle: route.params?.secondaryTitle,
       });
 
       // Cache the info page data
-      updateItemWithInfo(route.params.episodeList[route.params.linkIndex].link, {
-        ...route.params,
-        cachedAt: Date.now()
-      });
+      updateItemWithInfo(
+        route.params.episodeList[route.params.linkIndex].link,
+        {
+          ...route.params,
+          cachedAt: Date.now(),
+        },
+      );
     }
   }, [route.params?.primaryTitle]);
 
@@ -278,11 +282,14 @@ const Player = ({route}: Props): React.JSX.Element => {
       };
 
       // Update with correct parameters
-      updatePlaybackInfo(route.params.episodeList[route.params.linkIndex].link, {
-        currentTime,
-        duration: seekableDuration,
-        playbackRate
-      });
+      updatePlaybackInfo(
+        route.params.episodeList[route.params.linkIndex].link,
+        {
+          currentTime,
+          duration: seekableDuration,
+          playbackRate,
+        },
+      );
 
       if (
         Math.abs(currentTime - lastSavedPositionRef.current) > 5 ||
@@ -298,7 +305,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         lastSavedPositionRef.current = currentTime;
       }
     },
-    [activeEpisode.link, route.params.episodeList, route.params.linkIndex, updatePlaybackInfo, playbackRate],
+    [
+      activeEpisode.link,
+      route.params.episodeList,
+      route.params.linkIndex,
+      updatePlaybackInfo,
+      playbackRate,
+    ],
   );
 
   const handelResizeMode = () => {
