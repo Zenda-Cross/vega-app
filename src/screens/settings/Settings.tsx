@@ -201,6 +201,23 @@ const Settings = ({navigation}: Props) => {
                 </View>
               </TouchableNativeFeedback>
 
+              {/* Watch History */}
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('WatchHistory')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name="history"
+                      size={22}
+                      color={primary}
+                    />
+                    <Text className="text-white ml-3 text-base">Watch History</Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
+                </View>
+              </TouchableNativeFeedback>
+
               {/* Preferences */}
               <TouchableNativeFeedback
                 onPress={() => navigation.navigate('Preferences')}
