@@ -28,12 +28,12 @@ import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
 import {TouchableOpacity} from 'react-native';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
-import WatchHistory from './screens/WatchHistory';  // Add this import
+import WatchHistory from './screens/WatchHistory'; // Add this import
 
 enableScreens(true);
 enableFreeze(true);
@@ -51,14 +51,7 @@ export type HomeStackParamList = {
 };
 
 export type RootStackParamList = {
-  TabNavigator: undefined;
-  WatchHistory: undefined;
   TabStack: undefined;
-  Info: {
-    link: string | object;
-    provider?: string;
-    poster?: string;
-  };
   Player: {
     linkIndex: number;
     episodeList: EpisodeLink[];
@@ -98,12 +91,18 @@ export type WatchListStackParamList = {
   Info: {link: string; provider?: string; poster?: string};
 };
 
+export type WatchHistoryStackParamList = {
+  WatchHistory: undefined;
+  Info: {link: string; provider?: string; poster?: string};
+};
+
 export type SettingsStackParamList = {
   Settings: undefined;
   DisableProviders: undefined;
   About: undefined;
   Preferences: undefined;
   Downloads: undefined;
+  WatchHistoryStack: undefined;
 };
 
 export type TabStackParamList = {
@@ -123,6 +122,8 @@ const App = () => {
   const SearchStack = createNativeStackNavigator<SearchStackParamList>();
   const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
   const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+  const WatchHistoryStack =
+    createNativeStackNavigator<WatchHistoryStackParamList>();
   const {primary} = useThemeStore(state => state);
 
   const showTabBarLables = MMKV.getBool('showTabBarLables') || false;
@@ -179,6 +180,24 @@ const App = () => {
     );
   }
 
+  function WatchHistoryStackScreen() {
+    return (
+      <WatchHistoryStack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'ios_from_right',
+          animationDuration: 200,
+          freezeOnBlur: true,
+        }}>
+        <WatchHistoryStack.Screen
+          name="WatchHistory"
+          component={WatchHistory}
+        />
+        <WatchHistoryStack.Screen name="Info" component={Info} />
+      </WatchHistoryStack.Navigator>
+    );
+  }
+
   function SettingsStackScreen() {
     return (
       <SettingsStack.Navigator
@@ -196,6 +215,10 @@ const App = () => {
         <SettingsStack.Screen name="About" component={About} />
         <SettingsStack.Screen name="Preferences" component={Preferences} />
         <SettingsStack.Screen name="Downloads" component={Downloads} />
+        <SettingsStack.Screen
+          name="WatchHistoryStack"
+          component={WatchHistoryStackScreen}
+        />
       </SettingsStack.Navigator>
     );
   }
@@ -381,10 +404,16 @@ const App = () => {
             contentStyle: {backgroundColor: 'transparent'},
           }}>
           <Stack.Screen name="TabStack" component={TabStack} />
-          <Stack.Screen name="WatchHistory" component={WatchHistory} />
-          <Stack.Screen name="Player" component={Player} options={{ orientation: 'landscape' }} />
-          <Stack.Screen name="SeriesEpisodes" component={SeriesEpisodes} options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="Info" component={Info} />
+          <Stack.Screen
+            name="Player"
+            component={Player}
+            options={{orientation: 'landscape'}}
+          />
+          <Stack.Screen
+            name="SeriesEpisodes"
+            component={SeriesEpisodes}
+            options={{animation: 'slide_from_right'}}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
