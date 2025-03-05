@@ -25,6 +25,30 @@ const WatchHistory = () => {
     });
   }, [history]);
 
+  const handleNavigateToInfo = (item: any) => {
+    try {
+      // Parse the link if it's a JSON string
+      let linkData = item.link;
+      if (typeof item.link === 'string' && item.link.startsWith('{')) {
+        try {
+          linkData = JSON.parse(item.link);
+        } catch (e) {
+          console.error('Failed to parse link:', e);
+        }
+      }
+
+      // Simple direct navigation to Info screen
+      navigation.navigate('Info', {
+        link: linkData,
+        provider: item.provider || 'multiStream',
+        poster: item.image || ''
+      });
+      
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
   return (
     <View className="flex-1 bg-black">
       <StatusBar
@@ -42,13 +66,6 @@ const WatchHistory = () => {
 
       <View className="flex-row justify-between items-center p-4">
         <Text className="text-white text-2xl font-bold">Watch History</Text>
-        {uniqueHistory.length > 0 && (
-          <TouchableOpacity 
-            onPress={clearHistory}
-            className="bg-quaternary p-2 rounded-lg">
-            <MaterialCommunityIcons name="delete" size={24} color={primary} />
-          </TouchableOpacity>
-        )}
       </View>
 
       <FlashList
@@ -64,13 +81,7 @@ const WatchHistory = () => {
         renderItem={({item}) => (
           <View className="flex-1 m-1">
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('Info', {
-                  link: item.link,
-                  provider: item.provider,
-                  poster: item.image,
-                })
-              }>
+              onPress={() => handleNavigateToInfo(item)}>
               <Image
                 source={{uri: item.image}}
                 className="w-full aspect-[2/3] rounded-lg"

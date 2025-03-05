@@ -8,6 +8,7 @@ interface WatchHistoryItem extends Post {
   currentTime: number;
   playbackRate: number;
   episodeTitle?: string;
+  cachedInfoData?: any; // Add cached info data
 }
 
 export interface History {
@@ -15,6 +16,7 @@ export interface History {
   addItem: (item: WatchHistoryItem) => void;
   updatePlaybackInfo: (link: string, playbackInfo: Partial<WatchHistoryItem>) => void;
   clearHistory: () => void;
+  updateItemWithInfo: (link: string, infoData: any) => void;
 }
 
 const useWatchHistoryStore = create<History>((set) => ({
@@ -60,6 +62,23 @@ const useWatchHistoryStore = create<History>((set) => ({
   clearHistory: () => {
     MMKV.setString('recentlyWatched', '[]');
     set({history: []});
+  },
+
+  updateItemWithInfo: (link, infoData) => {
+    try {
+      const history = JSON.parse(MMKV.getString('recentlyWatched') || '[]');
+      const newHistory = history.map((item: WatchHistoryItem) => {
+        if (item.link === link) {
+          return { ...item, cachedInfoData: infoData };
+        }
+        return item;
+      });
+      
+      MMKV.setString('recentlyWatched', JSON.stringify(newHistory));
+      set({ history: newHistory });
+    } catch (error) {
+      console.error('❌ Error caching info data:', error);
+    }
   },
 }));
 
