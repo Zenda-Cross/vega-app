@@ -183,14 +183,14 @@ const Player = ({route}: Props): React.JSX.Element => {
       ].GetStream(activeEpisode.link, route.params?.type, controller.signal);
       const streamAbleServers = data.filter(
         // filter out non streamable servers
-        stream =>
+        streamItem =>
           !manifest[
             route.params.providerValue || provider.value
-          ].nonStreamableServer?.includes(stream.server),
+          ].nonStreamableServer?.includes(streamItem.server),
       );
       const filteredQualities = streamAbleServers?.filter(
         // filter out excluded qualities
-        stream => !excludedQualities.includes(stream?.quality + 'p'),
+        streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
       );
       const filteredData =
         filteredQualities?.length > 0 ? filteredQualities : streamAbleServers;
@@ -291,6 +291,13 @@ const Player = ({route}: Props): React.JSX.Element => {
         },
       );
 
+      // Store progress data specifically for watch history display
+      storeWatchProgressForHistory(
+        route.params.episodeList[route.params.linkIndex].link,
+        currentTime,
+        seekableDuration
+      );
+
       if (
         Math.abs(currentTime - lastSavedPositionRef.current) > 5 ||
         currentTime - lastSavedPositionRef.current > 5
@@ -313,6 +320,53 @@ const Player = ({route}: Props): React.JSX.Element => {
       playbackRate,
     ],
   );
+
+  // Dedicated function to store watch progress for history display
+  const storeWatchProgressForHistory = (link: string, currentTime: number, duration: number) => {
+    try {
+      // Only store if we have meaningful values
+      if (currentTime > 0 && duration > 0) {
+        // Use info URL as the primary key if available (more reliable across sessions)
+        const historyKey = route.params.infoUrl || link;
+
+        // Use a distinct key format for watch history progress data
+        const historyProgressKey = `watch_history_progress_${historyKey}`;
+
+        // Calculate percentage
+        const percentage = (currentTime / duration) * 100;
+
+        // Create rich progress data
+        const progressData = {
+          currentTime,
+          duration,
+          percentage: percentage,
+          infoUrl: route.params.infoUrl || '',
+          title: route.params?.primaryTitle || '',
+          episodeTitle: route.params?.secondaryTitle || '',
+          updatedAt: Date.now(),
+        };
+        // Store the data
+        MMKV.setString(historyProgressKey, JSON.stringify(progressData));
+
+        // Log every 5 seconds to avoid too much console spam
+        if (Math.floor(currentTime) % 5 === 0) {
+          console.log('Watch History Progress Stored:', {
+            key: historyProgressKey,
+            progress: Math.round(percentage) + '%',
+            time: `${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60).toString().padStart(2, '0')}/${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
+          });
+        }
+
+        // Also store with episodeTitle-specific key to handle series episodes
+        if (route.params?.secondaryTitle) {
+          const episodeKey = `watch_history_progress_${historyKey}_${route.params.secondaryTitle.replace(/\s+/g, '_')}`;
+          MMKV.setString(episodeKey, JSON.stringify(progressData));
+        }
+      }
+    } catch (error) {
+      console.error('Error storing watch progress for history:', error);
+    }
+  };
 
   const handelResizeMode = () => {
     const modes = [
@@ -1020,12 +1074,12 @@ const Player = ({route}: Props): React.JSX.Element => {
 export default Player;
 
 function formatQuality(quality: string) {
-  if (quality === 'auto') return quality;
-  if (Number(quality) > 1080) return '4K';
-  if (Number(quality) > 720) return '1080p';
-  if (Number(quality) > 480) return '720p';
-  if (Number(quality) > 360) return '480p';
-  if (Number(quality) > 240) return '360p';
-  if (Number(quality) > 144) return '240p';
+  if (quality === 'auto') { return quality; }
+  if (Number(quality) > 1080) { return '4K'; }
+  if (Number(quality) > 720) { return '1080p'; }
+  if (Number(quality) > 480) { return '720p'; }
+  if (Number(quality) > 360) { return '480p'; }
+  if (Number(quality) > 240) { return '360p'; }
+  if (Number(quality) > 144) { return '240p'; }
   return quality;
 }
