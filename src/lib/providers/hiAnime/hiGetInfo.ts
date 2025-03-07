@@ -27,7 +27,8 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
       if (!episode?.isSubbed) {
         return;
       }
-      const title = 'Episode ' + episode.number;
+      const title =
+        'Episode ' + episode.number + (episode?.isFiller ? ' (Filler)' : '');
       const link = episode.id + '$sub';
       if (link && title) {
         subLinks.push({
@@ -49,7 +50,8 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
         if (!episode?.isDubbed) {
           return;
         }
-        const title = 'Episode ' + episode.number;
+        const title =
+          'Episode ' + episode.number + (episode?.isFiller ? ' (Filler)' : '');
         const link = episode.id + '$dub';
         console.log(link);
         if (link && title) {
