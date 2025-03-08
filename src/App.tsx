@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState, Platform} from 'react';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
@@ -34,6 +34,7 @@ import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory'; // Add this import
+import TVLayout from './components/TVLayout';
 
 enableScreens(true);
 enableFreeze(true);
@@ -114,6 +115,7 @@ export type TabStackParamList = {
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
 const App = () => {
+  const [isTVMode, setIsTVMode] = useState(Platform.isTV);
   LogBox.ignoreLogs([
     'You have passed a style to FlashList',
     'new NativeEventEmitter()',
@@ -404,17 +406,36 @@ const App = () => {
             freezeOnBlur: true,
             contentStyle: {backgroundColor: 'transparent'},
           }}>
-          <Stack.Screen name="TabStack" component={TabStack} />
-          <Stack.Screen
-            name="Player"
-            component={Player}
-            options={{orientation: 'landscape'}}
-          />
-          <Stack.Screen
-            name="SeriesEpisodes"
-            component={SeriesEpisodes}
-            options={{animation: 'slide_from_right'}}
-          />
+          {isTVMode ? (
+            <>
+              <Stack.Screen name="TabStack">
+                {props => (
+                  <TVLayout>
+                    <TabStack {...props} />
+                  </TVLayout>
+                )}
+              </Stack.Screen>
+              <Stack.Screen
+                name="Player"
+                component={Player}
+                options={{orientation: 'landscape'}}
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="TabStack" component={TabStack} />
+              <Stack.Screen
+                name="Player"
+                component={Player}
+                options={{orientation: 'landscape'}}
+              />
+              <Stack.Screen
+                name="SeriesEpisodes"
+                component={SeriesEpisodes}
+                options={{animation: 'slide_from_right'}}
+              />
+            </>
+          )}
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
