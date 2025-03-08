@@ -6,9 +6,20 @@
             <size android:width="320dp" android:height="180dp"/>
         </shape>
     </item>
-    <item>
+    <item
+        android:left="20dp"
+        android:right="20dp"
+        android:gravity="center">
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher"/>
+            android:src="@mipmap/ic_launcher"
+            android:tint="#FFFFFF"/>
+    </item>
+    <item
+        android:bottom="20dp"
+        android:gravity="bottom|center_horizontal">
+        <bitmap
+            android:gravity="bottom"
+            android:src="@drawable/app_name_banner"/>
     </item>
 </layer-list> 

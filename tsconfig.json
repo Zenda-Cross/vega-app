@@ -1,11 +1,14 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-native",
     "strict": true,
     "baseUrl": ".",
     "paths": {
       "*": ["src/*"]
-    }
+    },
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false
   }
 }

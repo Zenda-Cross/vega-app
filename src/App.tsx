@@ -35,6 +35,9 @@ import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory'; // Add this import
 import TVLayout from './components/TVLayout';
+import {BackHandler} from 'react-native';
+import TVSettings from './screens/settings/TVSettings';
+import TVVideoPlayer from './screens/TVVideoPlayer';
 
 enableScreens(true);
 enableFreeze(true);
@@ -115,7 +118,8 @@ export type TabStackParamList = {
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
 const App = () => {
-  const [isTVMode, setIsTVMode] = useState(Platform.isTV);
+  const [isTVMode] = useState(Platform.isTV);
+  const [showTVSettings, setShowTVSettings] = useState(false);
   LogBox.ignoreLogs([
     'You have passed a style to FlashList',
     'new NativeEventEmitter()',
@@ -365,6 +369,19 @@ const App = () => {
     }
   }, []);
 
+  // Add TV-specific navigation handling
+  useEffect(() => {
+    if (isTVMode) {
+      const handleTVRemoteMenu = () => {
+        setShowTVSettings(prev => !prev);
+        return true;
+      };
+
+      BackHandler.addEventListener('hardwareMenuButton', handleTVRemoteMenu);
+      return () => BackHandler.removeEventListener('hardwareMenuButton', handleTVRemoteMenu);
+    }
+  }, [isTVMode]);
+
   return (
     <SafeAreaProvider>
       <NavigationContainer
@@ -412,14 +429,15 @@ const App = () => {
                 {props => (
                   <TVLayout>
                     <TabStack {...props} />
+                    {showTVSettings && <TVSettings />}
                   </TVLayout>
                 )}
               </Stack.Screen>
               <Stack.Screen
                 name="Player"
-                component={Player}
-                options={{orientation: 'landscape'}}
-              />
+                options={{ orientation: 'landscape' }}>
+                {props => <TVVideoPlayer {...props} />}
+              </Stack.Screen>
             </>
           ) : (
             <>
