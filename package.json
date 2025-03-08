@@ -65,6 +65,7 @@
     "@react-native/eslint-config": "0.74.81",
     "@react-native/metro-config": "0.74.81",
     "@react-native/typescript-config": "0.74.81",
+    "@tsconfig/react-native": "^3.0.5",
     "@types/react": "^18.2.6",
     "@types/react-native-vector-icons": "^6.4.18",
     "@types/react-test-renderer": "^18.0.0",
