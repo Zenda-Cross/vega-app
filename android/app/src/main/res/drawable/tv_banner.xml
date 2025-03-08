@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#000000"/>
             <size android:width="320dp" android:height="180dp"/>
         </shape>
     </item>
+    
+    <!-- App Icon -->
     <item
         android:left="20dp"
-        android:right="20dp"
-        android:gravity="center">
+        android:right="180dp"
+        android:top="40dp"
+        android:bottom="40dp"
+        android:gravity="center_vertical|left">
         <bitmap
             android:gravity="center"
             android:src="@mipmap/ic_launcher"
             android:tint="#FFFFFF"/>
     </item>
+    
+    <!-- App Name -->
     <item
-        android:bottom="20dp"
-        android:gravity="bottom|center_horizontal">
-        <bitmap
-            android:gravity="bottom"
-            android:src="@drawable/app_name_banner"/>
+        android:left="160dp"
+        android:right="20dp"
+        android:gravity="center_vertical">
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000"/>
+        </shape>
     </item>
 </layer-list> 
