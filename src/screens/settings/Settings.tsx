@@ -7,8 +7,9 @@ import {
   ScrollView,
   Dimensions,
   StatusBar,
+  Switch,
 } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
@@ -24,12 +25,15 @@ import {
   AntDesign,
   Feather,
   MaterialIcons,
+  Ionicons,
 } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
 import {MotiView} from 'moti';
 import {useNavigation} from '@react-navigation/native';
+import PlatformUtils from '../../utils/PlatformUtils';
+import usePlatform from '../../hooks/usePlatform';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -39,6 +43,8 @@ const Settings = ({navigation}: Props) => {
   const {primary} = useThemeStore(state => state);
   const {provider, setProvider} = useContentStore(state => state);
   const {clearHistory} = useWatchHistoryStore(state => state);
+  const { isTV } = usePlatform();
+  const [forceTVMode, setForceTVMode] = useState(PlatformUtils.isForcingTVMode);
 
   const renderProviderIcon = (uri: string) => (
     <Text>
@@ -105,255 +111,336 @@ const Settings = ({navigation}: Props) => {
     </MotiView>
   );
 
+  // Update the TV mode setting when the toggle changes
+  const handleTVModeToggle = (value: boolean) => {
+    setForceTVMode(value);
+    PlatformUtils.setForceTVMode(value);
+    
+    // Show a message that the app needs to be restarted for changes to take effect
+    ReactNativeHapticFeedback.trigger('impactMedium', {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+    
+    // You could implement a restart prompt here
+  };
+
   return (
-    <ScrollView
-      className="w-full h-full bg-black"
-      showsVerticalScrollIndicator={false}
-      bounces={true}
-      overScrollMode="always"
-      contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0,
-        paddingBottom: 24,
-        flexGrow: 1, // This ensures content is scrollable even if it's shorter than screen
-      }}>
-      <View className="p-5">
-        <MotiView
-          from={{opacity: 0, scale: 0.9}}
-          animate={{opacity: 1, scale: 1}}
-          transition={{type: 'timing', duration: 400}}>
-          <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
-        </MotiView>
+    <View style={{flex: 1, backgroundColor: 'black'}}>
+      <StatusBar backgroundColor={'black'} />
+      <ScrollView
+        className="w-full h-full bg-black"
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        overScrollMode="always"
+        contentContainerStyle={{
+          paddingTop: StatusBar.currentHeight || 0,
+          paddingBottom: 24,
+          flexGrow: 1, // This ensures content is scrollable even if it's shorter than screen
+        }}>
+        <View className="p-5">
+          <MotiView
+            from={{opacity: 0, scale: 0.9}}
+            animate={{opacity: 1, scale: 1}}
+            transition={{type: 'timing', duration: 400}}>
+            <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
+          </MotiView>
 
-        {/* Content provider section */}
-        <AnimatedSection delay={100}>
-          <View className="mb-6">
-            <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
-            <View className="bg-[#1A1A1A] rounded-xl py-4">
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 10,
+          {/* Content provider section */}
+          <AnimatedSection delay={100}>
+            <View className="mb-6">
+              <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
+              <View className="bg-[#1A1A1A] rounded-xl py-4">
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{
+                    paddingHorizontal: 10,
+                  }}>
+                  {providersList.map(item =>
+                    renderProviderItem(item, provider.value === item.value),
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+          </AnimatedSection>
+
+          {/* Main options section */}
+          <AnimatedSection delay={200}>
+            <View className="mb-6">
+              <Text className="text-gray-400 text-sm mb-3">Options</Text>
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                {/* Downloads */}
+                <TouchableNativeFeedback
+                  onPress={() => navigation.navigate('Downloads')}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <MaterialCommunityIcons
+                        name="folder-download"
+                        size={22}
+                        color={primary}
+                      />
+                      <Text className="text-white ml-3 text-base">Downloads</Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* Subtitle Style */}
+                <TouchableNativeFeedback
+                  onPress={async () => {
+                    if (MMKV.getBool('hapticFeedback') !== false) {
+                      ReactNativeHapticFeedback.trigger('virtualKey', {
+                        enableVibrateFallback: true,
+                        ignoreAndroidSystemSettings: false,
+                      });
+                    }
+                    await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
+                  }}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <MaterialCommunityIcons
+                        name="subtitles"
+                        size={22}
+                        color={primary}
+                      />
+                      <Text className="text-white ml-3 text-base">
+                        Subtitle Style
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* Disable Providers */}
+                <TouchableNativeFeedback
+                  onPress={() => navigation.navigate('DisableProviders')}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <MaterialIcons name="block" size={22} color={primary} />
+                      <Text className="text-white ml-3 text-base">
+                        Disable Providers in Search
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* Watch History */}
+                <TouchableNativeFeedback
+                  onPress={() => navigation.navigate('WatchHistoryStack')}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <MaterialCommunityIcons
+                        name="history"
+                        size={22}
+                        color={primary}
+                      />
+                      <Text className="text-white ml-3 text-base">
+                        Watch History
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* Preferences */}
+                <TouchableNativeFeedback
+                  onPress={() => navigation.navigate('Preferences')}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4">
+                    <View className="flex-row items-center">
+                      <MaterialIcons
+                        name="room-preferences"
+                        size={22}
+                        color={primary}
+                      />
+                      <Text className="text-white ml-3 text-base">
+                        Preferences
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+              </View>
+            </View>
+          </AnimatedSection>
+
+          {/* Data Management section */}
+          <AnimatedSection delay={300}>
+            <View className="mb-6">
+              <Text className="text-gray-400 text-sm mb-3">Data Management</Text>
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                {/* Clear Cache */}
+                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                  <Text className="text-white text-base">Clear Cache</Text>
+                  <TouchableOpacity
+                    className="bg-[#262626] px-4 py-2 rounded-lg"
+                    onPress={() => {
+                      if (MMKV.getBool('hapticFeedback') !== false) {
+                        ReactNativeHapticFeedback.trigger('virtualKey', {
+                          enableVibrateFallback: true,
+                          ignoreAndroidSystemSettings: false,
+                        });
+                      }
+                      MmmkvCache.clearStore();
+                    }}>
+                    <MaterialCommunityIcons
+                      name="delete-outline"
+                      size={20}
+                      color={primary}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Clear Watch History */}
+                <View className="flex-row items-center justify-between p-4">
+                  <Text className="text-white text-base">
+                    Clear Watch History
+                  </Text>
+                  <TouchableOpacity
+                    className="bg-[#262626] px-4 py-2 rounded-lg"
+                    onPress={() => {
+                      if (MMKV.getBool('hapticFeedback') !== false) {
+                        ReactNativeHapticFeedback.trigger('virtualKey', {
+                          enableVibrateFallback: true,
+                          ignoreAndroidSystemSettings: false,
+                        });
+                      }
+                      clearHistory();
+                    }}>
+                    <MaterialCommunityIcons
+                      name="delete-outline"
+                      size={20}
+                      color={primary}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </AnimatedSection>
+
+          {/* About & GitHub section */}
+          <AnimatedSection delay={400}>
+            <View className="mb-6">
+              <Text className="text-gray-400 text-sm mb-3">About</Text>
+              <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
+                {/* About */}
+                <TouchableNativeFeedback
+                  onPress={() => navigation.navigate('About')}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <Feather name="info" size={22} color={primary} />
+                      <Text className="text-white ml-3 text-base">About</Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* GitHub */}
+                <TouchableNativeFeedback
+                  onPress={() => Linking.openURL(socialLinks.github)}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+                    <View className="flex-row items-center">
+                      <AntDesign name="github" size={22} color={primary} />
+                      <Text className="text-white ml-3 text-base">
+                        Give a star ⭐
+                      </Text>
+                    </View>
+                    <Feather name="external-link" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+
+                {/* sponsore */}
+                <TouchableNativeFeedback
+                  onPress={() => Linking.openURL(socialLinks.sponsor)}
+                  background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                  <View className="flex-row items-center justify-between p-4">
+                    <View className="flex-row items-center">
+                      <AntDesign name="heart" size={22} color="#ff69b4" />
+                      <Text className="text-white ml-3 text-base">
+                        Sponsor Project
+                      </Text>
+                    </View>
+                    <Feather name="external-link" size={20} color="gray" />
+                  </View>
+                </TouchableNativeFeedback>
+              </View>
+            </View>
+          </AnimatedSection>
+
+          {/* TV Mode Section */}
+          <AnimatedSection delay={300}>
+            <View
+              style={{
+                backgroundColor: '#121212',
+                borderRadius: 10,
+                marginHorizontal: 10,
+                marginTop: 10,
+                padding: 10,
+              }}>
+              <Text
+                style={{
+                  color: 'white',
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  marginBottom: 10,
                 }}>
-                {providersList.map(item =>
-                  renderProviderItem(item, provider.value === item.value),
-                )}
-              </ScrollView>
-            </View>
-          </View>
-        </AnimatedSection>
-
-        {/* Main options section */}
-        <AnimatedSection delay={200}>
-          <View className="mb-6">
-            <Text className="text-gray-400 text-sm mb-3">Options</Text>
-            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              {/* Downloads */}
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('Downloads')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <MaterialCommunityIcons
-                      name="folder-download"
-                      size={22}
-                      color={primary}
-                    />
-                    <Text className="text-white ml-3 text-base">Downloads</Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
+                Display Settings
+              </Text>
+              
+              {/* TV Mode Toggle */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingVertical: 10,
+                }}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Ionicons name="tv-outline" size={24} color="white" />
+                  <Text
+                    style={{
+                      color: 'white',
+                      marginLeft: 10,
+                      fontSize: 16,
+                    }}>
+                    TV Mode
+                  </Text>
                 </View>
-              </TouchableNativeFeedback>
-
-              {/* Subtitle Style */}
-              <TouchableNativeFeedback
-                onPress={async () => {
-                  if (MMKV.getBool('hapticFeedback') !== false) {
-                    ReactNativeHapticFeedback.trigger('virtualKey', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                  }
-                  await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
-                }}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <MaterialCommunityIcons
-                      name="subtitles"
-                      size={22}
-                      color={primary}
-                    />
-                    <Text className="text-white ml-3 text-base">
-                      Subtitle Style
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-
-              {/* Disable Providers */}
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('DisableProviders')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <MaterialIcons name="block" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">
-                      Disable Providers in Search
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-
-              {/* Watch History */}
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('WatchHistoryStack')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <MaterialCommunityIcons
-                      name="history"
-                      size={22}
-                      color={primary}
-                    />
-                    <Text className="text-white ml-3 text-base">
-                      Watch History
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-
-              {/* Preferences */}
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('Preferences')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4">
-                  <View className="flex-row items-center">
-                    <MaterialIcons
-                      name="room-preferences"
-                      size={22}
-                      color={primary}
-                    />
-                    <Text className="text-white ml-3 text-base">
-                      Preferences
-                    </Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-            </View>
-          </View>
-        </AnimatedSection>
-
-        {/* Data Management section */}
-        <AnimatedSection delay={300}>
-          <View className="mb-6">
-            <Text className="text-gray-400 text-sm mb-3">Data Management</Text>
-            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              {/* Clear Cache */}
-              <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                <Text className="text-white text-base">Clear Cache</Text>
-                <TouchableOpacity
-                  className="bg-[#262626] px-4 py-2 rounded-lg"
-                  onPress={() => {
-                    if (MMKV.getBool('hapticFeedback') !== false) {
-                      ReactNativeHapticFeedback.trigger('virtualKey', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
-                    }
-                    MmmkvCache.clearStore();
-                  }}>
-                  <MaterialCommunityIcons
-                    name="delete-outline"
-                    size={20}
-                    color={primary}
-                  />
-                </TouchableOpacity>
+                <Switch
+                  trackColor={{false: '#767577', true: primary}}
+                  thumbColor={forceTVMode ? '#f4f3f4' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={handleTVModeToggle}
+                  value={forceTVMode}
+                />
               </View>
-
-              {/* Clear Watch History */}
-              <View className="flex-row items-center justify-between p-4">
-                <Text className="text-white text-base">
-                  Clear Watch History
-                </Text>
-                <TouchableOpacity
-                  className="bg-[#262626] px-4 py-2 rounded-lg"
-                  onPress={() => {
-                    if (MMKV.getBool('hapticFeedback') !== false) {
-                      ReactNativeHapticFeedback.trigger('virtualKey', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
-                    }
-                    clearHistory();
-                  }}>
-                  <MaterialCommunityIcons
-                    name="delete-outline"
-                    size={20}
-                    color={primary}
-                  />
-                </TouchableOpacity>
-              </View>
+              
+              {/* TV Mode Description */}
+              <Text
+                style={{
+                  color: 'gray',
+                  fontSize: 12,
+                  marginTop: 5,
+                  marginBottom: 10,
+                }}>
+                Optimizes the interface for TV devices with D-pad navigation. App restart required.
+                {isTV && !forceTVMode ? " (TV detected automatically)" : ""}
+              </Text>
+              
+              {/* ... other display settings ... */}
             </View>
-          </View>
-        </AnimatedSection>
-
-        {/* About & GitHub section */}
-        <AnimatedSection delay={400}>
-          <View className="mb-6">
-            <Text className="text-gray-400 text-sm mb-3">About</Text>
-            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
-              {/* About */}
-              <TouchableNativeFeedback
-                onPress={() => navigation.navigate('About')}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <Feather name="info" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">About</Text>
-                  </View>
-                  <Feather name="chevron-right" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-
-              {/* GitHub */}
-              <TouchableNativeFeedback
-                onPress={() => Linking.openURL(socialLinks.github)}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-                  <View className="flex-row items-center">
-                    <AntDesign name="github" size={22} color={primary} />
-                    <Text className="text-white ml-3 text-base">
-                      Give a star ⭐
-                    </Text>
-                  </View>
-                  <Feather name="external-link" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-
-              {/* sponsore */}
-              <TouchableNativeFeedback
-                onPress={() => Linking.openURL(socialLinks.sponsor)}
-                background={TouchableNativeFeedback.Ripple('#333333', false)}>
-                <View className="flex-row items-center justify-between p-4">
-                  <View className="flex-row items-center">
-                    <AntDesign name="heart" size={22} color="#ff69b4" />
-                    <Text className="text-white ml-3 text-base">
-                      Sponsor Project
-                    </Text>
-                  </View>
-                  <Feather name="external-link" size={20} color="gray" />
-                </View>
-              </TouchableNativeFeedback>
-            </View>
-          </View>
-        </AnimatedSection>
-      </View>
-    </ScrollView>
+          </AnimatedSection>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 

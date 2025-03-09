@@ -43,6 +43,7 @@ import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
 import {ifExists} from '../../lib/file/ifExists';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import PlatformUtils from '../../utils/PlatformUtils';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -111,11 +112,11 @@ const Player = ({route}: Props): React.JSX.Element => {
   console.log('watchedDuration', watchedDuration);
 
   const navigation = useNavigation();
-  const remoteMediaClient = Platform.isTV ? null : useRemoteMediaClient();
+  const remoteMediaClient = PlatformUtils.isTV ? null : useRemoteMediaClient();
 
   // cast
   useEffect(() => {
-    if (remoteMediaClient && !Platform.isTV) {
+    if (remoteMediaClient && !PlatformUtils.isTV) {
       remoteMediaClient.loadMedia({
         startTime: watchedDuration,
         playbackRate: playbackRate,
@@ -518,7 +519,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         style={{flex: 1, zIndex: 100}}
       />
       {/*2x speed gesture*/}
-      {loading === false && !Platform.isTV && enable2xGesture && (
+      {loading === false && !PlatformUtils.isTV && enable2xGesture && (
         <TouchableOpacity
           onLongPress={() => {
             setPlaybackRate(2);
@@ -549,7 +550,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         </TouchableOpacity>
       )}
       {/* // cast button */}
-      {loading === false && !Platform.isTV && (
+      {loading === false && !PlatformUtils.isTV && (
         <MotiView
           from={{translateY: 0}}
           animate={{translateY: showControls ? 0 : -300}}
@@ -632,7 +633,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         </View>
 
         {/* Pip  */}
-        {!Platform.isTV && (
+        {!PlatformUtils.isTV && (
           <View className="opacity-60">
             <TouchableOpacity
               className="flex-row gap-1 items-center"

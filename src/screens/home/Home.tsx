@@ -26,6 +26,9 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../../App';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import usePlatform from '../../hooks/usePlatform';
+import TVHomeLayout from '../../components/TVHomeLayout';
+import {useNavigation} from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 const Home = ({}: Props) => {
@@ -40,6 +43,8 @@ const Home = ({}: Props) => {
   const drawer = useRef<DrawerLayout>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const disableDrawer = MMKV.getBool('disableDrawer') || false;
+  const { isTV } = usePlatform();
+  const navigation = useNavigation();
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -132,6 +137,80 @@ const Home = ({}: Props) => {
   }
   notifee.onBackgroundEvent(actionHandler);
   notifee.onForegroundEvent(actionHandler);
+
+  // Convert homeData to the format expected by TVHomeLayout
+  const tvCategories = homeData.map(category => ({
+    id: category.title,
+    title: category.title,
+    items: category.data.map(item => ({
+      id: item.id,
+      title: item.title,
+      poster: item.image,
+      onPress: () => {
+        navigation.navigate('Details' as never, {
+          id: item.id,
+          title: item.title,
+          image: item.image,
+          description: item.description,
+          type: item.type,
+        } as never);
+      },
+    })),
+  }));
+
+  // Add recently watched as a category if enabled
+  if (ShowRecentlyWatched && recentlyWatched.length > 0) {
+    tvCategories.unshift({
+      id: 'recently-watched',
+      title: 'Recently Watched',
+      items: recentlyWatched.map(item => ({
+        id: item.id,
+        title: item.title,
+        poster: item.image,
+        onPress: () => {
+          navigation.navigate('Details' as never, {
+            id: item.id,
+            title: item.title,
+            image: item.image,
+            description: '',
+            type: item.type,
+          } as never);
+        },
+      })),
+    });
+  }
+
+  // Render TV layout if on a TV device
+  if (isTV) {
+    return (
+      <SafeAreaView style={{flex: 1, backgroundColor: 'black'}}>
+        <StatusBar backgroundColor={backgroundColor} />
+        {loading ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'black',
+            }}>
+            {/* Loading indicator would go here */}
+          </View>
+        ) : (
+          <TVHomeLayout
+            categories={tvCategories}
+            onCategoryFocus={(categoryId) => {
+              console.log('Category focused:', categoryId);
+            }}
+            onItemFocus={(itemId, categoryId) => {
+              console.log('Item focused:', itemId, 'in category:', categoryId);
+            }}
+          />
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  // Regular mobile layout
   return (
     <GestureHandlerRootView>
       <SafeAreaView className="bg-black flex-1">
