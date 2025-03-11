@@ -10,16 +10,28 @@ export const protonGetStream = async (link: string): Promise<Stream[]> => {
     const streamLinks: Stream[] = [];
     const res = await axios.get(link, {headers});
     const data = res.data;
-    const regex = /\[(?=.*?"<!-- Banne")(.*?)\]/g;
-    const htmlArray = data?.match(regex);
+    // const regex = /\[(?=.*?"<div class")(.*?)\]/g;
+    // const htmlArray = data?.match(regex);
+
+    // new code
+    const $$ = cheerio.load(data);
+    const htmlArray = $$('script:contains("decodeURIComponent")')
+      .text()
+      .split(' = ')?.[1]
+      ?.split('protomovies')?.[0]
+      ?.trim()
+      ?.slice(0, -1); // remove the last character
+    // console.log('protonGetInfo', htmlArray);
+    // const html = decodeHtml(JSON.parse(htmlArray[htmlArray.length - 1]));
+
+    const html = decodeHtml(JSON.parse(htmlArray));
+
     // console.log('protonGetInfo', htmlArray[htmlArray.length - 1]);
-    const html = decodeHtml(JSON.parse(htmlArray[htmlArray.length - 1]));
     // console.log('all', html);
     const $ = cheerio.load(html);
     const idList = [];
     const id1080 = $('tr:contains("1080p")')
-      .next()
-      .find('button:contains("Get Media")')
+      .find('button:contains("Info")')
       .attr('id')
       ?.split('-')[1];
     if (id1080) {
@@ -29,8 +41,7 @@ export const protonGetStream = async (link: string): Promise<Stream[]> => {
       });
     }
     const id720 = $('tr:contains("720p")')
-      .next()
-      .find('button:contains("Get Media")')
+      .find('button:contains("Info")')
       .attr('id')
       ?.split('-')[1];
 
@@ -42,8 +53,7 @@ export const protonGetStream = async (link: string): Promise<Stream[]> => {
     }
 
     const id480 = $('tr:contains("480p")')
-      .next()
-      .find('button:contains("Get Media")')
+      .find('button:contains("Info")')
       .attr('id')
       ?.split('-')[1];
 
@@ -53,6 +63,7 @@ export const protonGetStream = async (link: string): Promise<Stream[]> => {
         quality: '480p',
       });
     }
+    console.log('idList', idList);
 
     const baseUrl = link.split('/').slice(0, 3).join('/');
 
