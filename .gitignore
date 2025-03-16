@@ -88,3 +88,6 @@ app-tv/keystore.properties
 
 # Large files
 temp/gradle.zip
+
+# Temporary files and directories
+temp/
