@@ -85,3 +85,6 @@ web-build/
 # TV app specific
 app-tv/keystore.properties
 !app-tv/keystore.properties.template
+
+# Large files
+temp/gradle.zip
