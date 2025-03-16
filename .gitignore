@@ -81,3 +81,7 @@ index.android.bundle
 .expo
 dist/
 web-build/
+
+# TV app specific
+app-tv/keystore.properties
+!app-tv/keystore.properties.template
