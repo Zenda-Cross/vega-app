@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.Leanback" parent="Theme.Leanback.Browse">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="browseTitleTextStyle">@style/Widget.Leanback.Title</item>
+        <item name="rowHeaderTitleStyle">@style/Widget.Leanback.Row.Header</item>
+        <item name="cardTheme">@style/CardTheme</item>
+        <item name="defaultBrandColor">@color/primary</item>
+        <item name="defaultSearchColor">@color/search_opaque</item>
+        <item name="defaultSearchIconColor">@color/white</item>
+        <item name="defaultSearchBrightColor">@color/accent</item>
+        <item name="android:colorPrimary">@color/primary</item>
+        <item name="android:colorPrimaryDark">@color/primary_dark</item>
+        <item name="android:colorAccent">@color/accent</item>
+    </style>
+    
+    <!-- Player theme -->
+    <style name="Theme.Leanback.Player" parent="Theme.Leanback">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="playbackProgressPrimaryColor">@color/player_progress_played</item>
+        <item name="playbackProgressSecondaryColor">@color/player_progress_buffered</item>
+        <item name="playbackProgressUnplayedColor">@color/player_progress_unplayed</item>
+    </style>
+    
+    <!-- Details theme -->
+    <style name="Theme.Leanback.Details" parent="Theme.Leanback.DetailsBase">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="detailsDescriptionTitleStyle">@style/Widget.Leanback.DetailsDescriptionTitleStyle</item>
+        <item name="detailsDescriptionSubtitleStyle">@style/Widget.Leanback.DetailsDescriptionSubtitleStyle</item>
+        <item name="detailsDescriptionBodyStyle">@style/Widget.Leanback.DetailsDescriptionBodyStyle</item>
+        <item name="detailsActionButtonStyle">@style/Widget.Leanback.DetailsActionButtonStyle</item>
+        <item name="defaultBrandColor">@color/primary</item>
+        <item name="defaultSearchColor">@color/search_opaque</item>
+    </style>
+    
+    <!-- Search theme -->
+    <style name="Theme.Leanback.Search" parent="Theme.Leanback.GuidedStep">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="searchOrbViewStyle">@style/Widget.Leanback.SearchOrbViewStyle</item>
+        <item name="defaultSearchColor">@color/search_opaque</item>
+        <item name="defaultSearchIconColor">@color/white</item>
+        <item name="searchResultsBackgroundColor">@color/background_dark</item>
+    </style>
+    
+    <!-- GuidedStep theme for settings -->
+    <style name="Theme.Leanback.GuidedStep" parent="Theme.Leanback.GuidedStep.Half">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="guidedStepTheme">@style/Theme.Leanback.GuidedStep</item>
+        <item name="guidedActionItemTitleStyle">@style/Widget.Leanback.GuidedActionItemTitleStyle</item>
+        <item name="guidedActionItemDescriptionStyle">@style/Widget.Leanback.GuidedActionItemDescriptionStyle</item>
+        <item name="guidedActionItemIconStyle">@style/Widget.Leanback.GuidedActionItemIconStyle</item>
+    </style>
+    
+    <!-- Error theme -->
+    <style name="Theme.Leanback.Error" parent="Theme.Leanback">
+        <item name="android:windowBackground">@color/background_dark</item>
+        <item name="android:colorForeground">@color/white</item>
+    </style>
+    
+    <!-- Card theme -->
+    <style name="CardTheme">
+        <item name="imageCardViewStyle">@style/Widget.Leanback.ImageCardViewStyle</item>
+        <item name="imageCardViewTitleStyle">@style/Widget.Leanback.ImageCardView.TitleStyle</item>
+        <item name="imageCardViewContentStyle">@style/Widget.Leanback.ImageCardView.ContentStyle</item>
+        <item name="imageCardViewBadgeStyle">@style/Widget.Leanback.ImageCardView.BadgeStyle</item>
+        <item name="imageCardViewImageStyle">@style/Widget.Leanback.ImageCardView.ImageStyle</item>
+        <item name="imageCardViewInfoAreaStyle">@style/Widget.Leanback.ImageCardView.InfoAreaStyle</item>
+    </style>
+    
+    <!-- Title style -->
+    <style name="Widget.Leanback.Title" parent="Widget.Leanback.Title.Text">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    
+    <!-- Row header style -->
+    <style name="Widget.Leanback.Row.Header" parent="Widget.Leanback.Row.Header.Title">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_size_large</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    
+    <!-- ImageCardView styles -->
+    <style name="Widget.Leanback.ImageCardViewStyle" parent="Widget.Leanback.ImageCardView">
+        <item name="cardBackground">@color/card_background</item>
+        <item name="cardForeground">@drawable/card_foreground</item>
+        <item name="cardType">infoUnder</item>
+        <item name="infoAreaBackground">@color/card_background</item>
+        <item name="infoVisibility">activated</item>
+    </style>
+    
+    <style name="Widget.Leanback.ImageCardView.TitleStyle" parent="Widget.Leanback.ImageCardView.Title">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:paddingTop">@dimen/padding_small</item>
+        <item name="android:paddingBottom">@dimen/padding_xsmall</item>
+        <item name="android:paddingStart">@dimen/padding_medium</item>
+        <item name="android:paddingEnd">@dimen/padding_medium</item>
+    </style>
+    
+    <style name="Widget.Leanback.ImageCardView.ContentStyle" parent="Widget.Leanback.ImageCardView.Content">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:paddingBottom">@dimen/padding_small</item>
+        <item name="android:paddingStart">@dimen/padding_medium</item>
+        <item name="android:paddingEnd">@dimen/padding_medium</item>
+    </style>
+    
+    <style name="Widget.Leanback.ImageCardView.BadgeStyle" parent="Widget.Leanback.ImageCardView.Badge">
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:textSize">@dimen/text_size_xsmall</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    
+    <style name="Widget.Leanback.ImageCardView.ImageStyle">
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:adjustViewBounds">true</item>
+        <item name="android:layout_margin">@dimen/card_image_margin</item>
+    </style>
+    
+    <style name="Widget.Leanback.ImageCardView.InfoAreaStyle">
+        <item name="android:background">@color/card_background</item>
+        <item name="android:paddingTop">@dimen/padding_small</item>
+        <item name="android:paddingBottom">@dimen/padding_small</item>
+    </style>
+    
+    <!-- Details description styles -->
+    <style name="Widget.Leanback.DetailsDescriptionTitleStyle" parent="Widget.Leanback.DetailsDescriptionTitleStyle">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_size_xxlarge</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    
+    <style name="Widget.Leanback.DetailsDescriptionSubtitleStyle" parent="Widget.Leanback.DetailsDescriptionSubtitleStyle">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:paddingTop">@dimen/padding_small</item>
+    </style>
+    
+    <style name="Widget.Leanback.DetailsDescriptionBodyStyle" parent="Widget.Leanback.DetailsDescriptionBodyStyle">
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:maxLines">5</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:paddingTop">@dimen/padding_medium</item>
+    </style>
+    
+    <style name="Widget.Leanback.DetailsActionButtonStyle" parent="Widget.Leanback.Button">
+        <item name="android:background">@drawable/button_background_selector</item>
+        <item name="android:textColor">@color/text_on_primary</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:minWidth">@dimen/detail_action_button_width</item>
+        <item name="android:height">@dimen/detail_action_button_height</item>
+        <item name="android:layout_margin">@dimen/detail_action_button_margin</item>
+    </style>
+    
+    <!-- Search orb style -->
+    <style name="Widget.Leanback.SearchOrbViewStyle" parent="Widget.Leanback.SearchOrbViewStyle">
+        <item name="searchOrbColor">@color/accent</item>
+        <item name="searchOrbIconColor">@color/white</item>
+        <item name="searchOrbSize">@dimen/search_orb_size</item>
+    </style>
+    
+    <!-- Guided action styles -->
+    <style name="Widget.Leanback.GuidedActionItemTitleStyle" parent="Widget.Leanback.GuidedActionItemTitle">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    
+    <style name="Widget.Leanback.GuidedActionItemDescriptionStyle" parent="Widget.Leanback.GuidedActionItemDescription">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    
+    <style name="Widget.Leanback.GuidedActionItemIconStyle" parent="Widget.Leanback.GuidedActionItemIcon">
+        <item name="android:tint">@color/primary</item>
+    </style>
+
+    <!-- AppTheme -->
+    <style name="AppTheme" parent="@style/Theme.Leanback">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/background_dark</item>
+    </style>
+
+    <!-- TV Button style with proper focus handling -->
+    <style name="TvButton">
+        <item name="android:background">@drawable/button_background_selector</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:paddingStart">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/button_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/button_padding_vertical</item>
+        <item name="android:minWidth">@dimen/button_min_width</item>
+        <item name="android:gravity">center</item>
+        <item name="android:elevation">@dimen/button_elevation</item>
+        <item name="android:stateListAnimator">@animator/button_state_animator</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+    
+    <!-- TV Button Secondary style -->
+    <style name="TvButton.Secondary">
+        <item name="android:background">@drawable/button_background_secondary</item>
+    </style>
+    
+    <!-- TV Button Borderless style -->
+    <style name="TvButton.Borderless">
+        <item name="android:background">@drawable/button_background_borderless</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- TV Card style with focus handling -->
+    <style name="TvCard">
+        <item name="android:background">@drawable/card_background</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:padding">@dimen/padding_medium</item>
+        <item name="android:elevation">@dimen/card_elevation</item>
+        <item name="android:stateListAnimator">@animator/card_state_animator</item>
+        <item name="android:foreground">@drawable/card_foreground</item>
+    </style>
+    
+    <!-- TV Card style for featured content -->
+    <style name="TvCard.Featured">
+        <item name="android:layout_width">@dimen/featured_card_width</item>
+        <item name="android:layout_height">@dimen/featured_card_height</item>
+    </style>
+
+    <!-- TV Text style for focused items -->
+    <style name="TvTextFocusable">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/text_background_selector</item>
+        <item name="android:padding">@dimen/padding_medium</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+    
+    <!-- TV Settings Item style -->
+    <style name="TvSettingsItem">
+        <item name="android:background">@drawable/settings_item_background</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:minHeight">@dimen/settings_item_height</item>
+        <item name="android:paddingStart">@dimen/settings_item_padding</item>
+        <item name="android:paddingEnd">@dimen/settings_item_padding</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+    
+    <!-- TV Settings Category style -->
+    <style name="TvSettingsCategory">
+        <item name="android:textColor">@color/settings_category_text</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingStart">@dimen/settings_category_padding</item>
+        <item name="android:paddingEnd">@dimen/settings_category_padding</item>
+        <item name="android:paddingTop">@dimen/padding_large</item>
+        <item name="android:paddingBottom">@dimen/padding_small</item>
+    </style>
+    
+    <!-- TV Progress Bar style -->
+    <style name="TvProgressBar" parent="Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_bar_horizontal</item>
+        <item name="android:minHeight">@dimen/player_progress_height</item>
+        <item name="android:maxHeight">@dimen/player_progress_height</item>
+    </style>
+    
+    <!-- TV Badge style -->
+    <style name="TvBadge">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_xsmall</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/padding_small</item>
+        <item name="android:paddingEnd">@dimen/padding_small</item>
+        <item name="android:paddingTop">@dimen/padding_xsmall</item>
+        <item name="android:paddingBottom">@dimen/padding_xsmall</item>
+    </style>
+
+    <!-- TV-specific themes -->
+    <style name="AppTheme.TV" parent="Theme.Leanback">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="android:colorBackground">@color/windowBackground</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- TV Search theme -->
+    <style name="AppTheme.TV.Search">
+        <item name="searchOrbViewStyle">@style/CustomSearchOrbView</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@color/windowBackground</item>
+    </style>
+
+    <!-- TV Details theme -->
+    <style name="AppTheme.TV.Details">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="detailsBackgroundColor">@color/detailsBackground</item>
+        <item name="detailsActionButtonStyle">@style/CustomDetailsActionButton</item>
+    </style>
+
+    <!-- TV Playback theme -->
+    <style name="AppTheme.TV.Playback">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="playbackProgressPrimaryColor">@color/colorAccent</item>
+        <item name="playbackControlsIconHighlightColor">@color/colorAccent</item>
+        <item name="playbackControlsButtonStyle">@style/CustomPlaybackControlsButton</item>
+    </style>
+
+    <!-- TV Settings theme -->
+    <style name="AppTheme.TV.Settings">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Leanback</item>
+    </style>
+
+    <!-- Custom TV styles -->
+    <style name="CustomSearchOrbView" parent="Widget.Leanback.SearchOrbViewStyle">
+        <item name="searchOrbColor">@color/colorAccent</item>
+        <item name="searchOrbBrightColor">@color/colorAccentLight</item>
+        <item name="searchOrbIcon">@drawable/lb_ic_in_app_search</item>
+    </style>
+
+    <style name="CustomDetailsActionButton" parent="Widget.Leanback.DetailsActionButtonStyle">
+        <item name="android:background">@color/colorAccent</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="CustomPlaybackControlsButton" parent="Widget.Leanback.PlaybackControlsButtonStyle">
+        <item name="android:tint">@color/colorAccent</item>
+    </style>
+
+    <!-- Card styles -->
+    <style name="CustomCardStyle" parent="Widget.Leanback.ImageCardViewStyle">
+        <item name="cardBackground">@color/cardBackground</item>
+        <item name="cardForeground">@drawable/card_foreground</item>
+        <item name="informationBackgroundColor">@color/cardInfoBackground</item>
+        <item name="titleTextStyle">@style/CustomCardTitleStyle</item>
+        <item name="contentTextStyle">@style/CustomCardContentStyle</item>
+    </style>
+
+    <style name="CustomCardTitleStyle" parent="Widget.Leanback.ImageCardView.TitleStyle">
+        <item name="android:textColor">@color/cardTitleText</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="CustomCardContentStyle" parent="Widget.Leanback.ImageCardView.ContentStyle">
+        <item name="android:textColor">@color/cardContentText</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- Grid styles -->
+    <style name="CustomGridStyle" parent="Widget.Leanback.GridItems.VerticalGridView">
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <!-- Row styles -->
+    <style name="CustomRowStyle" parent="Widget.Leanback.Row.HorizontalGridView">
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:clipToPadding">false</item>
+    </style>
+
+    <!-- Header styles -->
+    <style name="CustomHeaderStyle" parent="Widget.Leanback.Header.Title">
+        <item name="android:textColor">@color/headerText</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+</resources> 

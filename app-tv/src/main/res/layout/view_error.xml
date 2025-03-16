@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:padding="@dimen/padding_xlarge">
+
+    <!-- Error Icon -->
+    <ImageView
+        android:id="@+id/error_icon"
+        android:layout_width="@dimen/error_icon_size"
+        android:layout_height="@dimen/error_icon_size"
+        android:contentDescription="@string/error_icon"
+        android:src="@drawable/ic_error"
+        app:layout_constraintBottom_toTopOf="@id/error_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <!-- Error Title -->
+    <TextView
+        android:id="@+id/error_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_large"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:text="@string/error_title"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_size_xlarge"
+        app:layout_constraintBottom_toTopOf="@id/error_message"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/error_icon" />
+
+    <!-- Error Message -->
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:fontFamily="sans-serif"
+        android:gravity="center"
+        android:maxWidth="600dp"
+        android:text="@string/error_message"
+        android:textColor="@color/text_secondary"
+        android:textSize="@dimen/text_size_medium"
+        app:layout_constraintBottom_toTopOf="@id/error_code"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/error_title"
+        app:layout_constraintWidth_max="600dp" />
+
+    <!-- Error Code -->
+    <TextView
+        android:id="@+id/error_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_small"
+        android:fontFamily="sans-serif-light"
+        android:gravity="center"
+        android:textColor="@color/text_tertiary"
+        android:textSize="@dimen/text_size_small"
+        app:layout_constraintBottom_toTopOf="@id/retry_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/error_message"
+        tools:text="Error Code: 404" />
+
+    <!-- Retry Button -->
+    <Button
+        android:id="@+id/retry_button"
+        style="@style/TvButton"
+        android:layout_width="@dimen/error_button_width"
+        android:layout_height="@dimen/error_button_height"
+        android:layout_marginTop="@dimen/margin_xlarge"
+        android:text="@string/retry_button"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/error_code" />
+
+</androidx.constraintlayout.widget.ConstraintLayout> 

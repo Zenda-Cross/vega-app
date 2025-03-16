@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Playback Settings -->
+    <PreferenceCategory android:title="@string/settings_playback">
+        
+        <ListPreference
+            android:key="playback_quality"
+            android:title="@string/settings_quality"
+            android:summary="%s"
+            android:entries="@array/playback_quality_entries"
+            android:entryValues="@array/playback_quality_values"
+            android:defaultValue="auto" />
+            
+        <SwitchPreference
+            android:key="autoplay"
+            android:title="@string/settings_autoplay"
+            android:summary="@string/settings_autoplay_summary"
+            android:defaultValue="true" />
+    </PreferenceCategory>
+    
+    <!-- Subtitle Settings -->
+    <PreferenceCategory android:title="@string/settings_subtitles">
+        
+        <SwitchPreference
+            android:key="subtitles_enabled"
+            android:title="@string/settings_subtitles_enabled"
+            android:summary="@string/settings_subtitles_enabled_summary"
+            android:defaultValue="false" />
+            
+        <ListPreference
+            android:key="subtitles_language"
+            android:title="@string/settings_subtitles_language"
+            android:summary="%s"
+            android:entries="@array/language_entries"
+            android:entryValues="@array/language_values"
+            android:defaultValue="en"
+            android:dependency="subtitles_enabled" />
+    </PreferenceCategory>
+    
+    <!-- Audio Settings -->
+    <PreferenceCategory android:title="@string/settings_audio">
+        
+        <ListPreference
+            android:key="audio_language"
+            android:title="@string/settings_audio_language"
+            android:summary="%s"
+            android:entries="@array/language_entries"
+            android:entryValues="@array/language_values"
+            android:defaultValue="en" />
+    </PreferenceCategory>
+    
+    <!-- Account Settings -->
+    <PreferenceCategory android:title="@string/settings_account">
+        
+        <Preference
+            android:key="account_info"
+            android:title="@string/settings_account_info"
+            android:summary="@string/settings_account_info_summary" />
+            
+        <Preference
+            android:key="logout"
+            android:title="@string/settings_logout"
+            android:summary="@string/settings_logout_summary" />
+    </PreferenceCategory>
+    
+    <!-- About Settings -->
+    <PreferenceCategory android:title="@string/settings_about">
+        
+        <Preference
+            android:key="app_version"
+            android:title="@string/settings_app_version"
+            android:summary="1.0.0" />
+            
+        <Preference
+            android:key="terms_of_service"
+            android:title="@string/settings_terms_of_service" />
+            
+        <Preference
+            android:key="privacy_policy"
+            android:title="@string/settings_privacy_policy" />
+    </PreferenceCategory>
+    
+    <!-- Advanced Settings -->
+    <PreferenceCategory android:title="@string/settings_advanced">
+        
+        <Preference
+            android:key="clear_data"
+            android:title="@string/settings_clear_data"
+            android:summary="@string/settings_clear_data_summary" />
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen> 

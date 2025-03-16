@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <scale
+        android:duration="150"
+        android:fromXScale="1.1"
+        android:fromYScale="1.1"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.0"
+        android:toYScale="1.0"
+        android:interpolator="@android:interpolator/fast_out_linear_in" />
+    <objectAnimator
+        android:duration="150"
+        android:propertyName="elevation"
+        android:valueFrom="8dp"
+        android:valueTo="0dp"
+        android:valueType="floatType"
+        android:interpolator="@android:interpolator/fast_out_linear_in" />
+</set> 

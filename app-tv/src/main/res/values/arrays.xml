@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Playback Quality Options -->
+    <string-array name="playback_quality_entries">
+        <item>Auto</item>
+        <item>Low (480p)</item>
+        <item>Medium (720p)</item>
+        <item>High (1080p)</item>
+        <item>Ultra HD (4K)</item>
+    </string-array>
+    
+    <string-array name="playback_quality_values">
+        <item>auto</item>
+        <item>480p</item>
+        <item>720p</item>
+        <item>1080p</item>
+        <item>4k</item>
+    </string-array>
+    
+    <!-- Language Options -->
+    <string-array name="language_entries">
+        <item>English</item>
+        <item>Spanish</item>
+        <item>French</item>
+        <item>German</item>
+        <item>Italian</item>
+        <item>Portuguese</item>
+        <item>Russian</item>
+        <item>Japanese</item>
+        <item>Korean</item>
+        <item>Chinese</item>
+    </string-array>
+    
+    <string-array name="language_values">
+        <item>en</item>
+        <item>es</item>
+        <item>fr</item>
+        <item>de</item>
+        <item>it</item>
+        <item>pt</item>
+        <item>ru</item>
+        <item>ja</item>
+        <item>ko</item>
+        <item>zh</item>
+    </string-array>
+</resources> 

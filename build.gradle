@@ -1,0 +1,95 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext {
+        buildToolsVersion = "34.0.0"
+        minSdkVersion = 21 // Standard Android
+        minSdkVersionTV = 21 // Android TV
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        ndkVersion = "25.1.8937393"
+        kotlinVersion = "1.9.0"
+        
+        // React Native versions
+        reactNativeVersion = "0.74.1"
+        reactNativeTVOSVersion = "0.74.1-0"
+        
+        // Support library versions
+        appCompatVersion = "1.6.1"
+        androidXCoreVersion = "1.12.0"
+        androidXLeanbackVersion = "1.0.0"
+        androidXTVProviderVersion = "1.0.0"
+        
+        // ExoPlayer version
+        exoPlayerVersion = "2.19.1"
+        
+        // MMKV version
+        mmkvVersion = "1.3.1"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.1.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+    }
+}
+
+allprojects {
+    repositories {
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url("$rootDir/node_modules/react-native/android")
+        }
+        maven {
+            // Android JSC is installed from npm
+            url("$rootDir/node_modules/jsc-android/dist")
+        }
+        maven {
+            // React Native TVOS
+            url("$rootDir/node_modules/react-native-tvos/android")
+        }
+        mavenCentral {
+            // We don't want to fetch react-native from Maven Central as there are
+            // older versions over there.
+            content {
+                excludeGroup "com.facebook.react"
+            }
+        }
+        google()
+        maven { url 'https://www.jitpack.io' }
+    }
+}
+
+// Define versions in a central place
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            // React Native
+            library('react-native-core', 'com.facebook.react', 'react-android').version(reactNativeVersion)
+            library('react-native-tvos', 'com.facebook.react', 'react-android').version(reactNativeTVOSVersion)
+            
+            // AndroidX
+            library('androidx-core', 'androidx.core', 'core').version(androidXCoreVersion)
+            library('androidx-appcompat', 'androidx.appcompat', 'appcompat').version(appCompatVersion)
+            library('androidx-leanback', 'androidx.leanback', 'leanback').version(androidXLeanbackVersion)
+            library('androidx-tvprovider', 'androidx.tvprovider', 'tvprovider').version(androidXTVProviderVersion)
+            library('androidx-leanback-preference', 'androidx.leanback', 'leanback-preference').version(androidXLeanbackVersion)
+            
+            // ExoPlayer
+            library('exoplayer-core', 'com.google.android.exoplayer', 'exoplayer').version(exoPlayerVersion)
+            library('exoplayer-ui', 'com.google.android.exoplayer', 'exoplayer-ui').version(exoPlayerVersion)
+            library('exoplayer-leanback', 'com.google.android.exoplayer', 'extension-leanback').version(exoPlayerVersion)
+            
+            // Storage
+            library('mmkv', 'com.tencent', 'mmkv').version(mmkvVersion)
+            
+            // Network
+            library('retrofit', 'com.squareup.retrofit2', 'retrofit').version('2.9.0')
+            library('retrofit-gson', 'com.squareup.retrofit2', 'converter-gson').version('2.9.0')
+            library('okhttp', 'com.squareup.okhttp3', 'okhttp').version('4.11.0')
+            library('okhttp-logging', 'com.squareup.okhttp3', 'logging-interceptor').version('4.11.0')
+        }
+    }
+} 

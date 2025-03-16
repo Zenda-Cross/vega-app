@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_controls_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/player_controls_background"
+    android:layoutDirection="ltr">
+
+    <!-- Back Button (Top Left) -->
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="@dimen/player_control_button_size"
+        android:layout_height="@dimen/player_control_button_size"
+        android:layout_gravity="top|start"
+        android:layout_margin="@dimen/margin_large"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/back_button"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:src="@drawable/ic_arrow_back" />
+
+    <!-- Title and Info (Top Center) -->
+    <LinearLayout
+        android:id="@+id/title_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_margin="@dimen/margin_large"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/content_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/player_title_text_size"
+            tools:text="Content Title" />
+
+        <TextView
+            android:id="@+id/content_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_xsmall"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/player_subtitle_text_size"
+            tools:text="Subtitle Information" />
+
+    </LinearLayout>
+
+    <!-- Settings Button (Top Right) -->
+    <ImageButton
+        android:id="@+id/settings_button"
+        android:layout_width="@dimen/player_control_button_size"
+        android:layout_height="@dimen/player_control_button_size"
+        android:layout_gravity="top|end"
+        android:layout_margin="@dimen/margin_large"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/settings_button"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:src="@drawable/ic_settings" />
+
+    <!-- Center Controls -->
+    <LinearLayout
+        android:id="@+id/center_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <!-- Rewind Button -->
+        <ImageButton
+            android:id="@+id/rewind_button"
+            android:layout_width="@dimen/player_control_button_size"
+            android:layout_height="@dimen/player_control_button_size"
+            android:layout_marginEnd="@dimen/margin_xlarge"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/rewind_button"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:src="@drawable/ic_rewind" />
+
+        <!-- Play/Pause Button -->
+        <ImageButton
+            android:id="@+id/play_pause_button"
+            android:layout_width="@dimen/player_control_button_size"
+            android:layout_height="@dimen/player_control_button_size"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/play_pause_button"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:src="@drawable/ic_pause" />
+
+        <!-- Fast Forward Button -->
+        <ImageButton
+            android:id="@+id/fast_forward_button"
+            android:layout_width="@dimen/player_control_button_size"
+            android:layout_height="@dimen/player_control_button_size"
+            android:layout_marginStart="@dimen/margin_xlarge"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/fast_forward_button"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:src="@drawable/ic_fast_forward" />
+
+    </LinearLayout>
+
+    <!-- Bottom Controls -->
+    <LinearLayout
+        android:id="@+id/bottom_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/margin_xlarge"
+        android:layout_marginEnd="@dimen/margin_xlarge"
+        android:layout_marginBottom="@dimen/margin_large"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <!-- Progress Bar and Time -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Current Position -->
+            <TextView
+                android:id="@+id/position_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/margin_medium"
+                android:fontFamily="sans-serif"
+                android:textColor="@color/player_time_text"
+                android:textSize="@dimen/text_size_medium"
+                tools:text="00:10:30" />
+
+            <!-- Progress Bar -->
+            <androidx.media3.ui.DefaultTimeBar
+                android:id="@+id/progress_bar"
+                style="@style/TvProgressBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                app:played_color="@color/player_progress_played"
+                app:buffered_color="@color/player_progress_buffered"
+                app:unplayed_color="@color/player_progress_unplayed"
+                app:scrubber_enabled_size="@dimen/player_progress_thumb_size"
+                app:scrubber_disabled_size="0dp"
+                app:scrubber_dragged_size="@dimen/player_progress_thumb_size" />
+
+            <!-- Duration -->
+            <TextView
+                android:id="@+id/duration_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_medium"
+                android:fontFamily="sans-serif"
+                android:textColor="@color/player_time_text"
+                android:textSize="@dimen/text_size_medium"
+                tools:text="01:30:00" />
+
+        </LinearLayout>
+
+        <!-- Additional Controls -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_medium"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Subtitle Button -->
+            <ImageButton
+                android:id="@+id/subtitle_button"
+                android:layout_width="@dimen/player_control_button_size"
+                android:layout_height="@dimen/player_control_button_size"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/subtitle_button"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:src="@drawable/ic_subtitle" />
+
+            <!-- Audio Track Button -->
+            <ImageButton
+                android:id="@+id/audio_track_button"
+                android:layout_width="@dimen/player_control_button_size"
+                android:layout_height="@dimen/player_control_button_size"
+                android:layout_marginStart="@dimen/margin_large"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/audio_track_button"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:src="@drawable/ic_audio_track" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <!-- Quality Button -->
+            <ImageButton
+                android:id="@+id/quality_button"
+                android:layout_width="@dimen/player_control_button_size"
+                android:layout_height="@dimen/player_control_button_size"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/quality_button"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:src="@drawable/ic_quality" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout> 

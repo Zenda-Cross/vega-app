@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    tools:context=".ui.player.VideoPlayerActivity">
+
+    <!-- Placeholder for video surface -->
+    <View
+        android:id="@+id/video_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:focusable="false" />
+
+    <!-- Overlay controls -->
+    <LinearLayout
+        android:id="@+id/controls_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#80000000"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:focusable="true">
+
+        <!-- Video title -->
+        <TextView
+            android:id="@+id/video_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:focusable="false"
+            tools:text="Video Title" />
+
+        <!-- Progress bar -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="30"
+            android:focusable="false" />
+
+        <!-- Playback controls -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Rewind button -->
+            <Button
+                android:id="@+id/btn_rewind"
+                style="@style/TvButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="Rewind"
+                android:nextFocusRight="@id/btn_play_pause"
+                android:contentDescription="@string/rewind" />
+
+            <!-- Play/Pause button -->
+            <Button
+                android:id="@+id/btn_play_pause"
+                style="@style/TvButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pause"
+                android:focusedByDefault="true"
+                android:nextFocusLeft="@id/btn_rewind"
+                android:nextFocusRight="@id/btn_fast_forward"
+                android:contentDescription="@string/pause" />
+
+            <!-- Fast forward button -->
+            <Button
+                android:id="@+id/btn_fast_forward"
+                style="@style/TvButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Forward"
+                android:nextFocusLeft="@id/btn_play_pause"
+                android:contentDescription="@string/fast_forward" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout> 

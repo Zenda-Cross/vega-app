@@ -1,0 +1,101 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.facebook.react'
+
+android {
+    namespace "com.vega.app"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.vega.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            shrinkResources true
+        }
+        
+        debug {
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    
+    buildFeatures {
+        buildConfig true
+    }
+    
+    // Packaging options
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/LICENSE', 'META-INF/NOTICE']
+        }
+    }
+}
+
+dependencies {
+    implementation project(':shared')
+    
+    // AndroidX
+    implementation libs.'androidx-core'
+    implementation libs.'androidx-appcompat'
+    
+    // React Native
+    implementation libs.'react-native-core'
+    
+    // Video playback
+    implementation libs.'exoplayer-core'
+    implementation libs.'exoplayer-ui'
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+// React Native specific configurations
+react {
+    // Path to the root of your React Native project
+    root = file("../")
+    
+    // Path to the entry file for your app
+    entryFile = file("../index.js")
+    
+    // Whether to bundle JS and assets in debug mode
+    bundleInDebug = false
+    
+    // Whether to bundle JS and assets in release mode
+    bundleInRelease = true
+    
+    // The root of your project, i.e. where "package.json" lives
+    reactRoot = file("../")
+    
+    // The directory where the react-native NPM package is. Default is ../node_modules/react-native
+    reactNativeDir = file("../node_modules/react-native")
+    
+    // The directory where the react-native Codegen package is. Default is ../node_modules/@react-native/codegen
+    codegenDir = file("../node_modules/@react-native/codegen")
+    
+    // The CLI configuration file to use. Default is metro.config.js in the root directory
+    cliFile = file("../metro.config.js")
+    
+    // Enable Hermes, the new JavaScript engine for React Native
+    enableHermes = true
+} 

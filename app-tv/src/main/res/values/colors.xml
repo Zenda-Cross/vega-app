@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary brand colors - optimized for TV display -->
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="primary_light">#64B5F6</color>
+    <color name="accent">#FF4081</color>
+    <color name="secondary">#607D8B</color>
+    <color name="secondary_dark">#455A64</color>
+    <color name="secondary_light">#B0BEC5</color>
+    
+    <!-- Basic colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#757575</color>
+    <color name="light_gray">#BDBDBD</color>
+    <color name="transparent">#00000000</color>
+    
+    <!-- Text colors - high contrast for TV readability -->
+    <color name="text_primary">#F9FAFB</color>
+    <color name="text_secondary">#D1D5DB</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    <color name="text_disabled">#6B7280</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_accent">#FFFFFF</color>
+    <color name="text_on_dark">#FFFFFF</color>
+    <color name="text_on_light">#121212</color>
+    
+    <!-- Background colors - darker for TV viewing -->
+    <color name="background_dark">#121212</color>
+    <color name="background_dark_translucent">#CC121212</color>
+    <color name="background_card">#1F1F1F</color>
+    <color name="background_card_selected">#2D2D2D</color>
+    <color name="default_background">#0F172A</color>
+    <color name="fastlane_background">#1E293B</color>
+    <color name="search_opaque">#3B82F6</color>
+    
+    <!-- Status colors -->
+    <color name="success_color">#4CAF50</color>
+    <color name="warning_color">#FFC107</color>
+    <color name="error_color">#F44336</color>
+    <color name="info_color">#2196F3</color>
+    
+    <!-- Gradient colors -->
+    <color name="gradient_start">#1E40AF</color>
+    <color name="gradient_end">#3B82F6</color>
+    <color name="gradient_dark_start">#0F172A</color>
+    <color name="gradient_dark_end">#1E293B</color>
+    <color name="gradient_accent_start">#FF4081</color>
+    <color name="gradient_accent_end">#F06292</color>
+    
+    <!-- Overlay colors -->
+    <color name="overlay_dark">#99000000</color>
+    <color name="overlay_light">#33FFFFFF</color>
+    <color name="overlay_gradient_start">#CC000000</color>
+    <color name="overlay_gradient_end">#00000000</color>
+    
+    <!-- Focus colors - vibrant for clear visibility -->
+    <color name="focus_border">#2196F3</color>
+    <color name="focus_glow">#3B82F6</color>
+    <color name="focus_ripple">#4D3B82F6</color>
+    
+    <!-- Button colors -->
+    <color name="button_primary">#1976D2</color>
+    <color name="button_primary_focused">#2196F3</color>
+    <color name="button_primary_pressed">#0D47A1</color>
+    <color name="button_secondary">#607D8B</color>
+    <color name="button_secondary_focused">#78909C</color>
+    <color name="button_secondary_pressed">#455A64</color>
+    <color name="button_disabled">#424242</color>
+    <color name="button_text">#FFFFFF</color>
+    <color name="button_text_disabled">#9E9E9E</color>
+    
+    <!-- Card colors -->
+    <color name="card_background">#1F1F1F</color>
+    <color name="card_background_focused">#2D2D2D</color>
+    <color name="card_background_pressed">#212121</color>
+    <color name="card_border">#424242</color>
+    <color name="card_border_focused">#2196F3</color>
+    
+    <!-- Progress colors -->
+    <color name="progress_background">#424242</color>
+    <color name="progress_buffer">#78909C</color>
+    <color name="progress_primary">#2196F3</color>
+    <color name="progress_secondary">#64B5F6</color>
+    
+    <!-- Badge colors -->
+    <color name="badge_new">#FF4081</color>
+    <color name="badge_live">#F44336</color>
+    <color name="badge_4k">#4CAF50</color>
+    <color name="badge_hdr">#FFC107</color>
+    
+    <!-- Player colors -->
+    <color name="player_controls_background">#99000000</color>
+    <color name="player_progress_played">#2196F3</color>
+    <color name="player_progress_buffered">#78909C</color>
+    <color name="player_progress_unplayed">#424242</color>
+    <color name="player_time_text">#FFFFFF</color>
+    
+    <!-- Settings colors -->
+    <color name="settings_item_background">#1F1F1F</color>
+    <color name="settings_item_background_focused">#2D2D2D</color>
+    <color name="settings_divider">#424242</color>
+    <color name="settings_category_text">#64B5F6</color>
+    
+    <!-- Base colors -->
+    <color name="colorPrimary">#1976D2</color>
+    <color name="colorPrimaryDark">#0D47A1</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccentLight">#FF80AB</color>
+    
+    <!-- Background colors -->
+    <color name="windowBackground">#121212</color>
+    <color name="detailsBackground">#1A1A1A</color>
+    
+    <!-- Card colors -->
+    <color name="cardBackground">#1F1F1F</color>
+    <color name="cardInfoBackground">#1F1F1F</color>
+    <color name="cardTitleText">#FFFFFF</color>
+    <color name="cardContentText">#B3FFFFFF</color>
+    
+    <!-- Text colors -->
+    <color name="headerText">#FFFFFF</color>
+    <color name="bodyText">#E6FFFFFF</color>
+    <color name="secondaryText">#B3FFFFFF</color>
+    <color name="disabledText">#80FFFFFF</color>
+    
+    <!-- Control colors -->
+    <color name="focusedItem">#FF4081</color>
+    <color name="selectedItem">#FF80AB</color>
+    <color name="playbackProgress">#FF4081</color>
+    <color name="playbackProgressBackground">#33FFFFFF</color>
+    
+    <!-- Error and status colors -->
+    <color name="errorColor">#CF6679</color>
+    <color name="successColor">#4CAF50</color>
+    <color name="warningColor">#FFAB00</color>
+    <color name="infoColor">#2196F3</color>
+</resources> 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary brand colors -->
+    <color name="primary">#6567a5</color>
+    <color name="primary_dark">#4a4c7a</color>
+    <color name="primary_light">#8a8bc9</color>
+    
+    <!-- Secondary colors -->
+    <color name="accent">#0CA6E9</color>
+    <color name="accent_dark">#0880b3</color>
+    <color name="accent_light">#4fc3f7</color>
+    
+    <!-- Neutral colors -->
+    <color name="black">#000000</color>
+    <color name="dark_gray">#121212</color>
+    <color name="medium_gray">#333333</color>
+    <color name="light_gray">#666666</color>
+    <color name="very_light_gray">#dadde3</color>
+    <color name="white">#FFFFFF</color>
+    
+    <!-- Transparent colors -->
+    <color name="transparent">#00000000</color>
+    <color name="semi_transparent_black">#80000000</color>
+    <color name="semi_transparent_white">#80FFFFFF</color>
+    
+    <!-- Status colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+</resources> 

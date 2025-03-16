@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Information -->
+    <string name="app_name">Vega TV</string>
+    <string name="app_description">Vega TV - Your entertainment hub</string>
+    
+    <!-- Activity Titles -->
+    <string name="title_player">Player</string>
+    <string name="title_details">Details</string>
+    <string name="title_search">Search</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_error">Error</string>
+    
+    <!-- Main Screen Categories -->
+    <string name="category_featured">Featured</string>
+    <string name="category_trending">Trending</string>
+    <string name="category_recommended">Recommended for You</string>
+    <string name="category_continue_watching">Continue Watching</string>
+    <string name="category_movies">Movies</string>
+    <string name="category_tv_shows">TV Shows</string>
+    <string name="category_live">Live TV</string>
+    <string name="category_sports">Sports</string>
+    <string name="category_kids">Kids</string>
+    <string name="category_news">News</string>
+    <string name="category_music">Music</string>
+    <string name="category_favorites">Favorites</string>
+    <string name="category_watchlist">Watchlist</string>
+    <string name="category_recently_watched">Recently Watched</string>
+    
+    <!-- Navigation -->
+    <string name="browse_title">Vega TV</string>
+    <string name="search_title">Search</string>
+    <string name="settings_title">Settings</string>
+    <string name="account_title">Account</string>
+    
+    <!-- Player Controls -->
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="fast_forward">Fast Forward</string>
+    <string name="rewind">Rewind</string>
+    <string name="skip_next">Next</string>
+    <string name="skip_previous">Previous</string>
+    <string name="closed_captions">Closed Captions</string>
+    <string name="audio_track">Audio Track</string>
+    <string name="quality">Quality</string>
+    
+    <!-- Details Screen -->
+    <string name="related_content">Related</string>
+    <string name="watch_trailer">Watch Trailer</string>
+    <string name="add_to_watchlist">Add to Watchlist</string>
+    <string name="remove_from_watchlist">Remove from Watchlist</string>
+    <string name="share">Share</string>
+    <string name="more_info">More Info</string>
+    <string name="watch_now">Watch Now</string>
+    <string name="cast">Cast</string>
+    <string name="director">Director</string>
+    <string name="year">Year</string>
+    <string name="duration">Duration</string>
+    <string name="rating">Rating</string>
+    <string name="genres">Genres</string>
+    
+    <!-- Error Messages -->
+    <string name="error_fragment_message">An error occurred</string>
+    <string name="dismiss_error">Dismiss</string>
+    <string name="network_error">Network error. Please check your connection.</string>
+    <string name="video_error">Unable to play this video. Please try again later.</string>
+    <string name="error_retry">Retry</string>
+    <string name="error_loading_content">Error loading content</string>
+    <string name="error_generic">Something went wrong. Please try again later.</string>
+    <string name="error_player">Error playing video</string>
+    <string name="error_playback_failed">Playback failed. Please try again.</string>
+    
+    <!-- Settings -->
+    <string name="settings_account">Account</string>
+    <string name="settings_playback">Playback</string>
+    <string name="settings_quality">Streaming Quality</string>
+    <string name="settings_subtitles">Subtitles</string>
+    <string name="settings_audio">Audio</string>
+    <string name="settings_about">About</string>
+    <string name="settings_help">Help</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_autoplay">Autoplay</string>
+    <string name="settings_autoplay_summary">Automatically play the next episode or recommended content</string>
+    <string name="settings_subtitles_enabled">Enable Subtitles</string>
+    <string name="settings_subtitles_enabled_summary">Show subtitles during playback</string>
+    <string name="settings_subtitles_language">Subtitle Language</string>
+    <string name="settings_audio_language">Audio Language</string>
+    <string name="settings_account_info">Account Information</string>
+    <string name="settings_account_info_summary">View and edit your account details</string>
+    <string name="settings_logout_summary">Sign out of your account</string>
+    <string name="settings_app_version">App Version</string>
+    <string name="settings_terms_of_service">Terms of Service</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_clear_data">Clear Data</string>
+    <string name="settings_clear_data_summary">Clear all app data including cache and preferences</string>
+    <string name="settings_network">Network</string>
+    <string name="settings_downloads">Downloads</string>
+    <string name="settings_parental">Parental Controls</string>
+    <string name="settings_notifications">Notifications</string>
+    
+    <!-- Search -->
+    <string name="search_hint">Search for movies, shows, and more</string>
+    <string name="search_settings_description">Movies, TV shows, and more</string>
+    <string name="no_search_results">No results found for \"%s\"</string>
+    <string name="search_results">Search Results</string>
+    <string name="search_results_for">Results for \"%s\"</string>
+    <string name="recent_searches">Recent Searches</string>
+    <string name="search_suggestions">Suggestions</string>
+    <string name="clear_recent_searches">Clear Recent Searches</string>
+    
+    <!-- Onboarding -->
+    <string name="welcome">Welcome to Vega TV</string>
+    <string name="get_started">Get Started</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    
+    <!-- Misc -->
+    <string name="loading">Loading…</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="shared_element_transition">shared_element_transition</string>
+    
+    <!-- Error messages -->
+    <string name="error_no_network">No internet connection. Please check your network settings and try again.</string>
+    <string name="error_network_problem">Network connection problem. Please try again.</string>
+    <string name="error_io_exception">Unable to load content. Please try again.</string>
+    <string name="error_forbidden">You don\'t have permission to access this content.</string>
+    <string name="error_not_found">The requested content could not be found.</string>
+    <string name="error_server">Server error. Please try again later.</string>
+    <string name="error_drm">DRM error. This content cannot be played on this device.</string>
+    <string name="error_unsupported_format">Unsupported video format. This content cannot be played on this device.</string>
+    
+    <!-- Loading messages -->
+    <string name="loading_video">Loading video…</string>
+    
+    <!-- Details strings -->
+    <string name="details_overview">Overview</string>
+    <string name="details_cast">Cast</string>
+    <string name="details_related">You May Also Like</string>
+    <string name="details_episodes">Episodes</string>
+    <string name="details_seasons">Seasons</string>
+    <string name="details_more_like_this">More Like This</string>
+    <string name="details_trailers">Trailers</string>
+    <string name="details_director">Director</string>
+    <string name="details_year">Year</string>
+    <string name="details_duration">Duration</string>
+    <string name="details_rating">Rating</string>
+    <string name="details_genre">Genre</string>
+    
+    <!-- Action strings -->
+    <string name="action_watch">Watch</string>
+    <string name="action_trailer">Watch Trailer</string>
+    <string name="action_add_watchlist">Add to Watchlist</string>
+    <string name="action_remove_watchlist">Remove from Watchlist</string>
+    <string name="action_add_favorite">Add to Favorites</string>
+    <string name="action_remove_favorite">Remove from Favorites</string>
+    <string name="action_share">Share</string>
+    <string name="action_download">Download</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_search">Search</string>
+    <string name="action_more_info">More Info</string>
+    
+    <!-- Playback strings -->
+    <string name="playback_error">Error playing media</string>
+    <string name="playback_buffering">Buffering…</string>
+    <string name="playback_controls">Playback Controls</string>
+    <string name="playback_quality">Quality</string>
+    <string name="playback_subtitles">Subtitles</string>
+    <string name="playback_audio">Audio</string>
+    <string name="playback_speed">Speed</string>
+    
+    <!-- Error strings -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_playback">Error playing this content. Please try again later.</string>
+    <string name="error_content_unavailable">This content is currently unavailable.</string>
+    <string name="error_general">Something went wrong. Please try again later.</string>
+    <string name="error_login">Login failed. Please check your credentials.</string>
+    
+    <!-- Misc strings -->
+    <string name="retry">Retry</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="continue_watching">Continue Watching</string>
+    <string name="recommended">Recommended for You</string>
+    <string name="trending">Trending Now</string>
+    <string name="new_releases">New Releases</string>
+    <string name="popular">Popular</string>
+</resources> 

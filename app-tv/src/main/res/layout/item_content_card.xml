@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.leanback.widget.ImageCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_card"
+    style="@style/Widget.Leanback.ImageCardViewStyle"
+    android:layout_width="@dimen/card_width"
+    android:layout_height="@dimen/card_height"
+    android:layout_margin="@dimen/margin_small"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    app:cardType="infoUnder"
+    app:infoVisibility="activated"
+    tools:cardBackground="@color/card_background"
+    tools:cardImageAdjustViewBounds="true"
+    tools:cardImageScaleType="centerCrop"
+    tools:ignore="ContentDescription"
+    tools:src="@drawable/default_background" /> 

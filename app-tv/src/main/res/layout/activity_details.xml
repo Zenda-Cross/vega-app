@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/details_fragment_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/default_background"
+    android:transitionName="@string/shared_element_transition"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    tools:context=".ui.details.DetailsActivity"
+    tools:deviceIds="tv"
+    tools:ignore="MergeRootFrame" /> 

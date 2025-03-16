@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tv-input xmlns:android="http://schemas.android.com/apk/res/android"
+    android:setupActivity="com.vega.tv.ui.SetupActivity"
+    android:canRecord="false"
+    android:settingsActivity="com.vega.tv.ui.SettingsActivity" /> 

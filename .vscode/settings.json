@@ -1,4 +1,5 @@
 {
   "cSpell.words": ["notifee", "RNFS"],
-  "npm.packageManager": "npm"
+  "npm.packageManager": "npm",
+  "java.configuration.updateBuildConfiguration": "automatic"
 }

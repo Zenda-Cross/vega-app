@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/featured_card"
+    style="@style/TvCard.Featured"
+    android:layout_width="@dimen/featured_card_width"
+    android:layout_height="@dimen/featured_card_height"
+    android:layout_margin="@dimen/margin_medium"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:foreground="@drawable/card_foreground"
+    android:stateListAnimator="@animator/card_state_animator">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/featured_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/featured_content"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/default_background" />
+
+    <!-- Content Info Overlay -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/overlay_gradient_start"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_medium">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/featured_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_size_xlarge"
+            tools:text="Featured Content Title" />
+
+        <!-- Subtitle -->
+        <TextView
+            android:id="@+id/featured_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_xsmall"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_size_medium"
+            tools:text="Subtitle information" />
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/featured_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_small"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-light"
+            android:maxLines="2"
+            android:textColor="@color/text_tertiary"
+            android:textSize="@dimen/text_size_small"
+            tools:text="This is a brief description of the featured content that gives the user more information about what they might watch." />
+
+    </LinearLayout>
+
+    <!-- Badge (if needed) -->
+    <TextView
+        android:id="@+id/featured_badge"
+        style="@style/TvBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="@dimen/margin_medium"
+        android:background="@color/badge_new"
+        android:text="@string/new_content"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</FrameLayout> 

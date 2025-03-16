@@ -1,0 +1,276 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.facebook.react'
+
+// Load keystore properties from external file
+def keystorePropertiesFile = rootProject.file("app-tv/keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "com.vega.tv"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.vega.tv"
+        minSdkVersion rootProject.ext.minSdkVersionTV
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // TV-specific configurations
+        vectorDrawables.useSupportLibrary = true
+        
+        // Set supported ABIs for different build variants
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+        
+        // Add TV banner for launcher
+        resValue "string", "app_name", "Vega TV"
+        resValue "string", "isTV", "true"
+        
+        // TV category for Google Play Store
+        manifestPlaceholders = [
+            tvBanner: "@drawable/tv_banner",
+            leanbackLauncher: "true"
+        ]
+    }
+    
+    // Signing configuration for release builds
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Enable code shrinking, obfuscation, and optimization for release builds
+            shrinkResources true
+            
+            // Additional ProGuard rules for TV
+            proguardFile 'tv-proguard-rules.pro'
+            
+            // Apply signing configuration
+            signingConfig signingConfigs.release
+            
+            // Enable resource optimization
+            resConfigs "en", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"
+            
+            // Optimize for TV
+            manifestPlaceholders = [
+                tvBanner: "@drawable/tv_banner",
+                leanbackLauncher: "true"
+            ]
+        }
+        
+        debug {
+            minifyEnabled false
+            shrinkResources false
+            debuggable true
+            
+            // For faster builds in debug mode
+            aaptOptions {
+                cruncherEnabled = false
+            }
+        }
+        
+        // Beta build type for testing
+        beta {
+            initWith release
+            matchingFallbacks = ['release']
+            applicationIdSuffix ".beta"
+            versionNameSuffix "-beta"
+            debuggable true
+        }
+    }
+    
+    // Define build variants for different architectures
+    flavorDimensions "version"
+    productFlavors {
+        // Full version with all architectures
+        full {
+            dimension "version"
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+            }
+        }
+        
+        // ARM 64-bit only version
+        arm64 {
+            dimension "version"
+            ndk {
+                abiFilters "arm64-v8a"
+            }
+            versionNameSuffix "-arm64"
+        }
+        
+        // ARM 32-bit only version
+        arm32 {
+            dimension "version"
+            ndk {
+                abiFilters "armeabi-v7a"
+            }
+            versionNameSuffix "-arm32"
+        }
+        
+        // x86_64 only version (for emulators)
+        x86_64 {
+            dimension "version"
+            ndk {
+                abiFilters "x86_64"
+            }
+            versionNameSuffix "-x86_64"
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    
+    buildFeatures {
+        buildConfig true
+    }
+    
+    // TV-specific resource directories
+    sourceSets {
+        main {
+            res.srcDirs = [
+                'src/main/res',
+                'src/main/res-tv'
+            ]
+        }
+    }
+    
+    // Packaging options for TV
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/LICENSE', 'META-INF/NOTICE', 'META-INF/DEPENDENCIES']
+        }
+    }
+    
+    // Enable bundle support
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+    
+    // Optimize dex for TV
+    dexOptions {
+        javaMaxHeapSize "4g"
+        preDexLibraries = false
+        jumboMode = true
+    }
+}
+
+// Custom Gradle tasks for APK generation
+tasks.register('generateAllApks') {
+    dependsOn 'assembleFullRelease', 'assembleArm64Release', 'assembleArm32Release', 'assembleX8664Release'
+    description = 'Generates all APK variants for release'
+    group = 'build'
+}
+
+tasks.register('generateAppBundle') {
+    dependsOn 'bundleFullRelease'
+    description = 'Generates App Bundle for Play Store submission'
+    group = 'build'
+}
+
+// Task to verify APK signing
+tasks.register('verifySignedApk') {
+    dependsOn 'assembleFullRelease'
+    description = 'Verifies that the APK is properly signed'
+    group = 'verification'
+    doLast {
+        def apkFile = file("${buildDir}/outputs/apk/full/release/app-tv-full-release.apk")
+        if (apkFile.exists()) {
+            exec {
+                commandLine 'jarsigner', '-verify', '-verbose', '-certs', apkFile
+            }
+            println "APK signature verification completed"
+        } else {
+            println "APK file not found at ${apkFile.absolutePath}"
+        }
+    }
+}
+
+dependencies {
+    implementation project(':shared')
+    
+    // AndroidX
+    implementation libs.'androidx-core'
+    implementation libs.'androidx-appcompat'
+    
+    // TV-specific libraries
+    implementation libs.'androidx-leanback'
+    implementation libs.'androidx-tvprovider'
+    implementation libs.'androidx-leanback-preference'
+    
+    // React Native TV
+    implementation libs.'react-native-tvos'
+    
+    // Video playback
+    implementation libs.'exoplayer-core'
+    implementation libs.'exoplayer-ui'
+    implementation libs.'exoplayer-leanback'
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+// React Native specific configurations
+react {
+    // Path to the root of your React Native project
+    root = file("../")
+    
+    // Path to the entry file for your app
+    entryFile = file("../index.js")
+    
+    // Whether to bundle JS and assets in debug mode
+    bundleInDebug = false
+    
+    // Whether to bundle JS and assets in release mode
+    bundleInRelease = true
+    
+    // The root of your project, i.e. where "package.json" lives
+    reactRoot = file("../")
+    
+    // The directory where the react-native NPM package is. Default is ../node_modules/react-native
+    reactNativeDir = file("../node_modules/react-native-tvos")
+    
+    // The directory where the react-native Codegen package is. Default is ../node_modules/@react-native/codegen
+    codegenDir = file("../node_modules/@react-native/codegen")
+    
+    // The CLI configuration file to use. Default is metro.config.js in the root directory
+    cliFile = file("../metro.config.js")
+    
+    // Enable Hermes, the new JavaScript engine for React Native
+    enableHermes = true
+} 

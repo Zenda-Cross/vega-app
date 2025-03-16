@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/playback_fragment_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    android:transitionName="@string/shared_element_transition"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    tools:context=".PlaybackActivity"
+    tools:deviceIds="tv"
+    tools:ignore="MergeRootFrame" /> 

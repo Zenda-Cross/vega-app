@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name -->
+    <string name="app_name">Vega</string>
+    
+    <!-- Common actions -->
+    <string name="action_search">Search</string>
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_download">Download</string>
+    <string name="action_add_to_watchlist">Add to Watchlist</string>
+    <string name="action_remove_from_watchlist">Remove from Watchlist</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_previous">Previous</string>
+    
+    <!-- Screen titles -->
+    <string name="title_home">Home</string>
+    <string name="title_search">Search</string>
+    <string name="title_watchlist">Watchlist</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_player">Player</string>
+    <string name="title_details">Details</string>
+    <string name="title_watch_history">Watch History</string>
+    <string name="title_downloads">Downloads</string>
+    
+    <!-- Content descriptions -->
+    <string name="content_desc_poster">Content poster</string>
+    <string name="content_desc_play_button">Play button</string>
+    <string name="content_desc_back_button">Back button</string>
+    <string name="content_desc_settings_button">Settings button</string>
+    <string name="content_desc_search_button">Search button</string>
+    
+    <!-- Error messages -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_playback">Playback error. Please try again.</string>
+    <string name="error_download">Download error. Please try again.</string>
+    <string name="error_search">Search error. Please try again.</string>
+    <string name="error_no_results">No results found.</string>
+    
+    <!-- Player controls -->
+    <string name="player_quality">Quality</string>
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Subtitles</string>
+    <string name="player_speed">Speed</string>
+    <string name="player_server">Server</string>
+    
+    <!-- Settings categories -->
+    <string name="settings_category_general">General</string>
+    <string name="settings_category_player">Player</string>
+    <string name="settings_category_providers">Providers</string>
+    <string name="settings_category_downloads">Downloads</string>
+    <string name="settings_category_about">About</string>
+</resources> 

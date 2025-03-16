@@ -1,0 +1,8 @@
+rootProject.name = "vega"
+
+include ':app'
+include ':app-tv'
+include ':shared'
+
+// VERSION_CATALOGS is enabled by default in Gradle 8.x, so we don't need to enable it explicitly
+// enableFeaturePreview('VERSION_CATALOGS') 
