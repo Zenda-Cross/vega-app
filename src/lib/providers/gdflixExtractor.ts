@@ -9,7 +9,22 @@ export async function gdFlixExtracter(link: string, signal: AbortSignal) {
     const res = await axios(`${link}`, {headers, signal});
     console.log('gdFlixExtracter', link);
     const data = res.data;
-    const $drive = cheerio.load(data);
+    let $drive = cheerio.load(data);
+    // handle if redirected to another link
+
+    if ($drive('body').attr('onload')?.includes('location.replace')) {
+      const newLink = $drive('body')
+        .attr('onload')
+        ?.split("location.replace('")?.[1]
+        .split("'")?.[0];
+
+      console.log('newLink', newLink);
+      if (newLink) {
+        const newRes = await axios.get(newLink, {headers, signal});
+        $drive = cheerio.load(newRes.data);
+      }
+    }
+
     // try {
     //   const resumeBot = $drive('.fab.fa-artstation').prev().attr('href') || '';
     //   console.log('resumeBot', resumeBot);
@@ -152,7 +167,7 @@ export async function gdFlixExtracter(link: string, signal: AbortSignal) {
     }
     return streamLinks;
   } catch (error) {
-    console.log('hubcloudExtracter error: ', error);
+    console.log('gdflix error: ', error);
     return [];
   }
 }
