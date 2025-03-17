@@ -1,15 +1,15 @@
 export const nfCatalog = [
   {
     title: 'Home',
-    filter: '/home?app=1',
+    filter: '/mobile/home?app=1',
   },
   {
     title: 'Series',
-    filter: '/series',
+    filter: '/mobile/series',
   },
   {
     title: 'Movies',
-    filter: '/movies',
+    filter: '/mobile/movies',
   },
 ];
 

@@ -1,22 +1,21 @@
 import axios from 'axios';
-import {getBaseUrl} from '../getBaseUrl';
-import * as cheerio from 'cheerio';
 import {MmmkvCache} from '../../Mmkv';
 import {ToastAndroid} from 'react-native';
 
 interface ApiResponse {
-  netflixCookie: {
-    cookie: string;
-  };
+  success: boolean;
+  cookie: string;
+  expiresAt: string;
+  remainingTime: string;
 }
 
 export async function nfGetCookie(): Promise<string> {
   try {
     const response = await axios.get<ApiResponse>(
-      'https://anshu78780.github.io/json/cookie.json',
+      'https://netmirror.8man.me/api/cookie',
     );
-    if (response.data?.netflixCookie?.cookie) {
-      return response.data.netflixCookie.cookie;
+    if (response.data?.cookie) {
+      return response.data.cookie?.replace('Asu', 'Ani');
     }
     throw new Error('Cookie not found in API response');
   } catch (error) {

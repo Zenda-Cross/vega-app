@@ -97,9 +97,12 @@ export const nfGetPostsSearch = async function (
     }
     const catalog: Post[] = [];
     const baseUrl = await getBaseUrl('nfMirror');
-    const url = `${baseUrl}${providerValue === 'netflixMirror' ? '' : '/pv'}/search.php?s=${encodeURI(searchQuery)}`;
-    
-    const cookie = await nfGetCookie() + 
+    const url = `${baseUrl}${
+      providerValue === 'netflixMirror' ? '' : '/pv'
+    }/search.php?s=${encodeURI(searchQuery)}`;
+
+    const cookie =
+      (await nfGetCookie()) +
       `ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
 
     const res = await fetch(url, {
@@ -115,7 +118,7 @@ export const nfGetPostsSearch = async function (
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
-        'x-requested-with': 'XMLHttpRequest'
+        'x-requested-with': 'XMLHttpRequest',
       },
       signal: signal,
       method: 'GET',
@@ -123,19 +126,25 @@ export const nfGetPostsSearch = async function (
     });
 
     const data = await res.json();
-    
+
     data?.searchResult?.forEach((result: any) => {
       const title = result?.t || '';
       const id = result?.id;
-      const image = providerValue === 'netflixMirror' 
-        ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
-        : '';
+      const image =
+        providerValue === 'netflixMirror'
+          ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
+          : '';
 
       if (id) {
         catalog.push({
           title: title,
-          link: baseUrl +
-            `${providerValue === 'netflixMirror' ? '/post.php?id=' : '/pv/post.php?id='}` +
+          link:
+            baseUrl +
+            `${
+              providerValue === 'netflixMirror'
+                ? '/post.php?id='
+                : '/pv/post.php?id='
+            }` +
             id +
             '&t=' +
             Math.round(new Date().getTime() / 1000),
