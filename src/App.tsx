@@ -51,7 +51,18 @@ export type HomeStackParamList = {
 };
 
 export type RootStackParamList = {
-  TabStack: undefined;
+  TabStack:
+    | {
+        screen?: keyof TabStackParamList;
+        params?: {
+          screen?: string;
+          params?: {
+            screen?: string;
+            params?: any;
+          };
+        };
+      }
+    | undefined;
   Player: {
     linkIndex: number;
     episodeList: EpisodeLink[];
@@ -67,11 +78,6 @@ export type RootStackParamList = {
     file?: string;
     providerValue?: string;
     infoUrl?: string;
-  };
-  SeriesEpisodes: {
-    series: string;
-    episodes: Array<{uri: string; size: number}>;
-    thumbnails: Record<string, string>;
   };
 };
 
@@ -95,6 +101,11 @@ export type WatchListStackParamList = {
 export type WatchHistoryStackParamList = {
   WatchHistory: undefined;
   Info: {link: string; provider?: string; poster?: string};
+  SeriesEpisodes: {
+    series: string;
+    episodes: Array<{uri: string; size: number}>;
+    thumbnails: Record<string, string>;
+  };
 };
 
 export type SettingsStackParamList = {
@@ -195,6 +206,10 @@ const App = () => {
           component={WatchHistory}
         />
         <WatchHistoryStack.Screen name="Info" component={Info} />
+        <WatchHistoryStack.Screen
+          name="SeriesEpisodes"
+          component={SeriesEpisodes}
+        />
       </WatchHistoryStack.Navigator>
     );
   }
@@ -409,11 +424,6 @@ const App = () => {
             name="Player"
             component={Player}
             options={{orientation: 'landscape'}}
-          />
-          <Stack.Screen
-            name="SeriesEpisodes"
-            component={SeriesEpisodes}
-            options={{animation: 'slide_from_right'}}
           />
         </Stack.Navigator>
       </NavigationContainer>
