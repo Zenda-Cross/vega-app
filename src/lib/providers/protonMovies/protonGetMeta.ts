@@ -8,10 +8,22 @@ export const protonGetInfo = async function (link: string): Promise<Info> {
     console.log('all', link);
     const res = await axios.get(link);
     const data = res.data;
-    const regex = /\[(?=.*?"<!-- Banne")(.*?)\]/g;
-    const htmlArray = data?.match(regex);
+    // console.log('protonGetInfo', data);
+    // const regex = /\[(?=.*?"<div class")(.*?)\]/g;
+    // const htmlArray = data?.match(regex);
+    // console.log('protonGetInfo', htmlArray);
     // console.log('protonGetInfo', htmlArray[htmlArray.length - 1]);
-    const html = decodeHtml(JSON.parse(htmlArray[htmlArray.length - 1]));
+
+    // new code
+    const $$ = cheerio.load(data);
+    const htmlArray = $$('script:contains("decodeURIComponent")')
+      .text()
+      .split(' = ')?.[1]
+      ?.split('protomovies')?.[0]
+      ?.trim()
+      ?.slice(0, -1); // remove the last character
+    // console.log('protonGetInfo', htmlArray);
+    const html = decodeHtml(JSON.parse(htmlArray));
     // console.log('all', html);
     const $ = cheerio.load(html);
 

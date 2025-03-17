@@ -37,6 +37,7 @@ import {ringz} from './providers/ringz';
 import {topMovies} from './providers/topmovies';
 import {primeMirror} from './providers/primeMirror';
 import {embedsu} from './providers/embedsu';
+import {filmyfly} from './providers/filmyfly';
 
 export interface ProviderType {
   searchFilter?: string;
@@ -105,4 +106,5 @@ export const manifest: Manifest = {
   topMovies: topMovies,
   primeMirror: primeMirror,
   embedsu: embedsu,
+  filmyfly: filmyfly,
 };

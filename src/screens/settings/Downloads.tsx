@@ -39,21 +39,59 @@ interface MediaGroup {
   isMovie: boolean;
 }
 
-const getBaseName = (fileName: string): string => {
-  // Remove episode numbers and extensions to get base name
-  return fileName
-    .replace(/\.(mp4|mkv|avi|mov)$/i, '')  // remove extension
-    .replace(/[\s-]*(?:episode|ep)[\s-]*\d+/gi, '') // remove episode indicators
-    .replace(/\s*-\s*\d+/, '')  // remove trailing numbers
-    .replace(/\s*\d+\s*$/, '')  // remove ending numbers
+const normalizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/[\s.-]+/g, ' ') // normalize spaces, dots, and hyphens
+    .replace(/[^\w\s]/g, '') // remove special characters
     .trim();
 };
 
-const getEpisodeNumber = (fileName: string): number => {
-  const match = 
-    fileName.match(/(?:episode|ep)[\s-]*(\d+)/i) ||
-    fileName.match(/[\s-](\d+)(?:\s*$|\s*\.)/);
-  return match ? parseInt(match[1]) : 0;
+const getBaseName = (fileName: string): string => {
+  let baseName = fileName
+    .replace(/\.(mp4|mkv|avi|mov)$/i, '') // remove extension
+    .replace(/(?:480p|720p|1080p|2160p|HEVC|x264|BluRay|WEB-DL|HDRip).*$/i, '') // remove quality tags
+    .replace(/\[.*?\]/g, '') // remove bracketed text
+    .replace(/\(.*?\)/g, '') // remove parenthesized text
+    .replace(/(?:episode|ep)[\s-]*\d+/gi, '') // remove episode indicators
+    .replace(/s\d{1,2}e\d{1,2}/gi, '') // remove SxxExx format
+    .replace(/season[\s-]*\d+/gi, '') // remove season indicators
+    .replace(/\s*-\s*\d+/, '') // remove trailing numbers
+    .replace(/\s*\d+\s*$/, '') // remove ending numbers
+    .trim();
+
+  // Remove any remaining numbers at the end that might be episode numbers
+  baseName = baseName.replace(/[\s.-]*\d+$/, '');
+
+  return baseName;
+};
+
+const getEpisodeInfo = (
+  fileName: string,
+): {season: number; episode: number} => {
+  // Try to match SxxExx format first
+  let match = fileName.match(/s(\d{1,2})e(\d{1,2})/i);
+  if (match) {
+    return {season: parseInt(match[1]), episode: parseInt(match[2])};
+  }
+
+  // Try to match "Season X Episode Y" format
+  match = fileName.match(/season[\s.-]*(\d{1,2}).*?episode[\s.-]*(\d{1,2})/i);
+  if (match) {
+    return {season: parseInt(match[1]), episode: parseInt(match[2])};
+  }
+
+  // Try to match episode number only
+  match =
+    fileName.match(/(?:episode|ep)[\s.-]*(\d{1,2})/i) ||
+    fileName.match(/[\s.-](\d{1,2})(?:\s*$|\s*\.)/);
+
+  if (match) {
+    return {season: 1, episode: parseInt(match[1])};
+  }
+
+  // Default case
+  return {season: 1, episode: 0};
 };
 
 const Downloads = () => {
@@ -147,7 +185,7 @@ const Downloads = () => {
           'downloadThumbnails',
           JSON.stringify(newThumbnails),
         );
-        setThumbnails(newThumbnails);
+        setThumbnails(newThumbnails || {});
       } catch (error) {
         console.error('Error generating thumbnails:', error);
       }
@@ -208,40 +246,45 @@ const Downloads = () => {
   // Add this function to group files by series name
   const groupMediaFiles = (): MediaGroup[] => {
     const groups: Record<string, MediaGroup> = {};
-    
-    // First pass: Group by base name
+
+    // First pass: Group by normalized base name
     files.forEach(file => {
       const fileName = file.uri.split('/').pop() || '';
       const baseName = getBaseName(fileName);
-      
-      if (!groups[baseName]) {
-        groups[baseName] = {
+      const normalizedBaseName = normalizeString(baseName);
+
+      if (!groups[normalizedBaseName]) {
+        groups[normalizedBaseName] = {
           title: baseName,
           episodes: [],
           thumbnail: thumbnails[file.uri],
-          isMovie: true // We'll update this in second pass
+          isMovie: true,
         };
       }
-      groups[baseName].episodes.push(file);
+      groups[normalizedBaseName].episodes.push(file);
     });
 
     // Second pass: Determine if each group is a movie or series
     Object.values(groups).forEach(group => {
-      // Check if any file in the group has episode indicators
       const hasEpisodeIndicators = group.episodes.some(file => {
         const fileName = file.uri.split('/').pop() || '';
-        return getEpisodeNumber(fileName) > 0;
+        return getEpisodeInfo(fileName).episode > 0;
       });
 
-      // Mark as series if multiple episodes or has episode indicators
       group.isMovie = !(group.episodes.length > 1 || hasEpisodeIndicators);
-      
-      // Sort episodes by episode number if it's a series
+
+      // Sort episodes by season and episode number if it's a series
       if (!group.isMovie) {
         group.episodes.sort((a, b) => {
           const aName = a.uri.split('/').pop() || '';
           const bName = b.uri.split('/').pop() || '';
-          return getEpisodeNumber(aName) - getEpisodeNumber(bName);
+          const aInfo = getEpisodeInfo(aName);
+          const bInfo = getEpisodeInfo(bName);
+
+          if (aInfo.season !== bInfo.season) {
+            return aInfo.season - bInfo.season;
+          }
+          return aInfo.episode - bInfo.episode;
         });
       }
     });
@@ -280,13 +323,13 @@ const Downloads = () => {
         data={groupMediaFiles()}
         numColumns={3}
         estimatedItemSize={150}
-        ListEmptyComponent={() => (
+        ListEmptyComponent={() =>
           !loading && (
             <View className="flex-1 justify-center items-center mt-10">
               <Text className="text-center text-lg">Looks Empty Here!</Text>
             </View>
           )
-        )}
+        }
         renderItem={({item}) => (
           <TouchableOpacity
             className={`flex-1 m-0.5 rounded-lg overflow-hidden ${
@@ -313,11 +356,16 @@ const Downloads = () => {
                   });
                 }
                 if (groupSelected.includes(item.episodes[0].uri)) {
-                  setGroupSelected(groupSelected.filter(f => f !== item.episodes[0].uri));
+                  setGroupSelected(
+                    groupSelected.filter(f => f !== item.episodes[0].uri),
+                  );
                 } else {
                   setGroupSelected([...groupSelected, item.episodes[0].uri]);
                 }
-                if (groupSelected.length === 1 && groupSelected[0] === item.episodes[0].uri) {
+                if (
+                  groupSelected.length === 1 &&
+                  groupSelected[0] === item.episodes[0].uri
+                ) {
                   setIsSelecting(false);
                   setGroupSelected([]);
                 }
@@ -336,10 +384,19 @@ const Downloads = () => {
                     providerValue: 'vega',
                   });
                 } else {
-                  navigation.navigate('SeriesEpisodes', {
-                    series: item.title,
-                    episodes: item.episodes,
-                    thumbnails: thumbnails,
+                  navigation.navigate('TabStack', {
+                    screen: 'SettingsStack',
+                    params: {
+                      screen: 'WatchHistoryStack',
+                      params: {
+                        screen: 'SeriesEpisodes',
+                        params: {
+                          episodes: item.episodes as any,
+                          series: item.title,
+                          thumbnails: thumbnails,
+                        },
+                      },
+                    },
                   });
                 }
               }

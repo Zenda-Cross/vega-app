@@ -20,7 +20,6 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
             const subtitles: TextTracks = [];
             res.data?.subtitles.forEach((sub: any) => {
               if (sub?.lang === 'Thumbnails') return;
-              console.log(sub);
               subtitles.push({
                 language: sub?.lang?.slice(0, 2) || 'Und',
                 uri: sub?.url,
@@ -31,10 +30,15 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
               });
             });
             res.data?.sources.forEach((source: any) => {
+              console.log(server, source?.url);
               streamLinks.push({
                 server: server,
                 link: source?.url,
                 type: source?.isM3U8 ? 'm3u8' : 'mp4',
+                headers: {
+                  Referer: 'https://megacloud.club/',
+                  Origin: 'https://megacloud.club',
+                },
                 subtitles: subtitles,
               });
             });
@@ -45,7 +49,7 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
       }),
     );
 
-    console.log('streamLinks: ', streamLinks);
+    // console.log('streamLinks: ', streamLinks);
     return streamLinks;
   } catch (err) {
     console.error(err);
