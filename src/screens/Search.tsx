@@ -17,9 +17,9 @@ import Animated, {
   SlideInRight,
   ZoomIn,
 } from 'react-native-reanimated';
-import {searchTMDB} from '../services/tmdb';
+import {searchOMDB} from '../services/omdb';
 import debounce from 'lodash/debounce';
-import {TMDBResult} from '../types/tmdb';
+import {OMDBResult} from '../types/omdb';
 
 const Search = () => {
   const {primary} = useThemeStore(state => state);
@@ -30,17 +30,28 @@ const Search = () => {
   const [searchHistory, setSearchHistory] = useState<string[]>(
     MMKV.getArray<string>('searchHistory') || [],
   );
-  const [searchResults, setSearchResults] = useState<TMDBResult[]>([]);
+  const [searchResults, setSearchResults] = useState<OMDBResult[]>([]);
 
   const debouncedSearch = debounce(async text => {
     if (text.length >= 2) {
-      const results = await searchTMDB(text);
-      console.log('Search Results:', results);
-      setSearchResults(results);
+      setSearchResults([]); // Clear previous results
+      const results = await searchOMDB(text);
+      if (results.length > 0) {
+        // Remove duplicates based on imdbID
+        const uniqueResults = results.reduce((acc, current) => {
+          const x = acc.find(item => item.imdbID === current.imdbID);
+          if (!x) {
+            return acc.concat([current]);
+          } else {
+            return acc;
+          }
+        }, [] as OMDBResult[]);
+        setSearchResults(uniqueResults);
+      }
     } else {
       setSearchResults([]);
     }
-  }, 500);
+  }, 300); // Reduced debounce time for better responsiveness
 
   useEffect(() => {
     debouncedSearch(searchText);
@@ -163,13 +174,13 @@ const Search = () => {
       {searchResults.length > 0 ? (
         <FlatList
           data={searchResults}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={item => item.imdbID.toString()}
           renderItem={({item}) => (
             <Animated.View entering={FadeInDown.springify()} className="px-4">
               <TouchableOpacity
                 className="py-3 border-b border-white/10"
                 onPress={() => {
-                  const searchTitle = item.title || item.name || '';
+                  const searchTitle = item.Title;
                   // Save to search history
                   const prevSearches =
                     MMKV.getArray<string>('searchHistory') || [];
@@ -194,10 +205,10 @@ const Search = () => {
                   />
                   <View>
                     <Text className="text-white text-base">
-                      {item.title || item.name}
+                      {item.Title}
                     </Text>
                     <Text className="text-white/50 text-xs">
-                      {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
+                      {item.Type === 'series' ? 'TV Show' : 'Movie'} • {item.Year}
                     </Text>
                   </View>
                 </View>
