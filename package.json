@@ -5,9 +5,11 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
+    "lint": "eslint . --fix",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "format":"prettier --write .",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@8man/react-native-media-console": "^2.2.4-alpha.18",
@@ -29,6 +31,7 @@
     "expo-system-ui": "~3.0.4",
     "expo-video-thumbnails": "~8.0.0",
     "ffmpeg-kit-react-native": "^6.0.2",
+    "husky": "^9.1.7",
     "moti": "^0.28.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
