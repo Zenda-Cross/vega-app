@@ -8,8 +8,14 @@
     "lint": "eslint . --fix",
     "start": "react-native start",
     "test": "jest",
-    "format":"prettier --write .",
+    "format": "prettier --write .",
     "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md,html,css}": [
+      "eslint --fix",
+      "prettier --write ."
+    ]
   },
   "dependencies": {
     "@8man/react-native-media-console": "^2.2.4-alpha.18",
@@ -32,6 +38,7 @@
     "expo-video-thumbnails": "~8.0.0",
     "ffmpeg-kit-react-native": "^6.0.2",
     "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
     "moti": "^0.28.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
@@ -74,6 +81,9 @@
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "jest": "^29.6.3",
     "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",

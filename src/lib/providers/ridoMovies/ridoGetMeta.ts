@@ -51,7 +51,9 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
     let season = new Map();
     if (meta.type === 'series') {
       data?.meta?.videos?.map((video: any) => {
-        if (video?.season <= 0) return;
+        if (video?.season <= 0) {
+          return;
+        }
         if (!season.has(video?.season)) {
           season.set(video?.season, []);
         }

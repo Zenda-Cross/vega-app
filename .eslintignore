@@ -1,0 +1,65 @@
+# Development Dependencies
+node_modules
+.expo
+.expo-shared
+.vscode
+.android
+android/**/*
+.ios
+.github
+
+# Build and Output
+dist
+build
+web-build
+*.jsbundle
+*.bundle
+
+# Testing and Coverage
+__tests__/
+coverage/
+jest.config.*
+
+# Configuration Files
+*.config.js
+metro.config.js
+babel.config.js
+tscconfig.json
+app.json
+expo-env.d.ts
+.env*
+
+# Documentation and Info
+README.md
+*.md
+
+# Media and Assets
+assets/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+
+# Cache and System Files
+.cache/
+*.log
+.DS_Store
+temp/
+*.tmp
+
+# Package Management
+package.json
+package-lock.json
+yarn.lock
+
+# Auto-generated
+*.generated.*
+*.auto.*
+*.d.ts
+
+# IDE specific
+.idea/
+*.sublime-*
+*.swp

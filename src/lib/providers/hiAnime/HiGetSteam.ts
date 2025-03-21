@@ -19,7 +19,9 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
           if (res.data) {
             const subtitles: TextTracks = [];
             res.data?.subtitles.forEach((sub: any) => {
-              if (sub?.lang === 'Thumbnails') return;
+              if (sub?.lang === 'Thumbnails') {
+                return;
+              }
               subtitles.push({
                 language: sub?.lang?.slice(0, 2) || 'Und',
                 uri: sub?.url,

@@ -3,9 +3,7 @@ import {Stream} from '../types';
 import {getWhvxStream} from './getWhvxStream';
 import {multiExtractor} from './multiExtractor';
 import {stableExtractor} from './stableExtractor';
-import {getFlimxyStream} from './getFlimxyStream';
 import {getRiveStream} from './getRiveStream';
-import {getVidSrcRip} from './getVidSrcRip';
 import axios from 'axios';
 
 const autoembed = 'YXV0b2VtYmVkLmNj';

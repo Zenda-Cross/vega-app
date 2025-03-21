@@ -28,7 +28,10 @@ import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
 import {TouchableOpacity} from 'react-native';
-import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
@@ -239,7 +242,7 @@ const App = () => {
     );
   }
   function TabStack() {
-    const {bottom}=useSafeAreaInsets()
+    const {bottom} = useSafeAreaInsets();
     return (
       <Tab.Navigator
         detachInactiveScreens={true}

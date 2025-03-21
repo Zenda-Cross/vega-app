@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {EpisodeLink} from '../types';
 
@@ -7,7 +6,7 @@ export const toonGetEpisodeLinks = async function (
 ): Promise<EpisodeLink[]> {
   try {
     const seasonData = JSON.parse(data);
-    const url = `https://toonstream.co/wp-admin/admin-ajax.php`;
+    const url = 'https://toonstream.co/wp-admin/admin-ajax.php';
     const formData = new FormData();
     formData.append('action', 'action_select_season');
     formData.append('season', seasonData.season);

@@ -32,7 +32,9 @@ export const suGetStream = async (
     // console.log('decodedJson', decodedJson);
     const hash = getApiHash(decodedJson?.hash, decodedJson?.server);
     // console.log('hash', hash);
-    if (!hash) return [];
+    if (!hash) {
+      return [];
+    }
     const streamLink = `${baseUrl}/api/e/${hash}`;
     console.log('streamJson', streamLink);
     const streamRes = await fetch(streamLink, {

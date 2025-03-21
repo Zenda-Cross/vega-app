@@ -1,6 +1,4 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {getNfHeaders} from './nfHeaders';
 import {Post} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
 import {nfGetCookie} from './nfGetCookie';
