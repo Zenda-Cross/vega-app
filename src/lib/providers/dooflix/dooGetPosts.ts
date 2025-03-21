@@ -47,7 +47,9 @@ export const dooGetPost = async function (
 
     data.forEach((result: any) => {
       const id = result?.videos_id;
-      if (!id) return;
+      if (!id) {
+        return;
+      }
 
       const type = !result?.is_tvseries ? 'tvseries' : 'movie';
       const link = `${baseUrl}/rest-api//v130/single_details?type=${type}&id=${id}`;
@@ -114,7 +116,9 @@ export const dooGetSearchPost = async function (
     // Process movies
     data?.movie?.forEach((result: any) => {
       const id = result?.videos_id;
-      if (!id) return;
+      if (!id) {
+        return;
+      }
 
       const link = `${baseUrl}/rest-api//v130/single_details?type=movie&id=${id}`;
       const thumbnailUrl = result?.thumbnail_url;
@@ -132,7 +136,9 @@ export const dooGetSearchPost = async function (
     // Process TV series
     data?.tvseries?.forEach((result: any) => {
       const id = result?.videos_id;
-      if (!id) return;
+      if (!id) {
+        return;
+      }
 
       const link = `${baseUrl}/rest-api//v130/single_details?type=tvseries&id=${id}`;
       const thumbnailUrl = result?.thumbnail_url;

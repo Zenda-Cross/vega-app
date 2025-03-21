@@ -201,7 +201,9 @@ const SeasonList = ({
               ActiveSeason.episodesLink,
             )
           : [];
-        if (episodes.length === 0) return;
+        if (episodes.length === 0) {
+          return;
+        }
         MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
         // console.log(episodes);
         setEpisodeList(episodes);

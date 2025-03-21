@@ -30,6 +30,7 @@ import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {SvgUri} from 'react-native-svg';
 import {MotiView} from 'moti';
 import {useNavigation} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -39,6 +40,7 @@ const Settings = ({navigation}: Props) => {
   const {primary} = useThemeStore(state => state);
   const {provider, setProvider} = useContentStore(state => state);
   const {clearHistory} = useWatchHistoryStore(state => state);
+  const {bottom} = useSafeAreaInsets();
 
   const renderProviderIcon = (uri: string) => (
     <Text>
@@ -304,7 +306,7 @@ const Settings = ({navigation}: Props) => {
 
         {/* About & GitHub section */}
         <AnimatedSection delay={400}>
-          <View className="mb-6">
+          <View className="mb-6" style={{paddingBottom: bottom}}>
             <Text className="text-gray-400 text-sm mb-3">About</Text>
             <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
               {/* About */}

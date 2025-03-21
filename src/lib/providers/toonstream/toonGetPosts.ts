@@ -2,7 +2,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {headers} from '../headers';
 import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
 
 export const toonGetPosts = async function (
   filter: string,

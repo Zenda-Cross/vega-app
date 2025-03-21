@@ -18,7 +18,9 @@ export const ringzGetPostsSearch = async function (
   // providerValue: string,
   // signal: AbortSignal,
 ): Promise<Post[]> {
-  if (page > 1) return [];
+  if (page > 1) {
+    return [];
+  }
 
   try {
     const catalog: Post[] = [];

@@ -3,7 +3,6 @@ import React from 'react';
 import {WebView} from 'react-native-webview';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList} from '../App';
-import {MMKV} from '../lib/Mmkv';
 import {MaterialIcons} from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Webview'>;
