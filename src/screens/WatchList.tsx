@@ -18,6 +18,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {MotiView} from 'moti';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const Library = () => {
   const {primary} = useThemeStore(state => state);
@@ -34,6 +35,7 @@ const Library = () => {
   const tileWidth =
     (screenWidth - padding - spacing * (numberOfTiles - 1)) / numberOfTiles;
   const tileHeight = tileWidth * 1.5; // maintain 1.5:1 aspect ratio
+  const {bottom} = useSafeAreaInsets();
 
   useEffect(() => {
     if (watchList.length === 0) {
@@ -75,7 +77,13 @@ const Library = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: spacing}}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: spacing,
+              paddingBottom: bottom * 2,
+            }}>
             {watchList.map((item: any, index: number) => (
               <TouchableOpacity
                 key={item.link + index}
