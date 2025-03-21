@@ -1,4 +1,12 @@
-import {View, Text, ScrollView, StatusBar, Platform, Image, Dimensions} from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StatusBar,
+  Platform,
+  Image,
+  Dimensions,
+} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
@@ -23,7 +31,8 @@ const Library = () => {
   const padding = 32; // 16 padding on each side (px-4 = 16)
   const spacing = 12; // gap-3 = 12px
   const numberOfTiles = 3;
-  const tileWidth = (screenWidth - padding - (spacing * (numberOfTiles - 1))) / numberOfTiles;
+  const tileWidth =
+    (screenWidth - padding - spacing * (numberOfTiles - 1)) / numberOfTiles;
   const tileHeight = tileWidth * 1.5; // maintain 1.5:1 aspect ratio
 
   useEffect(() => {
@@ -66,7 +75,7 @@ const Library = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: spacing}}>
             {watchList.map((item: any, index: number) => (
               <TouchableOpacity
                 key={item.link + index}
@@ -117,7 +126,12 @@ const Library = () => {
                 <Text className="text-white/70 text-lg font-medium mb-4">
                   Recommended for you
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    gap: spacing,
+                  }}>
                   {suggestions.map((item, index) => (
                     <MotiView
                       key={item.link + index}
@@ -128,7 +142,7 @@ const Library = () => {
                         duration: 500,
                         delay: index * 100,
                       }}
-                      style={{ width: tileWidth }}>
+                      style={{width: tileWidth}}>
                       <TouchableOpacity
                         onPress={() =>
                           navigation.navigate('Info', {

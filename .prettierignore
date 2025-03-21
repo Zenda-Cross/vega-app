@@ -6,6 +6,8 @@ node_modules
 .android
 android/**/*
 .ios
+ios/**/*
+.yarn
 .github
 
 # Build and Output
@@ -50,3 +52,9 @@ yarn.lock
 # Auto-generated
 *.generated.*
 *.auto.*
+*.d.ts
+
+# IDE specific
+.idea/
+*.sublime-*
+*.swp

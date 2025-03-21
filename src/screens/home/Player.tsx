@@ -295,7 +295,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       storeWatchProgressForHistory(
         route.params.episodeList[route.params.linkIndex].link,
         currentTime,
-        seekableDuration
+        seekableDuration,
       );
 
       if (
@@ -322,7 +322,11 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   // Dedicated function to store watch progress for history display
-  const storeWatchProgressForHistory = (link: string, currentTime: number, duration: number) => {
+  const storeWatchProgressForHistory = (
+    link: string,
+    currentTime: number,
+    duration: number,
+  ) => {
     try {
       // Only store if we have meaningful values
       if (currentTime > 0 && duration > 0) {
@@ -353,13 +357,24 @@ const Player = ({route}: Props): React.JSX.Element => {
           console.log('Watch History Progress Stored:', {
             key: historyProgressKey,
             progress: Math.round(percentage) + '%',
-            time: `${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60).toString().padStart(2, '0')}/${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
+            time: `${Math.floor(currentTime / 60)}:${Math.floor(
+              currentTime % 60,
+            )
+              .toString()
+              .padStart(2, '0')}/${Math.floor(duration / 60)}:${Math.floor(
+              duration % 60,
+            )
+              .toString()
+              .padStart(2, '0')}`,
           });
         }
 
         // Also store with episodeTitle-specific key to handle series episodes
         if (route.params?.secondaryTitle) {
-          const episodeKey = `watch_history_progress_${historyKey}_${route.params.secondaryTitle.replace(/\s+/g, '_')}`;
+          const episodeKey = `watch_history_progress_${historyKey}_${route.params.secondaryTitle.replace(
+            /\s+/g,
+            '_',
+          )}`;
           MMKV.setString(episodeKey, JSON.stringify(progressData));
         }
       }
@@ -1074,12 +1089,26 @@ const Player = ({route}: Props): React.JSX.Element => {
 export default Player;
 
 function formatQuality(quality: string) {
-  if (quality === 'auto') { return quality; }
-  if (Number(quality) > 1080) { return '4K'; }
-  if (Number(quality) > 720) { return '1080p'; }
-  if (Number(quality) > 480) { return '720p'; }
-  if (Number(quality) > 360) { return '480p'; }
-  if (Number(quality) > 240) { return '360p'; }
-  if (Number(quality) > 144) { return '240p'; }
+  if (quality === 'auto') {
+    return quality;
+  }
+  if (Number(quality) > 1080) {
+    return '4K';
+  }
+  if (Number(quality) > 720) {
+    return '1080p';
+  }
+  if (Number(quality) > 480) {
+    return '720p';
+  }
+  if (Number(quality) > 360) {
+    return '480p';
+  }
+  if (Number(quality) > 240) {
+    return '360p';
+  }
+  if (Number(quality) > 144) {
+    return '240p';
+  }
   return quality;
 }

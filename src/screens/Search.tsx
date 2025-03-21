@@ -204,11 +204,10 @@ const Search = () => {
                     style={{marginRight: 12}}
                   />
                   <View>
-                    <Text className="text-white text-base">
-                      {item.Title}
-                    </Text>
+                    <Text className="text-white text-base">{item.Title}</Text>
                     <Text className="text-white/50 text-xs">
-                      {item.Type === 'series' ? 'TV Show' : 'Movie'} • {item.Year}
+                      {item.Type === 'series' ? 'TV Show' : 'Movie'} •{' '}
+                      {item.Year}
                     </Text>
                   </View>
                 </View>

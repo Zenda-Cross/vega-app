@@ -6,6 +6,8 @@ node_modules
 .android
 android/**/*
 .ios
+ios/**/*
+.yarn
 .github
 
 # Build and Output

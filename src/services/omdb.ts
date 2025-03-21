@@ -1,4 +1,4 @@
-import { OMDBResult, OMDBResponse } from '../types/omdb';
+import {OMDBResult, OMDBResponse} from '../types/omdb';
 
 const OMDB_API_KEY = '7755307f';
 const BASE_URL = 'https://www.omdbapi.com';
