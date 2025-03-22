@@ -182,7 +182,7 @@ const Home = ({ }: Props) => {
             }>
             <Hero drawerRef={drawer} isDrawerOpen={isDrawerOpen} />
             <ContinueWatching />
-            <View className="-mt-12 relative z-20">
+            <View className="-mt-6 relative z-20">
               {!loading &&
                 recentlyWatched?.length > 0 &&
                 ShowRecentlyWatched && (

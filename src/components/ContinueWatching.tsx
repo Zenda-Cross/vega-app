@@ -96,7 +96,7 @@ const ContinueWatching = () => {
     };
 
     return (
-        <View className="mt-3 mb-4">
+        <View className="mt-3 mb-8">
             <Text className="text-white text-xl font-semibold px-4 mb-3">
                 Continue Watching
             </Text>
@@ -111,7 +111,7 @@ const ContinueWatching = () => {
                     const progress = progressData[item.link] || 0;
 
                     // Skip items that are completed
-                    if (progress >= 98) return null;
+                    if (progress >= 98) {return null;}
 
                     return (
                         <TouchableOpacity
@@ -144,22 +144,10 @@ const ContinueWatching = () => {
                                     />
                                 </View>
 
-                                {/* Episode indication for TV shows */}
-                                {item.episodeTitle && (
-                                    <View
-                                        className="absolute top-1 right-1 px-1 rounded-sm"
-                                        style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
-                                    >
-                                        <Text className="text-white text-[10px]">
-                                            {item.episodeTitle}
-                                        </Text>
-                                    </View>
-                                )}
+                                {/* Removed episode title overlay */}
                             </View>
 
-                            <Text numberOfLines={1} className="text-white text-xs mt-1">
-                                {item.title}
-                            </Text>
+                            {/* Removed title text */}
                         </TouchableOpacity>
                     );
                 }}
