@@ -93,6 +93,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
   // Add player lock state
   const [isPlayerLocked, setIsPlayerLocked] = useState(false);
 
+  // Add new state for unlock button visibility when locked and reference for timer
+  const [showUnlockButton, setShowUnlockButton] = useState(false);
+  const unlockButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // search subtitles
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -393,10 +397,44 @@ const Player = ({ route }: Props): React.JSX.Element => {
     // If unlocking, immediately show controls
     if (!newLockState) {
       setShowControls(true);
+    } else {
+      // When locking, initially hide the unlock button
+      setShowUnlockButton(false);
+    }
+
+    // Clear any existing timers when lock state changes
+    if (unlockButtonTimerRef.current) {
+      clearTimeout(unlockButtonTimerRef.current);
+      unlockButtonTimerRef.current = null;
     }
 
     setToast(newLockState ? 'Player Locked' : 'Player Unlocked', 2000);
   };
+
+  // Function to handle screen tap when locked
+  const handleLockedScreenTap = () => {
+    // Show the unlock button
+    setShowUnlockButton(true);
+
+    // Clear any existing timer
+    if (unlockButtonTimerRef.current) {
+      clearTimeout(unlockButtonTimerRef.current);
+    }
+
+    // Set a new timer to hide the button after 10 seconds
+    unlockButtonTimerRef.current = setTimeout(() => {
+      setShowUnlockButton(false);
+    }, 10000); // 10 seconds
+  };
+
+  // Clean up timer on component unmount
+  useEffect(() => {
+    return () => {
+      if (unlockButtonTimerRef.current) {
+        clearTimeout(unlockButtonTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <SafeAreaView
@@ -536,19 +574,24 @@ const Player = ({ route }: Props): React.JSX.Element => {
         style={{ flex: 1, zIndex: 100 }}
       />
 
-      {/* Full-screen overlay to prevent any interaction when locked */}
+      {/* Full-screen overlay to detect taps when locked */}
       {isPlayerLocked && (
-        <View
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={handleLockedScreenTap}
           className="absolute top-0 left-0 right-0 bottom-0 z-40 bg-transparent"
           pointerEvents="auto"
         />
       )}
 
-      {/* Lock/Unlock button - ALWAYS VISIBLE & INTERACTIVE regardless of player state */}
+      {/* Lock/Unlock button - Modified to hide with controls and auto-hide in locked mode */}
       {loading === false && !Platform.isTV && (
         <MotiView
-          from={{ translateY: 0 }}
-          animate={{ translateY: 0 }} // Never hide this button
+          from={{ translateY: 0, opacity: 1 }}
+          animate={{
+            translateY: 0,
+            opacity: (isPlayerLocked && showUnlockButton) || (!isPlayerLocked && showControls) ? 1 : 0,
+          }}
           //@ts-ignore
           transition={{ type: 'timing', duration: 190 }}
           className="absolute top-5 right-5 flex-row items-center gap-2 z-50">
