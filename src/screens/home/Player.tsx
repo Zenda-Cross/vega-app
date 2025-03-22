@@ -387,8 +387,15 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   // Function to toggle player lock state
   const togglePlayerLock = () => {
-    setIsPlayerLocked(!isPlayerLocked);
-    setToast(isPlayerLocked ? 'Player Unlocked' : 'Player Locked', 2000);
+    const newLockState = !isPlayerLocked;
+    setIsPlayerLocked(newLockState);
+
+    // If unlocking, immediately show controls
+    if (!newLockState) {
+      setShowControls(true);
+    }
+
+    setToast(newLockState ? 'Player Locked' : 'Player Unlocked', 2000);
   };
 
   return (
@@ -407,8 +414,6 @@ const Player = ({ route }: Props): React.JSX.Element => {
         disableGesture={isPlayerLocked || !enableSwipeGesture}
         doubleTapTime={200}
         disableSeekButtons={isPlayerLocked || hideSeekButtons}
-        disableControls={isPlayerLocked}
-        disableScrubber={isPlayerLocked} // Only disable scrubber when locked
         showOnStart={!isPlayerLocked}
         // Removed paused={isPlayerLocked ? true : undefined} - don't force pause when locked
         source={{
@@ -551,7 +556,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
             onPress={togglePlayerLock}
             className="bg-black/50 p-2 rounded-full">
             <MaterialIcons
-              name={isPlayerLocked ? "lock" : "lock-open"}
+              name={isPlayerLocked ? 'lock' : 'lock-open'}
               size={24}
               color="white"
             />
