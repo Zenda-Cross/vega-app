@@ -28,7 +28,7 @@ import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
 import {TouchableOpacity} from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
@@ -254,7 +254,7 @@ const App = () => {
           tabBarStyle: {
             position: 'absolute',
             bottom: 0,
-            height: 65,
+            height: 55,
             borderRadius: 0,
             // backgroundColor: 'rgba(0, 0, 0, 0.8)',
             overflow: 'hidden',
@@ -380,53 +380,63 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer
-        onReady={async () => await BootSplash.hide({fade: true})}
-        theme={{
-          fonts: {
-            regular: {
-              fontFamily: 'Inter_400Regular',
-              fontWeight: '400',
+      <SafeAreaView
+        edges={{
+          right: 'off',
+          top: 'off',
+          left: 'off',
+          bottom: 'additive',
+        }}
+        className="flex-1"
+        style={{backgroundColor: 'black'}}>
+        <NavigationContainer
+          onReady={async () => await BootSplash.hide({fade: true})}
+          theme={{
+            fonts: {
+              regular: {
+                fontFamily: 'Inter_400Regular',
+                fontWeight: '400',
+              },
+              medium: {
+                fontFamily: 'Inter_500Medium',
+                fontWeight: '500',
+              },
+              bold: {
+                fontFamily: 'Inter_700Bold',
+                fontWeight: '700',
+              },
+              heavy: {
+                fontFamily: 'Inter_800ExtraBold',
+                fontWeight: '800',
+              },
             },
-            medium: {
-              fontFamily: 'Inter_500Medium',
-              fontWeight: '500',
+            dark: true,
+            colors: {
+              background: 'transparent',
+              card: 'black',
+              primary: primary,
+              text: 'white',
+              border: 'black',
+              notification: primary,
             },
-            bold: {
-              fontFamily: 'Inter_700Bold',
-              fontWeight: '700',
-            },
-            heavy: {
-              fontFamily: 'Inter_800ExtraBold',
-              fontWeight: '800',
-            },
-          },
-          dark: true,
-          colors: {
-            background: 'transparent',
-            card: 'black',
-            primary: primary,
-            text: 'white',
-            border: 'black',
-            notification: primary,
-          },
-        }}>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            animation: 'ios_from_right',
-            animationDuration: 200,
-            freezeOnBlur: true,
-            contentStyle: {backgroundColor: 'transparent'},
           }}>
-          <Stack.Screen name="TabStack" component={TabStack} />
-          <Stack.Screen
-            name="Player"
-            component={Player}
-            options={{orientation: 'landscape'}}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              animation: 'ios_from_right',
+              animationDuration: 200,
+              freezeOnBlur: true,
+              contentStyle: {backgroundColor: 'transparent'},
+            }}>
+            <Stack.Screen name="TabStack" component={TabStack} />
+            <Stack.Screen
+              name="Player"
+              component={Player}
+              options={{orientation: 'landscape'}}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 };
