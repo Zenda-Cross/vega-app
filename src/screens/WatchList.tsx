@@ -1,5 +1,13 @@
-import {View, Text, ScrollView, StatusBar, Platform, Image, Dimensions} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StatusBar,
+  Platform,
+  Image,
+  Dimensions,
+} from 'react-native';
+import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -7,43 +15,20 @@ import {TouchableOpacity} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {MotiView} from 'moti';
-import useContentStore from '../lib/zustand/contentStore';
-import {manifest} from '../lib/Manifest';
 
 const Library = () => {
   const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const {watchList} = useWatchListStore(state => state);
-  const {provider} = useContentStore(state => state);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const screenWidth = Dimensions.get('window').width;
   const padding = 32; // 16 padding on each side (px-4 = 16)
   const spacing = 12; // gap-3 = 12px
   const numberOfTiles = 3;
-  const tileWidth = (screenWidth - padding - (spacing * (numberOfTiles - 1))) / numberOfTiles;
+  const tileWidth =
+    (screenWidth - padding - spacing * (numberOfTiles - 1)) / numberOfTiles;
   const tileHeight = tileWidth * 1.5; // maintain 1.5:1 aspect ratio
-
-  useEffect(() => {
-    if (watchList.length === 0) {
-      // Get random items from trending/popular section
-      const trendingItems =
-        (manifest[provider.value]?.catalog || []).find(
-          cat =>
-            cat.title.toLowerCase().includes('trend') ||
-            cat.title.toLowerCase().includes('popular'),
-        )?.Posts || [];
-
-      // Get 4 random items
-      const randomSuggestions = trendingItems
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 4);
-
-      setSuggestions(randomSuggestions);
-    }
-  }, [watchList.length, provider]);
 
   return (
     <View className="flex-1 bg-black">
@@ -66,8 +51,8 @@ const Library = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
-            {watchList.map((item: any, index: number) => (
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: spacing}}>
+            {watchList.map((item, index: number) => (
               <TouchableOpacity
                 key={item.link + index}
                 onPress={() =>
@@ -78,7 +63,7 @@ const Library = () => {
                   })
                 }
                 className="mb-4">
-                <View className="relative">
+                <View className="relative overflow-hidden">
                   <Image
                     className="rounded-xl"
                     source={{uri: item.poster}}
@@ -87,11 +72,12 @@ const Library = () => {
                       height: tileHeight,
                     }}
                   />
-                  <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
-                    <Text className="text-white text-xs" numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                  </View>
+                  <Text
+                    className="text-white text-xs truncate text-center mt-1"
+                    style={{width: tileWidth - 10}}
+                    numberOfLines={1}>
+                    {item.title}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -107,60 +93,7 @@ const Library = () => {
               <Text className="text-white/70 text-base mt-4 text-center">
                 Your watchlist is empty
               </Text>
-              <Text className="text-white/50 text-sm mt-2 text-center">
-                Add shows and movies to keep track of what you want to watch
-              </Text>
             </View>
-
-            {suggestions.length > 0 && (
-              <View className="mt-8">
-                <Text className="text-white/70 text-lg font-medium mb-4">
-                  Recommended for you
-                </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing }}>
-                  {suggestions.map((item, index) => (
-                    <MotiView
-                      key={item.link + index}
-                      from={{opacity: 0, translateY: 20}}
-                      animate={{opacity: 1, translateY: 0}}
-                      transition={{
-                        type: 'timing',
-                        duration: 500,
-                        delay: index * 100,
-                      }}
-                      style={{ width: tileWidth }}>
-                      <TouchableOpacity
-                        onPress={() =>
-                          navigation.navigate('Info', {
-                            link: item.link,
-                            provider: provider.value,
-                            poster: item.image,
-                          })
-                        }
-                        className="mb-4">
-                        <View className="relative">
-                          <Image
-                            className="rounded-xl"
-                            source={{uri: item.image}}
-                            style={{
-                              width: tileWidth,
-                              height: tileHeight,
-                            }}
-                          />
-                          <View className="absolute bottom-0 w-full bg-black/60 rounded-b-xl px-2 py-1">
-                            <Text
-                              className="text-white text-xs"
-                              numberOfLines={1}>
-                              {item.title}
-                            </Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                    </MotiView>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
         )}
       </ScrollView>

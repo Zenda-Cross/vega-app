@@ -5,45 +5,45 @@ import {
   StatusBar,
 } from 'react-native';
 import Slider from '../../components/Slider';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Hero from '../../components/Hero';
-import { View } from 'moti';
-import { getHomePageData, HomePageData } from '../../lib/getHomepagedata';
-import { MMKV, MmmkvCache } from '../../lib/Mmkv';
+import {View} from 'moti';
+import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
-import { manifest } from '../../lib/Manifest';
-import notifee, { EventDetail, EventType } from '@notifee/react-native';
+import {manifest} from '../../lib/Manifest';
+import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNFS from 'react-native-fs';
 import useDownloadsStore from '../../lib/zustand/downloadsStore';
-import { FFmpegKit } from 'ffmpeg-kit-react-native';
-import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import {FFmpegKit} from 'ffmpeg-kit-react-native';
+// import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
-import { downloadFolder } from '../../lib/constants';
+import {downloadFolder} from '../../lib/constants';
 import useThemeStore from '../../lib/zustand/themeStore';
 import ProviderDrawer from '../../components/ProviderDrawer';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '../../App';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {HomeStackParamList} from '../../App';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ContinueWatching from '../../components/ContinueWatching';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
-const Home = ({ }: Props) => {
-  const { primary } = useThemeStore(state => state);
+const Home = ({}: Props) => {
+  const {primary} = useThemeStore(state => state);
   const [refreshing, setRefreshing] = useState(false);
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const downloadStore = useDownloadsStore(state => state);
-  const recentlyWatched = useWatchHistoryStore(state => state).history;
-  const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
+  // const recentlyWatched = useWatchHistoryStore(state => state).history;
+  // const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
   const drawer = useRef<DrawerLayout>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen] = useState(false);
   const disableDrawer = MMKV.getBool('disableDrawer') || false;
 
-  const { provider } = useContentStore(state => state);
-  const { setHero } = useHeroStore(state => state);
+  const {provider} = useContentStore(state => state);
+  const {setHero} = useHeroStore(state => state);
 
   // change status bar color
   const handleScroll = (event: any) => {
@@ -57,7 +57,7 @@ const Home = ({ }: Props) => {
     const signal = controller.signal;
     const fetchHomeData = async () => {
       setLoading(true);
-      setHero({ link: '', image: '', title: '' });
+      setHero({link: '', image: '', title: ''});
       const cache = MmmkvCache.getString('homeData' + provider.value);
       // console.log('cache', cache);
       if (cache) {
@@ -66,7 +66,7 @@ const Home = ({ }: Props) => {
         // pick random post form random category
         const randomPost =
           data[data?.length - 1].Posts[
-          Math.floor(Math.random() * data[data?.length - 1].Posts.length)
+            Math.floor(Math.random() * data[data?.length - 1].Posts.length)
           ];
         setHero(randomPost);
 
@@ -76,7 +76,7 @@ const Home = ({ }: Props) => {
       if (!cache && data.length > 0) {
         const randomPost =
           data[data?.length - 1].Posts[
-          Math.floor(Math.random() * data[data?.length - 1].Posts.length)
+            Math.floor(Math.random() * data[data?.length - 1].Posts.length)
           ];
         setHero(randomPost);
       }
@@ -183,7 +183,8 @@ const Home = ({ }: Props) => {
             <Hero drawerRef={drawer} isDrawerOpen={isDrawerOpen} />
             <ContinueWatching />
             <View className="-mt-6 relative z-20">
-              {!loading &&
+              {/* use new continue watching component */}
+              {/* {!loading &&
                 recentlyWatched?.length > 0 &&
                 ShowRecentlyWatched && (
                   <Slider
@@ -192,26 +193,26 @@ const Home = ({ }: Props) => {
                     posts={recentlyWatched}
                     filter={'recent'}
                   />
-                )}
+                )} */}
               {loading
                 ? manifest[provider.value].catalog.map((item, index) => (
-                  <Slider
-                    isLoading={loading}
-                    key={index}
-                    title={item.title}
-                    posts={[]}
-                    filter={item.filter}
-                  />
-                ))
+                    <Slider
+                      isLoading={loading}
+                      key={index}
+                      title={item.title}
+                      posts={[]}
+                      filter={item.filter}
+                    />
+                  ))
                 : homeData.map((item, index) => (
-                  <Slider
-                    isLoading={loading}
-                    key={index}
-                    title={item.title}
-                    posts={item.Posts}
-                    filter={item.filter}
-                  />
-                ))}
+                    <Slider
+                      isLoading={loading}
+                      key={index}
+                      title={item.title}
+                      posts={item.Posts}
+                      filter={item.filter}
+                    />
+                  ))}
             </View>
             <View className="h-16" />
           </ScrollView>
