@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "2.6.5",
+  "version": "2.6.6",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@8man/react-native-media-console": "^2.2.4-alpha.18",
+    "@8man/react-native-media-console": "^2.2.4-alpha.20",
     "@dominicvonk/react-native-apk-installer": "^2.2.2",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@notifee/react-native": "^7.8.2",
