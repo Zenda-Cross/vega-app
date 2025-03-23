@@ -7,14 +7,14 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import { Easing } from 'react-native-reanimated';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
-import { MMKV, MmmkvCache } from '../../lib/Mmkv';
-import { OrientationLocker, LANDSCAPE } from 'react-native-orientation-locker';
+import {Easing} from 'react-native-reanimated';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../App';
+import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import VideoPlayer from '@8man/react-native-media-console';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   VideoRef,
@@ -29,34 +29,34 @@ import {
   SelectedTrack,
   SelectedTrackType,
 } from 'react-native-video';
-import { MotiView } from 'moti';
-import { manifest } from '../../lib/Manifest';
+import {MotiView} from 'moti';
+import {manifest} from '../../lib/Manifest';
 import useContentStore from '../../lib/zustand/contentStore';
-import { CastButton, useRemoteMediaClient } from 'react-native-google-cast';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
-import { Stream } from '../../lib/providers/types';
-import DocumentPicker, { isCancel } from 'react-native-document-picker';
+import {Stream} from '../../lib/providers/types';
+import DocumentPicker, {isCancel} from 'react-native-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
-import { FlashList } from '@shopify/flash-list';
+import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
-import { ifExists } from '../../lib/file/ifExists';
+import {ifExists} from '../../lib/file/ifExists';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
 type SettingsTabs = 'audio' | 'subtitle' | 'server' | 'quality' | 'speed';
 
-const Player = ({ route }: Props): React.JSX.Element => {
-  const { primary } = useThemeStore(state => state);
-  const { provider } = useContentStore();
-  const { addItem, updatePlaybackInfo, updateItemWithInfo } =
+const Player = ({route}: Props): React.JSX.Element => {
+  const {primary} = useThemeStore(state => state);
+  const {provider} = useContentStore();
+  const {addItem, updatePlaybackInfo, updateItemWithInfo} =
     useWatchHistoryStore(); // Add updatePlaybackInfo and updateItemWithInfo here
   const [activeEpisode, setActiveEpisode] = useState(
     route.params?.episodeList?.[route.params.linkIndex],
   );
-  const videoPositionRef = useRef({ position: 0, duration: 0 });
+  const videoPositionRef = useRef({position: 0, duration: 0});
   const lastSavedPositionRef = useRef(0);
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const [stream, setStream] = useState<Stream[]>([]);
@@ -154,14 +154,14 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   // get stream
   useEffect(() => {
-    setSelectedStream({ server: '', link: '', type: '' });
+    setSelectedStream({server: '', link: '', type: ''});
     const controller = new AbortController();
     const fetchStream = async () => {
       console.log('activeEpisode', activeEpisode);
       setLoading(true);
       if (route.params?.directUrl) {
         setStream([
-          { server: 'Downloaded', link: route.params?.directUrl, type: 'mp4' },
+          {server: 'Downloaded', link: route.params?.directUrl, type: 'mp4'},
         ]);
         setSelectedStream({
           server: 'Downloaded',
@@ -179,8 +179,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
         ).replaceAll(/[^a-zA-Z0-9]/g, '_');
         const exists = await ifExists(file);
         if (exists) {
-          setStream([{ server: 'downloaded', link: exists, type: 'mp4' }]);
-          setSelectedStream({ server: 'downloaded', link: exists, type: 'mp4' });
+          setStream([{server: 'downloaded', link: exists, type: 'mp4'}]);
+          setSelectedStream({server: 'downloaded', link: exists, type: 'mp4'});
           setLoading(false);
           return;
         }
@@ -281,8 +281,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   // handle progress
   const handleProgress = useCallback(
-    (e: { currentTime: number; seekableDuration: number }) => {
-      const { currentTime, seekableDuration } = e;
+    (e: {currentTime: number; seekableDuration: number}) => {
+      const {currentTime, seekableDuration} = e;
       videoPositionRef.current = {
         position: currentTime,
         duration: seekableDuration,
@@ -302,7 +302,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
       storeWatchProgressForHistory(
         route.params.episodeList[route.params.linkIndex].link,
         currentTime,
-        seekableDuration
+        seekableDuration,
       );
 
       if (
@@ -329,7 +329,11 @@ const Player = ({ route }: Props): React.JSX.Element => {
   );
 
   // Dedicated function to store watch progress for history display
-  const storeWatchProgressForHistory = (link: string, currentTime: number, duration: number) => {
+  const storeWatchProgressForHistory = (
+    link: string,
+    currentTime: number,
+    duration: number,
+  ) => {
     try {
       // Only store if we have meaningful values
       if (currentTime > 0 && duration > 0) {
@@ -360,13 +364,24 @@ const Player = ({ route }: Props): React.JSX.Element => {
           console.log('Watch History Progress Stored:', {
             key: historyProgressKey,
             progress: Math.round(percentage) + '%',
-            time: `${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60).toString().padStart(2, '0')}/${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
+            time: `${Math.floor(currentTime / 60)}:${Math.floor(
+              currentTime % 60,
+            )
+              .toString()
+              .padStart(2, '0')}/${Math.floor(duration / 60)}:${Math.floor(
+              duration % 60,
+            )
+              .toString()
+              .padStart(2, '0')}`,
           });
         }
 
         // Also store with episodeTitle-specific key to handle series episodes
         if (route.params?.secondaryTitle) {
-          const episodeKey = `watch_history_progress_${historyKey}_${route.params.secondaryTitle.replace(/\s+/g, '_')}`;
+          const episodeKey = `watch_history_progress_${historyKey}_${route.params.secondaryTitle.replace(
+            /\s+/g,
+            '_',
+          )}`;
           MMKV.setString(episodeKey, JSON.stringify(progressData));
         }
       }
@@ -377,10 +392,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
   const handelResizeMode = () => {
     const modes = [
-      { mode: ResizeMode.NONE, name: 'Fit' },
-      { mode: ResizeMode.COVER, name: 'Cover' },
-      { mode: ResizeMode.STRETCH, name: 'Stretch' },
-      { mode: ResizeMode.CONTAIN, name: 'Contain' },
+      {mode: ResizeMode.NONE, name: 'Fit'},
+      {mode: ResizeMode.COVER, name: 'Cover'},
+      {mode: ResizeMode.STRETCH, name: 'Stretch'},
+      {mode: ResizeMode.CONTAIN, name: 'Contain'},
     ];
     const index = modes.findIndex(mode => mode.mode === resizeMode);
     setResizeMode(modes[(index + 1) % modes.length].mode);
@@ -396,10 +411,11 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
     // If unlocking, immediately show controls
     if (!newLockState) {
-      setShowControls(true);
+      // setShowControls(true);
     } else {
       // When locking, initially hide the unlock button
       setShowUnlockButton(false);
+      playerRef?.current?.resume();
     }
 
     // Clear any existing timers when lock state changes
@@ -408,11 +424,16 @@ const Player = ({ route }: Props): React.JSX.Element => {
       unlockButtonTimerRef.current = null;
     }
 
-    setToast(newLockState ? 'Player Locked' : 'Player Unlocked', 2000);
+    setToast(newLockState ? ' Player Locked ' : ' Player Unlocked ', 2000);
   };
 
   // Function to handle screen tap when locked
   const handleLockedScreenTap = () => {
+    if (showUnlockButton) {
+      setShowUnlockButton(false);
+      return;
+    }
+
     // Show the unlock button
     setShowUnlockButton(true);
 
@@ -457,9 +478,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
         source={{
           textTracks: externalSubs,
           uri: selectedStream?.link || '',
-          bufferConfig: { backBufferDurationMs: 30000 },
+          bufferConfig: {backBufferDurationMs: 30000},
           shouldCache: true,
-          ...(selectedStream?.type === 'm3u8' && { type: 'm3u8' }),
+          ...(selectedStream?.type === 'm3u8' && {type: 'm3u8'}),
           headers: selectedStream?.headers,
           metadata: {
             title: route.params?.primaryTitle,
@@ -490,7 +511,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
         subtitleStyle={{
           paddingBottom:
             textTracks?.[Number(selectedTextTrack?.value) || 0]?.type ===
-              TextTrackType.VTT
+            TextTrackType.VTT
               ? 50
               : 0,
           subtitlesFollowVideo: false,
@@ -498,7 +519,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
         title={{
           primary:
             route.params?.primaryTitle &&
-              route.params?.primaryTitle?.length > 70
+            route.params?.primaryTitle?.length > 70
               ? route.params?.primaryTitle.slice(0, 70) + '...'
               : route.params?.primaryTitle || '',
           secondary: activeEpisode.title,
@@ -571,7 +592,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
           setVideoTracks(uniqueVideoTracks);
         }}
         selectedVideoTrack={selectedVideoTrack}
-        style={{ flex: 1, zIndex: 100 }}
+        style={{flex: 1, zIndex: 100}}
+        controlAnimationTiming={357}
+        controlTimeoutDelay={10000}
+        hideAllControlls={isPlayerLocked}
       />
 
       {/* Full-screen overlay to detect taps when locked */}
@@ -580,75 +604,87 @@ const Player = ({ route }: Props): React.JSX.Element => {
           activeOpacity={1}
           onPress={handleLockedScreenTap}
           className="absolute top-0 left-0 right-0 bottom-0 z-40 bg-transparent"
-          pointerEvents="auto"
         />
       )}
 
       {/* Lock/Unlock button - Modified to hide with controls and auto-hide in locked mode */}
       {loading === false && !Platform.isTV && (
         <MotiView
-          from={{ translateY: 0, opacity: 1 }}
+          from={{translateY: 0, opacity: 1}}
           animate={{
-            translateY: 0,
-            opacity: (isPlayerLocked && showUnlockButton) || (!isPlayerLocked && showControls) ? 1 : 0,
+            translateY:
+              (isPlayerLocked && showUnlockButton) ||
+              (!isPlayerLocked && showControls)
+                ? 0
+                : -150,
+            opacity:
+              (isPlayerLocked && showUnlockButton) ||
+              (!isPlayerLocked && showControls)
+                ? 1
+                : 0,
           }}
           //@ts-ignore
-          transition={{ type: 'timing', duration: 190 }}
+          transition={{
+            type: 'timing',
+            duration: 227,
+          }}
           className="absolute top-5 right-5 flex-row items-center gap-2 z-50">
           <TouchableOpacity
             onPress={togglePlayerLock}
-            className="bg-black/50 p-2 rounded-full">
+            className="opacity-70 p-2 rounded-full">
             <MaterialIcons
               name={isPlayerLocked ? 'lock' : 'lock-open'}
               size={24}
-              color="white"
             />
           </TouchableOpacity>
           {/* Only show cast button when not locked */}
           {!isPlayerLocked && (
             <CastButton
-              style={{ width: 40, height: 40, opacity: 0.5, tintColor: 'white' }}
+              style={{width: 40, height: 40, opacity: 0.5, tintColor: 'white'}}
             />
           )}
         </MotiView>
       )}
 
       {/* 2x speed gesture - only visible when not locked */}
-      {loading === false && !Platform.isTV && enable2xGesture && !isPlayerLocked && (
-        <TouchableOpacity
-          onLongPress={() => {
-            setPlaybackRate(2);
-            setIsTextVisible(true);
-            setToastMessage(' 2x Speed ');
-            setShowToast(true);
-          }}
-          onPressOut={() => {
-            setPlaybackRate(1.0);
-            setIsTextVisible(false);
-            setShowToast(false);
-          }}
-          className="absolute top-[20%] right-[10%] w-[15%] h-[60%] justify-center items-center">
-          {isTextVisible && (
-            <View className="flex flex-row items-center bg-white p-2 rounded-full">
-              <MotiView
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 300,
-                  loop: true,
-                  easing: Easing.inOut(Easing.ease),
-                }}>
-                <MaterialIcons name="fast-forward" size={40} color="black" />
-              </MotiView>
-            </View>
-          )}
-        </TouchableOpacity>
-      )}
+      {loading === false &&
+        !Platform.isTV &&
+        enable2xGesture &&
+        !isPlayerLocked && (
+          <TouchableOpacity
+            onLongPress={() => {
+              setPlaybackRate(2);
+              setIsTextVisible(true);
+              setToastMessage(' 2x Speed ');
+              setShowToast(true);
+            }}
+            onPressOut={() => {
+              setPlaybackRate(1.0);
+              setIsTextVisible(false);
+              setShowToast(false);
+            }}
+            className="absolute top-[20%] right-[10%] w-[15%] h-[60%] justify-center items-center">
+            {isTextVisible && (
+              <View className="flex flex-row items-center bg-white p-2 rounded-full">
+                <MotiView
+                  animate={{opacity: [1, 0, 1]}}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 300,
+                    loop: true,
+                    easing: Easing.inOut(Easing.ease),
+                  }}>
+                  <MaterialIcons name="fast-forward" size={40} color="black" />
+                </MotiView>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
 
       {/* Bottom controls - only visible when not locked */}
       {!isPlayerLocked && (
         <MotiView
-          from={{ translateY: 0 }}
+          from={{translateY: 0}}
           animate={{
             translateY: showControls ? 0 : 150,
             opacity: showControls ? 1 : 0,
@@ -668,7 +704,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
               }}
               className="flex flex-row gap-x-1 items-center">
               <MaterialIcons
-                style={{ opacity: 0.7 }}
+                style={{opacity: 0.7}}
                 name={'multitrack-audio'}
                 size={26}
                 color="white"
@@ -688,7 +724,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
               }}
               className="flex flex-row gap-x-1 items-center">
               <MaterialIcons
-                style={{ opacity: 0.6 }}
+                style={{opacity: 0.6}}
                 name={'subtitles'}
                 size={24}
                 color="white"
@@ -747,9 +783,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 {videoTracks?.length === 1
                   ? formatQuality(videoTracks[0]?.height?.toString() || 'auto')
                   : formatQuality(
-                    videoTracks?.[selectedQualityIndex]?.height?.toString() ||
-                    'auto',
-                  )}
+                      videoTracks?.[selectedQualityIndex]?.height?.toString() ||
+                        'auto',
+                    )}
               </Text>
             </TouchableOpacity>
           </View>
@@ -764,10 +800,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
                 {resizeMode === ResizeMode.NONE
                   ? 'Fit'
                   : resizeMode === ResizeMode.COVER
-                    ? 'Cover'
-                    : resizeMode === ResizeMode.STRETCH
-                      ? 'Stretch'
-                      : 'Contain'}
+                  ? 'Cover'
+                  : resizeMode === ResizeMode.STRETCH
+                  ? 'Stretch'
+                  : 'Contain'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -776,8 +812,8 @@ const Player = ({ route }: Props): React.JSX.Element => {
           {route.params?.episodeList?.indexOf(activeEpisode) <
             route.params?.episodeList?.length - 1 &&
             videoPositionRef.current.position /
-            videoPositionRef.current.duration >
-            0.8 && (
+              videoPositionRef.current.duration >
+              0.8 && (
               <View className="opacity-60">
                 <TouchableOpacity
                   className="flex-row items-center"
@@ -805,10 +841,10 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
       {/* message toast - visible regardless of lock state */}
       <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: showToast ? 1 : 0 }}
+        from={{opacity: 0}}
+        animate={{opacity: showToast ? 1 : 0}}
         //@ts-ignore
-        transition={{ type: 'timing', duration: 150 }}
+        transition={{type: 'timing', duration: 150}}
         pointerEvents="none"
         className="absolute w-full top-12 justify-center items-center px-2">
         <Text className="text-white bg-black/50 p-2 rounded-full text-base">
@@ -819,13 +855,13 @@ const Player = ({ route }: Props): React.JSX.Element => {
       {/* settings - only visible when not locked */}
       {loading === false && !isPlayerLocked && showSettings && (
         <MotiView
-          from={{ translateY: 0, opacity: 0 }}
+          from={{translateY: 0, opacity: 0}}
           animate={{
             translateY: showSettings ? 0 : 5000,
             opacity: showSettings ? 1 : 0,
           }}
           //@ts-ignore
-          transition={{ type: 'timing', duration: 250 }}
+          transition={{type: 'timing', duration: 250}}
           className="absolute opacity-0 top-0 left-0 w-full h-full bg-black/20 justify-end items-center"
           onTouchEnd={() => {
             setShowSettings(false);
@@ -984,7 +1020,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                     />
                   </>
                 }
-                renderItem={({ item: track }) => (
+                renderItem={({item: track}) => (
                   <TouchableOpacity
                     className={
                       'flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2'
@@ -1063,11 +1099,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                           {track.server}
                         </Text>
                         {track.link === selectedStream.link && (
-                          <MaterialIcons
-                            name="check"
-                            size={20}
-                            color="white"
-                          />
+                          <MaterialIcons name="check" size={20} color="white" />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -1108,11 +1140,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
                             (track?.codecs || 'unknown')}
                         </Text>
                         {(selectedQualityIndex === i) === track.index && (
-                          <MaterialIcons
-                            name="check"
-                            size={20}
-                            color="white"
-                          />
+                          <MaterialIcons name="check" size={20} color="white" />
                         )}
                       </TouchableOpacity>
                     ))}
@@ -1158,12 +1186,26 @@ const Player = ({ route }: Props): React.JSX.Element => {
 export default Player;
 
 function formatQuality(quality: string) {
-  if (quality === 'auto') { return quality; }
-  if (Number(quality) > 1080) { return '4K'; }
-  if (Number(quality) > 720) { return '1080p'; }
-  if (Number(quality) > 480) { return '720p'; }
-  if (Number(quality) > 360) { return '480p'; }
-  if (Number(quality) > 240) { return '360p'; }
-  if (Number(quality) > 144) { return '240p'; }
+  if (quality === 'auto') {
+    return quality;
+  }
+  if (Number(quality) > 1080) {
+    return '4K';
+  }
+  if (Number(quality) > 720) {
+    return '1080p';
+  }
+  if (Number(quality) > 480) {
+    return '720p';
+  }
+  if (Number(quality) > 360) {
+    return '480p';
+  }
+  if (Number(quality) > 240) {
+    return '360p';
+  }
+  if (Number(quality) > 144) {
+    return '240p';
+  }
   return quality;
 }
