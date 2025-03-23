@@ -7,9 +7,8 @@ import {HomeStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from './Skeleton';
-import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import useWatchHistoryStore from '../lib/zustand/watchHistrory';
+
+// import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
 
 export default function Slider({
@@ -32,7 +31,7 @@ export default function Slider({
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const [isSelected, setSelected] = React.useState('');
-  const {removeItem} = useWatchHistoryStore(state => state);
+  // const {removeItem} = useWatchHistoryStore(state => state);
 
   return (
     <Pressable onPress={() => setSelected('')} className="gap-3 mt-3 px-2">
@@ -78,14 +77,14 @@ export default function Slider({
               <TouchableOpacity
                 onLongPress={e => {
                   e.stopPropagation();
-                  if (filter === 'recent') {
-                    console.log('long press', filter);
-                    ReactNativeHapticFeedback.trigger('effectClick', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                    setSelected(item.link);
-                  }
+                  // if (filter === 'recent') {
+                  //   console.log('long press', filter);
+                  //   ReactNativeHapticFeedback.trigger('effectClick', {
+                  //     enableVibrateFallback: true,
+                  //     ignoreAndroidSystemSettings: false,
+                  //   });
+                  //   setSelected(item.link);
+                  // }
                 }}
                 onPress={e => {
                   e.stopPropagation();
@@ -105,7 +104,7 @@ export default function Slider({
                   }}
                   style={{width: 100, height: 150}}
                 />
-                {isSelected === item.link && (
+                {/* {isSelected === item.link && (
                   <View className="absolute top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-50">
                     <AntDesign
                       name="delete"
@@ -118,7 +117,7 @@ export default function Slider({
                       }}
                     />
                   </View>
-                )}
+                )} */}
               </TouchableOpacity>
               <Text className="text-white text-center truncate w-24 text-xs">
                 {item.title.length > 24
