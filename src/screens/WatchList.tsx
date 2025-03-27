@@ -65,7 +65,8 @@ const Library = () => {
                 className="mb-4">
                 <View className="relative overflow-hidden">
                   <Image
-                    className="rounded-xl"
+                    className="rounded-xl max-w-[100px] max-h-[150px]"
+                    resizeMode="cover"
                     source={{uri: item.poster}}
                     style={{
                       width: tileWidth,
