@@ -3,6 +3,7 @@
   "version": "2.6.6",
   "private": true,
   "scripts": {
+    "postinstall": "simple-git-hooks",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
@@ -72,8 +73,10 @@
     "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",
-    "prettier": "2.8.8",
+    "prettier": "^3.0.0",
+    "pretty-quick": "^4.1.1",
     "react-test-renderer": "18.2.0",
+    "simple-git-hooks": "^2.12.1",
     "tailwindcss": "^3.3.2",
     "typescript": "~5.3.3"
   },
