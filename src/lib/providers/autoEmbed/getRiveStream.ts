@@ -2,6 +2,7 @@ import axios from 'axios';
 import {getBaseUrl} from '../getBaseUrl';
 import {Stream} from '../types';
 import {TextTracks, TextTrackType} from 'react-native-video';
+import {headers} from '../headers';
 
 export async function getRiveStream(
   tmdId: string,
@@ -33,12 +34,17 @@ export async function getRiveStream(
     type === 'series'
       ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&secretKey=${secret}&service=`
       : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&secretKey=${secret}&service=`;
-  const url = cors + encodeURIComponent(baseUrl + route);
+  const url = cors
+    ? cors + encodeURIComponent(baseUrl + route)
+    : baseUrl + route;
   await Promise.all(
     servers.map(async server => {
       console.log('Rive: ' + url + server);
       try {
-        const res = await axios.get(url + server, {timeout: 4000});
+        const res = await axios.get(url + server, {
+          timeout: 4000,
+          headers: headers,
+        });
         console.log('Rive Stream: ' + url + server);
         const subtitles: TextTracks = [];
         if (res.data?.data?.captions) {
