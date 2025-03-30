@@ -2,6 +2,7 @@ import axios from 'axios';
 import {getBaseUrl} from '../getBaseUrl';
 import {Stream} from '../types';
 import {TextTracks, TextTrackType} from 'react-native-video';
+import {headers} from '../headers';
 
 export async function getRiveStream(
   tmdId: string,
@@ -23,6 +24,7 @@ export async function getRiveStream(
     'ghost',
     'putafilme',
     'asiacloud',
+    'shadow',
     'kage',
   ];
   const baseUrl = await getBaseUrl('rive');
@@ -32,12 +34,17 @@ export async function getRiveStream(
     type === 'series'
       ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&secretKey=${secret}&service=`
       : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&secretKey=${secret}&service=`;
-  const url = cors + encodeURIComponent(baseUrl + route);
+  const url = cors
+    ? cors + encodeURIComponent(baseUrl + route)
+    : baseUrl + route;
   await Promise.all(
     servers.map(async server => {
       console.log('Rive: ' + url + server);
       try {
-        const res = await axios.get(url + server, {timeout: 4000});
+        const res = await axios.get(url + server, {
+          timeout: 4000,
+          headers: headers,
+        });
         console.log('Rive Stream: ' + url + server);
         const subtitles: TextTracks = [];
         if (res.data?.data?.captions) {
@@ -70,72 +77,101 @@ export async function getRiveStream(
 }
 
 function generateSecretKey(id: number | string) {
-  const keyArray = [
-    'I',
-    '3LZu',
-    'M2V3',
-    '4EXX',
-    's4',
-    'yRy',
-    'oqMz',
-    'ysE',
-    'RT',
-    'iSI',
-    'zlc',
-    'H',
-    'YNp',
-    '5vR6',
-    'h9S',
-    'R',
-    'jo',
-    'F',
-    'h2',
-    'W8',
-    'i',
-    'sz09',
-    'Xom',
-    'gpU',
-    'q',
-    '6Qvg',
-    'Cu',
-    '5Zaz',
-    'VK',
-    'od',
-    'FGY4',
-    'eu',
-    'D5Q',
-    'smH',
-    '11eq',
-    'QrXs',
-    '3',
-    'L3',
-    'YhlP',
-    'c',
-    'Z',
-    'YT',
-    'bnsy',
+  // Array of secret key fragments
+  let l = [
+    '9Y2',
+    'xzL',
+    '4zZZwK',
+    'B3Yt3',
+    'Z35YU9jLlf',
+    'FyKw3pA',
     '5',
-    'fcL',
-    'L22G',
-    'r8',
-    'J',
-    '4',
-    'gnK',
+    '1aD8',
+    'Jl',
+    'xGr',
+    '42ER1',
+    'jczYB',
+    '9hZ7dK9b',
+    'Rqor4wJOP',
+    'sL',
+    'frTaH42KRz',
+    '7iud',
+    'sM',
+    'YE7rmwUNfo',
+    'uvCRS5',
+    'g',
+    'Dpymw189',
+    '78Z1U2f',
+    'edPXPbD',
+    'wpTZ3',
+    'DqPZ',
+    '3BR',
+    'vt',
+    'Z4l2j',
+    'nAp1Tv',
+    'Z2',
+    'BPNbeQoy',
+    'ut7KZeQXn',
+    '7QvWEHrUq',
+    'EoVt',
+    'xKGWHoH',
+    'M0VnD',
+    'uKZz',
+    'CT5Sr4Qt',
+    'c',
+    'A6P8',
+    'y2QPgB',
+    'VJ',
+    'c2k',
+    '6pH1ABUJat',
+    '5',
+    'o',
+    'PpjP',
+    'jb2tLf29',
+    'yr1zHg8Lz',
+    '7opBBY',
+    'EQOwB',
+    'YSTIaExVc',
+    'tbrfwW',
+    'mV9kT14Yn',
+    'ctkGj',
+    'iuaMBA',
+    'RFYsuG6j3r',
+    'AYJ3bJv',
+    'wM6OsyrU8',
   ];
 
-  // Handle undefined/null input
-  if (typeof id === 'undefined' || id === null) {
+  // Handle undefined input
+  if (void 0 === id) {
     return 'rive';
   }
 
-  // Convert to number and calculate array index
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : Number(id);
-  const index = numericId % keyArray.length;
+  try {
+    let t, n;
+    // Convert input to string
+    let r = String(id);
+    // Double base64 encode the input
+    let i = btoa(btoa(r));
 
-  // Handle NaN cases (invalid number conversion)
-  if (isNaN(index)) {
-    return 'rive';
+    // Different handling for non-numeric vs numeric inputs
+    if (isNaN(Number(id))) {
+      // For non-numeric inputs, sum the character codes
+      let e = r.split('').reduce((e, t) => e + t.charCodeAt(0), 0);
+      // Select array element or fallback to base64 encoded input
+      t = l[e % l.length] || btoa(r);
+      // Calculate insertion position
+      n = Math.floor((e % i.length) / 2);
+    } else {
+      // For numeric inputs, use the number directly
+      t = l[Number(id) % l.length] || btoa(r);
+      // Calculate insertion position
+      n = Math.floor((Number(id) % i.length) / 2);
+    }
+
+    // Construct the final key by inserting the selected value into the base64 string
+    return i.slice(0, n) + t + i.slice(n);
+  } catch (e) {
+    // Return fallback value if any errors occur
+    return 'topSecret';
   }
-
-  return keyArray[index];
 }
