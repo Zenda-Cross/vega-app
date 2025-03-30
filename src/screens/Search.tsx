@@ -204,11 +204,10 @@ const Search = () => {
                     style={{marginRight: 12}}
                   />
                   <View>
-                    <Text className="text-white text-base">
-                      {item.Title}
-                    </Text>
+                    <Text className="text-white text-base">{item.Title}</Text>
                     <Text className="text-white/50 text-xs">
-                      {item.Type === 'series' ? 'TV Show' : 'Movie'} • {item.Year}
+                      {item.Type === 'series' ? 'TV Show' : 'Movie'} •{' '}
+                      {item.Year}
                     </Text>
                   </View>
                 </View>
@@ -229,9 +228,6 @@ const Search = () => {
                 <Ionicons name="search" size={32} color={primary} />
               </View>
             </Animated.View>
-            <View className="bg-white/5 rounded-full p-6 mb-4">
-              <Ionicons name="search" size={32} color={primary} />
-            </View>
             <Text className="text-white/70 text-base text-center">
               Search for your favorite anime
             </Text>
