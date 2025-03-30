@@ -74,7 +74,7 @@ const Library = () => {
                     }}
                   />
                   <Text
-                    className="text-white text-xs truncate text-center mt-1"
+                    className="text-white text-xs truncate text-center mt-1 max-w-[100px]"
                     style={{width: tileWidth - 10}}
                     numberOfLines={1}>
                     {item.title}
