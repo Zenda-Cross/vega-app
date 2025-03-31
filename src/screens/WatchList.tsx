@@ -1,12 +1,4 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  StatusBar,
-  Platform,
-  Image,
-  Dimensions,
-} from 'react-native';
+import {View, Text, ScrollView, StatusBar, Platform, Image} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
@@ -22,21 +14,9 @@ const Library = () => {
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const {watchList} = useWatchListStore(state => state);
 
-  const screenWidth = Dimensions.get('window').width;
-  const padding = 32; // 16 padding on each side (px-4 = 16)
-  const spacing = 12; // gap-3 = 12px
-  const numberOfTiles = 3;
-  const tileWidth =
-    (screenWidth - padding - spacing * (numberOfTiles - 1)) / numberOfTiles;
-  const tileHeight = tileWidth * 1.5; // maintain 1.5:1 aspect ratio
-
   return (
-    <View className="flex-1 bg-black">
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="light-content"
-      />
+    <View className="flex-1 bg-black justify-center items-center">
+      <StatusBar translucent backgroundColor="transparent" />
 
       <View
         className="w-full bg-black"
@@ -45,13 +25,24 @@ const Library = () => {
         }}
       />
 
-      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
-        <Text className="text-white text-2xl font-bold mb-6 mt-4">
+      <ScrollView
+        className="px-3"
+        contentContainerStyle={{}}
+        showsVerticalScrollIndicator={false}>
+        <Text
+          className="text-2xl text-center font-bold mb-6 mt-4"
+          style={{color: primary}}>
           Watchlist
         </Text>
 
         {watchList.length > 0 ? (
-          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: spacing}}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              paddingBottom: 50,
+            }}>
             {watchList.map((item, index: number) => (
               <TouchableOpacity
                 key={item.link + index}
@@ -67,15 +58,15 @@ const Library = () => {
                   <Image
                     className="rounded-xl max-w-[100px] max-h-[150px]"
                     resizeMode="cover"
-                    source={{uri: item.poster}}
                     style={{
-                      width: tileWidth,
-                      height: tileHeight,
+                      width: 100,
+                      height: 150,
+                      borderRadius: 10,
                     }}
+                    source={{uri: item.poster}}
                   />
                   <Text
                     className="text-white text-xs truncate text-center mt-1 max-w-[100px]"
-                    style={{width: tileWidth - 10}}
                     numberOfLines={1}>
                     {item.title}
                   </Text>
@@ -92,7 +83,7 @@ const Library = () => {
                 color={primary}
               />
               <Text className="text-white/70 text-base mt-4 text-center">
-                Your watchlist is empty
+                Your WatchList is empty
               </Text>
             </View>
           </View>

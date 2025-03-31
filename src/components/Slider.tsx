@@ -55,7 +55,7 @@ export default function Slider({
       </View>
       {isLoading ? (
         <View className="flex flex-row gap-2 overflow-hidden">
-          {Array.from({length: 5}).map((_, index) => (
+          {Array.from({length: 20}).map((_, index) => (
             <View
               className="mx-3 gap-0 flex mb-3 justify-center items-center"
               key={index}>
