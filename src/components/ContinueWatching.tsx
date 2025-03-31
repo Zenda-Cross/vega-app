@@ -5,7 +5,6 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
-  Dimensions,
   Pressable,
 } from 'react-native';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
@@ -26,11 +25,6 @@ const ContinueWatching = () => {
   const [progressData, setProgressData] = useState<Record<string, number>>({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState<boolean>(false);
-
-  // Get screen width for calculating item size
-  const screenWidth = Dimensions.get('window').width;
-  // Use smaller width to match other UI elements (approximately 28% of screen width)
-  const itemWidth = screenWidth * 0.28;
 
   // Filter out duplicates and get the most recent items
   const recentItems = React.useMemo(() => {
@@ -211,16 +205,10 @@ const ContinueWatching = () => {
           const progress = progressData[item.link] || 0;
           const isSelected = selectedItems.has(item.link);
 
-          // Skip items that are completed
-          if (progress >= 98) {
-            return null;
-          }
-
           return (
             <TouchableOpacity
               activeOpacity={0.8}
-              className=""
-              style={{width: itemWidth}}
+              className="max-w-[100px] mx-2"
               onLongPress={e => {
                 e.stopPropagation();
                 handleLongPress(item.link);

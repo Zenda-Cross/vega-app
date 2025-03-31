@@ -52,7 +52,7 @@ async function posts(
       ?.children('article')
       ?.each((index, element) => {
         const post = {
-          title:
+          title: (
             $(element)
               ?.find('a')
               ?.attr('title')
@@ -60,7 +60,8 @@ async function posts(
               ?.match(/^(.*?)\s*\((\d{4})\)|^(.*?)\s*\((Season \d+)\)/)?.[0] ||
             $(element)?.find('a')?.attr('title')?.replace('Download', '') ||
             $(element)?.find('.post-title').text()?.replace('Download', '') ||
-            '',
+            ''
+          ).trim(),
 
           link: $(element)?.find('a')?.attr('href') || '',
           image:
