@@ -60,7 +60,7 @@ const Library = () => {
           resizeMode="cover"
           style={{
             width: itemWidth,
-            height: 150,
+            height: 155,
             borderRadius: 10,
           }}
           source={{uri: item.poster}}
