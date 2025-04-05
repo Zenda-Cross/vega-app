@@ -1,4 +1,12 @@
-import {View, Text, ScrollView, StatusBar, Platform, Image} from 'react-native';
+import {
+  View,
+  Text,
+  StatusBar,
+  Platform,
+  Image,
+  Dimensions,
+  FlatList,
+} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
@@ -14,6 +22,59 @@ const Library = () => {
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const {watchList} = useWatchListStore(state => state);
 
+  // Calculate how many items can fit per row
+  const screenWidth = Dimensions.get('window').width;
+  const containerPadding = 12; // from the px-3 class (3*4=12)
+  const itemSpacing = 10;
+
+  // Available width for the grid
+  const availableWidth = screenWidth - containerPadding * 2;
+
+  // Determine number of columns and adjusted item width
+  const numColumns = Math.floor(
+    (availableWidth + itemSpacing) / (100 + itemSpacing),
+  );
+
+  // Calculate the actual item width to fill the space exactly
+  const itemWidth =
+    (availableWidth - itemSpacing * (numColumns - 1)) / numColumns;
+
+  // Render each grid item
+  const renderItem = ({item, index}: {item: any; index: number}) => (
+    <TouchableOpacity
+      key={item.link + index}
+      onPress={() =>
+        navigation.navigate('Info', {
+          link: item.link,
+          provider: item.provider,
+          poster: item.poster,
+        })
+      }
+      style={{
+        width: itemWidth,
+        marginBottom: 16,
+      }}>
+      <View className="relative overflow-hidden">
+        <Image
+          className="rounded-xl"
+          resizeMode="cover"
+          style={{
+            width: itemWidth,
+            height: 150,
+            borderRadius: 10,
+          }}
+          source={{uri: item.poster}}
+        />
+        <Text
+          className="text-white text-xs truncate text-center mt-1"
+          style={{maxWidth: itemWidth}}
+          numberOfLines={1}>
+          {item.title}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View className="flex-1 bg-black justify-center items-center">
       <StatusBar translucent backgroundColor="transparent" />
@@ -25,10 +86,7 @@ const Library = () => {
         }}
       />
 
-      <ScrollView
-        className="px-3"
-        contentContainerStyle={{}}
-        showsVerticalScrollIndicator={false}>
+      <View className="flex-1 w-full px-3">
         <Text
           className="text-2xl text-center font-bold mb-6 mt-4"
           style={{color: primary}}>
@@ -36,44 +94,20 @@ const Library = () => {
         </Text>
 
         {watchList.length > 0 ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
+          <FlatList
+            data={watchList}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => item.link + index}
+            numColumns={numColumns}
+            columnWrapperStyle={{
+              gap: itemSpacing,
+              justifyContent: 'flex-start',
+            }}
+            contentContainerStyle={{
               paddingBottom: 50,
-            }}>
-            {watchList.map((item, index: number) => (
-              <TouchableOpacity
-                key={item.link + index}
-                onPress={() =>
-                  navigation.navigate('Info', {
-                    link: item.link,
-                    provider: item.provider,
-                    poster: item.poster,
-                  })
-                }
-                className="mb-4">
-                <View className="relative overflow-hidden">
-                  <Image
-                    className="rounded-xl max-w-[100px] max-h-[150px]"
-                    resizeMode="cover"
-                    style={{
-                      width: 100,
-                      height: 150,
-                      borderRadius: 10,
-                    }}
-                    source={{uri: item.poster}}
-                  />
-                  <Text
-                    className="text-white text-xs truncate text-center mt-1 max-w-[100px]"
-                    numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+            }}
+            showsVerticalScrollIndicator={false}
+          />
         ) : (
           <View className="flex-1">
             <View className="items-center justify-center mt-20 mb-12">
@@ -88,7 +122,7 @@ const Library = () => {
             </View>
           </View>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 };
