@@ -135,6 +135,12 @@ export const providersList: ProvidersList[] = [
   //   flag: FLAGS.ENGLISH,
   // },
   {
+    name: 'ShowBox',
+    value: 'showBox',
+    type: 'english',
+    flag: FLAGS.ENGLISH,
+  },
+  {
     name: 'EmbedSU',
     value: 'embedsu',
     type: 'english',
