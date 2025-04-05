@@ -509,11 +509,9 @@ const Player = ({route}: Props): React.JSX.Element => {
           resizeMode: 'center',
         }}
         subtitleStyle={{
-          paddingBottom:
-            textTracks?.[Number(selectedTextTrack?.value) || 0]?.type ===
-            TextTrackType.VTT
-              ? 50
-              : 0,
+          fontSize: MMKV.getInt('subtitleFontSize') || 20,
+          opacity: parseFloat(MMKV.getString('subtitleOpacity')) || 1,
+          paddingBottom: MMKV.getInt('subtitleBottomPadding') || 10,
           subtitlesFollowVideo: false,
         }}
         title={{
