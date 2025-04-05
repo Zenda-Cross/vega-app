@@ -34,6 +34,7 @@ import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory'; // Add this import
+import SubtitlePreference from './screens/settings/SubtitleSettings';
 
 enableScreens(true);
 enableFreeze(true);
@@ -115,6 +116,7 @@ export type SettingsStackParamList = {
   Preferences: undefined;
   Downloads: undefined;
   WatchHistoryStack: undefined;
+  SubTitlesPreferences: undefined;
 };
 
 export type TabStackParamList = {
@@ -234,6 +236,10 @@ const App = () => {
         <SettingsStack.Screen
           name="WatchHistoryStack"
           component={WatchHistoryStackScreen}
+        />
+        <SettingsStack.Screen
+          name="SubTitlesPreferences"
+          component={SubtitlePreference}
         />
       </SettingsStack.Navigator>
     );

@@ -13,7 +13,6 @@ import {MMKV, MmmkvCache} from '../../lib/Mmkv';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {providersList, socialLinks} from '../../lib/constants';
-import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {
   NativeStackScreenProps,
   NativeStackNavigationProp,
@@ -97,9 +96,19 @@ const Settings = ({navigation}: Props) => {
       from={{opacity: 0, translateY: 20}}
       animate={{opacity: 1, translateY: 0}}
       transition={{
-        type: 'timing',
-        duration: 500,
-        delay,
+        translateY: {
+          delay,
+          type: 'timing',
+          duration: 500,
+        },
+        opacity: {
+          delay,
+          type: 'timing',
+          duration: 500,
+        },
+      }}
+      style={{
+        opacity: 1,
       }}>
       {children}
     </MotiView>
@@ -120,7 +129,16 @@ const Settings = ({navigation}: Props) => {
         <MotiView
           from={{opacity: 0, scale: 0.9}}
           animate={{opacity: 1, scale: 1}}
-          transition={{type: 'timing', duration: 400}}>
+          transition={{
+            opacity: {
+              type: 'timing',
+              duration: 400,
+            },
+            scale: {
+              type: 'timing',
+              duration: 400,
+            },
+          }}>
           <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
         </MotiView>
 
@@ -168,13 +186,7 @@ const Settings = ({navigation}: Props) => {
               {/* Subtitle Style */}
               <TouchableNativeFeedback
                 onPress={async () => {
-                  if (MMKV.getBool('hapticFeedback') !== false) {
-                    ReactNativeHapticFeedback.trigger('virtualKey', {
-                      enableVibrateFallback: true,
-                      ignoreAndroidSystemSettings: false,
-                    });
-                  }
-                  await startActivityAsync(ActivityAction.CAPTIONING_SETTINGS);
+                  navigation.navigate('SubTitlesPreferences');
                 }}
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
