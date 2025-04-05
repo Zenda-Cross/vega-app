@@ -29,22 +29,24 @@ export const clGetInfo = async function (link: string): Promise<Info> {
     // Links
     const links: Link[] = [];
 
-    $('.mb-center.maxbutton-5-center').map((i, element) => {
-      const title = $(element)
-        .prev()
-        .text()
-        .replace('⬇Download', '')
-        .replace('⬇ Download', '')
-        .trim();
-      const link = $(element).find('a').attr('href');
-      if (title && link) {
-        links.push({
-          title,
-          episodesLink: link,
-          quality: title?.match(/\d+P\b/)?.[0].replace('P', 'p') || '',
-        });
-      }
-    });
+    $('.mb-center.maxbutton-5-center,.ep-button-container').map(
+      (i, element) => {
+        const title = $(element)
+          .prev()
+          .text()
+          .replace('⬇Download', '')
+          .replace('⬇ Download', '')
+          .trim();
+        const link = $(element).find('a').attr('href');
+        if (title && link) {
+          links.push({
+            title,
+            episodesLink: link,
+            quality: title?.match(/\d+P\b/)?.[0].replace('P', 'p') || '',
+          });
+        }
+      },
+    );
 
     return {
       title,
