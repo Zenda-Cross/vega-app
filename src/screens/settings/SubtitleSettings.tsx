@@ -73,7 +73,7 @@ const SubtitlePreference = () => {
 
         <View className="bg-[#1A1A1A] rounded-xl overflow-hidden">
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-            <Text className="text-white text-base">Subtitle Font Size</Text>
+            <Text className="text-white text-base">Font Size</Text>
             <View className="flex-row items-center gap-4">
               <TouchableOpacity onPress={() => handleSubtitleSize('decrease')}>
                 <Entypo name="minus" size={23} color={primary} />
@@ -88,7 +88,7 @@ const SubtitlePreference = () => {
           </View>
           {/* opacity */}
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-            <Text className="text-white text-base">Subtitle Opacity</Text>
+            <Text className="text-white text-base">Opacity</Text>
             <View className="flex-row items-center gap-4">
               <TouchableOpacity
                 onPress={() => handleSubtitleOpacity('decrease')}>
@@ -105,7 +105,7 @@ const SubtitlePreference = () => {
           </View>
           {/* bottom padding */}
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
-            <Text className="text-white text-base">Subtitle Elevation</Text>
+            <Text className="text-white text-base">Bottom Elevation</Text>
             <View className="flex-row items-center gap-4">
               <TouchableOpacity
                 onPress={() => handleSubtitleBottomPadding('decrease')}>
