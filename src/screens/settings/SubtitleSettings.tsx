@@ -49,10 +49,10 @@ const SubtitlePreference = () => {
   };
 
   const handleSubtitleBottomPadding = (action: 'increase' | 'decrease') => {
-    if (bottomElevation < 0 || bottomElevation > 50) return;
+    if (bottomElevation < 0 || bottomElevation > 99) return;
     if (action === 'increase') {
       MMKV.setInt('subtitleBottomPadding', bottomElevation + 1);
-      setBottomElevation(prev => Math.min(prev + 1, 30));
+      setBottomElevation(prev => Math.min(prev + 1, 99));
     }
     if (action === 'decrease') {
       MMKV.setInt('subtitleBottomPadding', bottomElevation - 1);
