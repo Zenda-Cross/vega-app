@@ -40,17 +40,19 @@ export const sbGetInfo = async function (link: string): Promise<Info> {
     // console.log('sbGetInfo', febLink);
     const febRes = await axios.get(febLink, {headers});
     const febData = febRes.data;
-    const fileList = febData.data.file_list;
+    const fileList = febData?.data?.file_list;
 
     const links: Link[] = [];
-    fileList.map((file: any) => {
-      const fileName = `${file.file_name} (${file.file_size})`;
-      const fileId = file.fid;
-      links.push({
-        title: fileName,
-        episodesLink: file.is_dir ? `${febKey}&${fileId}` : `${febKey}&`,
+    if (fileList) {
+      fileList.map((file: any) => {
+        const fileName = `${file.file_name} (${file.file_size})`;
+        const fileId = file.fid;
+        links.push({
+          title: fileName,
+          episodesLink: file.is_dir ? `${febKey}&${fileId}` : `${febKey}&`,
+        });
       });
-    });
+    }
 
     return {
       title,
