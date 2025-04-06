@@ -97,10 +97,8 @@ const ContinueWatching = () => {
         screen: 'Info',
         params: {
           link: linkData,
-          title: item.title,
-          image: item.image,
-          isMovie: item.isMovie,
-          isContinueWatching: true,
+          provider: item.provider,
+          poster: item.image,
         },
       } as any);
     } catch (error) {

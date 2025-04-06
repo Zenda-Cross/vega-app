@@ -457,6 +457,32 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, []);
 
+  // set last selected audio and subtitle track
+  useEffect(() => {
+    const lastAudioTrack = MMKV.getString('lastAudioTrack') || 'auto';
+    const lastTextTrack = MMKV.getString('lastTextTrack') || 'auto';
+    const audioTrackIndex = audioTracks.findIndex(
+      track => track.language === lastAudioTrack,
+    );
+    const textTrackIndex = textTracks.findIndex(
+      track => track.language === lastTextTrack,
+    );
+    if (audioTrackIndex !== -1) {
+      setSelectedAudioTrack({
+        type: SelectedTrackType.INDEX,
+        value: audioTrackIndex,
+      });
+      setSelectedAudioTrackIndex(audioTrackIndex);
+    }
+    if (textTrackIndex !== -1) {
+      setSelectedTextTrack({
+        type: SelectedTrackType.INDEX,
+        value: textTrackIndex,
+      });
+      setSelectedTextTrackIndex(textTrackIndex);
+    }
+  }, [textTracks, audioTracks]);
+
   return (
     <SafeAreaView
       edges={{
@@ -509,11 +535,9 @@ const Player = ({route}: Props): React.JSX.Element => {
           resizeMode: 'center',
         }}
         subtitleStyle={{
-          paddingBottom:
-            textTracks?.[Number(selectedTextTrack?.value) || 0]?.type ===
-            TextTrackType.VTT
-              ? 50
-              : 0,
+          fontSize: MMKV.getInt('subtitleFontSize') || 20,
+          opacity: parseFloat(MMKV.getString('subtitleOpacity')) || 1,
+          paddingBottom: MMKV.getInt('subtitleBottomPadding') || 10,
           subtitlesFollowVideo: false,
         }}
         title={{
@@ -915,6 +939,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                         type: SelectedTrackType.LANGUAGE,
                         value: track.language,
                       });
+                      MMKV.setString('lastAudioTrack', track.language || '');
                       setSelectedAudioTrackIndex(i);
                       setShowSettings(false);
                     }}>
@@ -1031,6 +1056,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                         value: track.index,
                       });
                       setSelectedTextTrackIndex(track.index);
+                      MMKV.setString('lastTextTrack', track.language || '');
                       setShowSettings(false);
                     }}>
                     <Text

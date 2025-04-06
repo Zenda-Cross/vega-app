@@ -119,7 +119,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         } catch (e) {
           console.log('meta error', e);
         }
-        if (data.linkList?.length === 0) {
+        if (data.linkList?.length === 0 && data?.title && data?.imdbId) {
           setInfoLoading(false);
           return;
         }

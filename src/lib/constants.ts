@@ -135,6 +135,12 @@ export const providersList: ProvidersList[] = [
   //   flag: FLAGS.ENGLISH,
   // },
   {
+    name: 'ShowBox',
+    value: 'showBox',
+    type: 'english',
+    flag: FLAGS.ENGLISH,
+  },
+  {
     name: 'EmbedSU',
     value: 'embedsu',
     type: 'english',
@@ -182,12 +188,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  {
-    name: 'KissKh',
-    value: 'kissKh',
-    type: 'english',
-    flag: FLAGS.ENGLISH,
-  },
+  // {
+  //   name: 'KissKh',
+  //   value: 'kissKh',
+  //   type: 'english',
+  //   flag: FLAGS.ENGLISH,
+  // },
   // {
   //   name: 'DramaCool',
   //   value: 'dramaCool',
@@ -200,12 +206,12 @@ export const providersList: ProvidersList[] = [
   //   type: 'english',
   //   flag: FLAGS.ENGLISH,
   // },
-  {
-    name: 'Dooflix',
-    value: 'dooflix',
-    type: 'india',
-    flag: FLAGS.INDIA,
-  },
+  // {
+  //   name: 'Dooflix',
+  //   value: 'dooflix',
+  //   type: 'india',
+  //   flag: FLAGS.INDIA,
+  // },
   {
     name: 'RogMovies',
     value: 'lux',
