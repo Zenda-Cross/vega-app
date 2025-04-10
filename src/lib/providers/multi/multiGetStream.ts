@@ -106,10 +106,11 @@ export const multiGetStream = async (
       console.log('No match found');
     }
 
-    const streamUrl = p?.match(/file:\s*"([^"]+\.m3u8[^"]*)"/)?.[1];
+    const streamUrl = p?.match(/https?:\/\/[^"]+?\.m3u8[^"]*/)?.[0];
     const subtitles: TextTracks = [];
     const subtitleMatch = p?.match(/https:\/\/[^\s"]+\.vtt/g);
     // console.log('subtitleMatch', subtitleMatch);
+    // console.log('streamUrl', streamUrl);
     if (subtitleMatch?.length) {
       subtitleMatch.forEach((sub: any) => {
         const lang = sub.match(/_([a-zA-Z]{3})\.vtt$/)[1];
