@@ -15,7 +15,7 @@ Android app for streaming media.
 ___
 
 ## Download  ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Zenda-Cross/vega-app/total?link=https%3A%2F%2Fgithub.com%2FZenda-Cross%2Fvega-app%2Freleases)
-Note: Download Universal version if you are confused about armeabi-v7a or arm64-v8a.
+> <sub>Download Universal version if you are confused about armeabi-v7a or arm64-v8a.</sub>
 
 [![Download Apk](https://custom-icon-badges.demolab.com/badge/-Download_Apk-blue?style=for-the-badge&logo=download&logoColor=white "Download Apk")](https://github.com/Zenda-Cross/vega-app/releases)
 
@@ -63,8 +63,10 @@ Dev
 Build apk/aab
 https://reactnative.dev/docs/signed-apk-android
 
-## Note
-Vega App does not store any media files on our servers and is not directly linked to the media. Third-party services host all media, and Vega App merely provides a search and web scraping tool that indexes publicly available data. We are not responsible for the content or availability of the media, as we do not host or control any of it.
+---
+> [!IMPORTANT]
+> Vega App does not store any media files on our servers and is not directly linked to the media. Third-party services host all media, and Vega App merely provides a search and web scraping tool that indexes publicly available data. We are not responsible for the content or availability of the media, as we do not host or control any of it.
+
 
 ## Stars
  <picture>
