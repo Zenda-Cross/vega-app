@@ -25,7 +25,6 @@ import {
   ResizeMode,
   VideoTrack,
   TextTracks,
-  TextTrackType,
   SelectedTrack,
   SelectedTrackType,
 } from 'react-native-video';
@@ -102,6 +101,8 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const [playbackRate, setPlaybackRate] = useState(1.0);
 
+  const hasSetInitialTracksRef = useRef(false);
+
   // constants
   const playbacks = [0.25, 0.5, 1.0, 1.25, 1.35, 1.5, 1.75, 2];
   const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
@@ -155,6 +156,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   // get stream
   useEffect(() => {
     setSelectedStream({server: '', link: '', type: ''});
+    setExternalSubs([]);
     const controller = new AbortController();
     const fetchStream = async () => {
       console.log('activeEpisode', activeEpisode);
@@ -212,7 +214,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
       }
       setStream(filteredData);
-      filteredData?.forEach(track => {
+      data?.forEach(track => {
         if (track?.subtitles?.length && track.subtitles.length > 0) {
           setExternalSubs((prev: any) => [...prev, ...(track.subtitles || [])]);
         }
@@ -459,6 +461,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // set last selected audio and subtitle track
   useEffect(() => {
+    if (hasSetInitialTracksRef.current) return;
     const lastAudioTrack = MMKV.getString('lastAudioTrack') || 'auto';
     const lastTextTrack = MMKV.getString('lastTextTrack') || 'auto';
     const audioTrackIndex = audioTracks.findIndex(
@@ -480,6 +483,9 @@ const Player = ({route}: Props): React.JSX.Element => {
         value: textTrackIndex,
       });
       setSelectedTextTrackIndex(textTrackIndex);
+    }
+    if (audioTracks.length > 0 && textTracks.length > 0) {
+      hasSetInitialTracksRef.current = true;
     }
   }, [textTracks, audioTracks]);
 
@@ -851,6 +857,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                       setActiveEpisode(
                         route.params?.episodeList[nextEpisodeIndex + 1],
                       );
+                      hasSetInitialTracksRef.current = false;
                     } else {
                       ToastAndroid.show('No more episodes', ToastAndroid.SHORT);
                     }
@@ -992,10 +999,16 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: SelectedTrackType.DISABLED,
                         });
                         setSelectedTextTrackIndex(1000);
+                        MMKV.setString('lastTextTrack', '');
                         setShowSettings(false);
                       }}>
-                      <Text className="text-base font-semibold text-white">
-                        Disable
+                      <Text
+                        className="text-base font-semibold "
+                        style={{
+                          color:
+                            selectedTextTrackIndex === 1000 ? primary : 'white',
+                        }}>
+                        Disabled
                       </Text>
                     </TouchableOpacity>
                   </View>
