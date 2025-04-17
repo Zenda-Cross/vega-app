@@ -1,0 +1,383 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Runs at 12:00 AM India time (18:30 UTC of previous day)
+    - cron: '30 18 * * *'
+  # Optional: Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'main'
+
+jobs:
+  check_for_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Check for new commits
+        id: check_changes
+        run: |
+          git fetch --tags
+          
+          # Get the latest nightly tag if it exists
+          LATEST_NIGHTLY_TAG=$(git tag -l "nightly-*" | sort -r | head -n 1 || echo "")
+          
+          if [ -z "$LATEST_NIGHTLY_TAG" ]; then
+            # No previous nightly tag, so we should build
+            echo "No previous nightly build found. Proceeding with build."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            # Check if there are new commits since the last nightly tag
+            COMMIT_COUNT=$(git rev-list --count $LATEST_NIGHTLY_TAG..HEAD)
+            
+            if [ "$COMMIT_COUNT" -gt 0 ]; then
+              echo "Found $COMMIT_COUNT new commits since last nightly build. Proceeding with build."
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            else
+              echo "No new commits since last nightly build. Skipping build."
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-android:
+    needs: check_for_changes
+    if: ${{ needs.check_for_changes.outputs.has_changes == 'true' }}
+    runs-on: ubuntu-latest
+    # Use the nightly environment with the required secrets
+    environment: nightly
+    permissions:
+      # Need these permissions for creating GitHub releases
+      contents: write
+      
+    steps:
+      - name: Checkout specific branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || 'main' }}
+          fetch-depth: 0
+      
+      # Get the latest commit info for Discord notification
+      - name: Get commit info
+        id: commit_info
+        run: |
+          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+          echo "COMMIT_AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
+          echo "COMMIT_DATE=$(git log -1 --pretty=%cd --date=format:'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      # Decode the keystore from your secret
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
+          # Verify the keystore was created properly
+          ls -la android/app/release.keystore
+      
+      # Make gradlew executable
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+      
+      # Define the build timestamp
+      - name: Set build timestamp
+        run: |
+          echo "BUILD_DATE=$(date -u '+%Y-%m-%d')" >> $GITHUB_ENV
+          echo "BUILD_TIME=$(date -u '+%H-%M-%S')" >> $GITHUB_ENV
+          echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Builder: himanshu8443"
+      
+      # Build the APKs with DIRECT SIGNING PARAMETERS as requested
+      - name: Build Android App with Direct Signing Parameters
+        run: |
+          cd android
+          KEYSTORE_PATH=$(realpath app/release.keystore)
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}" \
+            --stacktrace
+      
+      # Find and identify the APKs
+      - name: Identify APKs
+        id: apk_files
+        run: |
+          # Get app version from build.gradle
+          VERSION=$(grep -m 1 "versionName " android/app/build.gradle | sed 's/.*versionName "\(.*\)".*/\1/')
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          
+          # Create APKs directory
+          mkdir -p apks
+          
+          # Find all APKs and log them
+          echo "Finding APKs:"
+          find android/app/build/outputs/apk/release -name "*.apk" -not -name "*unsigned*"
+          
+          # Define variables for each APK type
+          UNIVERSAL_APK=$(find android/app/build/outputs/apk/release -name "*universal*.apk" -not -name "*unsigned*" | head -1)
+          ARMV7_APK=$(find android/app/build/outputs/apk/release -name "*armeabi-v7a*.apk" -not -name "*unsigned*" | head -1)
+          ARMV8_APK=$(find android/app/build/outputs/apk/release -name "*arm64-v8a*.apk" -not -name "*unsigned*" | head -1)
+          
+          # Create a comma-separated list of APK paths for the release step
+          APK_PATHS=""
+          
+          # Set the file paths with clean names
+          if [ -f "$UNIVERSAL_APK" ]; then
+            UNIVERSAL_APK_NAME="Vega-nightly-v${VERSION}-universal-${BUILD_DATE}.apk"
+            cp "$UNIVERSAL_APK" "apks/${UNIVERSAL_APK_NAME}"
+            echo "UNIVERSAL_APK_NAME=${UNIVERSAL_APK_NAME}" >> $GITHUB_ENV
+            echo "UNIVERSAL_APK_FOUND=true" >> $GITHUB_ENV
+            APK_PATHS="${APK_PATHS}apks/${UNIVERSAL_APK_NAME},"
+          else
+            echo "Universal APK not found"
+            echo "UNIVERSAL_APK_FOUND=false" >> $GITHUB_ENV
+          fi
+          
+          if [ -f "$ARMV7_APK" ]; then
+            ARMV7_APK_NAME="Vega-nightly-v${VERSION}-armv7-${BUILD_DATE}.apk"
+            cp "$ARMV7_APK" "apks/${ARMV7_APK_NAME}"
+            echo "ARMV7_APK_NAME=${ARMV7_APK_NAME}" >> $GITHUB_ENV
+            echo "ARMV7_APK_FOUND=true" >> $GITHUB_ENV
+            APK_PATHS="${APK_PATHS}apks/${ARMV7_APK_NAME},"
+          else
+            echo "ARMv7 APK not found"
+            echo "ARMV7_APK_FOUND=false" >> $GITHUB_ENV
+          fi
+          
+          if [ -f "$ARMV8_APK" ]; then
+            ARMV8_APK_NAME="Vega-nightly-v${VERSION}-armv8-${BUILD_DATE}.apk"
+            cp "$ARMV8_APK" "apks/${ARMV8_APK_NAME}"
+            echo "ARMV8_APK_NAME=${ARMV8_APK_NAME}" >> $GITHUB_ENV
+            echo "ARMV8_APK_FOUND=true" >> $GITHUB_ENV
+            APK_PATHS="${APK_PATHS}apks/${ARMV8_APK_NAME},"
+          else
+            echo "ARMv8 APK not found"
+            echo "ARMV8_APK_FOUND=false" >> $GITHUB_ENV
+          fi
+          
+          # Remove trailing comma if any
+          APK_PATHS=$(echo $APK_PATHS | sed 's/,$//')
+          echo "apk_paths=${APK_PATHS}" >> $GITHUB_OUTPUT
+          
+          echo "APKs prepared for GitHub Release:"
+          ls -la apks/
+          
+          # Create a tag name for the release
+          NIGHTLY_DATE=$(date -u '+%Y%m%d')
+          RELEASE_TAG="nightly-${NIGHTLY_DATE}"
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+      
+      # Delete ALL previous nightly releases (not just yesterday's)
+      - name: Delete All Previous Nightly Releases
+        run: |
+          # Fetch all tags
+          git fetch --tags
+          
+          # List all nightly tags and delete them
+          NIGHTLY_TAGS=$(git tag -l "nightly-*" || echo "")
+          
+          if [ -n "$NIGHTLY_TAGS" ]; then
+            echo "Found previous nightly tags: $NIGHTLY_TAGS"
+            
+            for TAG in $NIGHTLY_TAGS; do
+              echo "Deleting tag: $TAG"
+              git tag -d $TAG 2>/dev/null || true
+              git push --delete origin $TAG 2>/dev/null || true
+              
+              # Also delete the release via API
+              RELEASE_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | \
+                grep -o '"id": [0-9]*' | head -1 | sed 's/"id": //')
+              
+              if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+                echo "Deleting release with ID: $RELEASE_ID"
+                curl -s -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
+              fi
+            done
+          else
+            echo "No previous nightly tags found"
+          fi
+      
+      # Create a dedicated GitHub Release just for nightly builds
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "🌙 Nightly Build v${{ env.APP_VERSION }} (${{ env.BUILD_DATE }})"
+          body: |
+            ## 🌙 Vega Nightly Build
+            
+            > ⚠️ **NIGHTLY BUILD WARNING** ⚠️  
+            > This is an automated nightly build and may contain bugs or incomplete features.
+            > Not recommended for production use.
+            
+            **Version:** v${{ env.APP_VERSION }}
+            **Build Date:** ${{ env.BUILD_DATE }}
+            **Commit:** [${{ env.COMMIT_HASH }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) by ${{ env.COMMIT_AUTHOR }}
+            **Commit Message:** ${{ env.COMMIT_MSG }}
+            
+            ### Download APKs
+            Choose the appropriate APK for your device:
+            
+            - **Universal APK:** Works on all devices (largest file size)
+            - **ARMv8 APK:** For most modern phones (last 5+ years)
+            - **ARMv7 APK:** For older devices only
+          files: ${{ steps.apk_files.outputs.apk_paths }}
+          draft: false
+          prerelease: true
+      
+      # Also upload APKs as GitHub artifacts as backup
+      - name: Upload APKs as GitHub artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vega-Nightly-v${{ env.APP_VERSION }}-${{ env.BUILD_DATE }}
+          path: apks/*.apk
+          if-no-files-found: warn
+      
+      # Create and run a dedicated Discord notification script with direct download links
+      - name: Create Discord notification script
+        run: |
+          # Get the tag name to construct proper download URLs directly
+          REPO_OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          
+          # Construct download URLs directly using the release tag and filenames
+          if [ "$UNIVERSAL_APK_FOUND" = "true" ]; then
+            UNIVERSAL_DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${UNIVERSAL_APK_NAME}"
+            echo "UNIVERSAL_DOWNLOAD_URL=$UNIVERSAL_DOWNLOAD_URL" >> $GITHUB_ENV
+          fi
+          
+          if [ "$ARMV7_APK_FOUND" = "true" ]; then
+            ARMV7_DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${ARMV7_APK_NAME}"
+            echo "ARMV7_DOWNLOAD_URL=$ARMV7_DOWNLOAD_URL" >> $GITHUB_ENV
+          fi
+          
+          if [ "$ARMV8_APK_FOUND" = "true" ]; then
+            ARMV8_DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${ARMV8_APK_NAME}"
+            echo "ARMV8_DOWNLOAD_URL=$ARMV8_DOWNLOAD_URL" >> $GITHUB_ENV
+          fi
+          
+          # Debug: Print out the URLs to verify they're correct
+          echo "Universal APK URL: $UNIVERSAL_DOWNLOAD_URL"
+          echo "ARMv7 APK URL: $ARMV7_DOWNLOAD_URL"
+          echo "ARMv8 APK URL: $ARMV8_DOWNLOAD_URL"
+          
+          cat > send_discord.sh << 'EOF'
+          #!/bin/bash
+
+          # Get environment variables
+          REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          COMMIT_URL="${REPO_URL}/commit/${GITHUB_SHA}"
+          RELEASE_URL="${REPO_URL}/releases/tag/${RELEASE_TAG}"
+
+          # Format the commit message (escape quotes for JSON)
+          FORMATTED_COMMIT_MSG=$(echo "$COMMIT_MSG" | head -n 1 | sed 's/"/\\"/g')
+          CURRENT_TIMESTAMP=$(date -u --iso-8601=seconds)
+
+          # Check which download links are available and build the download section
+          DOWNLOAD_SECTION=""
+          
+          if [ -n "$UNIVERSAL_DOWNLOAD_URL" ]; then
+            DOWNLOAD_SECTION="${DOWNLOAD_SECTION}• [📱 **Universal APK**](${UNIVERSAL_DOWNLOAD_URL}) - Works on all devices\n"
+          fi
+          
+          if [ -n "$ARMV7_DOWNLOAD_URL" ]; then
+            DOWNLOAD_SECTION="${DOWNLOAD_SECTION}• [📱 **ARMv7 APK**](${ARMV7_DOWNLOAD_URL}) - For older Android devices\n"
+          fi
+          
+          if [ -n "$ARMV8_DOWNLOAD_URL" ]; then
+            DOWNLOAD_SECTION="${DOWNLOAD_SECTION}• [📱 **ARMv8 APK**](${ARMV8_DOWNLOAD_URL}) - For newer Android devices (recommended)\n"
+          fi
+          
+          # Add link to all downloads
+          DOWNLOAD_SECTION="${DOWNLOAD_SECTION}\n[View all downloads on GitHub](${RELEASE_URL})"
+
+          # Create the JSON payload
+          cat > discord_payload.json << EOJSON
+          {
+            "embeds": [
+              {
+                "title": "🌙 Vega Nightly Build v${APP_VERSION}",
+                "description": "A new nightly build of **Vega App** is ready for testing!",
+                "color": 3447003,
+                "fields": [
+                  {
+                    "name": "Version",
+                    "value": "v${APP_VERSION} (Build #${GITHUB_RUN_NUMBER})",
+                    "inline": true
+                  },
+                  {
+                    "name": "Build Date",
+                    "value": "${BUILD_DATE} UTC",
+                    "inline": true
+                  },
+                  {
+                    "name": "Latest Commit",
+                    "value": "[${COMMIT_HASH}](${COMMIT_URL}) by ${COMMIT_AUTHOR}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Commit Message",
+                    "value": "${FORMATTED_COMMIT_MSG}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Download APKs (Direct Links)",
+                    "value": "${DOWNLOAD_SECTION}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Which APK should I download?",
+                    "value": "• **Universal**: If you're not sure about your device\n• **ARMv8**: For phones from the last ~5 years (smaller file size)\n• **ARMv7**: For very old devices only",
+                    "inline": false
+                  }
+                ],
+                "footer": {
+                  "text": "⚠️ Nightly build - may contain bugs • Built by himanshu8443"
+                },
+                "timestamp": "${CURRENT_TIMESTAMP}"
+              }
+            ]
+          }
+          EOJSON
+
+          # Send to Discord
+          if [ -n "${DISCORD_WEBHOOK}" ]; then
+            curl -H "Content-Type: application/json" -d @discord_payload.json "${DISCORD_WEBHOOK}"
+            echo "Discord notification sent successfully"
+          else
+            echo "Discord webhook URL not set, skipping notification"
+          fi
+          EOF
+
+          chmod +x send_discord.sh
+          
+      - name: Send Discord notification
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: ./send_discord.sh
