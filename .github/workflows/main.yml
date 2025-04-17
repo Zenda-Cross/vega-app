@@ -106,7 +106,7 @@ jobs:
           echo "BUILD_DATE=$(date -u '+%Y-%m-%d')" >> $GITHUB_ENV
           echo "BUILD_TIME=$(date -u '+%H-%M-%S')" >> $GITHUB_ENV
           echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "Builder: himanshu8443"
+          echo "Builder: 8man"
       
       # Build the APKs with DIRECT SIGNING PARAMETERS as requested
       - name: Build Android App with Direct Signing Parameters
@@ -357,7 +357,7 @@ jobs:
                   }
                 ],
                 "footer": {
-                  "text": "⚠️ Nightly build - may contain bugs • Built by himanshu8443"
+                  "text": "⚠️ Nightly build - may contain bugs • Built by 8man"
                 },
                 "timestamp": "${CURRENT_TIMESTAMP}"
               }
