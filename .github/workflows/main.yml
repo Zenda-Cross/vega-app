@@ -231,9 +231,9 @@ jobs:
           body: |
             ## 🌙 Vega Nightly Build
             
-            > ⚠️ **NIGHTLY BUILD WARNING** ⚠️  
+            > ⚠️ **NIGHTLY BUILD** ⚠️  
+            > Not recommended for regular users. Download version with latest tag not pre-release tag, for stable apk.
             > This is an automated nightly build and may contain bugs or incomplete features.
-            > Not recommended for production use.
             
             **Version:** v${{ env.APP_VERSION }}
             **Build Date:** ${{ env.BUILD_DATE }}
