@@ -228,9 +228,7 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: "🌙 Nightly Build v${{ env.APP_VERSION }} (${{ env.BUILD_DATE }})"
-          body: |
-            ## 🌙 Vega Nightly Build
-            
+          body: |            
             > ⚠️ **NIGHTLY BUILD** ⚠️  
             > Not recommended for regular users. Download version with latest tag not pre-release tag, for stable apk.
             > This is an automated nightly build and may contain bugs or incomplete features.
@@ -240,12 +238,6 @@ jobs:
             **Commit:** [${{ env.COMMIT_HASH }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) by ${{ env.COMMIT_AUTHOR }}
             **Commit Message:** ${{ env.COMMIT_MSG }}
             
-            ### Download APKs
-            Choose the appropriate APK for your device:
-            
-            - **Universal APK:** Works on all devices (largest file size)
-            - **ARMv8 APK:** For most modern phones (last 5+ years)
-            - **ARMv7 APK:** For older devices only
           files: ${{ steps.apk_files.outputs.apk_paths }}
           draft: false
           prerelease: true
