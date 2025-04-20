@@ -85,6 +85,7 @@ const Home = ({}: Props) => {
         data[data?.length - 1].Posts.length === 0 ||
         data[0].Posts.length === 0
       ) {
+        setLoading(false);
         return;
       }
       setLoading(false);
