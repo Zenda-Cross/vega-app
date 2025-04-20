@@ -11,7 +11,7 @@ export const vegaMovies: ProviderType = {
   GetMetaData: vegaGetInfo,
   GetHomePosts: vegaGetPosts,
   GetStream: vegaGetStream,
-  nonStreamableServer: ['filepress'],
+  nonStreamableServer: ['filepress', 'hubcloud', 'HubCdn'],
   GetEpisodeLinks: vegaGetEpisodeLinks,
   GetSearchPosts: vegaGetPostsSearch,
 };

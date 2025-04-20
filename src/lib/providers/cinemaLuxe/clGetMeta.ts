@@ -32,7 +32,6 @@ export const clGetInfo = async function (link: string): Promise<Info> {
     $('.mb-center.maxbutton-5-center,.ep-button-container').map(
       (i, element) => {
         const title = $(element)
-          .prev()
           .text()
           .replace('⬇Download', '')
           .replace('⬇ Download', '')
