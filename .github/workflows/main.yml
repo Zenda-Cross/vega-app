@@ -65,14 +65,25 @@ jobs:
           ref: ${{ github.event.inputs.branch || 'main' }}
           fetch-depth: 0
 
-      # Get the latest commit info for Discord notification
+      # Get the latest commit info for Discord notification - WITH SANITIZATION
       - name: Get commit info
         id: commit_info
         run: |
-          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-          echo "COMMIT_AUTHOR=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
-          echo "COMMIT_DATE=$(git log -1 --pretty=%cd --date=format:'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+          # Get the short hash
+          HASH=$(git rev-parse --short HEAD)
+          echo "COMMIT_HASH=$HASH" >> $GITHUB_ENV
+          
+          # Get and sanitize the commit message - prevent special characters issues
+          MSG=$(git log -1 --pretty=%s | sed 's/[^a-zA-Z0-9 .,;:_()-]//g')
+          echo "COMMIT_MSG=$MSG" >> $GITHUB_ENV
+          
+          # Get author
+          AUTHOR=$(git log -1 --pretty=%an)
+          echo "COMMIT_AUTHOR=$AUTHOR" >> $GITHUB_ENV
+          
+          # Get formatted date
+          DATE=$(git log -1 --pretty=%cd --date=format:'%Y-%m-%d %H:%M:%S')
+          echo "COMMIT_DATE=$DATE" >> $GITHUB_ENV
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -286,8 +297,8 @@ jobs:
           COMMIT_URL="${REPO_URL}/commit/${GITHUB_SHA}"
           RELEASE_URL="${REPO_URL}/releases/tag/${RELEASE_TAG}"
 
-          # Format the commit message (escape quotes for JSON)
-          FORMATTED_COMMIT_MSG=$(echo "$COMMIT_MSG" | head -n 1 | sed 's/"/\\"/g')
+          # Format the commit message for JSON (escape properly)
+          FORMATTED_COMMIT_MSG=$(echo "$COMMIT_MSG" | sed 's/"/\\"/g')
           CURRENT_TIMESTAMP=$(date -u --iso-8601=seconds)
 
           # Check which download links are available and build the download section
