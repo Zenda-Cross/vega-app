@@ -1,0 +1,20 @@
+name: Discord Release Notification
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+    # Only run this job if the release is not a prerelease
+    if: ${{ !github.event.release.prerelease }}
+    environment: nightly
+    steps:
+      - name: Send Discord notification
+        uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_UPDATE_WEBHOOK }}
+        with:
+          args: |
+            update ${{ github.event.release.tag_name }}
+            ${{ github.event.release.body }}
