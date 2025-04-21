@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for new commits
+      - name: Check for relevant changes
         id: check_changes
         run: |
           git fetch --tags
@@ -35,17 +35,29 @@ jobs:
             # No previous nightly tag, so we should build
             echo "No previous nightly build found. Proceeding with build."
             echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            # Check if there are new commits since the last nightly tag
-            COMMIT_COUNT=$(git rev-list --count $LATEST_NIGHTLY_TAG..HEAD)
+            exit 0
+          fi
+
+          # Check if there are new commits since the last nightly tag
+          COMMIT_COUNT=$(git rev-list --count $LATEST_NIGHTLY_TAG..HEAD)
             
-            if [ "$COMMIT_COUNT" -gt 0 ]; then
-              echo "Found $COMMIT_COUNT new commits since last nightly build. Proceeding with build."
-              echo "has_changes=true" >> $GITHUB_OUTPUT
-            else
-              echo "No new commits since last nightly build. Skipping build."
-              echo "has_changes=false" >> $GITHUB_OUTPUT
-            fi
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "No new commits since last nightly build. Skipping build."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Found $COMMIT_COUNT new commits since last nightly build."
+          
+          # Check if any of these commits modified files in the src or android folders
+          CHANGED_FILES=$(git diff --name-only $LATEST_NIGHTLY_TAG..HEAD)
+          
+          if echo "$CHANGED_FILES" | grep -q -E '^(src|android)/'; then
+            echo "Changes detected in src or android folders. Proceeding with build."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes in src or android folders. Skipping build."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
   build-android:
@@ -117,7 +129,7 @@ jobs:
           echo "BUILD_DATE=$(date -u '+%Y-%m-%d')" >> $GITHUB_ENV
           echo "BUILD_TIME=$(date -u '+%H-%M-%S')" >> $GITHUB_ENV
           echo "Build started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "Builder: 8man"
+          echo "Builder: himanshu8443"
 
       # Build the APKs with DIRECT SIGNING PARAMETERS as requested
       - name: Build Android App with Direct Signing Parameters
@@ -324,8 +336,8 @@ jobs:
           {
             "embeds": [
               {
-                "title": "🌙 Vega Nightly Build v${APP_VERSION}",
-                "description": "A new nightly build of **Vega App** is ready for testing!",
+                "title": "Vega pre-build Build v${APP_VERSION}",
+                "description": "A new pre-build of **Vega App** is ready for testing!",
                 "color": 3447003,
                 "fields": [
                   {
