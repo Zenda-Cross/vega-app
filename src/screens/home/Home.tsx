@@ -9,7 +9,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import Hero from '../../components/Hero';
 import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {mainStorage, cacheStorage} from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {manifest} from '../../lib/Manifest';
@@ -40,7 +40,7 @@ const Home = ({}: Props) => {
   // const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
   const drawer = useRef<DrawerLayout>(null);
   const [isDrawerOpen] = useState(false);
-  const disableDrawer = MMKV.getBool('disableDrawer') || false;
+  const disableDrawer = mainStorage.getBool('disableDrawer') || false;
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -58,7 +58,7 @@ const Home = ({}: Props) => {
     const fetchHomeData = async () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
-      const cache = MmmkvCache.getString('homeData' + provider.value);
+      const cache = cacheStorage.getString('homeData' + provider.value);
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
@@ -90,7 +90,7 @@ const Home = ({}: Props) => {
       }
       setLoading(false);
       setHomeData(data);
-      MmmkvCache.setString('homeData' + provider.value, JSON.stringify(data));
+      cacheStorage.setString('homeData' + provider.value, JSON.stringify(data));
     };
     fetchHomeData();
     return () => {

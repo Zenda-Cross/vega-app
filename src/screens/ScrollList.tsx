@@ -9,7 +9,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import useContentStore from '../lib/zustand/contentStore';
 import {manifest} from '../lib/Manifest';
 import {MaterialIcons} from '@expo/vector-icons';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
@@ -27,7 +27,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [isEnd, setIsEnd] = useState<boolean>(false);
   const {provider} = useContentStore(state => state);
   const [viewType, setViewType] = useState<number>(
-    MMKV.getInt('viewType') || 1,
+    settingsStorage.getListViewType(),
   );
   console.log('isl', isLoading);
 
@@ -80,7 +80,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         <TouchableOpacity
           onPress={() => {
             setViewType(viewType === 1 ? 2 : 1);
-            MMKV.setInt('viewType', viewType === 1 ? 2 : 1);
+            settingsStorage.setListViewType(viewType === 1 ? 2 : 1);
           }}>
           <MaterialIcons
             name={viewType === 1 ? 'view-module' : 'view-list'}

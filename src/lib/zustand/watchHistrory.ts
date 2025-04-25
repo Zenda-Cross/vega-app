@@ -1,15 +1,5 @@
 import {create} from 'zustand';
-import {Post} from '../providers/types';
-import {MMKV} from '../Mmkv';
-
-interface WatchHistoryItem extends Post {
-  lastPlayed: number;
-  duration: number;
-  currentTime: number;
-  playbackRate: number;
-  episodeTitle?: string;
-  cachedInfoData?: any; // Add cached info data
-}
+import {WatchHistoryItem, watchHistoryStorage} from '../storage';
 
 export interface History {
   history: WatchHistoryItem[];
@@ -23,25 +13,42 @@ export interface History {
   removeItem: (item: WatchHistoryItem) => void;
 }
 
+// Helper function to convert between our storage format and zustand format
+const convertStorageToZustand = (items: any[]): WatchHistoryItem[] => {
+  return items.map(item => ({
+    ...item,
+    lastPlayed: item.timestamp,
+    currentTime: item.progress || 0,
+  }));
+};
+
 const useWatchHistoryStore = create<History>(set => ({
-  history: JSON.parse(MMKV.getString('recentlyWatched') || '[]'),
+  // Initialize from our storage service
+  history: convertStorageToZustand(watchHistoryStorage.getWatchHistory()),
 
   addItem: item => {
     try {
-      const history = JSON.parse(MMKV.getString('recentlyWatched') || '[]');
-      const newHistory = history.filter(
-        (i: WatchHistoryItem) =>
-          !(i.link === item.link || i.title === item.title),
-      );
+      // Format item for our storage service
+      const storageItem: WatchHistoryItem = {
+        id: item.link || item.title,
+        title: item.title,
+        poster: item.poster,
+        provider: item.provider,
+        link: item.link,
+        timestamp: Date.now(),
+        duration: item.duration,
+        progress: item.currentTime,
+        episodeTitle: item.episodeTitle,
+        cachedInfoData: item.cachedInfoData,
+      };
 
-      newHistory.unshift({
-        ...item,
-        lastPlayed: Date.now(),
+      // Add to storage
+      watchHistoryStorage.addToWatchHistory(storageItem);
+
+      // Update UI state
+      set({
+        history: convertStorageToZustand(watchHistoryStorage.getWatchHistory()),
       });
-
-      const limitedHistory = newHistory.slice(0, 100);
-      MMKV.setString('recentlyWatched', JSON.stringify(limitedHistory));
-      set({history: limitedHistory});
     } catch (error) {
       console.error('❌ Error:', error);
     }
@@ -49,45 +56,57 @@ const useWatchHistoryStore = create<History>(set => ({
 
   updatePlaybackInfo: (link, playbackInfo) => {
     try {
-      const history = JSON.parse(MMKV.getString('recentlyWatched') || '[]');
-      const newHistory = history.map((item: WatchHistoryItem) => {
-        if (item.link === link) {
-          return {...item, ...playbackInfo, lastPlayed: Date.now()};
-        }
-        return item;
-      });
+      const history = watchHistoryStorage.getWatchHistory();
+      const existingItem = history.find(item => item.link === link);
 
-      MMKV.setString('recentlyWatched', JSON.stringify(newHistory));
-      set({history: newHistory});
+      if (existingItem) {
+        const updatedItem = {
+          ...existingItem,
+          progress: playbackInfo.currentTime,
+          duration: playbackInfo.duration || existingItem.duration,
+          timestamp: Date.now(),
+        };
+
+        watchHistoryStorage.addToWatchHistory(updatedItem);
+      }
+
+      set({
+        history: convertStorageToZustand(watchHistoryStorage.getWatchHistory()),
+      });
     } catch (error) {
       console.error('❌ Error updating watch history:', error);
     }
   },
 
   removeItem: item => {
-    const history = JSON.parse(MMKV.getString('recentlyWatched') || '[]');
-    const newHistory = history.filter((i: Post) => i.link !== item.link);
-    MMKV.setString('recentlyWatched', JSON.stringify(newHistory));
-    set({history: newHistory});
+    watchHistoryStorage.removeFromWatchHistory(item.link);
+    set({
+      history: convertStorageToZustand(watchHistoryStorage.getWatchHistory()),
+    });
   },
 
   clearHistory: () => {
-    MMKV.setString('recentlyWatched', '[]');
+    watchHistoryStorage.clearWatchHistory();
     set({history: []});
   },
 
   updateItemWithInfo: (link, infoData) => {
     try {
-      const history = JSON.parse(MMKV.getString('recentlyWatched') || '[]');
-      const newHistory = history.map((item: WatchHistoryItem) => {
-        if (item.link === link) {
-          return {...item, cachedInfoData: infoData};
-        }
-        return item;
-      });
+      const history = watchHistoryStorage.getWatchHistory();
+      const existingItem = history.find(item => item.link === link);
 
-      MMKV.setString('recentlyWatched', JSON.stringify(newHistory));
-      set({history: newHistory});
+      if (existingItem) {
+        const updatedItem = {
+          ...existingItem,
+          cachedInfoData: infoData,
+        };
+
+        watchHistoryStorage.addToWatchHistory(updatedItem);
+      }
+
+      set({
+        history: convertStorageToZustand(watchHistoryStorage.getWatchHistory()),
+      });
     } catch (error) {
       console.error('❌ Error caching info data:', error);
     }

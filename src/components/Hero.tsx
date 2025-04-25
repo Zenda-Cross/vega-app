@@ -11,7 +11,7 @@ import {HomeStackParamList, SearchStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
-import {MMKV, MmmkvCache} from '../lib/Mmkv';
+import {cacheStorage, settingsStorage} from '../lib/storage';
 import {manifest} from '../lib/Manifest';
 import {Info} from '../lib/providers/types';
 import {Feather} from '@expo/vector-icons';
@@ -30,10 +30,10 @@ function Hero({
   const [searchActive, setSearchActive] = useState(false);
   const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
-  const [showHamburgerMenu] = useState(
-    MMKV.getBool('showHamburgerMenu') === false ? false : true,
+  const [showHamburgerMenu] = useState(settingsStorage.showHamburgerMenu());
+  const [isDrawerDisabled] = useState(
+    settingsStorage.getBool('disableDrawer') || false,
   );
-  const [isDrawerDisabled] = useState(MMKV.getBool('disableDrawer') || false);
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const searchNavigation =
@@ -43,7 +43,7 @@ function Hero({
     const fetchPosts = async () => {
       setLoading(true);
       if (hero?.link) {
-        const CacheInfo = MmmkvCache.getString(hero.link);
+        const CacheInfo = cacheStorage.getString(hero.link);
         try {
           let info: Info;
           if (CacheInfo) {
@@ -53,7 +53,7 @@ function Hero({
               hero.link,
               provider,
             );
-            MmmkvCache.setString(hero.link, JSON.stringify(info));
+            cacheStorage.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);
           if (info.imdbId) {

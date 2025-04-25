@@ -1,4 +1,4 @@
-import {MmmkvCache} from '../Mmkv';
+import { cacheStorageService } from '../storage';
 
 // 1 hour
 const expireTime = 60 * 60 * 1000;
@@ -6,20 +6,26 @@ const expireTime = 60 * 60 * 1000;
 export const getBaseUrl = async (providerValue: string) => {
   try {
     let baseUrl = '';
+    const cacheKey = 'CacheBaseUrl' + providerValue;
+    const timeKey = 'baseUrlTime' + providerValue;
+    
+    const cachedUrl = cacheStorageService.getString(cacheKey);
+    const cachedTime = cacheStorageService.getObject<number>(timeKey);
+    
     if (
-      MmmkvCache.getString('CacheBaseUrl' + providerValue) &&
-      MmmkvCache.getInt('baseUrlTime' + providerValue) &&
-      Date.now() - MmmkvCache.getInt('baseUrlTime' + providerValue) < expireTime
+      cachedUrl && 
+      cachedTime && 
+      Date.now() - cachedTime < expireTime
     ) {
-      baseUrl = MmmkvCache.getString('CacheBaseUrl' + providerValue);
+      baseUrl = cachedUrl;
     } else {
       const baseUrlRes = await fetch(
         'https://himanshu8443.github.io/providers/modflix.json',
       );
       const baseUrlData = await baseUrlRes.json();
       baseUrl = baseUrlData[providerValue].url;
-      MmmkvCache.setString('CacheBaseUrl' + providerValue, baseUrl);
-      MmmkvCache.setInt('baseUrlTime' + providerValue, Date.now());
+      cacheStorageService.setString(cacheKey, baseUrl);
+      cacheStorageService.setObject(timeKey, Date.now());
     }
     return baseUrl;
   } catch (error) {

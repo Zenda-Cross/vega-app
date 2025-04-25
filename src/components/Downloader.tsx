@@ -16,7 +16,7 @@ import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 
 const DownloadComponent = ({
   link,
@@ -58,17 +58,17 @@ const DownloadComponent = ({
   // handle download deletion
   const deleteDownload = async () => {
     try {
-      const files = await RNFS.readDir(downloadFolder);
+      const fileList = await RNFS.readDir(downloadFolder);
       // Find a file with the given name (without extension)
-      const file = files.find(file => {
-        const nameWithoutExtension = file.name
+      const foundFile = fileList.find(fileItem => {
+        const nameWithoutExtension = fileItem.name
           .split('.')
           .slice(0, -1)
           .join('.');
         return nameWithoutExtension === fileName;
       });
-      if (file) {
-        await RNFS.unlink(file.path);
+      if (foundFile) {
+        await RNFS.unlink(foundFile.path);
         setAlreadyDownloaded(false);
         setDeleteModal(false);
       }
@@ -150,14 +150,16 @@ const DownloadComponent = ({
         ) : (
           <TouchableOpacity
             onPress={() => {
-              if (MMKV.getBool('alwaysExternalDownloader') === true) {
+              if (
+                settingsStorage.getBool('alwaysExternalDownloader') === true
+              ) {
                 setLongPressModal(true);
               } else {
                 setDownloadModal(true);
               }
             }}
             onLongPress={() => {
-              if (MMKV.getBool('hapticFeedback') !== false) {
+              if (settingsStorage.getBool('hapticFeedback') !== false) {
                 ReactNativeHapticFeedback.trigger('effectHeavyClick', {
                   enableVibrateFallback: true,
                   ignoreAndroidSystemSettings: false,

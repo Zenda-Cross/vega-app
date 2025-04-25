@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {MmmkvCache} from '../../Mmkv';
+import {cacheStorageService} from '../../storage';
 import {ToastAndroid} from 'react-native';
 
 interface ApiResponse {

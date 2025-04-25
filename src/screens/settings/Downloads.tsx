@@ -4,7 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import {downloadFolder} from '../../lib/constants';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import React, {useState, useEffect} from 'react';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {settingsStorage, downloadsStorage} from '../../lib/storage';
 import useThemeStore from '../../lib/zustand/themeStore';
 import RNFS from 'react-native-fs';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -72,13 +72,13 @@ const getEpisodeInfo = (
   // Try to match SxxExx format first
   let match = fileName.match(/s(\d{1,2})e(\d{1,2})/i);
   if (match) {
-    return {season: parseInt(match[1]), episode: parseInt(match[2])};
+    return {season: parseInt(match[1], 10), episode: parseInt(match[2], 10)};
   }
 
   // Try to match "Season X Episode Y" format
   match = fileName.match(/season[\s.-]*(\d{1,2}).*?episode[\s.-]*(\d{1,2})/i);
   if (match) {
-    return {season: parseInt(match[1]), episode: parseInt(match[2])};
+    return {season: parseInt(match[1], 10), episode: parseInt(match[2], 10)};
   }
 
   // Try to match episode number only
@@ -87,7 +87,7 @@ const getEpisodeInfo = (
     fileName.match(/[\s.-](\d{1,2})(?:\s*$|\s*\.)/);
 
   if (match) {
-    return {season: 1, episode: parseInt(match[1])};
+    return {season: 1, episode: parseInt(match[1], 10)};
   }
 
   // Default case
@@ -135,7 +135,9 @@ const Downloads = () => {
               return fileInfo;
             }),
           );
-          MmmkvCache.setString('downloadFiles', JSON.stringify(filesInfo));
+
+          // Save files info to storage
+          downloadsStorage.saveFilesInfo(filesInfo);
           setFiles(filesInfo);
           setLoading(false);
         } catch (error) {
@@ -181,10 +183,11 @@ const Downloads = () => {
         const newThumbnails = thumbnailResults.reduce((acc, curr) => {
           return curr ? {...acc, ...curr} : acc;
         }, {});
-        MmmkvCache.setString(
-          'downloadThumbnails',
-          JSON.stringify(newThumbnails),
-        );
+
+        // Save thumbnails to storage and fix the type error by ensuring non-null
+        if (newThumbnails) {
+          downloadsStorage.saveThumbnails(newThumbnails);
+        }
         setThumbnails(newThumbnails || {});
       } catch (error) {
         console.error('Error generating thumbnails:', error);
@@ -196,15 +199,16 @@ const Downloads = () => {
     }
   }, [files]);
 
-  // Load files and thumbnails from cache on initial render
+  // Load files and thumbnails from storage on initial render
   useEffect(() => {
-    const downloadFiles = MmmkvCache.getString('downloadFiles');
-    if (downloadFiles) {
-      setFiles(JSON.parse(downloadFiles));
+    const cachedFiles = downloadsStorage.getFilesInfo();
+    if (cachedFiles) {
+      setFiles(cachedFiles);
     }
-    const downloadThumbnails = MmmkvCache.getString('downloadThumbnails');
-    if (downloadThumbnails) {
-      setThumbnails(JSON.parse(downloadThumbnails));
+
+    const cachedThumbnails = downloadsStorage.getThumbnails();
+    if (cachedThumbnails) {
+      setThumbnails(cachedThumbnails);
     }
   }, []);
 
@@ -338,7 +342,7 @@ const Downloads = () => {
                 : 'bg-tertiary'
             }`}
             onLongPress={() => {
-              if (MMKV.getBool('hapticFeedback') !== false) {
+              if (settingsStorage.isHapticFeedbackEnabled()) {
                 RNReactNativeHapticFeedback.trigger('effectTick', {
                   enableVibrateFallback: true,
                   ignoreAndroidSystemSettings: false,
@@ -349,7 +353,7 @@ const Downloads = () => {
             }}
             onPress={() => {
               if (isSelecting) {
-                if (MMKV.getBool('hapticFeedback') !== false) {
+                if (settingsStorage.isHapticFeedbackEnabled()) {
                   RNReactNativeHapticFeedback.trigger('effectTick', {
                     enableVibrateFallback: true,
                     ignoreAndroidSystemSettings: false,

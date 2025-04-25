@@ -9,8 +9,7 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
     const streamLinks: Stream[] = [];
     const subtitles: TextTracks = [];
     const baseUrl = await getBaseUrl('kissKh');
-    const streamUrl =
-      baseUrl + `/api/DramaList/Episode/${id}.png?err=false&ts=&time=`;
+    const streamUrl = 'https://kmmovies-ansh.8man.me/api/kisskh?videoId=' + id;
     const res = await axios.get(streamUrl);
     const stream = res.data?.Video;
 

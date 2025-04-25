@@ -6,7 +6,7 @@ import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {manifest} from '../lib/Manifest';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
@@ -28,7 +28,8 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   const trueLoading = providersList.map(item => {
     return {name: item.name, value: item.value, isLoading: true};
   });
-  const disabledProviders = MMKV.getArray('disabledProviders') || [];
+  // Use settingsStorage instead of direct MMKV call
+  const disabledProviders = settingsStorage.getExcludedQualities() || [];
   const updatedProvidersList = providersList.filter(
     provider => !disabledProviders.includes(provider.value),
   );
