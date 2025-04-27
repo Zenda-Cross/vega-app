@@ -24,7 +24,7 @@ export const getHomePageData = async (
       );
       return {
         title: item.title,
-        Posts: data,
+        Posts: data?.length > 0 ? data : [],
         filter: item.filter,
       };
     },
