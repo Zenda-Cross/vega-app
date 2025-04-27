@@ -188,18 +188,18 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  // {
-  //   name: 'KissKh',
-  //   value: 'kissKh',
-  //   type: 'english',
-  //   flag: FLAGS.ENGLISH,
-  // },
-  // {
-  //   name: 'DramaCool',
-  //   value: 'dramaCool',
-  //   type: 'english',
-  //   flag: FLAGS.ENGLISH,
-  // },
+  {
+    name: 'KissKh',
+    value: 'kissKh',
+    type: 'english',
+    flag: FLAGS.ENGLISH,
+  },
+  {
+    name: 'DramaCool',
+    value: 'dramaCool',
+    type: 'english',
+    flag: FLAGS.ENGLISH,
+  },
   // {
   //   name: 'AE Drama',
   //   value: 'AEDrama',
