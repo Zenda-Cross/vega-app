@@ -1,9 +1,6 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
-import {getNfHeaders} from './nfHeaders';
 import {Post} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
-import {nfGetCookie} from './nfGetCookie';
 
 export const nfGetPost = async function (
   filter: string,
@@ -18,38 +15,16 @@ export const nfGetPost = async function (
       return [];
     }
     // console.log(filter);
+    const isPrime =
+      providerValue === 'primeMirror' ? 'isPrime=true' : 'isPrime=false';
 
-    const url = `${baseUrl + filter}`;
-    // console.log(url);
-    const cookie =
-      (await nfGetCookie()) +
-      `ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
-    console.log('nfCookie', cookie);
+    const url = `https://netmirror.8man.me/api/net-proxy?${isPrime}&url=${
+      baseUrl + filter
+    }`;
+
     const res = await fetch(url, {
-      headers: {
-        accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'accept-language': 'en-US,en;q=0.9,en-IN;q=0.8',
-        'cache-control': 'no-cache',
-        pragma: 'no-cache',
-        cookie: cookie,
-        priority: 'u=0, i',
-        'sec-ch-ua':
-          '"Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'same-origin',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-      },
-      referrer: 'https://iosmirror.cc/movies',
-      referrerPolicy: 'strict-origin-when-cross-origin',
-      body: null,
       signal: signal,
       method: 'GET',
-      mode: 'cors',
       credentials: 'omit',
     });
     const data = await res.text();
@@ -97,29 +72,14 @@ export const nfGetPostsSearch = async function (
     }
     const catalog: Post[] = [];
     const baseUrl = await getBaseUrl('nfMirror');
-    const url = `${baseUrl}${
+    const isPrime =
+      providerValue === 'primeMirror' ? 'isPrime=true' : 'isPrime=false';
+
+    const url = `https://netmirror.8man.me/api/net-proxy?${isPrime}&url=${baseUrl}${
       providerValue === 'netflixMirror' ? '' : '/pv'
     }/search.php?s=${encodeURI(searchQuery)}`;
 
-    const cookie =
-      (await nfGetCookie()) +
-      `ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`;
-
     const res = await fetch(url, {
-      headers: {
-        accept: 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'en-US,en;q=0.9',
-        'cache-control': 'no-cache',
-        pragma: 'no-cache',
-        cookie: cookie,
-        'sec-ch-ua': '"Chromium";v="130", "Not?A_Brand";v="99"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'x-requested-with': 'XMLHttpRequest',
-      },
       signal: signal,
       method: 'GET',
       credentials: 'omit',
@@ -132,7 +92,7 @@ export const nfGetPostsSearch = async function (
       const id = result?.id;
       const image =
         providerValue === 'netflixMirror'
-          ? `https://img.nfmirrorcdn.top/poster/v/${id}.jpg`
+          ? `https://imgcdn.media/poster/v/${id}.jpg`
           : '';
 
       if (id) {
@@ -142,8 +102,8 @@ export const nfGetPostsSearch = async function (
             baseUrl +
             `${
               providerValue === 'netflixMirror'
-                ? '/post.php?id='
-                : '/pv/post.php?id='
+                ? '/mobile/post.php?id='
+                : '/mobile/pv/post.php?id='
             }` +
             id +
             '&t=' +

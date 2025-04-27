@@ -1,20 +1,17 @@
 import {Info, Link} from '../types';
-import {nfGetCookie} from './nfGetCookie';
 
 export const nfGetInfo = async function (
   providerValue: string,
   link: string,
 ): Promise<Info> {
   try {
-    const url = link;
+    const isPrime =
+      providerValue === 'primeMirror' ? 'isPrime=true' : 'isPrime=false';
+    const url = `https://netmirror.8man.me/api/net-proxy?${isPrime}&url=${encodeURIComponent(
+      link,
+    )}`;
     console.log('nfifo', url);
-    const cookies = await nfGetCookie();
     const res = await fetch(url, {
-      headers: {
-        cookie:
-          cookies +
-          `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`,
-      },
       credentials: 'omit',
     });
     const data = await res.json();
