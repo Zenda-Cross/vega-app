@@ -9,13 +9,13 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
     const streamLinks: Stream[] = [];
     const subtitles: TextTracks = [];
     const baseUrl = await getBaseUrl('kissKh');
-    const streamUrl = 'https://kmmovies-ansh.8man.me/api/kisskh?videoId=' + id;
+    const streamUrl =
+      'https://adorable-salamander-ecbb21.netlify.app/api/kisskh/video?id=' +
+      id;
     const res = await axios.get(streamUrl);
-    const stream = res.data?.Video;
+    const stream = res.data?.source?.Video;
 
-    const subUrl = baseUrl + `/api/Sub/${id}`;
-    const subRes = await axios.get(subUrl);
-    const subData = subRes.data;
+    const subData = res.data?.subtitles;
     subData?.map((sub: any) => {
       subtitles.push({
         title: sub?.label,
@@ -30,7 +30,7 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
     streamLinks.push({
       server: 'kissKh',
       link: stream,
-      type: stream?.includes('.m3u8') ? 'm3u8' : 'mp4',
+      type: 'm3u8',
       subtitles,
       headers: {
         referer: baseUrl,
