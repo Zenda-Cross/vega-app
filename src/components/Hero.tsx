@@ -85,7 +85,7 @@ function Hero({
     setSearchActive(false);
   });
   return (
-    <View className="relative h-[65vh]">
+    <View className="relative h-[55vh]">
       <View className="absolute pt-3 w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
         {!searchActive && (
           <View
@@ -160,9 +160,9 @@ function Hero({
           style={{resizeMode: 'cover'}}
         />
       </Skeleton>
-      <View className="absolute bottom-20 w-full z-20 px-6">
+      <View className="absolute bottom-12 w-full z-20 px-6">
         {!loading && (
-          <View className="gap-4">
+          <View className="gap-4 items-center">
             {post?.logo ? (
               <Image
                 onError={() => {
@@ -175,25 +175,43 @@ function Hero({
                 }}
                 source={{uri: post?.logo}}
                 style={{
-                  width: 300,
-                  height: 150,
+                  width: 200,
+                  height: 100,
                   resizeMode: 'contain',
                 }}
               />
             ) : (
-              <Text className="text-white text-center text-4xl font-bold">
+              <Text className="text-white text-center text-2xl font-bold">
                 {post?.name || post?.title}
               </Text>
             )}
 
-            <Text className="text-white/80 text-base w-2/3">
-              {post?.description?.slice(0, 150)}...
-            </Text>
+            <View className="flex-row items-center justify-center space-x-2">
+              {post?.genre?.map((item: string, index: number) => {
+                return (
+                  <Text
+                    key={index}
+                    className="text-white text-sm font-semibold">
+                    • {item}
+                  </Text>
+                );
+              })}
+              {!post?.genre &&
+                post?.tags?.map((item: string, index: number) => {
+                  return (
+                    <Text
+                      key={index}
+                      className="text-white text-sm font-semibold">
+                      • {item}
+                    </Text>
+                  );
+                })}
+            </View>
 
             <View className="flex-1 items-center justify-center">
               {hero?.link && (
                 <TouchableOpacity
-                  className="bg-white px-16 py-4 rounded-lg flex-row items-center space-x-2"
+                  className="bg-white px-10 py-2 rounded-lg flex-row items-center space-x-2"
                   onPress={() => {
                     navigation.navigate('Info', {
                       link: hero.link,
@@ -201,8 +219,8 @@ function Hero({
                       poster: post?.image || post?.poster || post?.background,
                     });
                   }}>
-                  <FontAwesome6 name="play" size={24} color="black" />
-                  <Text className="text-black font-bold text-xl">Play</Text>
+                  <FontAwesome6 name="play" size={20} color="black" />
+                  <Text className="text-black font-bold text-lg">Play</Text>
                 </TouchableOpacity>
               )}
             </View>
