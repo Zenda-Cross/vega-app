@@ -22,7 +22,11 @@ import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
 import {Skeleton} from 'moti/skeleton';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { cacheStorage, settingsStorage, watchListStorage } from '../../lib/storage';
+import {
+  cacheStorage,
+  settingsStorage,
+  watchListStorage,
+} from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
@@ -49,7 +53,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const threeDotsRef = useRef<any>();
 
   const [inLibrary, setInLibrary] = useState(
-    watchListStorage.isInWatchList(route.params.link)
+    watchListStorage.isInWatchList(route.params.link),
   );
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const {provider} = useContentStore(state => state);
@@ -262,7 +266,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       {genre}
                     </Text>
                   ))}
-                  {info?.tags?.map((tag: string) => (
+                  {info?.tags?.slice(0, 3)?.map((tag: string) => (
                     <Text
                       key={tag}
                       className="text-white text-lg bg-tertiary px-2 rounded-md">
@@ -482,13 +486,19 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       info?.linkList
                         ? info?.linkList?.filter(
                             item =>
-                              !item.quality || settingsStorage.getExcludedQualities().includes(item.quality as string) === false,
+                              !item.quality ||
+                              settingsStorage
+                                .getExcludedQualities()
+                                .includes(item.quality as string) === false,
                           )?.length! > 0
-                        ? info?.linkList?.filter(
-                            item =>
-                              !item.quality || settingsStorage.getExcludedQualities().includes(item.quality as string) === false,
-                          )
-                        : info?.linkList
+                          ? info?.linkList?.filter(
+                              item =>
+                                !item.quality ||
+                                settingsStorage
+                                  .getExcludedQualities()
+                                  .includes(item.quality as string) === false,
+                            )
+                          : info?.linkList
                         : []
                     }
                     poster={{

@@ -1,6 +1,5 @@
 import {Stream} from '../types';
 import {getBaseUrl} from '../getBaseUrl';
-import {nfGetCookie} from './nfGetCookie';
 
 export const nfGetStream = async (
   providerValue: string,
@@ -8,19 +7,13 @@ export const nfGetStream = async (
 ): Promise<Stream[]> => {
   try {
     const baseUrl = await getBaseUrl('nfMirror');
-    const url = `${baseUrl}${
+    const url = `https://netmirror.8man.me/api/net-proxy?url=${baseUrl}${
       providerValue === 'netflixMirror'
         ? '/playlist.php?id='
         : '/pv/playlist.php?id='
     }${id}&t=${Math.round(new Date().getTime() / 1000)}`;
-    const cookies = await nfGetCookie();
-    console.log('nfGetStream', cookies);
+    console.log('nfGetStream');
     const res = await fetch(url, {
-      headers: {
-        cookie:
-          cookies +
-          `;hd=on;ott=${providerValue === 'netflixMirror' ? 'nf' : 'pv'};`,
-      },
       credentials: 'omit',
     });
     const resJson = await res.json();
@@ -29,7 +22,7 @@ export const nfGetStream = async (
     data?.sources.forEach((source: any) => {
       streamLinks.push({
         server: source.label,
-        link: baseUrl + source.file,
+        link: (baseUrl + source.file)?.replace(':su', ':ni'),
         type: 'm3u8',
         headers: {
           Referer: baseUrl,

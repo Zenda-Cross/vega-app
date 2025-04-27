@@ -187,7 +187,7 @@ function Hero({
             )}
 
             <View className="flex-row items-center justify-center space-x-2">
-              {post?.genre?.map((item: string, index: number) => {
+              {post?.genre?.slice(0, 3)?.map((item: string, index: number) => {
                 return (
                   <Text
                     key={index}
@@ -197,7 +197,7 @@ function Hero({
                 );
               })}
               {!post?.genre &&
-                post?.tags?.map((item: string, index: number) => {
+                post?.tags?.slice(0, 3)?.map((item: string, index: number) => {
                   return (
                     <Text
                       key={index}

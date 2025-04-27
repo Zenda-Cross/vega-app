@@ -3,9 +3,7 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
-  Text,
   View,
-  TouchableOpacity,
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useRef, useState} from 'react';
@@ -87,8 +85,6 @@ const Home = ({}: Props) => {
         data[data?.length - 1].Posts.length === 0 ||
         data[0].Posts.length === 0
       ) {
-        setLoading(false);
-        setHomeData([]);
         return;
       }
       setLoading(false);
@@ -218,21 +214,6 @@ const Home = ({}: Props) => {
                     />
                   ))}
             </View>
-            {!loading && homeData.length === 0 && (
-              <View className="flex-1 items-center justify-center mt-10">
-                <Text className="text-white text-lg font-semibold">
-                  Oops! Something went wrong.
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setRefreshing(true);
-                    setTimeout(() => setRefreshing(false), 1000);
-                  }}
-                  className="bg-white rounded-md px-4 py-2 mt-3">
-                  <Text className="text-black font-semibold">Try Again</Text>
-                </TouchableOpacity>
-              </View>
-            )}
             <View className="h-16" />
           </ScrollView>
         </DrawerLayout>
