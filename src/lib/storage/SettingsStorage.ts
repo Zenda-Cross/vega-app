@@ -66,7 +66,9 @@ export class SettingsStorage {
 
   // UI preferences
   showTabBarLabels(): boolean {
-    return mainStorage.getBool(SettingsKeys.SHOW_TAB_BAR_LABELS);
+    return mainStorage.getBool(SettingsKeys.SHOW_TAB_BAR_LABELS) === null
+      ? false
+      : mainStorage.getBool(SettingsKeys.SHOW_TAB_BAR_LABELS);
   }
 
   setShowTabBarLabels(show: boolean): void {
@@ -74,7 +76,9 @@ export class SettingsStorage {
   }
 
   isHapticFeedbackEnabled(): boolean {
-    return mainStorage.getBool(SettingsKeys.HAPTIC_FEEDBACK, true);
+    return mainStorage.getBool(SettingsKeys.HAPTIC_FEEDBACK) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.HAPTIC_FEEDBACK);
   }
 
   setHapticFeedbackEnabled(enabled: boolean): void {
@@ -83,7 +87,9 @@ export class SettingsStorage {
 
   // Update settings
   isAutoCheckUpdateEnabled(): boolean {
-    return mainStorage.getBool(SettingsKeys.AUTO_CHECK_UPDATE, true);
+    return mainStorage.getBool(SettingsKeys.AUTO_CHECK_UPDATE) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.AUTO_CHECK_UPDATE);
   }
 
   setAutoCheckUpdateEnabled(enabled: boolean): void {
@@ -100,7 +106,9 @@ export class SettingsStorage {
 
   // Player settings
   showMediaControls(): boolean {
-    return mainStorage.getBool(SettingsKeys.SHOW_MEDIA_CONTROLS, true);
+    return mainStorage.getBool(SettingsKeys.SHOW_MEDIA_CONTROLS) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.SHOW_MEDIA_CONTROLS);
   }
 
   setShowMediaControls(show: boolean): void {
@@ -108,7 +116,9 @@ export class SettingsStorage {
   }
 
   showHamburgerMenu(): boolean {
-    return mainStorage.getBool(SettingsKeys.SHOW_HAMBURGER_MENU, true);
+    return mainStorage.getBool(SettingsKeys.SHOW_HAMBURGER_MENU) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.SHOW_HAMBURGER_MENU);
   }
 
   setShowHamburgerMenu(show: boolean): void {
@@ -132,7 +142,9 @@ export class SettingsStorage {
   }
 
   isSwipeGestureEnabled(): boolean {
-    return mainStorage.getBool(SettingsKeys.ENABLE_SWIPE_GESTURE, true);
+    return mainStorage.getBool(SettingsKeys.ENABLE_SWIPE_GESTURE, true) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.ENABLE_SWIPE_GESTURE, true);
   }
 
   setSwipeGestureEnabled(enabled: boolean): void {
