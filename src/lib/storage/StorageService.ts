@@ -24,7 +24,7 @@ export interface IStorageService {
  */
 export class StorageService implements IStorageService {
   // Define storage variable with proper typing
-  private storage: any;
+  private storage;
 
   constructor(instanceId?: string) {
     const loader = new MMKVLoader();
@@ -54,34 +54,21 @@ export class StorageService implements IStorageService {
 
   // Number operations
   getNumber(key: string): number | undefined {
-    // Use getInt or getFloat depending on what's available
-    if (typeof this.storage.getFloat === 'function') {
-      return this.storage.getFloat(key);
-    } else if (typeof this.storage.getInt === 'function') {
-      return this.storage.getInt(key);
-    } else {
-      // Fallback to parsing from string if numeric methods aren't available
-      const value = this.storage.getString(key);
-      return value !== undefined ? parseFloat(value) : undefined;
-    }
+    // Use getInt or getFloat equivalent methods which exist in MMKV
+    return this.storage.getInt(key);
   }
 
   setNumber(key: string, value: number): void {
-    // Use setInt or setFloat depending on what's available
-    if (typeof this.storage.setFloat === 'function') {
-      this.storage.setFloat(key, value);
-    } else if (typeof this.storage.setInt === 'function') {
-      this.storage.setInt(key, Math.floor(value));
-    } else {
-      // Fallback to storing as string if numeric methods aren't available
-      this.storage.setString(key, value.toString());
-    }
+    // Use setInt for number values
+    this.storage.setInt(key, value);
   }
 
   // Object operations
   getObject<T>(key: string): T | undefined {
     const json = this.storage.getString(key);
-    if (!json) return undefined;
+    if (!json) {
+      return undefined;
+    }
     try {
       return JSON.parse(json) as T;
     } catch (e) {
@@ -110,12 +97,17 @@ export class StorageService implements IStorageService {
 
   // Check if key exists
   contains(key: string): boolean {
-    return this.storage.contains(key);
+    // Check if key exists by attempting to get the value
+    return (
+      this.storage.getString(key) !== undefined ||
+      this.storage.getBool(key) !== undefined ||
+      this.storage.getInt(key) !== undefined
+    );
   }
 
   // Clear all storage
   clearAll(): void {
-    this.storage.clearAll();
+    this.storage.clearStore();
   }
 }
 
