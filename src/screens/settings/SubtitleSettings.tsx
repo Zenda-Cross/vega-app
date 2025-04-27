@@ -8,42 +8,45 @@ import {
 import React from 'react';
 import {startActivityAsync, ActivityAction} from 'expo-intent-launcher';
 import {ScrollView} from 'moti';
-import {MMKV} from '../../lib/Mmkv';
+import {settingsStorage} from '../../lib/storage';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {Feather, Entypo} from '@expo/vector-icons';
+
 const SubtitlePreference = () => {
   const [fontSize, setFontSize] = React.useState(
-    MMKV.getInt('subtitleOpacity') || 16,
+    settingsStorage.getSubtitleFontSize(),
   );
   const [opacity, setOpacity] = React.useState(
-    MMKV.getInt('subtitleOpacity') || 1,
+    settingsStorage.getSubtitleOpacity(),
   );
   const [bottomElevation, setBottomElevation] = React.useState(
-    MMKV.getInt('subtitleBottomPadding') || 10,
+    settingsStorage.getSubtitleBottomPadding(),
   );
   const {primary} = useThemeStore();
 
   const handleSubtitleSize = (action: 'increase' | 'decrease') => {
     if (fontSize < 5 || fontSize > 30) return;
     if (action === 'increase') {
-      MMKV.setInt('subtitleFontSize', fontSize + 1);
-      setFontSize(prev => Math.min(prev + 1, 30));
+      const newSize = Math.min(fontSize + 1, 30);
+      settingsStorage.setSubtitleFontSize(newSize);
+      setFontSize(newSize);
     }
     if (action === 'decrease') {
-      MMKV.setInt('subtitleFontSize', fontSize - 1);
-      setFontSize(prev => Math.max(prev - 1, 10));
+      const newSize = Math.max(fontSize - 1, 10);
+      settingsStorage.setSubtitleFontSize(newSize);
+      setFontSize(newSize);
     }
   };
 
   const handleSubtitleOpacity = (action: 'increase' | 'decrease') => {
     if (action === 'increase') {
       const newOpacity = Math.min(opacity + 0.1, 1).toFixed(1);
-      MMKV.setString('subtitleOpacity', newOpacity);
+      settingsStorage.setSubtitleOpacity(parseFloat(newOpacity));
       setOpacity(parseFloat(newOpacity));
     }
     if (action === 'decrease') {
       const newOpacity = Math.max(opacity - 0.1, 0).toFixed(1);
-      MMKV.setString('subtitleOpacity', newOpacity);
+      settingsStorage.setSubtitleOpacity(parseFloat(newOpacity));
       setOpacity(parseFloat(newOpacity));
     }
   };
@@ -51,12 +54,14 @@ const SubtitlePreference = () => {
   const handleSubtitleBottomPadding = (action: 'increase' | 'decrease') => {
     if (bottomElevation < 0 || bottomElevation > 99) return;
     if (action === 'increase') {
-      MMKV.setInt('subtitleBottomPadding', bottomElevation + 1);
-      setBottomElevation(prev => Math.min(prev + 1, 99));
+      const newPadding = Math.min(bottomElevation + 1, 99);
+      settingsStorage.setSubtitleBottomPadding(newPadding);
+      setBottomElevation(newPadding);
     }
     if (action === 'decrease') {
-      MMKV.setInt('subtitleBottomPadding', bottomElevation - 1);
-      setBottomElevation(prev => Math.max(prev - 1, 0));
+      const newPadding = Math.max(bottomElevation - 1, 0);
+      settingsStorage.setSubtitleBottomPadding(newPadding);
+      setBottomElevation(newPadding);
     }
   };
 
@@ -86,6 +91,7 @@ const SubtitlePreference = () => {
               </TouchableOpacity>
             </View>
           </View>
+
           {/* opacity */}
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Opacity</Text>
@@ -103,6 +109,7 @@ const SubtitlePreference = () => {
               </TouchableOpacity>
             </View>
           </View>
+
           {/* bottom padding */}
           <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
             <Text className="text-white text-base">Bottom Elevation</Text>
@@ -120,6 +127,7 @@ const SubtitlePreference = () => {
               </TouchableOpacity>
             </View>
           </View>
+
           {/* More Settings */}
           <TouchableNativeFeedback
             onPress={async () => {
@@ -141,9 +149,9 @@ const SubtitlePreference = () => {
             <Text className="text-white text-base">Reset to Default</Text>
             <TouchableOpacity
               onPress={() => {
-                MMKV.setInt('subtitleFontSize', 16);
-                MMKV.setInt('subtitleOpacity', 1);
-                MMKV.setInt('subtitleBottomPadding', 10);
+                settingsStorage.setSubtitleFontSize(16);
+                settingsStorage.setSubtitleOpacity(1);
+                settingsStorage.setSubtitleBottomPadding(10);
                 setFontSize(16);
                 setOpacity(1);
                 setBottomElevation(10);

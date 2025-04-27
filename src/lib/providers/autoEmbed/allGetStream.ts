@@ -7,6 +7,7 @@ import {getFlimxyStream} from './getFlimxyStream';
 import {getRiveStream} from './getRiveStream';
 import {getVidSrcRip} from './getVidSrcRip';
 import axios from 'axios';
+import {getVidsrcCo} from './vidsrcCo';
 
 const autoembed = 'YXV0b2VtYmVkLmNj';
 export const allGetStream = async (
@@ -17,6 +18,7 @@ export const allGetStream = async (
     // console.log(id);
     const streams: Stream[] = [];
     const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
+    console.log('tmdbId🔥🔥', tmdbId);
 
     ///// whvx
 
@@ -221,6 +223,9 @@ export const allGetStream = async (
 
     ///// rive
     await getRiveStream(tmdbId, episode, season, type, streams);
+
+    ///// Vidsrcco
+    await getVidsrcCo(imdbId, season, episode, type, streams);
 
     ///// vidsrcrip
     // await getVidSrcRip(tmdbId, season, episode, streams);

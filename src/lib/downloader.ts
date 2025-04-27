@@ -6,7 +6,7 @@ import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
-import {MMKV} from './Mmkv';
+import {settingsStorage} from './storage';
 
 export const downloadManager = async ({
   title,
@@ -29,7 +29,7 @@ export const downloadManager = async ({
   setDownloadId: (value: number) => void;
   deleteDownload: () => void;
 }) => {
-  const primary = MMKV.getString('primaryColor') || '#FF6347';
+  const primary = settingsStorage.getPrimaryColor();
   await requestStoragePermission();
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;

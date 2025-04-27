@@ -8,7 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import React, {useState} from 'react';
-import {MMKV} from '../../lib/Mmkv';
+import {settingsStorage} from '../../lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useThemeStore from '../../lib/zustand/themeStore';
@@ -21,53 +21,54 @@ const Preferences = () => {
     state => state,
   );
   const [showRecentlyWatched, setShowRecentlyWatched] = useState(
-    MMKV.getBool('showRecentlyWatched') || false,
+    settingsStorage.getBool('showRecentlyWatched') || false,
   );
   const [disableDrawer, setDisableDrawer] = useState(
-    MMKV.getBool('disableDrawer') || false,
+    settingsStorage.getBool('disableDrawer') || false,
   );
 
   const [ExcludedQualities, setExcludedQualities] = useState(
-    MMKV.getArray('ExcludedQualities') || [],
+    settingsStorage.getExcludedQualities(),
   );
 
   const [customColor, setCustomColor] = useState(
-    MMKV.getString('customColor') || '#FF6347',
+    settingsStorage.getCustomColor(),
   );
 
   const [showMediaControls, setShowMediaControls] = useState<boolean>(
-    MMKV.getBool('showMediaControls') === false ? false : true,
+    settingsStorage.showMediaControls(),
   );
 
   const [showHamburgerMenu, setShowHamburgerMenu] = useState<boolean>(
-    MMKV.getBool('showHamburgerMenu') === false ? false : true,
+    settingsStorage.showHamburgerMenu(),
   );
 
   const [hideSeekButtons, setHideSeekButtons] = useState<boolean>(
-    MMKV.getBool('hideSeekButtons') || false,
+    settingsStorage.hideSeekButtons(),
   );
+
   const [enable2xGesture, setEnable2xGesture] = useState<boolean>(
-    MMKV.getBool('enable2xGesture') || false,
+    settingsStorage.isEnable2xGestureEnabled(),
   );
 
   const [enableSwipeGesture, setEnableSwipeGesture] = useState<boolean>(
-    MMKV.getBool('enableSwipeGesture') === false ? false : true,
+    settingsStorage.isSwipeGestureEnabled(),
   );
 
   const [showTabBarLables, setShowTabBarLables] = useState<boolean>(
-    MMKV.getBool('showTabBarLables') || false,
+    settingsStorage.showTabBarLabels(),
   );
 
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(
-    MMKV.getBool('useExternalPlayer', () => false),
+    settingsStorage.getBool('useExternalPlayer', false),
   );
 
   const [hapticFeedback, setHapticFeedback] = useState(
-    MMKV.getBool('hapticFeedback') === false ? false : true,
+    settingsStorage.isHapticFeedbackEnabled(),
   );
 
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
-    MMKV.getBool('alwaysExternalDownloader') || false,
+    settingsStorage.getBool('alwaysExternalDownloader') || false,
   );
 
   return (
@@ -110,7 +111,7 @@ const Preferences = () => {
                           );
                           return;
                         }
-                        MMKV.setString('customColor', e.nativeEvent.text);
+                        settingsStorage.setCustomColor(e.nativeEvent.text);
                         setPrimary(e.nativeEvent.text);
                       }}
                     />
@@ -139,18 +140,18 @@ const Preferences = () => {
                       borderWidth: 0,
                       marginTop: 4,
                     }}
-                    itemTextStyle={{ color: 'white' }}
+                    itemTextStyle={{color: 'white'}}
                     activeColor="#3A3A3A"
                     itemContainerStyle={{
                       backgroundColor: '#262626',
-                      borderWidth: 0
+                      borderWidth: 0,
                     }}
                     style={{
                       backgroundColor: '#262626',
-                      borderWidth: 0 
+                      borderWidth: 0,
                     }}
-                    iconStyle={{ tintColor: 'white' }}
-                    placeholderStyle={{ color: 'white' }}
+                    iconStyle={{tintColor: 'white'}}
+                    placeholderStyle={{color: 'white'}}
                     labelField="name"
                     valueField="color"
                     data={themes}
@@ -175,7 +176,7 @@ const Preferences = () => {
                 thumbColor={hapticFeedback ? primary : 'gray'}
                 value={hapticFeedback}
                 onValueChange={() => {
-                  MMKV.setBool('hapticFeedback', !hapticFeedback);
+                  settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
                   setHapticFeedback(!hapticFeedback);
                 }}
               />
@@ -188,7 +189,7 @@ const Preferences = () => {
                 thumbColor={showTabBarLables ? primary : 'gray'}
                 value={showTabBarLables}
                 onValueChange={() => {
-                  MMKV.setBool('showTabBarLables', !showTabBarLables);
+                  settingsStorage.setShowTabBarLabels(!showTabBarLables);
                   setShowTabBarLables(!showTabBarLables);
                   ToastAndroid.show(
                     'Restart App to Apply Changes',
@@ -205,7 +206,7 @@ const Preferences = () => {
                 thumbColor={showHamburgerMenu ? primary : 'gray'}
                 value={showHamburgerMenu}
                 onValueChange={() => {
-                  MMKV.setBool('showHamburgerMenu', !showHamburgerMenu);
+                  settingsStorage.setShowHamburgerMenu(!showHamburgerMenu);
                   setShowHamburgerMenu(!showHamburgerMenu);
                 }}
               />
@@ -220,7 +221,10 @@ const Preferences = () => {
                 thumbColor={showRecentlyWatched ? primary : 'gray'}
                 value={showRecentlyWatched}
                 onValueChange={() => {
-                  MMKV.setBool('showRecentlyWatched', !showRecentlyWatched);
+                  settingsStorage.setBool(
+                    'showRecentlyWatched',
+                    !showRecentlyWatched,
+                  );
                   setShowRecentlyWatched(!showRecentlyWatched);
                 }}
               />
@@ -233,7 +237,7 @@ const Preferences = () => {
                 thumbColor={disableDrawer ? primary : 'gray'}
                 value={disableDrawer}
                 onValueChange={() => {
-                  MMKV.setBool('disableDrawer', !disableDrawer);
+                  settingsStorage.setBool('disableDrawer', !disableDrawer);
                   setDisableDrawer(!disableDrawer);
                 }}
               />
@@ -248,7 +252,7 @@ const Preferences = () => {
                 thumbColor={alwaysUseExternalDownload ? primary : 'gray'}
                 value={alwaysUseExternalDownload}
                 onValueChange={() => {
-                  MMKV.setBool(
+                  settingsStorage.setBool(
                     'alwaysExternalDownloader',
                     !alwaysUseExternalDownload,
                   );
@@ -272,7 +276,7 @@ const Preferences = () => {
                 thumbColor={OpenExternalPlayer ? primary : 'gray'}
                 value={OpenExternalPlayer}
                 onValueChange={val => {
-                  MMKV.setBool('useExternalPlayer', val);
+                  settingsStorage.setBool('useExternalPlayer', val);
                   setOpenExternalPlayer(val);
                 }}
               />
@@ -285,7 +289,7 @@ const Preferences = () => {
                 thumbColor={showMediaControls ? primary : 'gray'}
                 value={showMediaControls}
                 onValueChange={() => {
-                  MMKV.setBool('showMediaControls', !showMediaControls);
+                  settingsStorage.setShowMediaControls(!showMediaControls);
                   setShowMediaControls(!showMediaControls);
                 }}
               />
@@ -298,7 +302,7 @@ const Preferences = () => {
                 thumbColor={hideSeekButtons ? primary : 'gray'}
                 value={hideSeekButtons}
                 onValueChange={() => {
-                  MMKV.setBool('hideSeekButtons', !hideSeekButtons);
+                  settingsStorage.setHideSeekButtons(!hideSeekButtons);
                   setHideSeekButtons(!hideSeekButtons);
                 }}
               />
@@ -313,7 +317,7 @@ const Preferences = () => {
                 thumbColor={enableSwipeGesture ? primary : 'gray'}
                 value={enableSwipeGesture}
                 onValueChange={() => {
-                  MMKV.setBool('enableSwipeGesture', !enableSwipeGesture);
+                  settingsStorage.setSwipeGestureEnabled(!enableSwipeGesture);
                   setEnableSwipeGesture(!enableSwipeGesture);
                 }}
               />
@@ -333,14 +337,14 @@ const Preferences = () => {
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
-                    if (MMKV.getBool('hapticFeedback') !== false) {
+                    if (settingsStorage.isHapticFeedbackEnabled()) {
                       RNReactNativeHapticFeedback.trigger('effectTick');
                     }
                     const newExcluded = ExcludedQualities.includes(quality)
                       ? ExcludedQualities.filter(q => q !== quality)
                       : [...ExcludedQualities, quality];
                     setExcludedQualities(newExcluded);
-                    MMKV.setArray('ExcludedQualities', newExcluded);
+                    settingsStorage.setExcludedQualities(newExcluded);
                   }}
                   style={{
                     backgroundColor: ExcludedQualities.includes(quality)

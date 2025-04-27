@@ -18,7 +18,7 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
-import {MMKV, MmmkvCache} from '../lib/Mmkv';
+import {cacheStorage, settingsStorage} from '../lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -73,8 +73,12 @@ const SeasonList = ({
   const [isLoadingStreams, setIsLoadingStreams] = useState<boolean>(false);
 
   const [ActiveSeason, setActiveSeason] = useState<Link>(
-    MmmkvCache.getMap(`ActiveSeason${metaTitle + providerValue}`) ||
-      LinkList[0],
+    cacheStorage.getString(`ActiveSeason${metaTitle + providerValue}`)
+      ? JSON.parse(
+          cacheStorage.getString(`ActiveSeason${metaTitle + providerValue}`) ||
+            '{}',
+        )
+      : LinkList[0],
   );
 
   const {addItem} = useWatchHistoryStore(state => state);
@@ -166,9 +170,10 @@ const SeasonList = ({
     episodeList,
   }: playHandlerProps) => {
     addItem({
+      id: routeParams.link,
       link: routeParams.link,
       title: primaryTitle,
-      image: poster.poster || '',
+      poster: poster?.poster,
       provider: providerValue,
       lastPlayed: Date.now(),
       episodeTitle: secondaryTitle,
@@ -188,7 +193,7 @@ const SeasonList = ({
       episodeList[linkIndex].title
     ).replaceAll(/[^a-zA-Z0-9]/g, '_');
 
-    const externalPlayer = MMKV.getBool('useExternalPlayer');
+    const externalPlayer = settingsStorage.getBool('useExternalPlayer');
     const dwFile = await ifExists(file);
 
     if (externalPlayer) {
@@ -216,7 +221,7 @@ const SeasonList = ({
   };
 
   const isCompleted = (link: string) => {
-    const watchProgress = JSON.parse(MmmkvCache.getString(link) || '{}');
+    const watchProgress = JSON.parse(cacheStorage.getString(link) || '{}');
     const percentage =
       (watchProgress?.position / watchProgress?.duration) * 100;
     if (percentage > 85) {
@@ -228,7 +233,7 @@ const SeasonList = ({
 
   // onLongPress
   const onLongPressHandler = (active: boolean, link: string, type?: string) => {
-    if (MMKV.getBool('hapticFeedback') !== false) {
+    if (settingsStorage.isHapticFeedbackEnabled()) {
       RNReactNativeHapticFeedback.trigger('effectTick', {
         enableVibrateFallback: true,
         ignoreAndroidSystemSettings: false,
@@ -244,7 +249,7 @@ const SeasonList = ({
       }
       setEpisodeLoading(true);
       try {
-        const cacheEpisodes = await MmmkvCache.getItem(
+        const cacheEpisodes = await cacheStorage.getString(
           ActiveSeason.episodesLink,
         );
         if (cacheEpisodes) {
@@ -260,7 +265,10 @@ const SeasonList = ({
         if (episodes.length === 0) {
           return;
         }
-        MmmkvCache.setItem(ActiveSeason.episodesLink, JSON.stringify(episodes));
+        cacheStorage.setString(
+          ActiveSeason.episodesLink,
+          JSON.stringify(episodes),
+        );
         // console.log(episodes);
         setEpisodeList(episodes);
         setEpisodeLoading(false);
@@ -288,7 +296,10 @@ const SeasonList = ({
           }
           onChange={item => {
             setActiveSeason(item);
-            MmmkvCache.setMap(`ActiveSeason${metaTitle + providerValue}`, item);
+            cacheStorage.setString(
+              `ActiveSeason${metaTitle + providerValue}`,
+              JSON.stringify(item),
+            );
           }}
           value={ActiveSeason}
           data={LinkList}
@@ -604,7 +615,7 @@ const SeasonList = ({
                 className="flex-row justify-center items-center gap-2 p-2"
                 onPress={() => {
                   if (stickyMenu.link) {
-                    MmmkvCache.setString(
+                    cacheStorage.setString(
                       stickyMenu.link,
                       JSON.stringify({
                         position: 0,
@@ -622,7 +633,7 @@ const SeasonList = ({
                 className="flex-row justify-center items-center gap-2 pt-0 pb-2 px-2 bg-tertiary rounded-md"
                 onPress={() => {
                   if (stickyMenu.link) {
-                    MmmkvCache.setString(
+                    cacheStorage.setString(
                       stickyMenu.link,
                       JSON.stringify({
                         position: 10000,

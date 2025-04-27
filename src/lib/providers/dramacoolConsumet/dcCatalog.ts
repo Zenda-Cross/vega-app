@@ -1,7 +1,7 @@
 export const dcCatalog = [
   {
     title: 'Popular',
-    filter: '/most-popular-drama',
+    filter: '/popular',
   },
 ];
 

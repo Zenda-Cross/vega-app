@@ -10,7 +10,7 @@ import {
 import pkg from '../../../package.json';
 import React, {useState} from 'react';
 import {Feather} from '@expo/vector-icons';
-import {MMKV} from '../../lib/Mmkv';
+import {settingsStorage} from '../../lib/storage';
 import RNFS from 'react-native-fs';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
@@ -181,10 +181,10 @@ const About = () => {
   const {primary} = useThemeStore(state => state);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [autoDownload, setAutoDownload] = useState(
-    MMKV.getBool('autoDownload') || false,
+    settingsStorage.isAutoDownloadEnabled(),
   );
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
-    MMKV.getBool('autoCheckUpdate') || true,
+    settingsStorage.isAutoCheckUpdateEnabled(),
   );
 
   return (
@@ -210,7 +210,7 @@ const About = () => {
             value={autoDownload}
             onValueChange={() => {
               setAutoDownload(!autoDownload);
-              MMKV.setBool('autoDownload', !autoDownload);
+              settingsStorage.setAutoDownloadEnabled(!autoDownload);
             }}
             thumbColor={autoDownload ? primary : 'gray'}
           />
@@ -228,7 +228,7 @@ const About = () => {
             value={autoCheckUpdate}
             onValueChange={() => {
               setAutoCheckUpdate(!autoCheckUpdate);
-              MMKV.setBool('autoCheckUpdate', !autoCheckUpdate);
+              settingsStorage.setAutoCheckUpdateEnabled(!autoCheckUpdate);
             }}
             thumbColor={autoCheckUpdate ? primary : 'gray'}
           />

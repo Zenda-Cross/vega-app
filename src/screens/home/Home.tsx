@@ -3,13 +3,15 @@ import {
   ScrollView,
   RefreshControl,
   StatusBar,
+  Text,
+  View,
+  TouchableOpacity,
 } from 'react-native';
 import Slider from '../../components/Slider';
 import React, {useEffect, useRef, useState} from 'react';
 import Hero from '../../components/Hero';
-import {View} from 'moti';
 import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {mainStorage, cacheStorage} from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
 import {manifest} from '../../lib/Manifest';
@@ -40,7 +42,7 @@ const Home = ({}: Props) => {
   // const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
   const drawer = useRef<DrawerLayout>(null);
   const [isDrawerOpen] = useState(false);
-  const disableDrawer = MMKV.getBool('disableDrawer') || false;
+  const disableDrawer = mainStorage.getBool('disableDrawer') || false;
 
   const {provider} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
@@ -58,7 +60,7 @@ const Home = ({}: Props) => {
     const fetchHomeData = async () => {
       setLoading(true);
       setHero({link: '', image: '', title: ''});
-      const cache = MmmkvCache.getString('homeData' + provider.value);
+      const cache = cacheStorage.getString('homeData' + provider.value);
       // console.log('cache', cache);
       if (cache) {
         const data = JSON.parse(cache as string);
@@ -86,11 +88,12 @@ const Home = ({}: Props) => {
         data[0].Posts.length === 0
       ) {
         setLoading(false);
+        setHomeData([]);
         return;
       }
       setLoading(false);
       setHomeData(data);
-      MmmkvCache.setString('homeData' + provider.value, JSON.stringify(data));
+      cacheStorage.setString('homeData' + provider.value, JSON.stringify(data));
     };
     fetchHomeData();
     return () => {
@@ -215,6 +218,21 @@ const Home = ({}: Props) => {
                     />
                   ))}
             </View>
+            {!loading && homeData.length === 0 && (
+              <View className="flex-1 items-center justify-center mt-10">
+                <Text className="text-white text-lg font-semibold">
+                  Oops! Something went wrong.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setRefreshing(true);
+                    setTimeout(() => setRefreshing(false), 1000);
+                  }}
+                  className="bg-white rounded-md px-4 py-2 mt-3">
+                  <Text className="text-black font-semibold">Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <View className="h-16" />
           </ScrollView>
         </DrawerLayout>

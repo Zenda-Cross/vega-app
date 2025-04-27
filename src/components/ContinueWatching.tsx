@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
-import {MMKV} from '../lib/Mmkv';
+import {mainStorage as MMKV} from '../lib/storage/StorageService';
 import {useNavigation} from '@react-navigation/native';
 import useThemeStore from '../lib/zustand/themeStore';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -91,14 +91,14 @@ const ContinueWatching = () => {
           console.error('Failed to parse link:', e);
         }
       }
-
+      console.log('linkData', item.poster);
       // Navigate to Info screen
       navigation.navigate('HomeStack', {
         screen: 'Info',
         params: {
           link: linkData,
           provider: item.provider,
-          poster: item.image,
+          poster: item.poster,
         },
       } as any);
     } catch (error) {
@@ -218,7 +218,7 @@ const ContinueWatching = () => {
               <View className="relative">
                 {/* Poster Image */}
                 <Image
-                  source={{uri: item.image}}
+                  source={{uri: item?.poster}}
                   className="rounded-md"
                   style={{width: 100, height: 150}}
                 />

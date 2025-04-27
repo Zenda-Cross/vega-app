@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import React from 'react';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {settingsStorage, cacheStorageService} from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {providersList, socialLinks} from '../../lib/constants';
@@ -51,7 +51,7 @@ const Settings = ({navigation}: Props) => {
       onPress={() => {
         setProvider(item);
         // Add haptic feedback
-        if (MMKV.getBool('hapticFeedback') !== false) {
+        if (settingsStorage.isHapticFeedbackEnabled()) {
           ReactNativeHapticFeedback.trigger('virtualKey', {
             enableVibrateFallback: true,
             ignoreAndroidSystemSettings: false,
@@ -123,7 +123,7 @@ const Settings = ({navigation}: Props) => {
       contentContainerStyle={{
         paddingTop: StatusBar.currentHeight || 0,
         paddingBottom: 24,
-        flexGrow: 1, // This ensures content is scrollable even if it's shorter than screen
+        flexGrow: 1,
       }}>
       <View className="p-5">
         <MotiView
@@ -271,13 +271,13 @@ const Settings = ({navigation}: Props) => {
                 <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={() => {
-                    if (MMKV.getBool('hapticFeedback') !== false) {
+                    if (settingsStorage.isHapticFeedbackEnabled()) {
                       ReactNativeHapticFeedback.trigger('virtualKey', {
                         enableVibrateFallback: true,
                         ignoreAndroidSystemSettings: false,
                       });
                     }
-                    MmmkvCache.clearStore();
+                    cacheStorageService.clearAll();
                   }}>
                   <MaterialCommunityIcons
                     name="delete-outline"
@@ -295,7 +295,7 @@ const Settings = ({navigation}: Props) => {
                 <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
                   onPress={() => {
-                    if (MMKV.getBool('hapticFeedback') !== false) {
+                    if (settingsStorage.isHapticFeedbackEnabled()) {
                       ReactNativeHapticFeedback.trigger('virtualKey', {
                         enableVibrateFallback: true,
                         ignoreAndroidSystemSettings: false,

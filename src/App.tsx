@@ -18,12 +18,11 @@ import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
 import DisableProviders from './screens/settings/DisableProviders';
 import About, {checkForUpdate} from './screens/settings/About';
-import {MMKV} from './lib/Mmkv';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
 import useThemeStore from './lib/zustand/themeStore';
-import {LogBox, ViewStyle} from 'react-native';
+import {Dimensions, LogBox, ViewStyle} from 'react-native';
 import {EpisodeLink} from './lib/providers/types';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import TabBarBackgound from './components/TabBarBackgound';
@@ -33,11 +32,14 @@ import {StyleProp} from 'react-native';
 import Animated from 'react-native-reanimated';
 import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
-import WatchHistory from './screens/WatchHistory'; // Add this import
+import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
+import {settingsStorage} from './lib/storage';
 
 enableScreens(true);
 enableFreeze(true);
+
+const isLargeScreen = Dimensions.get('window').width > 768;
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -140,7 +142,7 @@ const App = () => {
     createNativeStackNavigator<WatchHistoryStackParamList>();
   const {primary} = useThemeStore(state => state);
 
-  const showTabBarLables = MMKV.getBool('showTabBarLables') || false;
+  const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
 
@@ -250,25 +252,29 @@ const App = () => {
         detachInactiveScreens={true}
         screenOptions={{
           animation: 'shift',
+          tabBarLabelPosition: 'below-icon',
+          tabBarVariant: isLargeScreen ? 'material' : 'uikit',
           popToTopOnBlur: false,
-          tabBarPosition: 'bottom',
+          tabBarPosition: isLargeScreen ? 'left' : 'bottom',
           headerShown: false,
           freezeOnBlur: true,
           tabBarActiveTintColor: primary,
           tabBarInactiveTintColor: '#dadde3',
           tabBarShowLabel: showTabBarLables,
-          tabBarStyle: {
-            position: 'absolute',
-            bottom: 0,
-            height: 55,
-            borderRadius: 0,
-            // backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            overflow: 'hidden',
-            elevation: 0,
-            borderTopWidth: 0,
-            paddingHorizontal: 0,
-            paddingTop: 5,
-          },
+          tabBarStyle: !isLargeScreen
+            ? {
+                position: 'absolute',
+                bottom: 0,
+                height: 55,
+                borderRadius: 0,
+                // backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                overflow: 'hidden',
+                elevation: 0,
+                borderTopWidth: 0,
+                paddingHorizontal: 0,
+                paddingTop: 5,
+              }
+            : {},
           tabBarBackground: () => <TabBarBackgound />,
           tabBarHideOnKeyboard: true,
           tabBarButton: props => {
@@ -281,7 +287,7 @@ const App = () => {
                   props.onPress && props.onPress(e);
                   if (
                     !props?.accessibilityState?.selected &&
-                    MMKV.getBool('hapticFeedback') !== false
+                    settingsStorage.isHapticFeedbackEnabled()
                   ) {
                     RNReactNativeHapticFeedback.trigger('effectTick', {
                       enableVibrateFallback: true,
@@ -373,11 +379,12 @@ const App = () => {
       </Tab.Navigator>
     );
   }
+
   useEffect(() => {
-    if (MMKV.getBool('autoCheckUpdate') !== false) {
+    if (settingsStorage.isAutoCheckUpdateEnabled()) {
       checkForUpdate(
         () => {},
-        MMKV.getBool('autoDownload') || false,
+        settingsStorage.isAutoDownloadEnabled(),
         false,
         primary,
       );

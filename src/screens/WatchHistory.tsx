@@ -6,14 +6,14 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import {FlashList} from '@shopify/flash-list';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {WatchHistoryStackParamList} from '../App';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import useThemeStore from '../lib/zustand/themeStore';
-import { MMKV } from '../lib/Mmkv';
+import {mainStorage} from '../lib/storage';
 
 type Props = NativeStackScreenProps<WatchHistoryStackParamList, 'WatchHistory'>;
 const WatchHistory = ({navigation}: Props) => {
@@ -40,11 +40,14 @@ const WatchHistory = ({navigation}: Props) => {
         try {
           // First try to get the dedicated watch history progress
           // Use the infoUrl or link as the key, matching Player.tsx
-          const historyKey = item.infoUrl || item.link;
+          const historyKey = item.link;
           const historyProgressKey = `watch_history_progress_${historyKey}`;
-          const storedProgress = MMKV.getString(historyProgressKey);
+          const storedProgress = mainStorage.getString(historyProgressKey);
           // Log what we're looking for and what we found
-          console.log(`Looking for progress: ${historyProgressKey}`, storedProgress ? 'FOUND' : 'NOT FOUND');
+          console.log(
+            `Looking for progress: ${historyProgressKey}`,
+            storedProgress ? 'FOUND' : 'NOT FOUND',
+          );
 
           if (storedProgress) {
             const parsed = JSON.parse(storedProgress);
@@ -55,7 +58,10 @@ const WatchHistory = ({navigation}: Props) => {
               updatedAt: new Date(parsed.updatedAt).toLocaleTimeString(),
             });
             if (parsed.percentage) {
-              progressMap[item.link] = Math.min(Math.max(parsed.percentage, 0), 100);
+              progressMap[item.link] = Math.min(
+                Math.max(parsed.percentage, 0),
+                100,
+              );
               return;
             } else if (parsed.currentTime && parsed.duration) {
               const percentage = (parsed.currentTime / parsed.duration) * 100;
@@ -65,19 +71,25 @@ const WatchHistory = ({navigation}: Props) => {
           }
           // Try episode-specific key if this item has an episodeTitle
           if (item.episodeTitle) {
-            const episodeKey = `watch_history_progress_${historyKey}_${item.episodeTitle.replace(/\s+/g, '_')}`;
-            const episodeData = MMKV.getString(episodeKey);
+            const episodeKey = `watch_history_progress_${historyKey}_${item.episodeTitle.replace(
+              /\s+/g,
+              '_',
+            )}`;
+            const episodeData = mainStorage.getString(episodeKey);
             if (episodeData) {
               const parsed = JSON.parse(episodeData);
               if (parsed.percentage) {
-                progressMap[item.link] = Math.min(Math.max(parsed.percentage, 0), 100);
+                progressMap[item.link] = Math.min(
+                  Math.max(parsed.percentage, 0),
+                  100,
+                );
                 return;
               }
             }
           }
 
           // Fall back to standard video position cache
-          const cachedProgress = MMKV.getString(item.link);
+          const cachedProgress = mainStorage.getString(item.link);
           if (cachedProgress) {
             const parsed = JSON.parse(cachedProgress);
             if (parsed.position && parsed.duration) {
@@ -97,7 +109,7 @@ const WatchHistory = ({navigation}: Props) => {
           console.error('Error processing progress for item:', item.title, e);
         }
       });
-      console.log("Final progress data loaded:", progressMap);
+      console.log('Final progress data loaded:', progressMap);
       setProgressData(progressMap);
     };
 
@@ -147,8 +159,7 @@ const WatchHistory = ({navigation}: Props) => {
         {uniqueHistory.length > 0 && (
           <TouchableOpacity
             onPress={() => clearHistory()}
-            className="bg-white/10 px-3 py-1 rounded-full"
-          >
+            className="bg-white/10 px-3 py-1 rounded-full">
             <Text className="text-white">Clear</Text>
           </TouchableOpacity>
         )}
@@ -174,8 +185,7 @@ const WatchHistory = ({navigation}: Props) => {
             <View className="flex-1 m-1">
               <TouchableOpacity
                 onPress={() => handleNavigateToInfo(item)}
-                activeOpacity={0.8}
-              >
+                activeOpacity={0.8}>
                 <View className="relative overflow-hidden">
                   <Image
                     source={{uri: item.image}}
@@ -188,8 +198,7 @@ const WatchHistory = ({navigation}: Props) => {
                     style={{
                       backgroundColor: 'rgba(0,0,0,0.6)',
                       zIndex: 10,
-                    }}
-                  >
+                    }}>
                     {/* Progress bar fill with gradient effect */}
                     <View
                       style={{
@@ -201,7 +210,7 @@ const WatchHistory = ({navigation}: Props) => {
                         backgroundColor: primary,
                         zIndex: 20,
                         shadowColor: primary,
-                        shadowOffset: { width: 0, height: 0 },
+                        shadowOffset: {width: 0, height: 0},
                         shadowOpacity: 0.5,
                         shadowRadius: 3,
                         elevation: 5,
@@ -214,7 +223,7 @@ const WatchHistory = ({navigation}: Props) => {
                     <View
                       className="absolute bottom-0 left-0 right-0 h-16"
                       style={{
-                        backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                        backgroundColor: 'rgba(0,0,0,0.8)',
                         zIndex: 10,
                       }}
                     />
@@ -224,13 +233,12 @@ const WatchHistory = ({navigation}: Props) => {
                     <View
                       className="absolute bottom-3 right-2"
                       style={{
-                        zIndex:15,
-                      }}
-                    >
+                        zIndex: 15,
+                      }}>
                       {/* Container with fixed width for consistent size */}
                       <View
                         style={{
-                          width: 45,  // Fixed width for consistent sizing
+                          width: 45, // Fixed width for consistent sizing
                           height: 18, // Fixed height
                           backgroundColor: 'rgba(0,0,0,0.7)',
                           borderRadius: 9,
@@ -239,8 +247,7 @@ const WatchHistory = ({navigation}: Props) => {
                           borderLeftColor: primary,
                           flexDirection: 'row', // For horizontal layout
                           alignItems: 'center', // Center text vertically
-                        }}
-                      >
+                        }}>
                         {/* More visible fill with primary color */}
                         <View
                           style={{
@@ -259,10 +266,9 @@ const WatchHistory = ({navigation}: Props) => {
                           style={{
                             textShadowColor: 'rgba(0,0,0,0.9)',
                             textShadowRadius: 3,
-                            textShadowOffset: { width: 0, height: 0 },
+                            textShadowOffset: {width: 0, height: 0},
                             zIndex: 20, // Ensure text is on top
-                          }}
-                        >
+                          }}>
                           {Math.round(progress)}%
                         </Text>
                       </View>
@@ -278,9 +284,12 @@ const WatchHistory = ({navigation}: Props) => {
                         borderWidth: 1.5,
                         borderColor: primary,
                         zIndex: 15,
-                      }}
-                    >
-                      <MaterialCommunityIcons name="check-circle" size={18} color={primary} />
+                      }}>
+                      <MaterialCommunityIcons
+                        name="check-circle"
+                        size={18}
+                        color={primary}
+                      />
                     </View>
                   )}
                 </View>

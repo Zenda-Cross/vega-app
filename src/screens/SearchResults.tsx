@@ -1,12 +1,12 @@
 import {SafeAreaView, ScrollView, ActivityIndicator, Text} from 'react-native';
 import Slider from '../components/Slider';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {View} from 'moti';
 import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {manifest} from '../lib/Manifest';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
@@ -22,103 +22,116 @@ interface SearchPageData {
 
 const SearchResults = ({route}: Props): React.ReactElement => {
   const {primary} = useThemeStore(state => state);
-  // const [refreshing, setRefreshing] = useState(false);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
   const [emptyResults, setEmptyResults] = useState<SearchPageData[]>([]);
   const trueLoading = providersList.map(item => {
     return {name: item.name, value: item.value, isLoading: true};
   });
-  const disabledProviders = MMKV.getArray('disabledProviders') || [];
+  // Use settingsStorage instead of direct MMKV call
+  const disabledProviders = settingsStorage.getExcludedQualities() || [];
   const updatedProvidersList = providersList.filter(
     provider => !disabledProviders.includes(provider.value),
   );
   const [loading, setLoading] = useState(trueLoading);
+  const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
+    // Clean up previous controller if exists
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+
+    // Create a new controller for this effect
+    abortController.current = new AbortController();
+    const signal = abortController.current.signal;
+
+    // Reset states when component mounts or filter changes
+    setSearchData([]);
+    setEmptyResults([]);
+    setLoading(trueLoading);
+
+    const fetchPromises: Promise<void>[] = [];
 
     const getSearchResults = () => {
-      updatedProvidersList.forEach(async item => {
-        try {
-          const data = await manifest[item.value].GetSearchPosts(
-            route.params.filter,
-            1,
-            item.value,
-            signal,
-          );
+      updatedProvidersList.forEach(item => {
+        const fetchPromise = (async () => {
+          try {
+            const data = await manifest[item.value].GetSearchPosts(
+              route.params.filter,
+              1,
+              item.value,
+              signal,
+            );
 
-          if (data.length > 0) {
-            setSearchData(prev => [
-              ...prev,
-              {
-                title: item.name,
-                Posts: data,
-                filter: route.params.filter,
-                providerValue: item.value,
-                value: item.value,
-                name: item.name,
-              },
-            ]);
-          } else {
-            setEmptyResults(prev => [
-              ...prev,
-              {
-                title: item.name,
-                Posts: data,
-                filter: route.params.filter,
-                providerValue: item.value,
-                value: item.value,
-                name: item.name,
-              },
-            ]);
+            // Skip updating state if request was aborted
+            if (signal.aborted) return;
+
+            if (data && data.length > 0) {
+              setSearchData(prev => [
+                ...prev,
+                {
+                  title: item.name,
+                  Posts: data,
+                  filter: route.params.filter,
+                  providerValue: item.value,
+                  value: item.value,
+                  name: item.name,
+                },
+              ]);
+            } else {
+              setEmptyResults(prev => [
+                ...prev,
+                {
+                  title: item.name,
+                  Posts: data || [],
+                  filter: route.params.filter,
+                  providerValue: item.value,
+                  value: item.value,
+                  name: item.name,
+                },
+              ]);
+            }
+
+            setLoading(prev =>
+              prev.map(i =>
+                i.value === item.value ? {...i, isLoading: false} : i,
+              ),
+            );
+          } catch (error) {
+            if (signal.aborted) return;
+
+            console.error(`Error fetching data for ${item.name}:`, error);
+            setLoading(prev =>
+              prev.map(i =>
+                i.value === item.value
+                  ? {...i, isLoading: false, error: true}
+                  : i,
+              ),
+            );
           }
+        })();
 
-          setLoading(prev =>
-            prev.map(i =>
-              i.value === item.value ? {...i, isLoading: false} : i,
-            ),
-          );
-        } catch (error) {
-          console.error(`Error fetching data for ${item.name}:`, error);
-          setLoading(prev =>
-            prev.map(i =>
-              i.value === item.value
-                ? {...i, isLoading: false, error: true}
-                : i,
-            ),
-          );
-        }
+        fetchPromises.push(fetchPromise);
       });
+
+      // Use Promise.allSettled to handle all promises regardless of their outcome
+      return Promise.allSettled(fetchPromises);
     };
 
     getSearchResults();
 
     return () => {
-      controller.abort();
+      // Cleanup function: abort any ongoing API requests
+      if (abortController.current) {
+        abortController.current.abort();
+        abortController.current = null;
+      }
     };
-  }, []);
+  }, [route.params.filter]);
+
   return (
     <SafeAreaView className="bg-black h-full w-full">
-      {/* <StatusBar translucent={false} backgroundColor="black" /> */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        // refreshControl={
-        //   <RefreshControl
-        //     colors={[primary]}
-        //     tintColor={primary}
-        //     progressBackgroundColor={'black'}
-        //     refreshing={refreshing}
-        //     onRefresh={() => {
-        //       setRefreshing(true);
-        //       setTimeout(() => setRefreshing(false), 1000);
-        //     }}
-        //   />
-        // }
-      >
-        {/* <Text className="text-white text-2xl font-semibold px-4 mt-3 ">
-          Search Results
-        </Text> */}
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View className="mt-14 px-4 flex flex-row justify-between items-center gap-x-3">
           <Text className="text-white text-2xl font-semibold ">
             {loading?.every(i => !i.isLoading)

@@ -1,7 +1,7 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
 import {MMKVLoader} from 'react-native-mmkv-storage';
-import {MMKV} from '../Mmkv';
+import {settingsStorage} from '../storage';
 
 const storage = new MMKVLoader().initialize();
 
@@ -15,20 +15,21 @@ export interface Theme {
 const useThemeStore = create<Theme>()(
   persist(
     set => ({
-      primary: '#FF6347',
-      isCustom: false,
+      primary: settingsStorage.getPrimaryColor(),
+      isCustom: settingsStorage.isCustomTheme(),
 
       setPrimary: (primary: Theme['primary']) => {
         set({primary});
-        MMKV.setString('primaryColor', primary);
+        settingsStorage.setPrimaryColor(primary);
       },
       setCustom: (isCustom: Theme['isCustom']) => {
         set({isCustom});
-        MMKV.setBool('isCustom', isCustom);
+        settingsStorage.setCustomTheme(isCustom);
       },
     }),
     {
       name: 'content-storage',
+      //@ts-expect-error
       storage: createJSONStorage(() => storage),
     },
   ),

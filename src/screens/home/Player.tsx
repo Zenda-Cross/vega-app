@@ -11,7 +11,7 @@ import {Easing} from 'react-native-reanimated';
 import React, {useEffect, useState, useRef, useCallback} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import {mainStorage, cacheStorage, settingsStorage} from '../../lib/storage';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import VideoPlayer from '@8man/react-native-media-console';
 import {useNavigation} from '@react-navigation/native';
@@ -82,6 +82,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [resizeMode, setResizeMode] = useState<ResizeMode>(ResizeMode.NONE);
 
   const [videoTracks, setVideoTracks] = useState<VideoTrack[]>([]);
+
   const [selectedVideoTrack, setSelectedVideoTrack] =
     useState<SelectedVideoTrack>({
       type: SelectedVideoTrackType.AUTO,
@@ -105,16 +106,14 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // constants
   const playbacks = [0.25, 0.5, 1.0, 1.25, 1.35, 1.5, 1.75, 2];
-  const excludedQualities = MMKV.getArray('ExcludedQualities') || [];
-  const hideSeekButtons = MMKV.getBool('hideSeekButtons') || false;
-  const enable2xGesture = MMKV.getBool('enable2xGesture') || false;
-  const enableSwipeGesture =
-    MMKV.getBool('enableSwipeGesture') === false ? false : true;
-  const showMediaControls =
-    MMKV.getBool('showMediaControls') === false ? false : true;
+  const excludedQualities = settingsStorage.getExcludedQualities() || [];
+  const hideSeekButtons = settingsStorage.hideSeekButtons() || false;
+  const enable2xGesture = settingsStorage.isEnable2xGestureEnabled() || false;
+  const enableSwipeGesture = settingsStorage.isSwipeGestureEnabled();
+  const showMediaControls = settingsStorage.showMediaControls();
 
-  const watchedDuration = MmmkvCache.getString(activeEpisode?.link)
-    ? JSON.parse(MmmkvCache.getString(activeEpisode?.link) as string).position
+  const watchedDuration = cacheStorage.getString(activeEpisode?.link)
+    ? JSON.parse(cacheStorage.getString(activeEpisode?.link) as string).position
     : 0;
   console.log('watchedDuration', watchedDuration);
 
@@ -251,8 +250,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   useEffect(() => {
     if (route.params?.primaryTitle) {
       addItem({
+        id: route.params.infoUrl || activeEpisode.link,
         title: route.params.primaryTitle,
-        image: route.params.poster?.poster || '',
+        poster:
+          route.params.poster?.poster || route.params.poster?.background || '',
         link: route.params.infoUrl || '',
         provider: route.params?.providerValue || provider.value,
         lastPlayed: Date.now(),
@@ -311,7 +312,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         Math.abs(currentTime - lastSavedPositionRef.current) > 5 ||
         currentTime - lastSavedPositionRef.current > 5
       ) {
-        MmmkvCache.setString(
+        cacheStorage.setString(
           activeEpisode.link,
           JSON.stringify({
             position: currentTime,
@@ -359,7 +360,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           updatedAt: Date.now(),
         };
         // Store the data
-        MMKV.setString(historyProgressKey, JSON.stringify(progressData));
+        mainStorage.setString(historyProgressKey, JSON.stringify(progressData));
 
         // Log every 5 seconds to avoid too much console spam
         if (Math.floor(currentTime) % 5 === 0) {
@@ -384,7 +385,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             /\s+/g,
             '_',
           )}`;
-          MMKV.setString(episodeKey, JSON.stringify(progressData));
+          mainStorage.setString(episodeKey, JSON.stringify(progressData));
         }
       }
     } catch (error) {
@@ -462,8 +463,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   // set last selected audio and subtitle track
   useEffect(() => {
     if (hasSetInitialTracksRef.current) return;
-    const lastAudioTrack = MMKV.getString('lastAudioTrack') || 'auto';
-    const lastTextTrack = MMKV.getString('lastTextTrack') || 'auto';
+    const lastAudioTrack = cacheStorage.getString('lastAudioTrack') || 'auto';
+    const lastTextTrack = cacheStorage.getString('lastTextTrack') || 'auto';
     const audioTrackIndex = audioTracks.findIndex(
       track => track.language === lastAudioTrack,
     );
@@ -534,16 +535,16 @@ const Player = ({route}: Props): React.JSX.Element => {
         rate={playbackRate}
         poster={{
           source: {
-            uri:
-              route?.params?.poster?.logo ||
-              'https://placehold.co/600x400/000000/000000/png',
+            ...(route.params?.poster?.logo && {
+              uri: route.params?.poster?.logo,
+            }),
           },
           resizeMode: 'center',
         }}
         subtitleStyle={{
-          fontSize: MMKV.getInt('subtitleFontSize') || 20,
-          opacity: parseFloat(MMKV.getString('subtitleOpacity')) || 1,
-          paddingBottom: MMKV.getInt('subtitleBottomPadding') || 10,
+          fontSize: settingsStorage.getSubtitleFontSize() || 16,
+          opacity: settingsStorage.getSubtitleOpacity() || 1,
+          paddingBottom: settingsStorage.getSubtitleBottomPadding() || 10,
           subtitlesFollowVideo: false,
         }}
         title={{
@@ -946,7 +947,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                         type: SelectedTrackType.LANGUAGE,
                         value: track.language,
                       });
-                      MMKV.setString('lastAudioTrack', track.language || '');
+                      cacheStorage.setString(
+                        'lastAudioTrack',
+                        track.language || '',
+                      );
                       setSelectedAudioTrackIndex(i);
                       setShowSettings(false);
                     }}>
@@ -999,7 +1003,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                           type: SelectedTrackType.DISABLED,
                         });
                         setSelectedTextTrackIndex(1000);
-                        MMKV.setString('lastTextTrack', '');
+                        cacheStorage.setString('lastTextTrack', '');
                         setShowSettings(false);
                       }}>
                       <Text
@@ -1069,7 +1073,10 @@ const Player = ({route}: Props): React.JSX.Element => {
                         value: track.index,
                       });
                       setSelectedTextTrackIndex(track.index);
-                      MMKV.setString('lastTextTrack', track.language || '');
+                      cacheStorage.setString(
+                        'lastTextTrack',
+                        track.language || '',
+                      );
                       setShowSettings(false);
                     }}>
                     <Text

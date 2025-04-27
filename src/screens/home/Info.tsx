@@ -22,7 +22,7 @@ import axios from 'axios';
 import SeasonList from '../../components/SeasonList';
 import {Skeleton} from 'moti/skeleton';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {MMKV, MmmkvCache} from '../../lib/Mmkv';
+import { cacheStorage, settingsStorage, watchListStorage } from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
@@ -49,17 +49,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const threeDotsRef = useRef<any>();
 
   const [inLibrary, setInLibrary] = useState(
-    MMKV.getArray('watchlist')?.some(
-      (item: any) => item.link === route.params.link,
-    ),
+    watchListStorage.isInWatchList(route.params.link)
   );
   const [backgroundColor, setBackgroundColor] = useState('transparent');
   const {provider} = useContentStore(state => state);
 
   const openThreeDotsMenu = () => {
-    const menuPosition = threeDotsRef.current;
-    if (menuPosition) {
-      menuPosition.measure(
+    if (threeDotsRef.current) {
+      threeDotsRef.current.measure(
         (
           x: number,
           y: number,
@@ -88,13 +85,13 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         setInfoLoading(true);
         // cache
         await new Promise(resolve => setTimeout(resolve, 200));
-        const cacheDataRes = MmmkvCache.getString(route.params.link) || '';
+        const cacheDataRes = cacheStorage.getString(route.params.link) || '';
         // console.log('cacheDataRes', cacheDataRes);
         if (cacheDataRes) {
           const cacheData = await JSON.parse(cacheDataRes as string);
           setInfo(cacheData);
           setInfoLoading(false);
-          const cacheMetaRes = MmmkvCache.getString(cacheData.imdbId);
+          const cacheMetaRes = cacheStorage.getString(cacheData.imdbId);
           if (cacheMetaRes) {
             const cacheMeta = await JSON.parse(cacheMetaRes as string);
             setMeta(cacheMeta);
@@ -111,7 +108,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           );
           if (metaRes?.data?.meta) {
             setMeta(metaRes?.data.meta);
-            MmmkvCache.setString(
+            cacheStorage.setString(
               data.imdbId,
               JSON.stringify(metaRes.data.meta),
             );
@@ -124,7 +121,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           return;
         }
         setInfo(data);
-        MmmkvCache.setString(route.params.link, JSON.stringify(data));
+        cacheStorage.setString(route.params.link, JSON.stringify(data));
         setInfoLoading(false);
         // console.log(info?.linkList);
       } catch (e) {
@@ -152,13 +149,11 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
 
   // remove from library
   const removeLibrary = () => {
-    if (MMKV.getBool('hapticFeedback') !== false) {
-      if (MMKV.getBool('hapticFeedback') !== false) {
-        ReactNativeHapticFeedback.trigger('effectClick', {
-          enableVibrateFallback: true,
-          ignoreAndroidSystemSettings: false,
-        });
-      }
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('effectClick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
     }
     removeItem(route.params.link);
     setInLibrary(false);
@@ -487,17 +482,13 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       info?.linkList
                         ? info?.linkList?.filter(
                             item =>
-                              (
-                                MMKV.getArray('ExcludedQualities') || []
-                              )?.includes(item.quality) === false,
+                              !item.quality || settingsStorage.getExcludedQualities().includes(item.quality as string) === false,
                           )?.length! > 0
-                          ? info?.linkList?.filter(
-                              item =>
-                                (
-                                  MMKV.getArray('ExcludedQualities') || []
-                                )?.includes(item.quality) === false,
-                            )
-                          : info?.linkList
+                        ? info?.linkList?.filter(
+                            item =>
+                              !item.quality || settingsStorage.getExcludedQualities().includes(item.quality as string) === false,
+                          )
+                        : info?.linkList
                         : []
                     }
                     poster={{

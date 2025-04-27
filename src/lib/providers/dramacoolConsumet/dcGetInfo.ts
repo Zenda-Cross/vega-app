@@ -1,12 +1,12 @@
 import axios from 'axios';
 import {Info, Link} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+// import {getBaseUrl} from '../getBaseUrl';
 
 export const dcGetInfo = async function (id: string): Promise<Info> {
   try {
-    const baseUrl = await getBaseUrl('consumet');
-    const url = `${baseUrl}/movies/dramacool/info?id=` + id;
-    console.log(url);
+    // const baseUrl = await getBaseUrl('consumet');
+    const url = `https://consumet.8man.me/movies/dramacool/info?id=` + id;
+    console.log('dcGetInfo', url);
     const res = await axios.get(url);
     const data = res.data;
     const meta = {

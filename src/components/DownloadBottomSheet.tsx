@@ -16,7 +16,7 @@ import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Clipboard} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import {TextTrackType} from 'react-native-video';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 
 type Props = {
   data: Stream[];
@@ -121,7 +121,7 @@ const DownloadBottomSheet = ({
                         className="p-2 bg-white/30 rounded-md my-1"
                         key={item.link}
                         onLongPress={() => {
-                          if (MMKV.getBool('hapticFeedback') !== false) {
+                          if (settingsStorage.isHapticFeedbackEnabled()) {
                             RNReactNativeHapticFeedback.trigger('effectTick', {
                               enableVibrateFallback: true,
                               ignoreAndroidSystemSettings: false,
@@ -138,43 +138,46 @@ const DownloadBottomSheet = ({
                       </TouchableOpacity>
                     ))
                   : subtitle.length > 0
-                  ? subtitle.map(subs =>
-                      subs?.map(item => (
-                        <TouchableOpacity
-                          className="p-2 bg-white/30 rounded-md my-1"
-                          key={item.uri}
-                          onLongPress={() => {
-                            if (MMKV.getBool('hapticFeedback') !== false) {
-                              RNReactNativeHapticFeedback.trigger(
-                                'effectTick',
-                                {
-                                  enableVibrateFallback: true,
-                                  ignoreAndroidSystemSettings: false,
-                                },
+                  ? subtitle.map(
+                      subs =>
+                        subs?.map(item => (
+                          <TouchableOpacity
+                            className="p-2 bg-white/30 rounded-md my-1"
+                            key={item.uri}
+                            onLongPress={() => {
+                              if (settingsStorage.isHapticFeedbackEnabled()) {
+                                RNReactNativeHapticFeedback.trigger(
+                                  'effectTick',
+                                  {
+                                    enableVibrateFallback: true,
+                                    ignoreAndroidSystemSettings: false,
+                                  },
+                                );
+                              }
+                              Clipboard.setString(item.uri);
+                              ToastAndroid.show(
+                                'Link copied',
+                                ToastAndroid.SHORT,
                               );
-                            }
-                            Clipboard.setString(item.uri);
-                            ToastAndroid.show(
-                              'Link copied',
-                              ToastAndroid.SHORT,
-                            );
-                          }}
-                          onPress={() => {
-                            onPressSubs({
-                              server: 'Subtitles',
-                              link: item.uri,
-                              type:
-                                item.type === TextTrackType.VTT ? 'vtt' : 'srt',
-                              title: item.title,
-                            });
-                            bottomSheetRef.current?.close();
-                          }}>
-                          <Text style={{color: 'white'}}>
-                            {item.language}
-                            {' - '} {item.title}
-                          </Text>
-                        </TouchableOpacity>
-                      )),
+                            }}
+                            onPress={() => {
+                              onPressSubs({
+                                server: 'Subtitles',
+                                link: item.uri,
+                                type:
+                                  item.type === TextTrackType.VTT
+                                    ? 'vtt'
+                                    : 'srt',
+                                title: item.title,
+                              });
+                              bottomSheetRef.current?.close();
+                            }}>
+                            <Text style={{color: 'white'}}>
+                              {item.language}
+                              {' - '} {item.title}
+                            </Text>
+                          </TouchableOpacity>
+                        )),
                     )
                   : null}
                 {data.length === 0 && !loading && (

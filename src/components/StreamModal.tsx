@@ -5,7 +5,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {Skeleton} from 'moti/skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
-import {MMKV} from '../lib/Mmkv';
+import {settingsStorage} from '../lib/storage';
 
 const StreamModal = ({
   downloadModal,
@@ -38,7 +38,7 @@ const StreamModal = ({
                       downloadFile(server.link);
                     }}
                     onLongPress={() => {
-                      if (MMKV.getBool('hapticFeedback') !== false) {
+                      if (settingsStorage.getBool('hapticFeedback') !== false) {
                         ReactNativeHapticFeedback.trigger('effectHeavyClick', {
                           enableVibrateFallback: true,
                           ignoreAndroidSystemSettings: false,
