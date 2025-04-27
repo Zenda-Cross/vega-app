@@ -1,5 +1,5 @@
 import {View, Text, TouchableOpacity} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {HomeStackParamList, SearchStackParamList} from '../App';
 import {Post} from '../lib/providers/types';
@@ -29,46 +29,109 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const [viewType, setViewType] = useState<number>(
     settingsStorage.getListViewType(),
   );
-  console.log('isl', isLoading);
+  // Add abort controller to cancel API requests when unmounting
+  const abortController = useRef<AbortController | null>(null);
+  const isMounted = useRef(true);
+  const isLoadingMore = useRef(false);
+
+  // Set up cleanup effect that runs on component unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
+    // Clean up the previous controller if it exists
+    if (abortController.current) {
+      abortController.current.abort();
+    }
+
+    // Create a new controller for this effect
+    abortController.current = new AbortController();
+    const signal = abortController.current.signal;
+
     const fetchPosts = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setIsLoading(true);
-      const getNewPosts = route.params.isSearch
-        ? manifest[route.params.providerValue || provider.value].GetSearchPosts(
-            filter,
-            page,
-            provider.value,
-            signal,
-          )
-        : manifest[route.params.providerValue || provider.value].GetHomePosts(
-            filter,
-            page,
-            provider.value,
-            signal,
-          );
-      const newPosts = await getNewPosts;
-      if (newPosts?.length === 0 && (page > 2 || page === 1)) {
-        console.log('end', page);
-        setIsEnd(true);
-        setIsLoading(false);
-        return;
+      // Don't fetch if we're already at the end
+      if (isEnd) return;
+
+      try {
+        // Prevent concurrent loading calls
+        if (isLoadingMore.current) return;
+        isLoadingMore.current = true;
+
+        setIsLoading(true);
+
+        // Simulate network delay to reduce rapid API calls
+        // Remove this in production if not needed
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Skip if component unmounted or request was aborted
+        if (!isMounted.current || signal.aborted) return;
+
+        const getNewPosts = route.params.isSearch
+          ? manifest[
+              route.params.providerValue || provider.value
+            ].GetSearchPosts(filter, page, provider.value, signal)
+          : manifest[route.params.providerValue || provider.value].GetHomePosts(
+              filter,
+              page,
+              provider.value,
+              signal,
+            );
+
+        const newPosts = await getNewPosts;
+
+        // Skip if component unmounted or request was aborted
+        if (!isMounted.current || signal.aborted) return;
+
+        if (!newPosts || newPosts.length === 0) {
+          console.log('end', page);
+          setIsEnd(true);
+          setIsLoading(false);
+          isLoadingMore.current = false;
+          return;
+        }
+
+        setPosts(prev => [...prev, ...newPosts]);
+      } catch (error) {
+        // Skip handling if component unmounted or request was aborted
+        if (!isMounted.current || (error as any)?.name === 'AbortError') return;
+        console.error('Error fetching posts:', error);
+      } finally {
+        if (isMounted.current) {
+          setIsLoading(false);
+          isLoadingMore.current = false;
+        }
       }
-      setPosts(prev => [...prev, ...newPosts]);
     };
+
     fetchPosts();
-  }, [page]);
+  }, [page, route.params, filter, provider.value]);
 
   const onEndReached = async () => {
-    if (isEnd) {
-      setIsLoading(false);
+    // Don't trigger more loading if we're already loading or at the end
+    if (isLoading || isEnd || isLoadingMore.current) {
       return;
     }
     setIsLoading(true);
-    setPage(page + 1);
+    setPage(prevPage => prevPage + 1);
+  };
+
+  // Limit the number of skeletons to prevent unnecessary renders
+  const renderSkeletons = () => {
+    const skeletonCount = viewType === 1 ? 6 : 3;
+    return Array.from({length: skeletonCount}).map((_, i) => (
+      <View
+        className="mx-3 gap-0 flex mb-3 justify-center items-center"
+        key={i}>
+        <SkeletonLoader height={150} width={100} />
+        <SkeletonLoader height={12} width={97} />
+      </View>
+    ));
   };
 
   return (
@@ -79,8 +142,9 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            setViewType(viewType === 1 ? 2 : 1);
-            settingsStorage.setListViewType(viewType === 1 ? 2 : 1);
+            const newViewType = viewType === 1 ? 2 : 1;
+            setViewType(newViewType);
+            settingsStorage.setListViewType(newViewType);
           }}>
           <MaterialIcons
             name={viewType === 1 ? 'view-module' : 'view-list'}
@@ -94,33 +158,22 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           estimatedItemSize={300}
           ListFooterComponent={
             <>
-              {isLoading && viewType === 1 ? (
-                <View className="flex flex-row gap-1 flex-wrap justify-center items-center mb-16">
-                  {[...Array(6)].map((_, i) => (
-                    <View
-                      className="mx-3 gap-0 flex mb-3 justify-center items-center"
-                      key={i}>
-                      <SkeletonLoader height={150} width={100} />
-                      <SkeletonLoader height={12} width={97} />
-                    </View>
-                  ))}
+              {isLoading && (
+                <View
+                  className={`flex ${
+                    viewType === 1 ? 'flex-row flex-wrap' : 'flex-col'
+                  } gap-1 justify-center items-center mb-16`}>
+                  {renderSkeletons()}
                 </View>
-              ) : (
-                <View className="h-32" />
               )}
-              <View className="h-16" />
+              <View className="h-32" />
             </>
           }
           data={posts}
           numColumns={viewType === 1 ? 3 : 1}
-          key={viewType}
-          contentContainerStyle={
-            {
-              // flexDirection: 'row',
-              // flexWrap: 'wrap',
-            }
-          }
-          keyExtractor={(item, i) => item.title + i}
+          key={`view-type-${viewType}`}
+          contentContainerStyle={{paddingBottom: 80}}
+          keyExtractor={(item, i) => `${item.title}-${i}`}
           renderItem={({item}) => (
             <TouchableOpacity
               className={
@@ -161,11 +214,12 @@ const ScrollList = ({route}: Props): React.ReactElement => {
             </TouchableOpacity>
           )}
           onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
         />
         {!isLoading && posts.length === 0 ? (
           <View className="w-full h-full flex items-center justify-center">
             <Text className="text-white text-center font-semibold text-lg">
-              Not Content Found
+              No Content Found
             </Text>
           </View>
         ) : null}

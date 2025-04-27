@@ -1,25 +1,21 @@
 import {View, Text, FlatList} from 'react-native';
-import React, {useState, useEffect} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, {useState, useEffect, useCallback} from 'react';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {MaterialIcons, Ionicons, Feather} from '@expo/vector-icons';
 import {TextInput} from 'react-native';
 import {TouchableOpacity} from 'react-native';
-//import {manifest} from '../lib/Manifest';
-//import useContentStore from '../lib/zustand/contentStore';
 import useThemeStore from '../lib/zustand/themeStore';
 import {MMKV} from '../lib/Mmkv';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import Animated, {
-  FadeInDown,
-  FadeIn,
-  SlideInRight,
-  ZoomIn,
-} from 'react-native-reanimated';
+import Animated, {FadeInDown, SlideInRight} from 'react-native-reanimated';
 import {searchOMDB} from '../services/omdb';
 import debounce from 'lodash/debounce';
 import {OMDBResult} from '../types/omdb';
+
+const MAX_VISIBLE_RESULTS = 15; // Limit number of animated items to prevent excessive callbacks
+const MAX_HISTORY_ITEMS = 30; // Maximum number of history items to store
 
 const Search = () => {
   const {primary} = useThemeStore(state => state);
@@ -31,39 +27,61 @@ const Search = () => {
     MMKV.getArray<string>('searchHistory') || [],
   );
   const [searchResults, setSearchResults] = useState<OMDBResult[]>([]);
+  const [showAnimations, setShowAnimations] = useState(true);
 
-  const debouncedSearch = debounce(async text => {
-    if (text.length >= 2) {
-      setSearchResults([]); // Clear previous results
-      const results = await searchOMDB(text);
-      if (results.length > 0) {
-        // Remove duplicates based on imdbID
-        const uniqueResults = results.reduce((acc, current) => {
-          const x = acc.find(item => item.imdbID === current.imdbID);
-          if (!x) {
-            return acc.concat([current]);
-          } else {
-            return acc;
-          }
-        }, [] as OMDBResult[]);
-        setSearchResults(uniqueResults);
+  // Enable/disable animations based on component mount/unmount
+  useFocusEffect(
+    useCallback(() => {
+      setShowAnimations(true);
+
+      return () => {
+        setShowAnimations(false);
+      };
+    }, []),
+  );
+
+  const debouncedSearch = useCallback(
+    debounce(async (text: string) => {
+      if (text.length >= 2) {
+        setSearchResults([]); // Clear previous results
+        const results = await searchOMDB(text);
+        if (results.length > 0) {
+          // Remove duplicates based on imdbID
+          const uniqueResults = results.reduce((acc, current) => {
+            const x = acc.find(item => item.imdbID === current.imdbID);
+            if (!x) {
+              return acc.concat([current]);
+            } else {
+              return acc;
+            }
+          }, [] as OMDBResult[]);
+
+          // Limit the number of results to prevent excessive animations
+          setSearchResults(uniqueResults.slice(0, MAX_VISIBLE_RESULTS));
+        }
+      } else {
+        setSearchResults([]);
       }
-    } else {
-      setSearchResults([]);
-    }
-  }, 300); // Reduced debounce time for better responsiveness
+    }, 300), // Reduced debounce time for better responsiveness
+    [],
+  );
 
   useEffect(() => {
     debouncedSearch(searchText);
-    return () => debouncedSearch.cancel();
-  }, [searchText]);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchText, debouncedSearch]);
 
   const handleSearch = (text: string) => {
     if (text.trim()) {
       // Save to search history
       const prevSearches = MMKV.getArray<string>('searchHistory') || [];
       if (!prevSearches.includes(text.trim())) {
-        const newSearches = [text.trim(), ...prevSearches].slice(0, 15);
+        const newSearches = [text.trim(), ...prevSearches].slice(
+          0,
+          MAX_HISTORY_ITEMS,
+        );
         MMKV.setArray('searchHistory', newSearches);
         setSearchHistory(newSearches);
       }
@@ -85,25 +103,27 @@ const Search = () => {
     setSearchHistory([]);
   };
 
+  // Conditionally render animations based on state
+  const AnimatedContainer = showAnimations ? Animated.View : View;
+  const animationProps = showAnimations
+    ? {entering: FadeInDown.delay(100).springify()}
+    : {};
+
   return (
     <SafeAreaView className="flex-1 bg-black">
       {/* Title Section */}
-      <Animated.View
-        entering={FadeInDown.delay(100).springify()}
-        className="px-4 pt-4">
+      <AnimatedContainer {...animationProps} className="px-4 pt-4">
         <Text className="text-white text-xl font-bold mb-3">Search</Text>
         <View className="flex-row items-center space-x-3 mb-2">
           <View className="flex-1">
             <View className="overflow-hidden rounded-xl bg-[#141414] shadow-lg shadow-black/50">
               <View className="px-3 py-3">
                 <View className="flex-row items-center">
-                  <Animated.View entering={ZoomIn.delay(200)}>
-                    <MaterialIcons
-                      name="search"
-                      size={24}
-                      color={isFocused ? primary : '#666'}
-                    />
-                  </Animated.View>
+                  <MaterialIcons
+                    name="search"
+                    size={24}
+                    color={isFocused ? primary : '#666'}
+                  />
                   <TextInput
                     className="flex-1 text-white text-base ml-3"
                     placeholder="Search anime..."
@@ -116,59 +136,18 @@ const Search = () => {
                     returnKeyType="search"
                   />
                   {searchText.length > 0 && (
-                    <Animated.View entering={FadeIn}>
-                      <TouchableOpacity
-                        onPress={() => setSearchText('')}
-                        className="bg-gray-800/50 rounded-full p-2">
-                        <Feather name="x" size={18} color="#999" />
-                      </TouchableOpacity>
-                    </Animated.View>
+                    <TouchableOpacity
+                      onPress={() => setSearchText('')}
+                      className="bg-gray-800/50 rounded-full p-2">
+                      <Feather name="x" size={18} color="#999" />
+                    </TouchableOpacity>
                   )}
                 </View>
               </View>
             </View>
           </View>
         </View>
-
-        {/* Search History - Moved here and only show when no search results */}
-        {searchResults.length === 0 && searchHistory.length > 0 && (
-          <Animated.View
-            entering={SlideInRight.delay(300).springify()}
-            className="mb-3">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-white/90 text-base font-semibold">
-                Recent Searches
-              </Text>
-              <TouchableOpacity
-                onPress={clearHistory}
-                className="bg-red-500/10 rounded-full px-2 py-0.5">
-                <Text className="text-red-500 text-xs">Clear All</Text>
-              </TouchableOpacity>
-            </View>
-            {searchHistory.map((search, index) => (
-              <Animated.View
-                key={index}
-                entering={FadeInDown.delay(400 + index * 100).springify()}>
-                <TouchableOpacity
-                  onPress={() => handleSearch(search)}
-                  className="bg-[#141414] rounded-lg p-3 mb-2 flex-row justify-between items-center border border-white/5">
-                  <View className="flex-row items-center space-x-2">
-                    <View className="bg-white/10 rounded-full p-1.5">
-                      <Ionicons name="time-outline" size={16} color={primary} />
-                    </View>
-                    <Text className="text-white text-sm">{search}</Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => removeHistoryItem(search)}
-                    className="bg-white/5 rounded-full p-1.5">
-                    <Feather name="x" size={14} color="#999" />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </Animated.View>
-        )}
-      </Animated.View>
+      </AnimatedContainer>
 
       {/* Search Results */}
       {searchResults.length > 0 ? (
@@ -176,7 +155,7 @@ const Search = () => {
           data={searchResults}
           keyExtractor={item => item.imdbID.toString()}
           renderItem={({item}) => (
-            <Animated.View entering={FadeInDown.springify()} className="px-4">
+            <View className="px-4">
               <TouchableOpacity
                 className="py-3 border-b border-white/10"
                 onPress={() => {
@@ -187,7 +166,7 @@ const Search = () => {
                   if (searchTitle && !prevSearches.includes(searchTitle)) {
                     const newSearches = [searchTitle, ...prevSearches].slice(
                       0,
-                      15,
+                      MAX_HISTORY_ITEMS,
                     );
                     MMKV.setArray('searchHistory', newSearches);
                     setSearchHistory(newSearches);
@@ -212,30 +191,66 @@ const Search = () => {
                   </View>
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           )}
           contentContainerStyle={{paddingTop: 4}}
           showsVerticalScrollIndicator={false}
         />
+      ) : // Search History Section with FlatList for scrolling
+      searchHistory.length > 0 ? (
+        <AnimatedContainer
+          {...(showAnimations
+            ? {entering: SlideInRight.delay(300).springify()}
+            : {})}
+          className="px-4 flex-1">
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="text-white/90 text-base font-semibold">
+              Recent Searches
+            </Text>
+            <TouchableOpacity
+              onPress={clearHistory}
+              className="bg-red-500/10 rounded-full px-2 py-0.5">
+              <Text className="text-red-500 text-xs">Clear All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={searchHistory}
+            keyExtractor={(item, index) => `history-${index}`}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{paddingBottom: 20}}
+            renderItem={({item: search}) => (
+              <View className="bg-[#141414] rounded-lg p-3 mb-2 flex-row justify-between items-center border border-white/5">
+                <TouchableOpacity
+                  onPress={() => handleSearch(search)}
+                  className="flex-row flex-1 items-center space-x-2">
+                  <View className="bg-white/10 rounded-full p-1.5">
+                    <Ionicons name="time-outline" size={16} color={primary} />
+                  </View>
+                  <Text className="text-white text-sm ml-2">{search}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => removeHistoryItem(search)}
+                  className="bg-white/5 rounded-full p-1.5">
+                  <Feather name="x" size={14} color="#999" />
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        </AnimatedContainer>
       ) : (
         // Empty State - Only show when no history and no results
-        searchHistory.length === 0 && (
-          <Animated.View
-            entering={FadeIn.delay(300)}
-            className="items-center justify-center flex-1">
-            <Animated.View entering={ZoomIn.springify()}>
-              <View className="bg-white/5 rounded-full p-6 mb-4">
-                <Ionicons name="search" size={32} color={primary} />
-              </View>
-            </Animated.View>
-            <Text className="text-white/70 text-base text-center">
-              Search for your favorite anime
-            </Text>
-            <Text className="text-white/40 text-sm text-center mt-1">
-              Your recent searches will appear here
-            </Text>
-          </Animated.View>
-        )
+        <View className="items-center justify-center flex-1">
+          <View className="bg-white/5 rounded-full p-6 mb-4">
+            <Ionicons name="search" size={32} color={primary} />
+          </View>
+          <Text className="text-white/70 text-base text-center">
+            Search for your favorite anime
+          </Text>
+          <Text className="text-white/40 text-sm text-center mt-1">
+            Your recent searches will appear here
+          </Text>
+        </View>
       )}
     </SafeAreaView>
   );
