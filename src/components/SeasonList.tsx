@@ -170,9 +170,10 @@ const SeasonList = ({
     episodeList,
   }: playHandlerProps) => {
     addItem({
+      id: routeParams.link,
       link: routeParams.link,
       title: primaryTitle,
-      image: poster.poster || '',
+      poster: poster?.poster,
       provider: providerValue,
       lastPlayed: Date.now(),
       episodeTitle: secondaryTitle,
