@@ -18,7 +18,7 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
-import {cacheStorage, settingsStorage} from '../lib/storage';
+import {cacheStorage, mainStorage, settingsStorage} from '../lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -28,6 +28,7 @@ import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Feather from '@expo/vector-icons/Feather';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
+import {TextInput} from 'react-native';
 
 const SeasonList = ({
   LinkList,
@@ -67,6 +68,12 @@ const SeasonList = ({
   }>({active: false});
   const [titleSide, setTitleSide] = useState<string>('justify-center');
 
+  // Add state for search and sorting
+  const [searchText, setSearchText] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    mainStorage.getString('episodeSortOrder') === 'desc' ? 'desc' : 'asc',
+  );
+
   // Add new state variables for server selection modal
   const [showServerModal, setShowServerModal] = useState<boolean>(false);
   const [externalPlayerStreams, setExternalPlayerStreams] = useState<any[]>([]);
@@ -90,6 +97,65 @@ const SeasonList = ({
     secondaryTitle?: string;
     seasonTitle: string;
     episodeList: EpisodeLink[] | Link['directLinks'];
+  };
+
+  // Filter episodes based on search text
+  const getFilteredEpisodes = () => {
+    if (!searchText.trim()) {
+      return episodeList;
+    }
+
+    return episodeList.filter(episode =>
+      episode.title.toLowerCase().includes(searchText.toLowerCase()),
+    );
+  };
+
+  // Sort episodes based on current sort order - just reverse the list
+  const getSortedEpisodes = (episodes: EpisodeLink[]) => {
+    if (sortOrder === 'desc') {
+      return [...episodes].reverse();
+    }
+    return episodes;
+  };
+
+  // Get filtered and sorted episodes
+  const getProcessedEpisodes = () => {
+    const filteredEpisodes = getFilteredEpisodes();
+    return getSortedEpisodes(filteredEpisodes);
+  };
+
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newSortOrder);
+    // Store sort preference in storage
+    mainStorage.setString('episodeSortOrder', newSortOrder);
+
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      RNReactNativeHapticFeedback.trigger('effectClick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+  };
+
+  // Get filtered and sorted directLinks
+  const getProcessedDirectLinks = () => {
+    if (!ActiveSeason?.directLinks) {
+      return [];
+    }
+
+    let filteredLinks = ActiveSeason.directLinks;
+
+    // Apply search filter if search text exists
+    if (searchText.trim()) {
+      filteredLinks = filteredLinks.filter(link =>
+        link.title.toLowerCase().includes(searchText.toLowerCase()),
+      );
+    }
+
+    // Simply reverse the list based on sort order
+    return sortOrder === 'desc' ? [...filteredLinks].reverse() : filteredLinks;
   };
 
   // handle external player playback
@@ -335,11 +401,34 @@ const SeasonList = ({
         </Text>
       )}
 
+      {/* search episodes  */}
+      {(episodeList.length > 8 ||
+        (ActiveSeason?.directLinks?.length &&
+          ActiveSeason?.directLinks?.length > 8)) && (
+        <View className="flex-row justify-between items-center mt-2">
+          <TextInput
+            placeholder="Search..."
+            className="bg-black/30 text-white rounded-md p-2 h-10 w-[80%] border-collapse border border-white/10"
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+          <TouchableOpacity
+            className="bg-black/30 rounded-md p-2 h-10 w-[15%] flex-row justify-center items-center"
+            onPress={toggleSortOrder}>
+            <MaterialCommunityIcons
+              name={sortOrder === 'asc' ? 'sort-ascending' : 'sort-descending'}
+              size={24}
+              color={primary}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View className="flex-row flex-wrap justify-center gap-x-2 gap-y-2">
         {/* episodesLinks */}
-        {episodeList.length > 0 && !episodeLoading && (
+        {getProcessedEpisodes().length > 0 && !episodeLoading && (
           <FlatList
-            data={episodeList}
+            data={getProcessedEpisodes()}
             keyExtractor={(item, index) => item.link + index}
             renderItem={({item, index}) => {
               // set titleSide to justify-center if title is too long
@@ -402,82 +491,79 @@ const SeasonList = ({
         )}
 
         {/* directLinks */}
-        {ActiveSeason?.directLinks &&
-          ActiveSeason?.directLinks.length > 0 &&
-          !episodeLoading && (
-            <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
-              <FlatList
-                data={ActiveSeason?.directLinks}
-                keyExtractor={(item, index) => item.link + index}
-                renderItem={({item, index}) => {
-                  // set titleSide to justify-center if title is too long
-                  ActiveSeason?.directLinks?.length &&
-                    ActiveSeason?.directLinks?.length > 1 &&
-                    item?.title?.length > 27 &&
-                    setTitleSide('justify-start');
-                  return (
-                    <View
-                      key={item.link + index}
-                      className={`w-full justify-center items-center my-2 gap-2 flex-row
-                        ${
-                          isCompleted(item.link) ||
-                          stickyMenu.link === item.link
-                            ? 'opacity-60'
-                            : ''
+        {getProcessedDirectLinks().length > 0 && !episodeLoading && (
+          <View className="w-full justify-center items-center gap-y-2 mt-3 p-2">
+            <FlatList
+              data={getProcessedDirectLinks()}
+              keyExtractor={(item, index) => item.link + index}
+              renderItem={({item, index}) => {
+                // set titleSide to justify-center if title is too long
+                ActiveSeason?.directLinks?.length &&
+                  ActiveSeason?.directLinks?.length > 1 &&
+                  item?.title?.length > 27 &&
+                  setTitleSide('justify-start');
+                return (
+                  <View
+                    key={item.link + index}
+                    className={`w-full justify-center items-center my-2 gap-2 flex-row
+                      ${
+                        isCompleted(item.link) || stickyMenu.link === item.link
+                          ? 'opacity-60'
+                          : ''
+                      }
+                    `}>
+                    <View className="flex-row w-full justify-between gap-2 items-center">
+                      <TouchableOpacity
+                        className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleSide}`}
+                        onPress={() =>
+                          playHandler({
+                            linkIndex: index,
+                            type: item.type || 'series',
+                            primaryTitle: metaTitle,
+                            secondaryTitle: item.title,
+                            seasonTitle: ActiveSeason.title,
+                            episodeList: ActiveSeason.directLinks,
+                          })
                         }
-                      `}>
-                      <View className="flex-row w-full justify-between gap-2 items-center">
-                        <TouchableOpacity
-                          className={`rounded-md bg-white/30 w-[80%] h-12 items-center p-2 flex-row gap-x-2 relative ${titleSide}`}
-                          onPress={() =>
-                            playHandler({
-                              linkIndex: index,
-                              type: item.type || 'series',
-                              primaryTitle: metaTitle,
-                              secondaryTitle: item.title,
-                              seasonTitle: ActiveSeason.title,
-                              episodeList: ActiveSeason.directLinks,
-                            })
-                          }
-                          onLongPress={() =>
-                            onLongPressHandler(true, item.link, 'series')
-                          }>
-                          <Ionicons
-                            name="play-circle"
-                            size={28}
-                            color={primary}
-                          />
-                          <Text className="text-white">
-                            {ActiveSeason?.directLinks?.length &&
-                            ActiveSeason?.directLinks?.length > 1
-                              ? item.title?.length > 27
-                                ? item.title.slice(0, 27) + '...'
-                                : item.title
-                              : 'Play'}
-                          </Text>
-                        </TouchableOpacity>
-                        <Downloader
-                          providerValue={providerValue}
-                          link={item.link}
-                          type={item.type || 'series'}
-                          title={
-                            metaTitle.length > 30
-                              ? metaTitle.slice(0, 30) + '... ' + item.title
-                              : metaTitle + ' ' + item.title
-                          }
-                          fileName={(
-                            metaTitle +
-                            ActiveSeason.title +
-                            item.title
-                          ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                        onLongPress={() =>
+                          onLongPressHandler(true, item.link, 'series')
+                        }>
+                        <Ionicons
+                          name="play-circle"
+                          size={28}
+                          color={primary}
                         />
-                      </View>
+                        <Text className="text-white">
+                          {ActiveSeason?.directLinks?.length &&
+                          ActiveSeason?.directLinks?.length > 1
+                            ? item.title?.length > 27
+                              ? item.title.slice(0, 27) + '...'
+                              : item.title
+                            : 'Play'}
+                        </Text>
+                      </TouchableOpacity>
+                      <Downloader
+                        providerValue={providerValue}
+                        link={item.link}
+                        type={item.type || 'series'}
+                        title={
+                          metaTitle.length > 30
+                            ? metaTitle.slice(0, 30) + '... ' + item.title
+                            : metaTitle + ' ' + item.title
+                        }
+                        fileName={(
+                          metaTitle +
+                          ActiveSeason.title +
+                          item.title
+                        ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+                      />
                     </View>
-                  );
-                }}
-              />
-            </View>
-          )}
+                  </View>
+                );
+              }}
+            />
+          </View>
+        )}
 
         {episodeLoading && (
           <MotiView
