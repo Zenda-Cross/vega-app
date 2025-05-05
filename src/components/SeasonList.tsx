@@ -403,7 +403,7 @@ const SeasonList = ({
 
       {/* search episodes  */}
       {(episodeList.length > 8 ||
-        (ActiveSeason?.directLinks?.length &&
+        (ActiveSeason?.directLinks &&
           ActiveSeason?.directLinks?.length > 8)) && (
         <View className="flex-row justify-between items-center mt-2">
           <TextInput
