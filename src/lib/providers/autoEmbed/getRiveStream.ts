@@ -83,99 +83,126 @@ export async function getRiveStream(
 
 function generateSecretKey(id: number | string) {
   // Array of secret key fragments
-  let l = [
-    '9Y2',
-    'xzL',
-    '4zZZwK',
-    'B3Yt3',
-    'Z35YU9jLlf',
-    'FyKw3pA',
-    '5',
-    '1aD8',
-    'Jl',
-    'xGr',
-    '42ER1',
-    'jczYB',
-    '9hZ7dK9b',
-    'Rqor4wJOP',
-    'sL',
-    'frTaH42KRz',
-    '7iud',
-    'sM',
-    'YE7rmwUNfo',
-    'uvCRS5',
-    'g',
-    'Dpymw189',
-    '78Z1U2f',
-    'edPXPbD',
-    'wpTZ3',
-    'DqPZ',
-    '3BR',
-    'vt',
-    'Z4l2j',
-    'nAp1Tv',
-    'Z2',
-    'BPNbeQoy',
-    'ut7KZeQXn',
-    '7QvWEHrUq',
-    'EoVt',
-    'xKGWHoH',
-    'M0VnD',
-    'uKZz',
-    'CT5Sr4Qt',
-    'c',
-    'A6P8',
-    'y2QPgB',
-    'VJ',
-    'c2k',
-    '6pH1ABUJat',
-    '5',
-    'o',
-    'PpjP',
-    'jb2tLf29',
-    'yr1zHg8Lz',
-    '7opBBY',
-    'EQOwB',
-    'YSTIaExVc',
-    'tbrfwW',
-    'mV9kT14Yn',
-    'ctkGj',
-    'iuaMBA',
-    'RFYsuG6j3r',
-    'AYJ3bJv',
-    'wM6OsyrU8',
+  const c = [
+    'kItQgG',
+    '5kOaYyTD',
+    'Pzv7axaf',
+    'cZbvi1dUx',
+    'vUDA5Lv0rU',
+    'kY9aWU',
+    'ViC1',
+    'sB9Z',
+    'Nwrks1',
+    'mqTb7mD2Dw',
+    'qLmPaNCs7',
+    'xcAD',
+    'ip8lrJtJh',
+    'Yu3I',
+    'WOQU56C',
+    'bUdzb',
+    'NuQg4c',
+    'JiuTF',
+    'Wq5pQQO',
+    'XVYT',
+    'HZl4z8E',
+    'kMMqZ1MxgQ',
+    'cTvo7E',
+    '3JkWzhoSy',
+    'D0s2SLG3J',
+    'isAG',
+    'jE191vA',
+    'jRoCKE',
+    'coC7ciVee',
+    '2XAX',
+    'mCjV',
+    'MzIji1krV',
+    'biKBKNN6a',
+    'SABuCs',
+    '2Umy2ydhlq',
+    'u1T3aXTrJZ',
+    'HFNO3',
+    'siEwTXUoMB',
+    'm2nDLpso',
+    'g7ft00J',
+    'Ufryor',
+    'fm4fmX',
+    'qLmkp67',
+    'WgLj2',
+    'pGO5gLWy7',
+    '6alkX',
+    '5zSRDCA',
+    'FdM8p',
+    'J6fvNE2SUH',
+    'XbrIULh',
   ];
 
   // Handle undefined input
-  if (void 0 === id) {
+  if (id === undefined) {
     return 'rive';
   }
 
   try {
-    let t, n;
+    let fragment, insertPos;
     // Convert input to string
-    let r = String(id);
-    // Double base64 encode the input
-    let i = btoa(btoa(r));
+    const idStr = String(id);
+
+    // Create a string hash function that exactly matches the original code
+    /* eslint-disable no-bitwise */
+    const generateStringHash = function (input: string) {
+      input = String(input);
+      let hash = 0;
+      for (let i = 0; i < input.length; i++) {
+        hash =
+          (input.charCodeAt(i) + ((hash << 6) + (hash << 16) - hash)) >>> 0;
+      }
+      return hash.toString(16);
+    };
+
+    // Apply MurmurHash-like function exactly as in the original code
+    const applyMurmurHash = function (input: string) {
+      const str = String(input);
+      let hash = 3735928559;
+      for (let i = 0; i < str.length; i++) {
+        let char = str.charCodeAt(i);
+        char ^= (17 * i) & 255;
+        hash =
+          (73244475 * (hash = (((hash << 5) | (hash >>> 27)) >>> 0) ^ char)) >>>
+          0;
+      }
+      hash ^= hash >>> 16;
+      hash = (295559667 * hash) >>> 0;
+      hash ^= hash >>> 13;
+      hash = (877262033 * hash) >>> 0;
+      return (hash ^= hash >>> 16).toString(16).padStart(8, '0');
+    };
+    /* eslint-enable no-bitwise */
+
+    // Exactly match the website implementation
+    const encodedHash = btoa(applyMurmurHash(generateStringHash(idStr)));
 
     // Different handling for non-numeric vs numeric inputs
     if (isNaN(Number(id))) {
       // For non-numeric inputs, sum the character codes
-      let e = r.split('').reduce((e, t) => e + t.charCodeAt(0), 0);
+      const charSum = idStr
+        .split('')
+        .reduce((sum, char) => sum + char.charCodeAt(0), 0);
       // Select array element or fallback to base64 encoded input
-      t = l[e % l.length] || btoa(r);
+      fragment = c[charSum % c.length] || btoa(idStr);
       // Calculate insertion position
-      n = Math.floor((e % i.length) / 2);
+      insertPos = Math.floor((charSum % encodedHash.length) / 2);
     } else {
       // For numeric inputs, use the number directly
-      t = l[Number(id) % l.length] || btoa(r);
+      const numId = Number(id);
+      fragment = c[numId % c.length] || btoa(idStr);
       // Calculate insertion position
-      n = Math.floor((Number(id) % i.length) / 2);
+      insertPos = Math.floor((numId % encodedHash.length) / 2);
     }
 
     // Construct the final key by inserting the selected value into the base64 string
-    return i.slice(0, n) + t + i.slice(n);
-  } catch (e) {
+    return (
+      encodedHash.slice(0, insertPos) + fragment + encodedHash.slice(insertPos)
+    );
+  } catch (error) {
     // Return fallback value if any errors occur
     return 'topSecret';
   }

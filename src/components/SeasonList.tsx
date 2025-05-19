@@ -455,7 +455,7 @@ const SeasonList = ({
                           primaryTitle: metaTitle,
                           secondaryTitle: item.title,
                           seasonTitle: ActiveSeason.title,
-                          episodeList: episodeList,
+                          episodeList: getProcessedEpisodes(),
                         })
                       }
                       onLongPress={() =>
@@ -522,7 +522,7 @@ const SeasonList = ({
                             primaryTitle: metaTitle,
                             secondaryTitle: item.title,
                             seasonTitle: ActiveSeason.title,
-                            episodeList: ActiveSeason.directLinks,
+                            episodeList: getProcessedDirectLinks(),
                           })
                         }
                         onLongPress={() =>
