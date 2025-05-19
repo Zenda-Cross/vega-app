@@ -7,6 +7,7 @@ buildscript {
         ndkVersion = "26.1.10909125"
         kotlinVersion = "1.9.22"
         ffmpegKitPackage = "https-gpl"
+        castFrameworkVersion = "21.4.0" // Use a version compatible with Kotlin 1.9.x
     }
     repositories {
         google()
@@ -15,7 +16,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
     }
 }
 

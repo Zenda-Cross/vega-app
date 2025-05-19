@@ -89,6 +89,13 @@ android {
         versionCode 124
         versionName "2.7.2"
     }
+    
+    // Add kotlin compiler options to skip metadata version checks
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs = ['-Xskip-metadata-version-check']
+    }
+    
     signingConfigs {
         release {
             if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
