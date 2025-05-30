@@ -11,7 +11,7 @@ import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
 import useDownloadsStore from '../lib/zustand/downloadsStore';
 import {downloadManager} from '../lib/downloader';
-import {FFmpegKit} from 'ffmpeg-kit-react-native';
+// import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
@@ -255,7 +255,9 @@ const DownloadComponent = ({
             setCancelModal(false);
             try {
               RNFS.stopDownload(downloadId);
-              FFmpegKit.cancel(downloadId);
+              //FFMPEGKIT CANCEL
+              // FFmpegKit.cancel(downloadId);
+
               downloadStore.removeActiveDownload(fileName);
               const files = await RNFS.readDir(downloadFolder);
               // Find a file with the given name (without extension)

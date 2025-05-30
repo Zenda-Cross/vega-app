@@ -1,8 +1,8 @@
 import {ifExists} from './file/ifExists';
-import {hlsDownloader} from './hlsDownloader';
+// import {hlsDownloader} from './hlsDownloader';
 import RNFS from 'react-native-fs';
 import notifee from '@notifee/react-native';
-import {Alert} from 'react-native';
+import {Alert, ToastAndroid} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
@@ -89,16 +89,23 @@ export const downloadManager = async ({
     await notifee.requestPermission();
 
     if (fileType === 'm3u8') {
-      hlsDownloader({
-        videoUrl: url,
-        downloadStore,
-        path: `${downloadFolder}/${fileName}.mp4`,
-        fileName,
-        title,
-        setAlreadyDownloaded,
-        setDownloadId: setDownloadId,
-        headers,
-      });
+      // hlsDownloader({
+      //   videoUrl: url,
+      //   downloadStore,
+      //   path: `${downloadFolder}/${fileName}.mp4`,
+      //   fileName,
+      //   title,
+      //   setAlreadyDownloaded,
+      //   setDownloadId: setDownloadId,
+      //   headers,
+      // });
+      ToastAndroid.show(
+        'Hls video download is not supported, Use external Downloader',
+        ToastAndroid.LONG,
+      );
+      notifee.cancelNotification(fileName);
+      downloadStore.removeActiveDownload(fileName);
+      setAlreadyDownloaded(false);
       console.log('Downloading HLS');
       return;
     }
