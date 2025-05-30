@@ -101,8 +101,11 @@ export const downloadManager = async ({
       // });
       ToastAndroid.show(
         'Hls video download is not supported, Use external Downloader',
-        ToastAndroid.SHORT,
+        ToastAndroid.LONG,
       );
+      notifee.cancelNotification(fileName);
+      downloadStore.removeActiveDownload(fileName);
+      setAlreadyDownloaded(false);
       console.log('Downloading HLS');
       return;
     }

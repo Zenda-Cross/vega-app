@@ -16,7 +16,7 @@ import {manifest} from '../../lib/Manifest';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNFS from 'react-native-fs';
 import useDownloadsStore from '../../lib/zustand/downloadsStore';
-import {FFmpegKit} from 'ffmpeg-kit-react-native';
+// import {FFmpegKit} from 'ffmpeg-kit-react-native';
 // import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import Touturial from '../../components/Touturial';
 import {downloadFolder} from '../../lib/constants';
@@ -110,7 +110,9 @@ const Home = ({}: Props) => {
     ) {
       console.log('Cancel download');
       RNFS.stopDownload(Number(detail.notification?.data?.jobId));
-      FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+      // FFMPEGKIT CANCEL
+      // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+
       // setAlreadyDownloaded(false);
       downloadStore.removeActiveDownload(detail.notification?.data?.fileName!);
       try {
