@@ -74,7 +74,12 @@ export const multiGetStream = async (
         ifameUrl = newIframeUrl;
       }
     }
-    const iframeRes = await axios.get(ifameUrl, {headers});
+    const iframeRes = await axios.get(ifameUrl, {
+      headers: {
+        ...headers,
+        Referer: url,
+      },
+    });
     const iframeData = iframeRes.data;
 
     // Step 1: Extract the function parameters and the encoded string

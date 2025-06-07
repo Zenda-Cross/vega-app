@@ -16,13 +16,18 @@ export async function getRiveStream(
     'flowcast',
     'shadow',
     'asiacloud',
+    'hindicast',
     'anime',
+    'animez',
+    'guard',
+    'curve',
     'hq',
     'ninja',
     'alpha',
     'kaze',
+    'zenesis',
+    'genesis',
     'zenith',
-    'cast',
     'ghost',
     'halo',
     'kinoecho',
@@ -82,58 +87,68 @@ export async function getRiveStream(
 }
 
 function generateSecretKey(id: number | string) {
-  // Array of secret key fragments
+  // Array of secret key fragments - updated array from the new implementation
   const c = [
-    'kItQgG',
-    '5kOaYyTD',
-    'Pzv7axaf',
-    'cZbvi1dUx',
-    'vUDA5Lv0rU',
-    'kY9aWU',
-    'ViC1',
-    'sB9Z',
-    'Nwrks1',
-    'mqTb7mD2Dw',
-    'qLmPaNCs7',
-    'xcAD',
-    'ip8lrJtJh',
-    'Yu3I',
-    'WOQU56C',
-    'bUdzb',
-    'NuQg4c',
-    'JiuTF',
-    'Wq5pQQO',
-    'XVYT',
-    'HZl4z8E',
-    'kMMqZ1MxgQ',
-    'cTvo7E',
-    '3JkWzhoSy',
-    'D0s2SLG3J',
-    'isAG',
-    'jE191vA',
-    'jRoCKE',
-    'coC7ciVee',
-    '2XAX',
-    'mCjV',
-    'MzIji1krV',
-    'biKBKNN6a',
-    'SABuCs',
-    '2Umy2ydhlq',
-    'u1T3aXTrJZ',
-    'HFNO3',
-    'siEwTXUoMB',
-    'm2nDLpso',
-    'g7ft00J',
-    'Ufryor',
-    'fm4fmX',
-    'qLmkp67',
-    'WgLj2',
-    'pGO5gLWy7',
-    '6alkX',
-    '5zSRDCA',
-    'FdM8p',
-    'J6fvNE2SUH',
-    'XbrIULh',
+    'Yhv40uKAZa',
+    'nn8YU4yBA',
+    'uNeH',
+    'ehK',
+    'jT0',
+    'n5G',
+    '99R',
+    'MvB1M',
+    'DQtPCh',
+    'GBRjk4k4I',
+    'CzIOoa95UT',
+    'BLE8s',
+    'GDZlc7',
+    'Fz45T',
+    'JW6lWn',
+    'DE3g4uw0i',
+    '18KxmYizv',
+    '8ji',
+    'JUDdNMnZ',
+    'oGpBippPgm',
+    '7De8Pg',
+    'Zv6',
+    'VHT9TVN',
+    'bYH6m',
+    'aK1',
+    'WcWH6jU',
+    'Q47YEMi4k',
+    'vRD3A',
+    'CGOsfJO',
+    'BLn8',
+    'RgK0drv7l',
+    'oPTfGCn3a',
+    'MkpMDkttW9',
+    'VNI1fPM',
+    'XNFi6',
+    '6cq',
+    '4LvTksXoEI',
+    '1rRa2KOZB0',
+    'zoOGRb8HT2',
+    'mhcXDtvz',
+    'NUmexFY2Ur',
+    '6BIMdvSZ',
+    'Tr0zU2vjRd',
+    'QPR',
+    'fhOqJR',
+    'R9VnFY',
+    'xkZ99D6S',
+    'umY7E',
+    '5Ds8qyDq',
+    'Cc6jy09y3',
+    'yvU3iR',
+    'Bg07zY',
+    'GccECglg',
+    'VYd',
+    '6vOiXqz',
+    '7xX',
+    'UdRrbEzF',
+    'fE6wc',
+    'BUd25Rb',
+    'lxq5Zum89o',
   ];
 
   // Handle undefined input
@@ -146,38 +161,42 @@ function generateSecretKey(id: number | string) {
     // Convert input to string
     const idStr = String(id);
 
-    // Create a string hash function that exactly matches the original code
+    // Updated string hash function to match the new implementation
     /* eslint-disable no-bitwise */
     const generateStringHash = function (input: string) {
       input = String(input);
       let hash = 0;
       for (let i = 0; i < input.length; i++) {
+        const char = input.charCodeAt(i);
         hash =
-          (input.charCodeAt(i) + ((hash << 6) + (hash << 16) - hash)) >>> 0;
+          ((char + (hash << 6) + (hash << 16) - hash) ^ (char << i % 5)) >>> 0;
       }
-      return hash.toString(16);
+      hash ^= hash >>> 13;
+      hash = (1540483477 * hash) >>> 0;
+      return (hash ^= hash >>> 15).toString(16).padStart(8, '0');
     };
 
-    // Apply MurmurHash-like function exactly as in the original code
+    // Updated MurmurHash-like function to match the new implementation
     const applyMurmurHash = function (input: string) {
       const str = String(input);
-      let hash = 3735928559;
+      let hash = 3735928559 ^ str.length;
       for (let i = 0; i < str.length; i++) {
         let char = str.charCodeAt(i);
-        char ^= (17 * i) & 255;
+        char ^= ((i + 31) * 131) & 255;
         hash =
-          (73244475 * (hash = (((hash << 5) | (hash >>> 27)) >>> 0) ^ char)) >>>
+          (668265261 *
+            (hash = (((hash << 7) | (hash >>> 25)) >>> 0) ^ char)) >>>
           0;
       }
       hash ^= hash >>> 16;
-      hash = (295559667 * hash) >>> 0;
+      hash = (2246822507 * hash) >>> 0;
       hash ^= hash >>> 13;
-      hash = (877262033 * hash) >>> 0;
+      hash = (3266489909 * hash) >>> 0;
       return (hash ^= hash >>> 16).toString(16).padStart(8, '0');
     };
     /* eslint-enable no-bitwise */
 
-    // Exactly match the website implementation
+    // Generate the encoded hash using the new implementation
     const encodedHash = btoa(applyMurmurHash(generateStringHash(idStr)));
 
     // Different handling for non-numeric vs numeric inputs

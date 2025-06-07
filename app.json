@@ -1,6 +1,4 @@
 {
-  "name": "Vega",
-  "displayName": "Vega",
   "expo": {
     "name": "Vega",
     "displayName": "Vega",
@@ -22,12 +20,12 @@
       ]
     ],
     "slug": "vega",
-    "version": "2.7.2",
+    "version": "2.7.3",
     "sdkVersion": "51.0.0",
     "android": {
       "minSdkVersion": 24,
       "package": "com.vega",
-      "versionCode": 124
+      "versionCode": 128
     },
     "platforms": ["ios", "android"]
   }

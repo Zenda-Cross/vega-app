@@ -9,10 +9,10 @@ export const nfGetStream = async (
     const baseUrl = await getBaseUrl('nfMirror');
     const url = `https://netmirror.8man.me/api/net-proxy?url=${baseUrl}${
       providerValue === 'netflixMirror'
-        ? '/playlist.php?id='
+        ? '/mobile/playlist.php?id='
         : '/pv/playlist.php?id='
     }${id}&t=${Math.round(new Date().getTime() / 1000)}`;
-    console.log('nfGetStream');
+    console.log('nfGetStream, url:', url);
     const res = await fetch(url, {
       credentials: 'omit',
     });
@@ -27,6 +27,7 @@ export const nfGetStream = async (
         headers: {
           Referer: baseUrl,
           origin: baseUrl,
+          Cookie: 'hd=on',
         },
       });
     });
