@@ -17,7 +17,7 @@ export const kissKhGetInfo = async function (link: string): Promise<Info> {
     const linkList: Link[] = [];
     const subLinks: Link['directLinks'] = [];
 
-    data?.episodes?.map((episode: any) => {
+    data?.episodes?.reverse().map((episode: any) => {
       const title = 'Episode ' + episode?.number;
       const link = episode?.id?.toString();
       if (link && title) {
