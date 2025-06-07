@@ -68,12 +68,12 @@ export const providersList: ProvidersList[] = [
     type: 'global',
     flag: FLAGS.GLOBAL,
   },
-  {
-    name: 'CinemaLuxe',
-    value: 'cinemaLuxe',
-    type: 'global',
-    flag: FLAGS.GLOBAL,
-  },
+  // {
+  //   name: 'CinemaLuxe',
+  //   value: 'cinemaLuxe',
+  //   type: 'global',
+  //   flag: FLAGS.GLOBAL,
+  // },
   {
     name: 'FilmyFly',
     value: 'filmyfly',
@@ -140,12 +140,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  {
-    name: 'EmbedSU',
-    value: 'embedsu',
-    type: 'english',
-    flag: FLAGS.ENGLISH,
-  },
+  // {
+  //   name: 'EmbedSU',
+  //   value: 'embedsu',
+  //   type: 'english',
+  //   flag: FLAGS.ENGLISH,
+  // },
   {
     name: 'RidoMovies',
     value: 'ridoMovies',
@@ -194,12 +194,12 @@ export const providersList: ProvidersList[] = [
     type: 'english',
     flag: FLAGS.ENGLISH,
   },
-  {
-    name: 'DramaCool',
-    value: 'dramaCool',
-    type: 'english',
-    flag: FLAGS.ENGLISH,
-  },
+  // {
+  //   name: 'DramaCool',
+  //   value: 'dramaCool',
+  //   type: 'english',
+  //   flag: FLAGS.ENGLISH,
+  // },
   // {
   //   name: 'AE Drama',
   //   value: 'AEDrama',
