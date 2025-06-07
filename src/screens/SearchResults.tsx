@@ -6,7 +6,7 @@ import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import {manifest} from '../lib/Manifest';
-import {settingsStorage} from '../lib/storage';
+import {providersStorage} from '../lib/storage';
 import useThemeStore from '../lib/zustand/themeStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
@@ -28,9 +28,8 @@ const SearchResults = ({route}: Props): React.ReactElement => {
     return {name: item.name, value: item.value, isLoading: true};
   });
   // Use settingsStorage instead of direct MMKV call
-  const disabledProviders = settingsStorage.getExcludedQualities() || [];
-  const updatedProvidersList = providersList.filter(
-    provider => !disabledProviders.includes(provider.value),
+  const updatedProvidersList = providersList.filter(provider =>
+    providersStorage.isProviderDisabled(provider.value),
   );
   const [loading, setLoading] = useState(trueLoading);
   const abortController = useRef<AbortController | null>(null);
