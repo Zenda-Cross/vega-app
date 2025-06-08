@@ -11,6 +11,7 @@ import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
 import useDownloadsStore from '../lib/zustand/downloadsStore';
 import {downloadManager} from '../lib/downloader';
+import {cancelHlsDownload} from '../lib/hlsDownloader2';
 // import {FFmpegKit} from 'ffmpeg-kit-react-native';
 import RNFS from 'react-native-fs';
 import {downloadFolder} from '../lib/constants';
@@ -254,22 +255,29 @@ const DownloadComponent = ({
           onPress={async () => {
             setCancelModal(false);
             try {
-              RNFS.stopDownload(downloadId);
-              //FFMPEGKIT CANCEL
-              // FFmpegKit.cancel(downloadId);
+              // Check if this is an HLS download (ID >= 1000) or regular download
+              if (typeof downloadId === 'number' && downloadId >= 1000) {
+                // HLS download cancellation
+                cancelHlsDownload(downloadId);
+              } else {
+                // Regular download cancellation
+                RNFS.stopDownload(downloadId);
+                //FFMPEGKIT CANCEL
+                // FFmpegKit.cancel(downloadId);
+              }
 
               downloadStore.removeActiveDownload(fileName);
               const files = await RNFS.readDir(downloadFolder);
               // Find a file with the given name (without extension)
-              const file = files.find(file => {
-                const nameWithoutExtension = file.name
+              const foundFile = files.find(fileItem => {
+                const nameWithoutExtension = fileItem.name
                   .split('.')
                   .slice(0, -1)
                   .join('.');
                 return nameWithoutExtension === fileName;
               });
-              if (file) {
-                await RNFS.unlink(file.path);
+              if (foundFile) {
+                await RNFS.unlink(foundFile.path);
               }
             } catch (error) {
               console.log('Error cancelling download', error);
