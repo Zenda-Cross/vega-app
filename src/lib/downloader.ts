@@ -2,11 +2,12 @@ import {ifExists} from './file/ifExists';
 // import {hlsDownloader} from './hlsDownloader';
 import RNFS from 'react-native-fs';
 import notifee from '@notifee/react-native';
-import {Alert, ToastAndroid} from 'react-native';
+import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
 import {settingsStorage} from './storage';
+import {hlsDownloader2} from './hlsDownloader2';
 
 export const downloadManager = async ({
   title,
@@ -99,13 +100,23 @@ export const downloadManager = async ({
       //   setDownloadId: setDownloadId,
       //   headers,
       // });
-      ToastAndroid.show(
-        'Hls video download is not supported, Use external Downloader',
-        ToastAndroid.LONG,
-      );
-      notifee.cancelNotification(fileName);
-      downloadStore.removeActiveDownload(fileName);
-      setAlreadyDownloaded(false);
+      hlsDownloader2({
+        videoUrl: url,
+        downloadStore,
+        path: `${downloadFolder}/${fileName}.mp4`,
+        fileName,
+        title,
+        setAlreadyDownloaded,
+        setDownloadId: setDownloadId,
+        headers,
+      });
+      // ToastAndroid.show(
+      //   'Hls video download is not supported, Use external Downloader',
+      //   ToastAndroid.LONG,
+      // );
+      // notifee.cancelNotification(fileName);
+      // downloadStore.removeActiveDownload(fileName);
+      // setAlreadyDownloaded(false);
       console.log('Downloading HLS');
       return;
     }
