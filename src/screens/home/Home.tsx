@@ -27,6 +27,7 @@ import {HomeStackParamList} from '../../App';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ContinueWatching from '../../components/ContinueWatching';
+import {cancelHlsDownload} from '../../lib/hlsDownloader2';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 const Home = ({}: Props) => {
@@ -110,6 +111,7 @@ const Home = ({}: Props) => {
     ) {
       console.log('Cancel download');
       RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      cancelHlsDownload(detail.notification?.data?.fileName!);
       // FFMPEGKIT CANCEL
       // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
 
