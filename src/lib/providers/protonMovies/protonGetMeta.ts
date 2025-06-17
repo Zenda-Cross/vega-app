@@ -1,20 +1,41 @@
-import axios from 'axios';
-import {EpisodeLink, Info, Link} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import * as cheerio from 'cheerio';
+import {EpisodeLink, Info, Link, ProviderContext} from '../types';
 
-export const protonGetInfo = async function (link: string): Promise<Info> {
+export const protonGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio, getBaseUrl} = providerContext;
     console.log('all', link);
     const res = await axios.get(link);
     const data = res.data;
-    // console.log('protonGetInfo', data);
-    // const regex = /\[(?=.*?"<div class")(.*?)\]/g;
-    // const htmlArray = data?.match(regex);
-    // console.log('protonGetInfo', htmlArray);
-    // console.log('protonGetInfo', htmlArray[htmlArray.length - 1]);
 
-    // new code
+    function decodeHtml(encodedArray: string[]): string {
+      // Join array elements into a single string
+      const joined = encodedArray.join('');
+
+      // Replace escaped quotes
+      const unescaped = joined.replace(/\\"/g, '"').replace(/\\'/g, "'");
+
+      // Remove remaining escape characters
+      const cleaned = unescaped
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\r/g, '\r');
+
+      // Convert literal string representations back to characters
+      const decoded = cleaned
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+
+      return decoded;
+    }
+
     const $$ = cheerio.load(data);
     const htmlArray = $$('script:contains("decodeURIComponent")')
       .text()
@@ -86,26 +107,3 @@ export const protonGetInfo = async function (link: string): Promise<Info> {
     };
   }
 };
-
-export function decodeHtml(encodedArray: string[]): string {
-  // Join array elements into a single string
-  const joined = encodedArray.join('');
-
-  // Replace escaped quotes
-  const unescaped = joined.replace(/\\"/g, '"').replace(/\\'/g, "'");
-
-  // Remove remaining escape characters
-  const cleaned = unescaped
-    .replace(/\\n/g, '\n')
-    .replace(/\\t/g, '\t')
-    .replace(/\\r/g, '\r');
-
-  // Convert literal string representations back to characters
-  const decoded = cleaned
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-
-  return decoded;
-}

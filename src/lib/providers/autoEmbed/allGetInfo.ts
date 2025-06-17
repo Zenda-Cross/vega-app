@@ -1,7 +1,13 @@
-import axios from 'axios';
-import {EpisodeLink, Info, Link} from '../types';
+import {EpisodeLink, Info, Link, ProviderContext} from '../types';
 
-export const allGetInfo = async function (link: string): Promise<Info> {
+export const allGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
+  const axios = providerContext.axios;
   try {
     console.log('all', link);
     const res = await axios.get(link);

@@ -1,12 +1,15 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const ffGetInfo = async function (link: string): Promise<Info> {
+export const ffGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio, commonHeaders: headers} = providerContext;
     const url = link;
-    // console.log('url', url);
     const res = await axios.get(url, {headers});
     const data = res.data;
     const $ = cheerio.load(data);
@@ -21,12 +24,7 @@ export const ffGetInfo = async function (link: string): Promise<Info> {
     const tags =
       $('.fname:contains("Genre")').find('.colorb').text().split(',') || [];
     const rating = '';
-
-    // console.log(title, image, synopsis);
-
-    // Links
     const links: Link[] = [];
-
     const downloadLink = $('.dlbtn').find('a').attr('href');
     if (downloadLink) {
       links.push({
@@ -34,7 +32,6 @@ export const ffGetInfo = async function (link: string): Promise<Info> {
         episodesLink: downloadLink,
       });
     }
-
     return {
       title,
       tags,

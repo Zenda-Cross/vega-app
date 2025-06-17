@@ -1,12 +1,16 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const modGetInfo = async function (link: string): Promise<Info> {
+export const modGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const meta = {
@@ -60,7 +64,7 @@ export const modGetInfo = async function (link: string): Promise<Info> {
       synopsis: '',
       image: '',
       imdbId: '',
-      type: '',
+      type: 'movie',
       linkList: [],
     };
   }

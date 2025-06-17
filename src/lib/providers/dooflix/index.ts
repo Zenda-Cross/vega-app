@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {dooCatalog, dooGenresList} from './dooCatalog';
 import {dooGetInfo} from './dooGetInfo';
 import {dooGetPost, dooGetSearchPost} from './dooGetPosts';

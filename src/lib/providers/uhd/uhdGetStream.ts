@@ -1,13 +1,34 @@
-import axios from 'axios';
-import FormData from 'form-data';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from './header';
-import {modExtractor} from '../mod/modGetStream';
+import {ProviderContext, Stream} from '../types';
 
-export const uhdGetStream = async (url: string): Promise<Stream[]> => {
+const headers = {
+  Accept:
+    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Cache-Control': 'no-store',
+  'Accept-Language': 'en-US,en;q=0.9',
+  DNT: '1',
+  'sec-ch-ua':
+    '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+};
+
+export const uhdGetStream = async ({
+  link: url,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> => {
   try {
-    let downloadLink = await modExtractor(url);
+    const {axios, cheerio} = providerContext;
+    let downloadLink = await modExtractor(url, providerContext);
 
     // console.log(downloadLink.data);
 
@@ -125,14 +146,64 @@ export const uhdGetStream = async (url: string): Promise<Stream[]> => {
 
 const isDriveLink = async (ddl: string) => {
   if (ddl.includes('drive')) {
-    const driveLeach = await axios.get(ddl);
-    const path = driveLeach.data.match(
+    const driveLeach = await fetch(ddl);
+    const driveLeachData = await driveLeach.text();
+    const pathMatch = driveLeachData.match(
       /window\.location\.replace\("([^"]+)"\)/,
-    )[1];
+    );
+    const path = pathMatch?.[1];
     const mainUrl = ddl.split('/')[2];
-    console.log(`https://${mainUrl}${path}`);
+    console.log(`driveUrl = https://${mainUrl}${path}`);
     return `https://${mainUrl}${path}`;
   } else {
     return ddl;
   }
 };
+
+async function modExtractor(url: string, providerContext: ProviderContext) {
+  const {axios, cheerio} = providerContext;
+  try {
+    const wpHttp = url.split('sid=')[1];
+    var bodyFormData0 = new FormData();
+    bodyFormData0.append('_wp_http', wpHttp);
+    const res = await fetch(url.split('?')[0], {
+      method: 'POST',
+      body: bodyFormData0,
+    });
+    const data = await res.text();
+    // console.log('', data);
+    const html = data;
+    const $ = cheerio.load(html);
+
+    // find input with name="_wp_http2"
+    const wpHttp2 = $('input').attr('name', '_wp_http2').val();
+
+    // console.log('wpHttp2', wpHttp2);
+
+    // form data
+    var bodyFormData = new FormData();
+    bodyFormData.append('_wp_http2', wpHttp2);
+    const formUrl1 = $('form').attr('action');
+    const formUrl = formUrl1 || url.split('?')[0];
+
+    const res2 = await fetch(formUrl, {
+      method: 'POST',
+      body: bodyFormData,
+    });
+    const html2: any = await res2.text();
+    const link = html2.match(/setAttribute\("href",\s*"(.*?)"/)[1];
+    console.log(link);
+    const cookie = link.split('=')[1];
+    console.log('cookie', cookie);
+
+    const downloadLink = await axios.get(link, {
+      headers: {
+        Referer: formUrl,
+        Cookie: `${cookie}=${wpHttp2}`,
+      },
+    });
+    return downloadLink;
+  } catch (err) {
+    console.log('modGetStream error', err);
+  }
+}

@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {ffCatalog, ffGenresList} from './ffCatalog';
 import {ffEpisodeLinks} from './ffGetEpisodes';
 import {ffGetInfo} from './ffGetMeta';

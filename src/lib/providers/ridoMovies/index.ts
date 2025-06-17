@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {guardahdCatalog, guardahdGenresList} from '../guardahd/guardahdCatalog';
 import {allGetPost} from '../autoEmbed/allGetPost';
 import {guardahdGetSearchPosts} from '../guardahd/guardahdGetPosts';

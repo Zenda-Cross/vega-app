@@ -17,6 +17,7 @@ import {Info} from '../lib/providers/types';
 import {Feather} from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {DrawerLayout} from 'react-native-gesture-handler';
+import {providerContext} from '../lib/providers/providerContext';
 
 function Hero({
   isDrawerOpen,
@@ -49,10 +50,11 @@ function Hero({
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
-            info = await manifest[provider.value].GetMetaData(
-              hero.link,
+            info = await manifest[provider.value].GetMetaData({
+              link: hero.link,
               provider,
-            );
+              providerContext: providerContext,
+            });
             cacheStorage.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);

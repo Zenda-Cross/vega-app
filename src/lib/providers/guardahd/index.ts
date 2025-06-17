@@ -2,7 +2,7 @@ import {guardahdCatalog, guardahdGenresList} from './guardahdCatalog';
 import {allGetInfo} from '../autoEmbed/allGetInfo';
 import {allGetPost} from '../autoEmbed/allGetPost';
 import {guardahdGetSearchPosts} from './guardahdGetPosts';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {GuardahdGetStream} from './GetGuardahdStream';
 
 export const guardahd: ProviderType = {

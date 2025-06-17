@@ -18,6 +18,7 @@ import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
 import {settingsStorage} from '../lib/storage';
+import {providerContext} from '../lib/providers/providerContext';
 
 const DownloadComponent = ({
   link,
@@ -87,9 +88,7 @@ const DownloadComponent = ({
     const getServer = async () => {
       setServerLoading(true);
       const servers = await manifest[providerValue || provider.value].GetStream(
-        link,
-        type,
-        controller.signal,
+        {link, type, signal: controller.signal, providerContext},
       );
       const filteredServers = servers.filter(
         server =>

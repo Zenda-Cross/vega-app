@@ -2,7 +2,7 @@ import {tokyoCatalogList, tokyoGenresList} from './catalog';
 import {tokyoGetInfo} from './tokyoGetInfo';
 import {tokyoGetPosts, tokyoGetPostsSearch} from './tokyoGetPosts';
 import {tokyoGetStream} from './tokyoGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const tokyoInsider: ProviderType = {
   catalog: tokyoCatalogList,

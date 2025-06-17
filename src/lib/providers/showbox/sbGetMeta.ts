@@ -1,19 +1,21 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const sbGetInfo = async function (link: string): Promise<Info> {
+export const sbGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    // console.log('url', url);
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const type = url.includes('tv') ? 'series' : 'movie';
     const imdbId = '';
     const title = $('.heading-name').text();
-    // find only numbers in the string
     const rating =
       $('.btn-imdb')
         .text()
@@ -24,24 +26,18 @@ export const sbGetInfo = async function (link: string): Promise<Info> {
       .text()
       ?.replaceAll(/[\n\t]/g, '')
       ?.trim();
-
     const febID = $('.heading-name').find('a').attr('href')?.split('/')?.pop();
     const baseUrl = url.split('/').slice(0, 3).join('/');
     const indexUrl = `${baseUrl}/index/share_link?id=${febID}&type=${
       type === 'movie' ? '1' : '2'
     }`;
-    // console.log('indexUrl', indexUrl);
-
-    const indexRes = await axios.get(indexUrl, {headers});
+    const indexRes = await axios.get(indexUrl);
     const indexData = indexRes.data;
     const febKey = indexData.data.link.split('/').pop();
-
     const febLink = `https://www.febbox.com/file/file_share_list?share_key=${febKey}&is_html=0`;
-    // console.log('sbGetInfo', febLink);
-    const febRes = await axios.get(febLink, {headers});
+    const febRes = await axios.get(febLink);
     const febData = febRes.data;
     const fileList = febData?.data?.file_list;
-
     const links: Link[] = [];
     if (fileList) {
       fileList.map((file: any) => {
@@ -53,7 +49,6 @@ export const sbGetInfo = async function (link: string): Promise<Info> {
         });
       });
     }
-
     return {
       title,
       rating,
@@ -64,13 +59,13 @@ export const sbGetInfo = async function (link: string): Promise<Info> {
       linkList: links,
     };
   } catch (err) {
-    console.error(err);
     return {
       title: '',
+      rating: '',
       synopsis: '',
       image: '',
       imdbId: '',
-      type: 'movie',
+      type: '',
       linkList: [],
     };
   }

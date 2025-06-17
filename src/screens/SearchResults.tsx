@@ -8,6 +8,7 @@ import {SearchStackParamList} from '../App';
 import {manifest} from '../lib/Manifest';
 import {providersStorage} from '../lib/storage';
 import useThemeStore from '../lib/zustand/themeStore';
+import {providerContext} from '../lib/providers/providerContext';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
@@ -55,12 +56,13 @@ const SearchResults = ({route}: Props): React.ReactElement => {
       updatedProvidersList.forEach(item => {
         const fetchPromise = (async () => {
           try {
-            const data = await manifest[item.value].GetSearchPosts(
-              route.params.filter,
-              1,
-              item.value,
-              signal,
-            );
+            const data = await manifest[item.value].GetSearchPosts({
+              searchQuery: route.params.filter,
+              page: 1,
+              providerValue: item.value,
+              signal: signal,
+              providerContext: providerContext,
+            });
 
             // Skip updating state if request was aborted
             if (signal.aborted) return;

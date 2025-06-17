@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {flixhqCatalog, flixhqGenresList} from './flixhqCatalog';
 import {flixhqGetInfo} from './flixhqGetInfo';
 import {flixhqGetPosts, flixhqGetSearchPost} from './flixhqGetPosts';

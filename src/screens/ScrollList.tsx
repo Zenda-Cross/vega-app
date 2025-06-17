@@ -13,6 +13,7 @@ import {settingsStorage} from '../lib/storage';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
+import {providerContext} from '../lib/providers/providerContext';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -75,12 +76,21 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         const getNewPosts = route.params.isSearch
           ? manifest[
               route.params.providerValue || provider.value
-            ].GetSearchPosts(filter, page, provider.value, signal)
-          : manifest[route.params.providerValue || provider.value].GetHomePosts(
-              filter,
+            ].GetSearchPosts({
+              searchQuery: filter,
               page,
-              provider.value,
+              providerValue: provider.value,
               signal,
+              providerContext: providerContext,
+            })
+          : manifest[route.params.providerValue || provider.value].GetHomePosts(
+              {
+                filter,
+                page,
+                providerValue: provider.value,
+                signal,
+                providerContext,
+              },
             );
 
         const newPosts = await getNewPosts;

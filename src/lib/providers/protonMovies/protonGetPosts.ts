@@ -1,44 +1,79 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import {decodeHtml} from './protonGetMeta';
+import {Post, ProviderContext} from '../types';
 
-export const protonGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const protonGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('protonMovies');
-  // console.log('protonGetPosts', baseUrl);
   const url = `${baseUrl + filter}/page/${page}/`;
-  // console.log('proton url', url);
-  return posts(url, baseUrl, signal);
+  return posts({url, baseUrl, signal, axios, cheerio});
 };
 
-export const protonGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const protonGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('protonMovies');
   const url = `${baseUrl}/search/${searchQuery}/page/${page}/`;
-  // console.log('protonGetPostsSearch', url);
-  return posts(url, baseUrl, signal);
+  return posts({url, baseUrl, signal, axios, cheerio});
 };
 
-async function posts(
-  url: string,
-  baseUrl: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+async function posts({
+  url,
+  baseUrl,
+  signal,
+  axios,
+  cheerio,
+}: {
+  url: string;
+  baseUrl: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
+  function decodeHtml(encodedArray: string[]): string {
+    // Join array elements into a single string
+    const joined = encodedArray.join('');
+
+    // Replace escaped quotes
+    const unescaped = joined.replace(/\\"/g, '"').replace(/\\'/g, "'");
+
+    // Remove remaining escape characters
+    const cleaned = unescaped
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\r/g, '\r');
+
+    // Convert literal string representations back to characters
+    const decoded = cleaned
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+
+    return decoded;
+  }
   try {
     const res = await axios.get(url, {
       headers: {
-        ...headers,
         referer: baseUrl,
       },
       signal,
@@ -46,9 +81,7 @@ async function posts(
     const data = res.data;
     const regex = /\[(?=.*?"<div class")(.*?)\]/g;
     const htmlArray = data?.match(regex);
-    // console.log('protonGetPosts', JSON.parse(htmlArray[htmlArray.length - 1]));
     const html = decodeHtml(JSON.parse(htmlArray[htmlArray.length - 1]));
-    // console.log('protonGet html', html);
     const $ = cheerio.load(html);
     const catalog: Post[] = [];
     $('.col.mb-4').map((i, element) => {
@@ -58,19 +91,17 @@ async function posts(
         $(element).find('img').attr('data-src') ||
         $(element).find('img').attr('src') ||
         '';
-      // console.log('protonGetPosts', title, link, image);
-      if (title && link) {
+      if (title && link && image) {
         catalog.push({
-          title: title.replace('Download', '').trim(),
-          link: baseUrl + link,
+          title: title,
+          link: link,
           image: image,
         });
       }
     });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.error('proton error ', err);
+    console.error('protonGetPosts error ', err);
     return [];
   }
 }

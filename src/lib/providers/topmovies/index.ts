@@ -1,7 +1,7 @@
 import {modGetInfo} from '../mod/modGetInfo';
 import {modGetEpisodeLinks} from '../mod/modGetEpisodesList';
 import {modGetStream} from '../mod/modGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {topGetPosts, topGetPostsSearch} from './topGetPosts';
 import {topCatalogList, topGenresList} from './topCatalog';
 

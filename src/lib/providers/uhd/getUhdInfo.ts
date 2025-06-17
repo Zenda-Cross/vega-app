@@ -1,9 +1,33 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {Info, Link} from '../types';
-export async function getUhdInfo(link: string): Promise<Info> {
+import {Info, Link, ProviderContext} from '../types';
+
+const headers = {
+  Accept:
+    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Cache-Control': 'no-store',
+  'Accept-Language': 'en-US,en;q=0.9',
+  DNT: '1',
+  'sec-ch-ua':
+    '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+};
+
+export async function getUhdInfo({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
     const res = await axios.get(url, {headers});
     const html = await res.data;
@@ -11,7 +35,7 @@ export async function getUhdInfo(link: string): Promise<Info> {
 
     const title = $('h2:first').text() || '';
     const image = $('h2').siblings().find('img').attr('src') || '';
-    const trailer = $('iframe').attr('src') || '';
+    // const trailer = $('iframe').attr('src') || '';
 
     // console.log({ title, image, trailer });
 

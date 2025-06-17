@@ -1,22 +1,93 @@
-import axios from 'axios';
-import FormData from 'form-data';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from './header';
-import {modGetEpisodeLinks} from './modGetEpisodesList';
+import {Stream, ProviderContext, EpisodeLink} from '../types';
 
-export const modGetStream = async (
-  url: string,
-  type: string,
-): Promise<Stream[]> => {
+const headers = {
+  Accept:
+    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Cache-Control': 'no-store',
+  'Accept-Language': 'en-US,en;q=0.9',
+  DNT: '1',
+  'sec-ch-ua':
+    '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  Cookie: 'popads_user_id=6ba8fe60a481387a3249f05aa058822d',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+};
+
+export const modGetStream = async function ({
+  link: url,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const {axios, cheerio} = providerContext;
   try {
+    const modGetEpisodeLinks = async function ({
+      url,
+      providerContext,
+    }: {
+      url: string;
+      providerContext: ProviderContext;
+    }): Promise<EpisodeLink[]> {
+      const {axios, cheerio} = providerContext;
+      try {
+        if (url.includes('url=')) {
+          url = atob(url.split('url=')[1]);
+        }
+        const res = await axios.get(url);
+        const html = res.data;
+        let $ = cheerio.load(html);
+        if (url.includes('url=')) {
+          const newUrl = $("meta[http-equiv='refresh']")
+            .attr('content')
+            ?.split('url=')[1];
+          const res2 = await axios.get(newUrl || url);
+          const html2 = res2.data;
+          $ = cheerio.load(html2);
+        }
+        const episodeLinks: EpisodeLink[] = [];
+        $('h3,h4').map((i, element) => {
+          const seriesTitle = $(element).text();
+          const episodesLink = $(element).find('a').attr('href');
+          if (episodesLink && episodesLink !== '#') {
+            episodeLinks.push({
+              title: seriesTitle.trim() || 'No title found',
+              link: episodesLink || '',
+            });
+          }
+        });
+        $('a.maxbutton').map((i, element) => {
+          const seriesTitle = $(element).children('span').text();
+          const episodesLink = $(element).attr('href');
+          if (episodesLink && episodesLink !== '#') {
+            episodeLinks.push({
+              title: seriesTitle.trim() || 'No title found',
+              link: episodesLink || '',
+            });
+          }
+        });
+        return episodeLinks;
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    };
     console.log('modGetStream', type, url);
     if (type === 'movie') {
-      const servers = await modGetEpisodeLinks(url);
+      const servers = await modGetEpisodeLinks({url, providerContext});
       url = servers[0].link || url;
     }
 
-    let downloadLink = await modExtractor(url);
+    let downloadLink = await modExtractor(url, providerContext);
 
     // console.log(downloadLink.data);
 
@@ -154,10 +225,12 @@ export const modGetStream = async (
 
 const isDriveLink = async (ddl: string) => {
   if (ddl.includes('drive')) {
-    const driveLeach = await axios.get(ddl);
-    const path = driveLeach.data.match(
+    const driveLeach = await fetch(ddl);
+    const driveLeachData = await driveLeach.text();
+    const pathMatch = driveLeachData.match(
       /window\.location\.replace\("([^"]+)"\)/,
-    )[1];
+    );
+    const path = pathMatch?.[1];
     const mainUrl = ddl.split('/')[2];
     console.log(`driveUrl = https://${mainUrl}${path}`);
     return `https://${mainUrl}${path}`;
@@ -166,7 +239,8 @@ const isDriveLink = async (ddl: string) => {
   }
 };
 
-export async function modExtractor(url: string) {
+async function modExtractor(url: string, providerContext: ProviderContext) {
+  const {axios, cheerio} = providerContext;
   try {
     const wpHttp = url.split('sid=')[1];
     var bodyFormData0 = new FormData();

@@ -2,7 +2,7 @@ import {hiGetInfo} from './hiGetInfo';
 import {hiCatalog, hiGenresList} from './hiCatalog';
 import {hiGetStream} from './HiGetSteam';
 import {hiGetPosts, hiGetPostsSearch} from './hiGetPosts';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const HiAnime: ProviderType = {
   catalog: hiCatalog,

@@ -1,18 +1,20 @@
-import {TextTrackType} from 'react-native-video/lib/types/video';
-import {getBaseUrl} from '../getBaseUrl';
-import {Stream} from '../types';
+import {ProviderContext, Stream, TextTrackType} from '../types';
 
-export const flixhqGetStream = async (id: string): Promise<Stream[]> => {
+export const flixhqGetStream = async function ({
+  link: id,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
-    console.log(id);
+    const {getBaseUrl} = providerContext;
     const episodeId = id.split('*')[0];
     const mediaId = id.split('*')[1];
     const baseUrl = await getBaseUrl('consumet');
     const serverUrl = `${baseUrl}/movies/flixhq/servers?episodeId=${episodeId}&mediaId=${mediaId}`;
-    console.log('serverUrl', serverUrl);
     const res = await fetch(serverUrl);
     const servers = await res.json();
-    console.log('servers', servers);
     const streamLinks: Stream[] = [];
     for (const server of servers) {
       const streamUrl =
@@ -22,11 +24,9 @@ export const flixhqGetStream = async (id: string): Promise<Stream[]> => {
         episodeId +
         '&mediaId=' +
         mediaId;
-      console.log('streamUrl', streamUrl);
       const streamRes = await fetch(streamUrl);
       const streamData = await streamRes.json();
       const subtitles: Stream['subtitles'] = [];
-
       if (streamData?.sources?.length > 0) {
         if (streamData.subtitles) {
           streamData.subtitles.forEach((sub: {lang: string; url: string}) => {

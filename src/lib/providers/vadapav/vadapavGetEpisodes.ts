@@ -1,10 +1,13 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const vadapavGetEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const vadapavGetEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
+  const {axios, cheerio} = providerContext;
   try {
     const baseUrl = url?.split('/').slice(0, 3).join('/');
     const res = await axios.get(url);
@@ -28,10 +31,8 @@ export const vadapavGetEpisodeLinks = async function (
       }
     });
 
-    // console.log(episodeLinks);
     return episodeLinks;
   } catch (err) {
-    console.error(err);
     return [];
   }
 };

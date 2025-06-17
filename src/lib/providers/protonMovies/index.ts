@@ -1,7 +1,7 @@
 import {protonGenresList, protonCatalogList} from './protonCatalog';
 import {protonGetPosts, protonGetPostsSearch} from './protonGetPosts';
 import {protonGetInfo} from './protonGetMeta';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {protonGetStream} from './protonGetStream';
 
 export const protonMovies: ProviderType = {

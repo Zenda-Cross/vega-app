@@ -1,20 +1,23 @@
-import axios from 'axios';
-import {Stream} from '../types';
+import {Stream, ProviderContext} from '../types';
 import * as cheerio from 'cheerio';
 
-export const sbGetStream = async (
-  id: string,
-  type: string,
-  signal: AbortSignal,
-): Promise<Stream[]> => {
+export const sbGetStream = async function ({
+  link: id,
+  // type,
+  signal,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
+    const {axios} = providerContext;
     const stream: Stream[] = [];
     const [, epId] = id.split('&');
     const url = `https://febbox.vercel.app/api/video-quality?fid=${epId}`;
-    console.log('sbGetStream url', url);
-    const res = await axios.get(url, {
-      signal,
-    });
+    const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data.html);
     $('.file_quality').each((i, el) => {
@@ -33,10 +36,8 @@ export const sbGetStream = async (
         });
       }
     });
-
     return stream;
   } catch (err) {
-    console.log('getStream error', err);
     return [];
   }
 };

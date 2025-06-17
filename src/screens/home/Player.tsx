@@ -42,6 +42,7 @@ import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
 import {ifExists} from '../../lib/file/ifExists';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
+import {providerContext} from '../../lib/providers/providerContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -188,7 +189,12 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
       const data = await manifest[
         route.params?.providerValue || provider?.value
-      ].GetStream(activeEpisode.link, route.params?.type, controller.signal);
+      ].GetStream({
+        link: activeEpisode.link,
+        type: route.params?.type,
+        signal: controller.signal,
+        providerContext: providerContext,
+      });
       const streamAbleServers = data.filter(
         // filter out non streamable servers
         streamItem =>

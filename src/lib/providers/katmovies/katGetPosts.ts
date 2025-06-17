@@ -1,36 +1,52 @@
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const katGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const katGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('kat');
   const url = `${baseUrl + filter}/page/${page}/`;
-  // console.log('katGetPosts', url);
-  return posts(url, signal);
+  return posts({url, signal, cheerio});
 };
 
-export const katGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const katGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('kat');
   const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
-  // console.log('katGetPosts', url);
-
-  return posts(url, signal);
+  return posts({url, signal, cheerio});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  cheerio,
+}: {
+  url: string;
+  signal: AbortSignal;
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
   try {
-    const res = await fetch(url, {headers, signal});
+    const res = await fetch(url, {signal});
     const data = await res.text();
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -40,7 +56,6 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
         const title = $(element).find('img').attr('alt');
         const link = $(element).find('a').attr('href');
         const image = $(element).find('img').attr('src');
-        // console.log('katGetPosts', title, link, image);
         if (title && link && image) {
           catalog.push({
             title: title.replace('Download', '').trim(),
@@ -49,7 +64,6 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
           });
         }
       });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('katmovies error ', err);

@@ -1,14 +1,20 @@
-import * as cheerio from 'cheerio';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const nfGetPost = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const nfGetPost = async function ({
+  filter,
+  page,
+  providerValue,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
   try {
+    const {getBaseUrl, cheerio} = providerContext;
     const baseUrl = await getBaseUrl('nfMirror');
     const catalog: Post[] = [];
     if (page > 1) {
@@ -60,12 +66,20 @@ export const nfGetPost = async function (
   }
 };
 
-export const nfGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const nfGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  providerValue,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   try {
     if (page > 1) {
       return [];

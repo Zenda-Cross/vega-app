@@ -1,52 +1,39 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {ToastAndroid} from 'react-native';
-import {Stream} from '../types';
-import {hubcloudExtracter} from '../hubcloudExtractor';
+import {ProviderContext, Stream} from '../types';
 
-const encode = function (value: string) {
-  return btoa(value.toString());
-};
-const decode = function (value: string) {
-  if (value === undefined) {
-    return '';
-  }
-  return atob(value.toString());
-};
-const pen = function (value: string) {
-  return value.replace(/[a-zA-Z]/g, function (_0x1a470e: any) {
-    return String.fromCharCode(
-      (_0x1a470e <= 'Z' ? 90 : 122) >=
-        (_0x1a470e = _0x1a470e.charCodeAt(0) + 13)
-        ? _0x1a470e
-        : _0x1a470e - 26,
-    );
-  });
+const headers = {
+  Accept:
+    'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  'Cache-Control': 'no-store',
+  'Accept-Language': 'en-US,en;q=0.9',
+  DNT: '1',
+  'sec-ch-ua':
+    '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Windows"',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  Cookie:
+    '_lscache_vary=62abf8b96599676eb8ec211cffaeb8ff; ext_name=ojplmecpdpgccookcobabopnaifgidhf; cf_clearance=n4Y1XTKZ5TfIMBNQuAXzerwKpx0U35KoOm3imfT0GpU-1732097818-1.2.1.1-ZeAnEu.8D9TSZHYDoj7vwo1A1rpdKl304ZpaBn_QbAQOr211JFAb7.JRQU3EL2eIy1Dfl8HhYvH7_259.22lUz8gbchHcQ8hvfuQXMtFMCbqDBLzjNUZa9stuk.39l28IcPhH9Z2szsf3SGtNI1sAfo66Djt7sOReLK3lHw9UkJp7BdGqt6a2X9qAc8EsAI3lE480Tmt0fkHv14Oc30LSbPB_WwFmiqAki2W.Gv9hV7TN_QBFESleTDlXd.6KGflfd4.KwWF7rpSRo_cgoc9ALLLIafpxHVbe7_g5r7zvpml_Pj8fEL75fw.1GBuy16bciHBuB8s_kahuJYUnhtQFFgfTQl8_Gn6KeovBWx.PJ7nFv5sklHUfAyBVq3t30xKe8ZDydsQ_G.yipfj_In5GmmWcXGb6E4.bioDOwW_sKLtxwdTQt7Nu.RkILX_mKvXNpyLqflIVj8G7X5E8I.unw',
+  'Upgrade-Insecure-Requests': '1',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
 };
 
-const abortableTimeout = (ms, {signal} = {}) => {
-  return new Promise((resolve, reject) => {
-    if (signal && signal.aborted) {
-      return reject(new Error('Aborted'));
-    }
-
-    const timer = setTimeout(resolve, ms);
-
-    if (signal) {
-      signal.addEventListener('abort', () => {
-        clearTimeout(timer);
-        reject(new Error('Aborted'));
-      });
-    }
-  });
-};
-
-export async function vegaGetStream(
-  link: string,
-  type: string,
-  signal: AbortSignal,
-) {
+export async function vegaGetStream({
+  link,
+  type,
+  signal,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}) {
+  const {axios, cheerio, extractors} = providerContext;
+  const {hubcloudExtracter} = extractors;
   try {
     const streamLinks: Stream[] = [];
     console.log('dotlink', link);
@@ -119,80 +106,11 @@ export async function vegaGetStream(
       }
     }
 
-    // console.log(vLinkRedirect[1]);
-
-    // console.log(domains[2]);
-
-    /////////////////////////////
-    // const domains = vLinkText.match(/url\.replace\('([^']+)','([^']+)'\);/) || [
-    //   '',
-    //   '',
-    // ];
-    // const vLinkRedirectRes = await fetch(
-    //   '
-    //     vLinkRedirect[1].replace(domains[1], domains[2]),
-    //   {
-    //     headers: headers,
-    //     signal: signal,
-    //   },
-    // );
-    // const vLinkRedirectText = await vLinkRedirectRes.text();
-
-    // var regex = /ck\('_wp_http_\d+','([^']+)'/g;
-    // var combinedString = '';
-
-    // var match;
-    // while ((match = regex.exec(vLinkRedirectText)) !== null) {
-    //   // console.log(match[1]);
-    //   combinedString += match[1];
-    // }
-    // // console.log(decode(combinedString));
-    // const decodedString = decode(pen(decode(decode(combinedString))));
-    // // console.log(decodedString);
-    // const data = JSON.parse(decodedString);
-    // console.log(data);
-    // const token = encode(data?.data);
-    // const blogLink = data?.wp_http1 + '?re=' + token;
-    // // abort timeout on signal
-    // let wait = abortableTimeout((Number(data?.total_time) + 2) * 1000, {
-    //   signal,
-    // });
-    // ToastAndroid.show(`Wait ${data?.total_time} Sec`, ToastAndroid.SHORT);
-
-    // await wait;
-    // console.log('blogLink', blogLink);
-    // let vcloudLink = 'Invalid Request';
-    // while (vcloudLink.includes('Invalid Request')) {
-    //   const blogRes = await axios(blogLink, {headers, signal});
-    //   if (blogRes.data.includes('Invalid Request')) {
-    //     console.log(blogRes.data);
-    //   } else {
-    //     vcloudLink = blogRes.data.match(/var reurl = "([^"]+)"/);
-    //     break;
-    //   }
-    //   console.log('vcloudLink', vcloudLink);
-    // }
-
-    // console.log('vcloudLink', vcloudLink?.[1]);
-    /////////////////////////////
-
-    /////////////////////////////
-    // const vcloudRes = await axios(
-    //   'vcloudLink?.[1],
-    //   {headers, signal},
-    // );
-    /////////////////////////////
-
     return await hubcloudExtracter(link, signal);
   } catch (error: any) {
     console.log('getStream error: ', error);
     if (error.message.includes('Aborted')) {
-      // ToastAndroid.show('Request Aborted', ToastAndroid.SHORT);
     } else {
-      ToastAndroid.show(
-        `Error getting stream links ${error.message}`,
-        ToastAndroid.SHORT,
-      );
     }
     return [];
   }

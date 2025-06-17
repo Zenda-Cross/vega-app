@@ -1,40 +1,64 @@
-import * as cheerio from 'cheerio';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import {hdbHeaders} from './hdbHeaders';
+import {Post, ProviderContext} from '../types';
 
-export const hdhubGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+const hdbHeaders = {
+  Cookie: 'xla=s4t',
+  Referer: 'https://google.com',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+};
+
+export const hdhubGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('hdhub');
   const url = `${baseUrl + filter}/page/${page}/`;
-  console.log('hdhubGetPosts', url);
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-export const hdhubGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const hdhubGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('hdhub');
   const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
-  // console.log('hdhubGetPosts', url);
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  providerContext,
+}: {
+  url: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {cheerio} = providerContext;
   try {
     const res = await fetch(url, {
       headers: hdbHeaders,
       signal,
     });
     const data = await res.text();
-    console.log('hdhubGetPosts', data);
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
     $('.recent-movies')
@@ -52,10 +76,9 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
           });
         }
       });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.error('hdhub error ', err);
+    console.error('hdhubGetPosts error ', err);
     return [];
   }
 }

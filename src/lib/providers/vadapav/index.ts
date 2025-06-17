@@ -1,6 +1,6 @@
 import {vadapavGetPosts, vadapavGetPostsSearch} from './vadapavGetPosts';
 import {vadapavCatalogList, vadapavGenresList} from './VagapavCatalog';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {vadapavGetInfo} from './vadapavGetInfo';
 import {vadapavGetStream} from './vadapavGetStream';
 import {vadapavGetEpisodeLinks} from './vadapavGetEpisodes';

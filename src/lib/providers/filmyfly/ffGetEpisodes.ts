@@ -1,19 +1,19 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const ffEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const ffEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
   try {
+    const headers = providerContext.commonHeaders;
+    const {axios, cheerio} = providerContext;
     const res = await axios.get(url, {headers});
     const data = res.data;
     const $ = cheerio.load(data);
     const episodeLinks: EpisodeLink[] = [];
-
-    // if ($.text().includes('🔰')) {
-    // }
 
     $('.dlink.dl').map((i, element) => {
       const title = $(element)
@@ -30,7 +30,6 @@ export const ffEpisodeLinks = async function (
         });
       }
     });
-    // console.log(episodeLinks);
     return episodeLinks;
   } catch (err) {
     console.error('cl episode links', err);

@@ -1,34 +1,53 @@
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const driveGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const driveGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('drive');
   const url = `${baseUrl + filter}/page/${page}/`;
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-export const driveGetSearchPost = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const driveGetSearchPost = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('drive');
   const url = `${baseUrl}page/${page}/?s=${searchQuery}`;
-
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  providerContext,
+}: {
+  url: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
   try {
-    const res = await fetch(url, {headers, signal});
+    const {cheerio} = providerContext;
+    const res = await fetch(url, {signal});
     const data = await res.text();
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -46,7 +65,6 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
           });
         }
       });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('drive error ', err);

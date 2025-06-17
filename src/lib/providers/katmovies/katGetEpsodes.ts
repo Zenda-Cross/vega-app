@@ -1,18 +1,18 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const katEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
-  console.log('episode url', url);
+export const katEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
+  const {axios, cheerio} = providerContext;
   const episodesLink: EpisodeLink[] = [];
   try {
-    console.log('katEpisodeLinks', url);
     if (url.includes('gdflix')) {
       const baseUrl = url.split('/pack')?.[0];
-      const res = await axios.get(url, {headers});
+      const res = await axios.get(url);
       const data = res.data;
       const $ = cheerio.load(data);
       const links = $('.list-group-item');
@@ -27,18 +27,16 @@ export const katEpisodeLinks = async function (
       }
     }
     if (url.includes('/pack')) {
-      const epIds = await extractKmhdEpisodes(url);
-      epIds?.forEach((id, index) => {
+      const epIds = await extractKmhdEpisodes(url, providerContext);
+      epIds?.forEach((id: string, index: number) => {
         episodesLink.push({
           title: `Episode ${index + 1}`,
           link: url.split('/pack')[0] + '/file/' + id,
         });
       });
     }
-    console.log('episodesLink', episodesLink);
     const res = await axios.get(url, {
       headers: {
-        ...headers,
         Cookie:
           '_ga_GNR438JY8N=GS1.1.1722240350.5.0.1722240350.0.0.0; _ga=GA1.1.372196696.1722150754; unlocked=true',
       },
@@ -52,7 +50,6 @@ export const katEpisodeLinks = async function (
         link: $(link).attr('href') || '',
       });
     });
-    console.log('episodesLink', episodesLink);
 
     return episodesLink;
   } catch (err) {
@@ -61,28 +58,27 @@ export const katEpisodeLinks = async function (
   }
 };
 
-export async function extractKmhdLink(katlink: string) {
-  console.log('extractKmhd', katlink);
-  const res = await axios.get(katlink, {
-    headers: {
-      ...headers,
-      Cookie:
-        '_ga_GNR438JY8N=GS1.1.1722240350.5.0.1722240350.0.0.0; _ga=GA1.1.372196696.1722150754; unlocked=true',
-    },
-  });
+export async function extractKmhdLink(
+  katlink: string,
+  providerContext: ProviderContext,
+) {
+  const {axios} = providerContext;
+  const res = await axios.get(katlink);
   const data = res.data;
   const hubDriveRes = data.match(/hubdrive_res:\s*"([^"]+)"/)[1];
   const hubDriveLink = data.match(
     /hubdrive_res\s*:\s*{[^}]*?link\s*:\s*"([^"]+)"/,
   )[1];
-  console.log('hubDriveLink', hubDriveLink + hubDriveRes);
   return hubDriveLink + hubDriveRes;
 }
 
-async function extractKmhdEpisodes(katlink: string) {
-  const res = await axios.get(katlink, {headers});
+async function extractKmhdEpisodes(
+  katlink: string,
+  providerContext: ProviderContext,
+) {
+  const {axios} = providerContext;
+  const res = await axios.get(katlink);
   const data = res.data;
   const ids = data.match(/[\w]+_[a-f0-9]{8}/g);
-  console.log('ids', ids);
   return ids;
 }

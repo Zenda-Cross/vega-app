@@ -1,35 +1,54 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const modGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const modGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('Moviesmod');
   const url = `${baseUrl + filter}/page/${page}/`;
-
-  return posts(url, signal);
+  return posts({url, signal, axios, cheerio});
 };
 
-export const modGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const modGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('Moviesmod');
   const url = `${baseUrl}/search/${searchQuery}/page/${page}/`;
-  return posts(url, signal);
+  return posts({url, signal, axios, cheerio});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  axios,
+  cheerio,
+}: {
+  url: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
   try {
-    const res = await axios.get(url, {headers, signal});
+    const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -38,22 +57,18 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
       .map((i, element) => {
         const title = $(element).find('a').attr('title');
         const link = $(element).find('a').attr('href');
-        const image =
-          $(element).find('img').attr('data-src') ||
-          $(element).find('img').attr('src') ||
-          '';
-        if (title && link) {
+        const image = $(element).find('img').attr('src');
+        if (title && link && image) {
           catalog.push({
-            title: title.replace('Download', '').trim(),
+            title: title,
             link: link,
             image: image,
           });
         }
       });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.error('mod error ', err);
+    console.error('modGetPosts error ', err);
     return [];
   }
 }

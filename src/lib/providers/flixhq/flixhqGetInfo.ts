@@ -1,12 +1,16 @@
-import axios from 'axios';
-import {Info, Link} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Info, Link, ProviderContext} from '../types';
 
-export const flixhqGetInfo = async function (id: string): Promise<Info> {
+export const flixhqGetInfo = async function ({
+  link: id,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, getBaseUrl} = providerContext;
     const baseUrl = await getBaseUrl('consumet');
     const url = `${baseUrl}/movies/flixhq/info?id=` + id;
-    console.log(url);
     const res = await axios.get(url);
     const data = res.data;
     const meta = {

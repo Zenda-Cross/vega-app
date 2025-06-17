@@ -2,7 +2,7 @@ import {kisskhCatalog, kisskhGenresList} from './kissKhCatalog';
 import {kissKhGetInfo} from './kissKhGetInfo';
 import {kissKhGetPosts, kissKhGetPostsSearch} from './kissKhGetPosts';
 import {kissKhGetStream} from './kissKhGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const kissKhProvider: ProviderType = {
   catalog: kisskhCatalog,

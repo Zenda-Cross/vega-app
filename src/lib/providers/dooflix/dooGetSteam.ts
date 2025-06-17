@@ -1,6 +1,10 @@
 import {Stream} from '../types';
 
-export const dooGetStream = async (link: string): Promise<Stream[]> => {
+export const dooGetStream = async function ({
+  link,
+}: {
+  link: string;
+}): Promise<Stream[]> {
   try {
     const streams: Stream[] = [];
     streams.push({

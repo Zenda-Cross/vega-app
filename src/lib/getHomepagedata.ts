@@ -1,6 +1,7 @@
 import {Content} from './zustand/contentStore';
 import {manifest} from './Manifest';
 import {Post} from './providers/types';
+import {providerContext} from './providers/providerContext';
 
 export interface HomePageData {
   title: string;
@@ -16,12 +17,13 @@ export const getHomePageData = async (
 
   const fetchPromises = manifest[activeProvider.value].catalog.map(
     async item => {
-      const data = await manifest[activeProvider.value].GetHomePosts(
-        item.filter,
-        1,
-        activeProvider.value,
+      const data = await manifest[activeProvider.value].GetHomePosts({
+        filter: item.filter,
+        page: 1,
+        providerValue: activeProvider.value,
         signal,
-      );
+        providerContext: providerContext,
+      });
       return {
         title: item.title,
         Posts: data?.length > 0 ? data : [],

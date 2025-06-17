@@ -1,6 +1,11 @@
-import {Stream} from '../types';
+import {Stream, ProviderContext} from '../types';
 
-export const ringzGetStream = async (data: string): Promise<Stream[]> => {
+export const ringzGetStream = async function ({
+  link: data,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   const streamLinks: Stream[] = [];
   const dataJson = JSON.parse(data);
   streamLinks.push({

@@ -2,7 +2,7 @@ import {hdhub4uCatalog, hdhub4uGenresList} from './hdhubCatalog';
 import {hdhub4uGetInfo} from './hdhubGetInfo';
 import {hdhub4uGetStream} from './hdhub4uGetSteam';
 import {hdhubGetPosts, hdhubGetPostsSearch} from './hdhubGetPosts';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const hdhub4uProvider: ProviderType = {
   catalog: hdhub4uCatalog,

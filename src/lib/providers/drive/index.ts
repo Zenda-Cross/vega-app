@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {driveCatalog, driveGenresList} from './catalog';
 import {driveGetEpisodeLinks} from './driveGetEpisodesList';
 import {driveGetInfo} from './driveGetInfo';

@@ -1,41 +1,54 @@
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const clGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
-  const baseUrl = await getBaseUrl('cinemaLuxe');
-  // console.log(baseUrl);
+export const clGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const baseUrl = await providerContext.getBaseUrl('cinemaLuxe');
   const url = `${baseUrl + filter}page/${page}/`;
-  console.log('multiUrl', url);
-
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-export const clGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
-  const baseUrl = await getBaseUrl('cinemaLuxe');
-  // console.log(baseUrl);
+export const clGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const baseUrl = await providerContext.getBaseUrl('cinemaLuxe');
   const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
-  console.log('multiUrl', url);
-
-  return posts(url, signal);
+  return posts({url, signal, providerContext});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  providerContext,
+}: {
+  url: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
   try {
-    const res = await fetch(url, {headers, signal});
+    const res = await fetch(url, {
+      headers: providerContext.commonHeaders,
+      signal,
+    });
     const data = await res.text();
-    const $ = cheerio.load(data);
+    const $ = providerContext.cheerio.load(data);
     const catalog: Post[] = [];
     $('.item.tvshows,.item.movies').map((i, element) => {
       const title = $(element).find('.poster').find('img').attr('alt');
@@ -61,7 +74,6 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
         });
       }
     });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('cinemaluxe error ', err);

@@ -1,9 +1,14 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {EpisodeLink, Info, Link} from '../types';
+import {EpisodeLink, Info, Link, ProviderContext} from '../types';
 
-export const vadapavGetInfo = async function (link: string): Promise<Info> {
+export const vadapavGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const baseUrl = link?.split('/').slice(0, 3).join('/');
     const url = link;
     const res = await axios.get(url);
@@ -18,9 +23,7 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
         ?.split('/')
         .pop()
         ?.trim() || '';
-    console.log('title', title);
     const links: Link[] = [];
-
     $('.directory-entry:not(:contains("Parent Directory"))').map(
       (i, element) => {
         const link = $(element).attr('href');
@@ -46,30 +49,27 @@ export const vadapavGetInfo = async function (link: string): Promise<Info> {
         });
       }
     });
-
     if (directLinks.length > 0) {
       links.push({
         title: title + ' DL',
         directLinks: directLinks,
       });
     }
-
     return {
       title: title,
       synopsis: '',
       image: '',
       imdbId: '',
-      type: '',
+      type: 'movie',
       linkList: links,
     };
   } catch (err) {
-    console.error(err);
     return {
       title: '',
       synopsis: '',
       image: '',
       imdbId: '',
-      type: '',
+      type: 'movie',
       linkList: [],
     };
   }

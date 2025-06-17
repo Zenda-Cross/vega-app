@@ -1,34 +1,31 @@
-import {TextTracks, TextTrackType} from 'react-native-video';
-import {Stream} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import * as cheerio from 'cheerio';
+import {Stream, ProviderContext, TextTrackType, TextTracks} from '../types';
 
-export const mpGetStream = async (
-  id: string,
-  type: string,
-): Promise<Stream[]> => {
+export const mpGetStream = async function ({
+  link: id,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
-    console.log(id);
+    const {getBaseUrl, cheerio} = providerContext;
     const streams: Stream[] = [];
-    const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
+    const {season, episode, tmdbId} = JSON.parse(id);
     const baseUrl = await getBaseUrl('moviesapi');
     const link =
       type === 'movie'
         ? `${baseUrl}/movie/${tmdbId}`
         : `${baseUrl}/tv/${tmdbId}-${season}-${episode}`;
-    console.log('doo link', link);
     const res = await fetch(link, {
       headers: {
         referer: baseUrl,
       },
     });
     const baseData = await res.text();
-    // console.log('baseData', baseData);
     const $ = cheerio.load(baseData);
     const embededUrl = $('iframe').attr('src') || '';
-    console.log('embededUrl', embededUrl);
-
-    // Fetch the content from the provided URL
     const response = await fetch(embededUrl, {
       credentials: 'omit',
       headers: {
@@ -52,12 +49,10 @@ export const mpGetStream = async (
       mode: 'cors',
     });
     const data2 = await response.text();
-    // console.log('data2', data2);
 
     // Extract the encrypted content
     const contents =
       data2.match(/const\s+Encrypted\s*=\s*['"]({.*})['"]/)?.[1] || '';
-    console.log(contents);
     if (embededUrl) {
       const res2 = await fetch(
         'https://ext.8man.me/api/decrypt?passphrase==JV[t}{trEV=Ilh5',
@@ -67,7 +62,6 @@ export const mpGetStream = async (
         },
       );
       const finalData = await res2.json();
-      console.log('finaldata', finalData);
       const subtitle: TextTracks = finalData?.subtitles?.map((sub: any) => ({
         title: sub?.label || 'Unknown',
         language: sub?.label as string,

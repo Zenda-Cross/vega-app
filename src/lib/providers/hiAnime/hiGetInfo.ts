@@ -1,12 +1,16 @@
-import axios from 'axios';
-import {Info, Link} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Info, Link, ProviderContext} from '../types';
 
-export const hiGetInfo = async function (link: string): Promise<Info> {
+export const hiGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {getBaseUrl, axios} = providerContext;
     const baseUrl = await getBaseUrl('consumet');
     const url = `${baseUrl}/anime/zoro/info?id=` + link;
-    console.log(url);
     const res = await axios.get(url);
     const data = res.data;
     const meta = {
@@ -20,7 +24,6 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
       imdbId: '',
       type: data.episodes.length > 0 ? 'series' : 'movie',
     };
-
     const linkList: Link[] = [];
     const subLinks: Link['directLinks'] = [];
     data.episodes.forEach((episode: any) => {
@@ -37,23 +40,19 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
         });
       }
     });
-
     linkList.push({
       title: meta.title + ' (Sub)',
       directLinks: subLinks,
     });
-
     if (data?.subOrDub === 'both') {
       const dubLinks: Link['directLinks'] = [];
       data.episodes.forEach((episode: any) => {
-        console.log(episode);
         if (!episode?.isDubbed) {
           return;
         }
         const title =
           'Episode ' + episode.number + (episode?.isFiller ? ' (Filler)' : '');
         const link = episode.id + '$dub';
-        console.log(link);
         if (link && title) {
           dubLinks.push({
             title,
@@ -61,13 +60,11 @@ export const hiGetInfo = async function (link: string): Promise<Info> {
           });
         }
       });
-
       linkList.push({
         title: meta.title + ' (Dub)',
         directLinks: dubLinks,
       });
     }
-
     return {
       ...meta,
       linkList: linkList,

@@ -1,42 +1,60 @@
-import axios from 'axios';
-import {Post} from '../types';
-import {headers} from './header';
-import * as cheerio from 'cheerio';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const tokyoGetPosts = async (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> => {
+export const tokyoGetPosts = async function ({
+  filter,
+  page,
+  // providerValue,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseURL = await getBaseUrl('tokyoinsider');
   const start = page < 2 ? 0 : (page - 1) * 20;
   const url = `${baseURL}/${filter}&start=${start}`;
-  // console.log('url', url);
-  return posts(baseURL, url, signal);
+  return posts({baseURL, url, signal, axios, cheerio});
 };
 
-export const tokyoGetPostsSearch = async (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> => {
+export const tokyoGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  // providerValue,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseURL = await getBaseUrl('tokyoinsider');
   const start = page < 2 ? 0 : (page - 1) * 20;
   const url = `${baseURL}/anime/search?k=${searchQuery}&start=${start}`;
-  // console.log('url', url);
-  return posts(baseURL, url, signal);
+  return posts({baseURL, url, signal, axios, cheerio});
 };
 
-async function posts(
-  baseURL: string,
-  url: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+async function posts({
+  baseURL,
+  url,
+  signal,
+  axios,
+  cheerio,
+}: {
+  baseURL: string;
+  url: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
   try {
-    const res = await axios.get(url, {signal, headers});
+    const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -55,11 +73,8 @@ async function posts(
         });
       }
     });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
-    // console.log('tokyoGetPosts');
-    console.error('tokyo error ', err);
     return [];
   }
 }

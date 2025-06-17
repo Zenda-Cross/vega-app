@@ -1,13 +1,16 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './headers';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const multiGetInfo = async function (link: string): Promise<Info> {
+export const multiGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    // console.log('url', url);
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const type = url.includes('tvshows') ? 'series' : 'movie';
@@ -15,8 +18,6 @@ export const multiGetInfo = async function (link: string): Promise<Info> {
     const title = url.split('/')[4].replace(/-/g, ' ');
     const image = $('.g-item').find('a').attr('href') || '';
     const synopsis = $('.wp-content').find('p').text() || '';
-
-    // console.log(title, image, synopsis);
 
     // Links
     const links: Link[] = [];

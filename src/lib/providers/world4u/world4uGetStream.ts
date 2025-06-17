@@ -1,12 +1,27 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from './header';
+import {Stream, ProviderContext} from '../types';
 
-export const world4uGetStream = async (
-  url: string,
-  type: string,
-): Promise<Stream[]> => {
+export const world4uGetStream = async function ({
+  link: url,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const {axios, cheerio} = providerContext;
+  const headers = {
+    'sec-ch-ua':
+      '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+  };
+
   try {
     if (type === 'movie') {
       const linkRes = await axios.get(url, {headers});
@@ -47,7 +62,7 @@ export const world4uGetStream = async (
 
     if (url.includes('photolinx')) {
       console.log('photolinx', url);
-      const photolinxBaseUrl = url.split('/').slice(0, 3).join('/');
+      // const photolinxBaseUrl = url.split('/').slice(0, 3).join('/');
       const photolinxRes = await axios.get(url, {headers});
       const photolinxData = photolinxRes.data;
       const $$$ = cheerio.load(photolinxData);

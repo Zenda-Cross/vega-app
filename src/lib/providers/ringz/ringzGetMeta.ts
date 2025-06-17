@@ -1,5 +1,10 @@
-import {Info, Link} from '../types';
-export async function ringzGetInfo(data: string): Promise<Info> {
+import {Info, Link, ProviderContext} from '../types';
+export const ringzGetInfo = async function ({
+  link: data,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
     const dataJson = JSON.parse(data);
     const title = dataJson?.kn || dataJson?.mn;
@@ -10,11 +15,9 @@ export async function ringzGetInfo(data: string): Promise<Info> {
       .map((tag: string) => tag.trim());
     const type = dataJson?.cg === 'webSeries' ? 'series' : 'movie';
     const linkList: Link[] = [];
-    console.log('tags', tags);
     if (dataJson?.cg === 'webSeries') {
       ['1', '2', '3', '4']?.forEach(item => {
         const directLinks: Link['directLinks'] = [];
-        // console.log(dataJson?.['eServer' + item]);
         if (
           typeof dataJson?.['eServer' + item] === 'object' &&
           Object?.keys(dataJson?.['eServer' + item])?.length > 0
@@ -35,7 +38,6 @@ export async function ringzGetInfo(data: string): Promise<Info> {
         }
       });
     } else {
-      console.log('Movie', dataJson.s1);
       const directLinks: Link['directLinks'] = [];
       ['1', '2', '3', '4']?.forEach(item => {
         if (dataJson?.['s' + item]) {
@@ -47,7 +49,6 @@ export async function ringzGetInfo(data: string): Promise<Info> {
             }),
           });
         }
-
         if (dataJson?.['4s' + item]) {
           directLinks.push({
             title: 'Server ' + item + ' (480p)',
@@ -58,31 +59,29 @@ export async function ringzGetInfo(data: string): Promise<Info> {
           });
         }
       });
-
       linkList.push({
-        title: dataJson?.mn,
+        title: dataJson?.pn,
         directLinks,
       });
     }
-
     return {
+      title,
       image,
       imdbId: '',
-      synopsis: dataJson?.mn,
-      title,
+      synopsis: '',
       type,
       linkList,
       tags,
     };
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
     return {
       title: '',
       image: '',
       imdbId: '',
       synopsis: '',
+      type: 'movie',
       linkList: [],
-      type: 'uhd',
+      tags: [],
     };
   }
-}
+};

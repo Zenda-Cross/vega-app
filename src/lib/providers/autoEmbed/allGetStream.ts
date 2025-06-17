@@ -1,338 +1,250 @@
-import {TextTracks, TextTrackType} from 'react-native-video';
-import {Stream} from '../types';
-import {getWhvxStream} from './getWhvxStream';
-import {multiExtractor} from './multiExtractor';
-import {stableExtractor} from './stableExtractor';
-import {getFlimxyStream} from './getFlimxyStream';
-import {getRiveStream} from './getRiveStream';
-import {getVidSrcRip} from './getVidSrcRip';
-import axios from 'axios';
-import {getVidsrcCo} from './vidsrcCo';
+import {Stream, ProviderContext, TextTrackType, TextTracks} from '../types';
 
-const autoembed = 'YXV0b2VtYmVkLmNj';
-export const allGetStream = async (
-  id: string,
-  type: string,
-): Promise<Stream[]> => {
+export const allGetStream = async ({
+  link: id,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> => {
   try {
-    // console.log(id);
     const streams: Stream[] = [];
     const {imdbId, season, episode, title, tmdbId, year} = JSON.parse(id);
-    console.log('tmdbId🔥🔥', tmdbId);
-
-    ///// whvx
-
-    ///// nova
-    const whvxStream = await getWhvxStream(
-      imdbId,
+    await getRiveStream(
       tmdbId,
-      season,
       episode,
-      title,
-      type,
-      year,
-      'nova',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    const subtitles: TextTracks = [];
-    for (const caption in whvxStream?.captions) {
-      subtitles.push({
-        language: whvxStream?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStream?.captions?.[caption]?.url,
-        type:
-          whvxStream?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStream?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    for (const quality in whvxStream?.qualities) {
-      streams.push({
-        server: 'Nova-' + quality,
-        link: whvxStream?.qualities?.[quality]?.url,
-        type: whvxStream?.qualities?.[quality]?.type || 'mp4',
-        subtitles: subtitles,
-        quality: quality as any,
-      });
-    }
-
-    ///// flimxy
-    // const flimxyStream = await getFlimxyStream(imdbId, season, episode, type);
-    // if (flimxyStream) {
-    //   for (const quality in flimxyStream?.qualities) {
-    //     streams.push({
-    //       server: 'Flimxy-' + quality,
-    //       link: flimxyStream?.qualities?.[quality]?.url,
-    //       type: flimxyStream?.qualities?.[quality]?.type || 'mp4',
-    //       quality: quality as any,
-    //     });
-    //   }
-    // }
-
-    // whvx orion
-    const whvxStreamOrion = await getWhvxStream(
-      imdbId,
-      tmdbId,
       season,
-      episode,
-      title,
       type,
-      year,
-      'orion',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
+      streams,
+      providerContext,
     );
-    const subtitlesOrion: TextTracks = [];
-    for (const caption in whvxStreamOrion?.captions) {
-      subtitlesOrion.push({
-        language: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStreamOrion?.captions?.[caption]?.url,
-        type:
-          whvxStreamOrion?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStreamOrion?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    if (whvxStreamOrion?.playlist) {
-      streams.push({
-        server: 'Orion',
-        link: whvxStreamOrion?.playlist,
-        type: whvxStreamOrion?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesOrion,
-        headers: {
-          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-        },
-      });
-    }
-    // console.log('whvxorion', whvxStreamOrion?.playlist);
-
-    const whvxStreamAstra = await getWhvxStream(
-      imdbId,
-      tmdbId,
-      season,
-      episode,
-      title,
-      type,
-      year,
-      'astra',
-      'aHR0cHM6Ly9hcGkud2h2eC5uZXQ=',
-    );
-    console.log('whvxastra', whvxStreamAstra?.playlist);
-    const subtitlesAstra: TextTracks = [];
-    for (const caption in whvxStreamAstra?.captions) {
-      subtitlesAstra.push({
-        language: whvxStreamAstra?.captions?.[caption]?.language || 'Undefined',
-        uri: whvxStreamAstra?.captions?.[caption]?.url,
-        type:
-          whvxStreamAstra?.captions?.[caption]?.type === 'srt'
-            ? TextTrackType.SUBRIP
-            : TextTrackType.VTT,
-        title: whvxStreamAstra?.captions?.[caption]?.language || 'Undefined',
-      });
-    }
-    if (whvxStreamAstra?.playlist) {
-      streams.push({
-        server: 'Astra',
-        link: whvxStreamAstra?.playlist,
-        type: whvxStreamAstra?.type === 'hls' ? 'm3u8' : 'mp4',
-        subtitles: subtitlesAstra,
-        headers: {
-          origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-        },
-      });
-    }
-
-    /// whvx mirrors AMZN
-    try {
-      const response = await axios.get(
-        `https://mirrors.whvx.net/scrape?title=${title}&type=${
-          type === 'series' ? 'show' : 'movie'
-        }&releaseYear=${
-          year?.split('–')?.length > 0 ? year?.split('–')[0] : year
-        }&provider=amzn&season=${season}&episode=${episode}`,
-      );
-      const data = response.data;
-      console.log('mirrors', data);
-      if (data?.stream?.[0]?.playlist) {
-        streams.push({
-          server: 'whvx-mirrors-amzn',
-          link: data?.stream[0]?.playlist,
-          type: 'm3u8',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching from mirrors:', error);
-    }
-    /// whvx mirrors NTFLX
-    try {
-      const response = await axios.get(
-        `https://mirrors.whvx.net/scrape?title=${title}&type=${
-          type === 'series' ? 'show' : 'movie'
-        }&releaseYear=${
-          year?.split('–')?.length > 0 ? year?.split('–')[0] : year
-        }&provider=ntflx&season=${season}&episode=${episode}`,
-      );
-      const data = response.data;
-      console.log('mirrors', data);
-      if (data?.stream?.[0]?.playlist) {
-        streams.push({
-          server: 'whvx-mirrors-ntflx',
-          link: data?.stream[0]?.playlist,
-          type: 'm3u8',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching from mirrors:', error);
-    }
-
-    ///// nsbx
-    // const nsbxStream = await getWhvxStream(
-    //   imdbId,
-    //   tmdbId,
-    //   season,
-    //   episode,
-    //   title,
-    //   type,
-    //   year,
-    //   'alpha',
-    //   'aHR0cHM6Ly9uc2J4LndhZmZsZWhhY2tlci5pbw==',
-    // );
-    // const subtitlesNsbx: TextTracks = [];
-    // for (const caption in nsbxStream?.captions) {
-    //   subtitlesNsbx.push({
-    //     language: nsbxStream?.captions?.[caption]?.language || 'Undefined',
-    //     uri: nsbxStream?.captions?.[caption]?.url,
-    //     type:
-    //       nsbxStream?.captions?.[caption]?.type === 'srt'
-    //         ? TextTrackType.SUBRIP
-    //         : TextTrackType.VTT,
-    //     title: nsbxStream?.captions?.[caption]?.language || 'Undefined',
-    //   });
-    // }
-    // if (nsbxStream?.playlist) {
-    //   streams.push({
-    //     server: 'Nsbx',
-    //     link: nsbxStream?.playlist,
-    //     type: nsbxStream?.type === 'hls' ? 'm3u8' : 'mp4',
-    //     subtitles: subtitlesNsbx,
-    //     headers: {
-    //       origin: atob('aHR0cHM6Ly93d3cudmlkYmluZ2UuY29t'),
-    //     },
-    //   });
-    // }
-
-    ///// rive
-    await getRiveStream(tmdbId, episode, season, type, streams);
-
-    ///// Vidsrcco
-    await getVidsrcCo(imdbId, season, episode, type, streams);
-
-    ///// vidsrcrip
-    // await getVidSrcRip(tmdbId, season, episode, streams);
-
-    ///// autoembed
-
-    // disable
-    // try {
-    //   const server1Url =
-    //     type === 'movie'
-    //       ? `https://${atob(autoembed)}/embed/oplayer.php?id=${imdbId}`
-    //       : `https://${atob(
-    //           autoembed,
-    //         )}/embed/oplayer.php?id=${imdbId}&s=${season}&e=${episode}`;
-    //   const links = await multiExtractor(server1Url);
-    //   links.forEach(({lang, url}) => {
-    //     streams.push({
-    //       server: 'Multi' + (lang ? `-${lang}` : ''),
-    //       link: url,
-    //       type: 'm3u8',
-    //     });
-    //   });
-
-    //   // server 2
-
-    //   // const server2Url =
-    //   //   type === 'movie'
-    //   //     ? `https://duka.${atob(autoembed)}/movie/${imdbId}`
-    //   //     : `https://duka.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
-    //   // const links2 = await stableExtractor(server2Url);
-    //   // links2.forEach(({lang, url}) => {
-    //   //   streams.push({
-    //   //     server: 'Stable ' + (lang ? `-${lang}` : ''),
-    //   //     link: url,
-    //   //     type: 'm3u8',
-    //   //   });
-    //   // });
-
-    //   // server 4
-
-    //   const server4Url =
-    //     type === 'movie'
-    //       ? `https://${atob(autoembed)}/embed/player.php?id=${tmdbId}`
-    //       : `https://${atob(
-    //           autoembed,
-    //         )}/embed/player.php?id=${tmdbId}&s=${season}&e=${episode}`;
-    //   console.log(server4Url);
-    //   const links4 = await multiExtractor(server4Url);
-    //   links4.forEach(({lang, url}) => {
-    //     streams.push({
-    //       server: 'Stable ' + (lang ? `-${lang}` : ''),
-    //       link: url,
-    //       type: 'm3u8',
-    //     });
-    //   });
-
-    //   // server 3
-
-    //   const server3Url =
-    //     type === 'movie'
-    //       ? `https://viet.${atob(autoembed)}/movie/${imdbId}`
-    //       : `https://viet.${atob(autoembed)}/tv/${imdbId}/${season}/${episode}`;
-    //   const links3 = await stableExtractor(server3Url);
-    //   links3.forEach(({lang, url}) => {
-    //     streams.push({
-    //       server: 'Viet ' + (lang ? `-${lang}` : ''),
-    //       link: url,
-    //       type: 'm3u8',
-    //     });
-    //   });
-
-    //   // server 5
-
-    //   const server5Url =
-    //     type === 'movie'
-    //       ? `https://tom.${atob(
-    //           autoembed,
-    //         )}/api/getVideoSource?type=movie&id=${tmdbId}`
-    //       : `https://tom.${atob(
-    //           autoembed,
-    //         )}/api/getVideoSource?type=tv&id=${tmdbId}/${season}/${episode}`;
-    //   try {
-    //     const links5Res = await axios(server5Url, {
-    //       timeout: 20000,
-    //       headers: {
-    //         'user-agent':
-    //           'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0',
-    //         Referer: `https://${atob(autoembed)}/`,
-    //       },
-    //     });
-    //     const links5 = links5Res.data;
-    //     if (links5.videoSource) {
-    //       streams.push({
-    //         server: 'Tom',
-    //         link: links5.videoSource,
-    //         type: 'm3u8',
-    //       });
-    //     }
-    //   } catch (err) {
-    //     console.error('Tom', err);
-    //   }
-    // } catch (err) {
-    //   console.error('Error in autoembed', err);
-    // }
     return streams;
   } catch (err) {
     console.error(err);
     return [];
   }
 };
+
+export async function getRiveStream(
+  tmdId: string,
+  episode: string,
+  season: string,
+  type: string,
+  Streams: Stream[],
+  providerContext: ProviderContext,
+) {
+  const secret = generateSecretKey(Number(tmdId));
+  const servers = [
+    'flowcast',
+    'shadow',
+    'asiacloud',
+    'hindicast',
+    'anime',
+    'animez',
+    'guard',
+    'curve',
+    'hq',
+    'ninja',
+    'alpha',
+    'kaze',
+    'zenesis',
+    'genesis',
+    'zenith',
+    'ghost',
+    'halo',
+    'kinoecho',
+    'ee3',
+    'volt',
+    'putafilme',
+    'ophim',
+    'kage',
+  ];
+  const baseUrl = await providerContext.getBaseUrl('rive');
+  const cors = process.env.CORS_PRXY ? process.env.CORS_PRXY + '?url=' : '';
+  console.log('CORS: ' + cors);
+  const route =
+    type === 'series'
+      ? `/api/backendfetch?requestID=tvVideoProvider&id=${tmdId}&season=${season}&episode=${episode}&secretKey=${secret}&service=`
+      : `/api/backendfetch?requestID=movieVideoProvider&id=${tmdId}&secretKey=${secret}&service=`;
+  const url = cors
+    ? cors + encodeURIComponent(baseUrl + route)
+    : baseUrl + route;
+  await Promise.all(
+    servers.map(async server => {
+      console.log('Rive: ' + url + server);
+      try {
+        const res = await providerContext.axios.get(url + server, {
+          timeout: 4000,
+          headers: providerContext.commonHeaders,
+        });
+        const subtitles: TextTracks = [];
+        if (res.data?.data?.captions) {
+          res.data?.data?.captions.forEach((sub: any) => {
+            subtitles.push({
+              language: sub?.label?.slice(0, 2) || 'Und',
+              uri: sub?.file,
+              title: sub?.label || 'Undefined',
+              type: sub?.file?.endsWith('.vtt')
+                ? TextTrackType.VTT
+                : TextTrackType.SUBRIP,
+            });
+          });
+        }
+        res.data?.data?.sources.forEach((source: any) => {
+          Streams.push({
+            server: source?.source + '-' + source?.quality,
+            link: source?.url,
+            type: source?.format === 'hls' ? 'm3u8' : 'mp4',
+            quality: source?.quality,
+            subtitles: subtitles,
+          });
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    }),
+  );
+}
+
+function generateSecretKey(id: number | string) {
+  // Array of secret key fragments - updated array from the new implementation
+  const c = [
+    'Yhv40uKAZa',
+    'nn8YU4yBA',
+    'uNeH',
+    'ehK',
+    'jT0',
+    'n5G',
+    '99R',
+    'MvB1M',
+    'DQtPCh',
+    'GBRjk4k4I',
+    'CzIOoa95UT',
+    'BLE8s',
+    'GDZlc7',
+    'Fz45T',
+    'JW6lWn',
+    'DE3g4uw0i',
+    '18KxmYizv',
+    '8ji',
+    'JUDdNMnZ',
+    'oGpBippPgm',
+    '7De8Pg',
+    'Zv6',
+    'VHT9TVN',
+    'bYH6m',
+    'aK1',
+    'WcWH6jU',
+    'Q47YEMi4k',
+    'vRD3A',
+    'CGOsfJO',
+    'BLn8',
+    'RgK0drv7l',
+    'oPTfGCn3a',
+    'MkpMDkttW9',
+    'VNI1fPM',
+    'XNFi6',
+    '6cq',
+    '4LvTksXoEI',
+    '1rRa2KOZB0',
+    'zoOGRb8HT2',
+    'mhcXDtvz',
+    'NUmexFY2Ur',
+    '6BIMdvSZ',
+    'Tr0zU2vjRd',
+    'QPR',
+    'fhOqJR',
+    'R9VnFY',
+    'xkZ99D6S',
+    'umY7E',
+    '5Ds8qyDq',
+    'Cc6jy09y3',
+    'yvU3iR',
+    'Bg07zY',
+    'GccECglg',
+    'VYd',
+    '6vOiXqz',
+    '7xX',
+    'UdRrbEzF',
+    'fE6wc',
+    'BUd25Rb',
+    'lxq5Zum89o',
+  ];
+
+  // Handle undefined input
+  if (id === undefined) {
+    return 'rive';
+  }
+
+  try {
+    let fragment, insertPos;
+    // Convert input to string
+    const idStr = String(id);
+
+    // Updated string hash function to match the new implementation
+    /* eslint-disable no-bitwise */
+    const generateStringHash = function (input: string) {
+      input = String(input);
+      let hash = 0;
+      for (let i = 0; i < input.length; i++) {
+        const char = input.charCodeAt(i);
+        hash =
+          ((char + (hash << 6) + (hash << 16) - hash) ^ (char << i % 5)) >>> 0;
+      }
+      hash ^= hash >>> 13;
+      hash = (1540483477 * hash) >>> 0;
+      return (hash ^= hash >>> 15).toString(16).padStart(8, '0');
+    };
+
+    // Updated MurmurHash-like function to match the new implementation
+    const applyMurmurHash = function (input: string) {
+      const str = String(input);
+      let hash = 3735928559 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        let char = str.charCodeAt(i);
+        char ^= ((i + 31) * 131) & 255;
+        hash =
+          (668265261 *
+            (hash = (((hash << 7) | (hash >>> 25)) >>> 0) ^ char)) >>>
+          0;
+      }
+      hash ^= hash >>> 16;
+      hash = (2246822507 * hash) >>> 0;
+      hash ^= hash >>> 13;
+      hash = (3266489909 * hash) >>> 0;
+      return (hash ^= hash >>> 16).toString(16).padStart(8, '0');
+    };
+    /* eslint-enable no-bitwise */
+
+    // Generate the encoded hash using the new implementation
+    const encodedHash = btoa(applyMurmurHash(generateStringHash(idStr)));
+
+    // Different handling for non-numeric vs numeric inputs
+    if (isNaN(Number(id))) {
+      // For non-numeric inputs, sum the character codes
+      const charSum = idStr
+        .split('')
+        .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+      // Select array element or fallback to base64 encoded input
+      fragment = c[charSum % c.length] || btoa(idStr);
+      // Calculate insertion position
+      insertPos = Math.floor((charSum % encodedHash.length) / 2);
+    } else {
+      // For numeric inputs, use the number directly
+      const numId = Number(id);
+      fragment = c[numId % c.length] || btoa(idStr);
+      // Calculate insertion position
+      insertPos = Math.floor((numId % encodedHash.length) / 2);
+    }
+
+    // Construct the final key by inserting the selected value into the base64 string
+    return (
+      encodedHash.slice(0, insertPos) + fragment + encodedHash.slice(insertPos)
+    );
+  } catch (error) {
+    // Return fallback value if any errors occur
+    return 'topSecret';
+  }
+}

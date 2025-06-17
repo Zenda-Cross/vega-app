@@ -1,12 +1,16 @@
-import {Info} from '../types';
-import {headers} from './header';
-import * as cheerio from 'cheerio';
+import {Info, ProviderContext} from '../types';
 
-export const tokyoGetInfo = async (link: string): Promise<Info> => {
+export const tokyoGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {cheerio} = providerContext;
     const url = link;
-    console.log('infourl', url);
-    const res = await fetch(url, {headers});
+    const res = await fetch(url);
     const data = await res.text();
     const $ = cheerio.load(data);
     const meta = {
@@ -23,7 +27,6 @@ export const tokyoGetInfo = async (link: string): Promise<Info> => {
       imdbId: '',
       type: 'series',
     };
-    // console.log('meta', meta);
     const episodesList: {title: string; link: string}[] = [];
     $('.episode').map((i, element) => {
       const link =
@@ -36,14 +39,10 @@ export const tokyoGetInfo = async (link: string): Promise<Info> => {
       if (!title.trim()) {
         title = $('.download-link').text();
       }
-
-      console.log('link', link, 'title', title);
       if (link && title.trim()) {
         episodesList.push({title, link});
       }
     });
-    console.log('episodesList', episodesList);
-
     return {
       ...meta,
       linkList: [
@@ -54,13 +53,12 @@ export const tokyoGetInfo = async (link: string): Promise<Info> => {
       ],
     };
   } catch (err) {
-    console.error(err);
     return {
       title: '',
       synopsis: '',
       image: '',
       imdbId: '',
-      type: '',
+      type: 'series',
       linkList: [],
     };
   }

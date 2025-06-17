@@ -1,10 +1,14 @@
-import axios from 'axios';
-import {EpisodeLink, Info, Link} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {EpisodeLink, Info, Link, ProviderContext} from '../types';
 
-export const ridoGetInfo = async function (link: string): Promise<Info> {
+export const ridoGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
-    console.log('all', link);
+    const {getBaseUrl, axios} = providerContext;
     const res = await axios.get(link);
     const data = res.data;
     const meta = {
@@ -14,7 +18,6 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
       imdbId: data?.meta?.imdb_id || '',
       type: data?.meta?.type || 'movie',
     };
-
     const baseUrl = await getBaseUrl('ridomovies');
     let slug = '';
     try {
@@ -22,7 +25,6 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
         baseUrl + '/core/api/search?q=' + meta.imdbId,
       );
       const data2 = res2.data;
-      console.log('all', data2);
       slug = data2?.data?.items[0]?.fullSlug;
       if (!slug || meta?.type === 'series') {
         return {
@@ -35,7 +37,6 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
         };
       }
     } catch (err) {
-      console.error('ridoGetInfo', err);
       return {
         title: '',
         synopsis: '',
@@ -45,7 +46,6 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
         linkList: [],
       };
     }
-
     const links: Link[] = [];
     let directLinks: EpisodeLink[] = [];
     let season = new Map();
@@ -55,51 +55,26 @@ export const ridoGetInfo = async function (link: string): Promise<Info> {
         if (!season.has(video?.season)) {
           season.set(video?.season, []);
         }
-
         season.get(video?.season).push({
           title: 'Episode ' + video?.episode,
-          type: 'series',
-          link: JSON.stringify({
-            season: video?.id?.split(':')[1],
-            episode: video?.id?.split(':')[2],
-            type: data?.meta?.type,
-            slug: slug,
-            baseUrl: baseUrl,
-          }),
+          link: '',
         });
       });
-      const keys = Array.from(season.keys());
-      keys.sort();
-      keys.map(key => {
-        directLinks = season.get(key);
+      for (const [seasonNum, episodes] of season.entries()) {
         links.push({
-          title: `Season ${key}`,
-          directLinks: directLinks,
+          title: 'Season ' + seasonNum,
+          directLinks: episodes,
         });
-      });
+      }
     } else {
-      console.log('all meta Mv🔥🔥', meta);
-      links.push({
-        title: data?.meta?.name as string,
-        directLinks: [
-          {
-            title: 'Movie',
-            type: 'movie',
-            link: JSON.stringify({
-              type: data?.meta?.type,
-              slug: slug,
-              baseUrl: baseUrl,
-            }),
-          },
-        ],
-      });
+      directLinks.push({title: 'Movie', link: link});
+      links.push({title: 'Movie', directLinks: directLinks});
     }
     return {
       ...meta,
       linkList: links,
     };
   } catch (err) {
-    console.error('ridoGetInfo', err);
     return {
       title: '',
       synopsis: '',

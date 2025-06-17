@@ -2,7 +2,7 @@ import {uhdCatalogList, uhdGenresList} from './uhCtatalog';
 import {uhdGetPosts, uhdGetPostsSearch} from './uhdGetPosts';
 import {uhdGetStream} from './uhdGetStream';
 import {getUhdInfo} from './getUhdInfo';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const uhdMovies: ProviderType = {
   catalog: uhdCatalogList,

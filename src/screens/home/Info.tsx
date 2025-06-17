@@ -35,6 +35,7 @@ import {BlurView} from 'expo-blur';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {useNavigation} from '@react-navigation/native';
 import useWatchListStore from '../../lib/zustand/watchListStore';
+import {providerContext} from '../../lib/providers/providerContext';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
@@ -104,7 +105,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         }
         const data = await manifest[
           route.params.provider || provider.value
-        ].GetMetaData(route.params.link, provider);
+        ].GetMetaData({link: route.params.link, provider, providerContext});
 
         try {
           const metaRes = await axios.get(

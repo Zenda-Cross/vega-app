@@ -1,14 +1,19 @@
-import axios from 'axios';
-import {headers} from '../headers';
-import {Post} from '../types';
+import {Post, ProviderContext} from '../types';
 
-export const guardahdGetSearchPosts = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const guardahdGetSearchPosts = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
   try {
+    const {axios, commonHeaders: headers} = providerContext;
     if (page > 1) {
       return [];
     }

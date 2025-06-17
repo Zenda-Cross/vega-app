@@ -1,11 +1,13 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const vegaGetEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const vegaGetEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
+  const {axios, cheerio, commonHeaders: headers} = providerContext;
   console.log('getEpisodeLinks', url);
   try {
     const res = await axios.get(url, {headers});

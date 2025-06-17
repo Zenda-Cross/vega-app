@@ -1,6 +1,6 @@
 import {EpisodeLink, ProviderContext} from '../types';
 
-export const nfGetEpisodes = async function ({
+export const pmGetEpisodes = async function ({
   url: link,
   providerContext,
 }: {
@@ -8,7 +8,7 @@ export const nfGetEpisodes = async function ({
   providerContext: ProviderContext;
 }): Promise<EpisodeLink[]> {
   const {getBaseUrl, axios} = providerContext;
-  let providerValue = 'netflixMirror';
+  let providerValue = 'primeMirror';
   try {
     const baseUrl = await getBaseUrl('nfMirror');
     const url =

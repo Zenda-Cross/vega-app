@@ -1,15 +1,27 @@
-import axios from 'axios';
-import {headers} from './headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const dooGetPost = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+const headers = {
+  'Accept-Encoding': 'gzip',
+  'API-KEY': '2pm95lc6prpdbk0ppji9rsqo',
+  Connection: 'Keep-Alive',
+  'If-Modified-Since': 'Wed, 14 Aug 2024 13:00:04 GMT',
+  'User-Agent': 'okhttp/3.14.9',
+};
+
+export const dooGetPost = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
   try {
+    const {axios, getBaseUrl} = providerContext;
     const baseUrl = await getBaseUrl('dooflix');
     const catalog: Post[] = [];
     const url = `${baseUrl + filter + `?page=${page}`}`;
@@ -71,17 +83,23 @@ export const dooGetPost = async function (
   }
 };
 
-export const dooGetSearchPost = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const dooGetSearchPost = async function ({
+  searchQuery,
+  page,
+  providerContext,
+  signal,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
   try {
     if (page > 1) {
       return [];
     }
-
+    const {axios, getBaseUrl} = providerContext;
     const catalog: Post[] = [];
     const baseUrl = await getBaseUrl('dooflix');
     const url = `${baseUrl}/rest-api//v130/search?q=${searchQuery}&type=movietvserieslive&range_to=0&range_from=0&tv_category_id=0&genre_id=0&country_id=0`;

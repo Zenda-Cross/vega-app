@@ -1,18 +1,21 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from '../headers';
+import {Stream, ProviderContext} from '../types';
 
-export const pwGetStream = async (
-  url: string,
-  type: string,
-): Promise<Stream[]> => {
+export const pwGetStream = async function ({
+  link: url,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const {axios, cheerio} = providerContext;
   try {
     console.log('pwGetStream', type, url);
     const baseUrl = url.split('/').slice(0, 3).join('/');
     const streamLinks: Stream[] = [];
     const urls: {id: string; size: string}[] = [];
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     $('tr:contains("mixdrop")').map((i, element) => {
@@ -26,7 +29,7 @@ export const pwGetStream = async (
     console.log('urls', urls);
 
     for (const url of urls) {
-      const res2 = await axios.head(url.id, {headers});
+      const res2 = await axios.head(url.id);
       const location = res2.request?.responseURL.replace('/f/', '/e/');
 
       const res3 = await fetch(location, {
@@ -51,7 +54,7 @@ export const pwGetStream = async (
       });
       const data3 = await res3.text();
 
-      let MDCore: any = {};
+      // let MDCore: any = {};
       // Step 1: Extract the function parameters and the encoded string
       var functionRegex =
         /eval\(function\((.*?)\)\{.*?return p\}.*?\('(.*?)'\.split/;

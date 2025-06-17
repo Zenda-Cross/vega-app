@@ -1,13 +1,96 @@
-import {Stream} from '../types';
-import {ExtractGuardahd} from './ExtractGuardahd';
+import {ProviderContext, Stream} from '../types';
 
-import {GetMostraguardaStream} from './GetMostraguarda';
-
-export const GuardahdGetStream = async (
-  id: string,
-  type: string,
-): Promise<Stream[]> => {
+export const GuardahdGetStream = async function ({
+  link: id,
+  type,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
+    const {axios, cheerio, extractors} = providerContext;
+    const {superVideoExtractor} = extractors;
+    async function ExtractGuardahd({
+      imdb, // type,
+      // episode,
+    } // season,
+    : {
+      imdb: string;
+      type: string;
+      season: string;
+      episode: string;
+    }) {
+      try {
+        const baseUrl = 'https://guardahd.stream';
+        const path = '/set-movie-a/' + imdb;
+        const url = baseUrl + path;
+
+        console.log('url:', url);
+        const res = await axios.get(url, {timeout: 4000});
+        const html = res.data;
+        const $ = cheerio.load(html);
+        const superVideoUrl = $('li:contains("supervideo")').attr('data-link');
+        console.log('superVideoUrl:', superVideoUrl);
+
+        if (!superVideoUrl) {
+          return null;
+        }
+        const controller2 = new AbortController();
+        const signal2 = controller2.signal;
+        setTimeout(() => controller2.abort(), 4000);
+        const res2 = await fetch('https:' + superVideoUrl, {signal: signal2});
+        const data = await res2.text();
+        //   console.log('mostraguarda data:', data);
+        const streamUrl = await superVideoExtractor(data);
+        return streamUrl;
+      } catch (err) {
+        console.error('Error in GetMostraguardaStram:', err);
+      }
+    }
+    async function GetMostraguardaStream({
+      imdb,
+      type,
+      season,
+      episode,
+    }: {
+      imdb: string;
+      type: string;
+      season: string;
+      episode: string;
+    }) {
+      try {
+        const baseUrl = 'https://mostraguarda.stream';
+        const path =
+          type === 'tv'
+            ? `/serie/${imdb}/${season}/${episode}`
+            : `/movie/${imdb}`;
+        const url = baseUrl + path;
+
+        console.log('url:', url);
+
+        const res = await axios(url, {timeout: 4000});
+        const html = res.data;
+        const $ = cheerio.load(html);
+        const superVideoUrl = $('li:contains("supervideo")').attr('data-link');
+        console.log('superVideoUrl:', superVideoUrl);
+
+        if (!superVideoUrl) {
+          return null;
+        }
+        const controller2 = new AbortController();
+        const signal2 = controller2.signal;
+        setTimeout(() => controller2.abort(), 4000);
+        const res2 = await fetch('https:' + superVideoUrl, {signal: signal2});
+        const data = await res2.text();
+        //   console.log('mostraguarda data:', data);
+        const streamUrl = await superVideoExtractor(data);
+        return streamUrl;
+      } catch (err) {
+        console.error('Error in GetMostraguardaStram:', err);
+      }
+    }
     console.log(id);
     const streams: Stream[] = [];
     const {imdbId, season, episode} = JSON.parse(id);
@@ -44,7 +127,7 @@ export const GuardahdGetStream = async (
 
     return streams;
   } catch (err) {
-    console.error('Error in guardahd:', err);
+    console.error(err);
     return [];
   }
 };

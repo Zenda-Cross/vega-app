@@ -1,45 +1,57 @@
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const ffGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const ffGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('filmyfly');
-  // console.log(baseUrl);
   const url = `${baseUrl + filter}/${page}`;
-  console.log('ff', url);
-
-  return posts(url, signal, baseUrl);
+  return posts({url, signal, baseUrl, providerContext});
 };
 
-export const ffGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const ffGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  providerContext: ProviderContext;
+  signal: AbortSignal;
+}): Promise<Post[]> {
+  const {getBaseUrl} = providerContext;
   const baseUrl = await getBaseUrl('filmyfly');
-  // console.log(baseUrl);
   const url = `${baseUrl}/site-1.html?to-search=${searchQuery}`;
-  console.log('ff', url);
   if (page > 1) {
     return [];
   }
-
-  return posts(url, signal, baseUrl);
+  return posts({url, signal, baseUrl, providerContext});
 };
 
-async function posts(
-  url: string,
-  signal: AbortSignal,
-  baseUrl: string,
-): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  baseUrl,
+  providerContext,
+}: {
+  url: string;
+  signal: AbortSignal;
+  baseUrl: string;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
   try {
+    const {cheerio, commonHeaders: headers} = providerContext;
     const res = await fetch(url, {headers, signal});
     const data = await res.text();
     const $ = cheerio.load(data);
@@ -49,7 +61,6 @@ async function posts(
         $(element).find('a').eq(1).text() || $(element).find('b').text();
       const link = $(element).find('a').attr('href');
       const image = $(element).find('img').attr('src');
-      // console.log('ff', title, link, image);
       if (title && link && image) {
         catalog.push({
           title: title,
@@ -58,19 +69,6 @@ async function posts(
         });
       }
     });
-    // $('.result-item').map((i, element) => {
-    //   const title = $(element).find('.thumbnail').find('img').attr('alt');
-    //   const link = $(element).find('.thumbnail').find('a').attr('href');
-    //   const image = $(element).find('.thumbnail').find('img').attr('data-src');
-    //   if (title && link && image) {
-    //     catalog.push({
-    //       title: title,
-    //       link: link,
-    //       image: image,
-    //     });
-    //   }
-    // });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('ff error ', err);

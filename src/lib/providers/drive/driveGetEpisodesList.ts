@@ -1,13 +1,15 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const driveGetEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const driveGetEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
   try {
-    const res = await axios.get(url, {headers});
+    const {axios, cheerio} = providerContext;
+    const res = await axios.get(url);
     const html = res.data;
     let $ = cheerio.load(html);
 

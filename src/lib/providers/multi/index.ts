@@ -2,7 +2,7 @@ import {multiGenresList, multiCatalog} from './multiCatalog';
 import {multiGetInfo} from './multiGetInfo';
 import {multiGetPosts, multiGetPostsSearch} from './multiPosts';
 import {multiGetStream} from './multiGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const multiMovies: ProviderType = {
   catalog: multiCatalog,

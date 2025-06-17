@@ -1,14 +1,22 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Info, Link} from '../types';
-import {hdbHeaders} from './hdbHeaders';
+import {Info, Link, ProviderContext} from '../types';
 
-export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
+const hdbHeaders = {
+  Cookie: 'xla=s4t',
+  Referer: 'https://google.com',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+};
+export const hdhub4uGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
     const res = await axios.get(url, {headers: hdbHeaders});
-    console.log('hdhub4uGetInfo', url);
-    // console.log('hdhub4uGetInfo', res.data);
     const data = res.data;
     const $ = cheerio.load(data);
     const container = $('.page-body');
@@ -32,8 +40,6 @@ export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
       .replace('DESCRIPTION:', '');
     const image = container.find('img[decoding="async"]').attr('src') || '';
 
-    console.log('hdhub4uGetInfo', title, imdbId, type, synopsis, image);
-
     // Links
     const links: Link[] = [];
     const directLink: Link['directLinks'] = [];
@@ -54,7 +60,7 @@ export const hdhub4uGetInfo = async function (link: string): Promise<Info> {
 
       if (episodesLink && episodesLink) {
         directLink.push({
-          title: epTitle.toLocaleUpperCase(),
+          title: epTitle,
           link: episodesLink,
         });
       }

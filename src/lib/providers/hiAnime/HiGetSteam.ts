@@ -1,21 +1,22 @@
-import axios from 'axios';
-import {Stream} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import {TextTracks} from 'react-native-video';
-import {TextTrackType} from 'react-native-video/lib/types/video';
+import {Stream, ProviderContext, TextTracks, TextTrackType} from '../types';
 
-export const hiGetStream = async (id: string): Promise<Stream[]> => {
+export const hiGetStream = async function ({
+  link: id,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
+    const {getBaseUrl, axios} = providerContext;
     const baseUrl = await getBaseUrl('consumet');
     const servers = ['vidcloud', 'vidstreaming'];
     const url = `${baseUrl}/anime/zoro/watch?episodeId=${id}&server=`;
     const streamLinks: Stream[] = [];
-
     await Promise.all(
       servers.map(async server => {
         try {
           const res = await axios.get(url + server);
-          console.log('HiAnime Stream: ' + url + server);
           if (res.data) {
             const subtitles: TextTracks = [];
             res.data?.subtitles.forEach((sub: any) => {
@@ -30,7 +31,6 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
               });
             });
             res.data?.sources.forEach((source: any) => {
-              console.log(server, source?.url);
               streamLinks.push({
                 server: server,
                 link: source?.url,
@@ -48,8 +48,6 @@ export const hiGetStream = async (id: string): Promise<Stream[]> => {
         }
       }),
     );
-
-    // console.log('streamLinks: ', streamLinks);
     return streamLinks;
   } catch (err) {
     console.error(err);

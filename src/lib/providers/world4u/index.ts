@@ -3,7 +3,7 @@ import {world4uGetEpisodeLinks} from './world4uGetEpisodeLinks';
 import {world4uGetInfo} from './world4uGetInfo';
 import {world4uGetPosts, world4uGetPostsSearch} from './world4uGetPosts';
 import {world4uGetStream} from './world4uGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const world4u: ProviderType = {
   catalog: world4uCatalogList,

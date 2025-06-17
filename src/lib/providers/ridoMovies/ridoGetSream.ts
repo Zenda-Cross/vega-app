@@ -1,10 +1,14 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from '../headers';
+import {ProviderContext, Stream} from '../types';
 
-export const ridoGetStream = async (data: string): Promise<Stream[]> => {
+export const ridoGetStream = async ({
+  link: data,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> => {
   try {
+    const {cheerio, commonHeaders: headers, axios} = providerContext;
     const streamData = JSON.parse(data);
     const streamLinks: Stream[] = [];
 

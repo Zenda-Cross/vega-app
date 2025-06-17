@@ -3,14 +3,14 @@ import {nfGetInfo} from './nfGetInfo';
 import {nfGetPost, nfGetPostsSearch} from './nfGetPost';
 import {nfGetEpisodes} from './nfGetEpisodes';
 import {nfGetStream} from './nfGetSteam';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const netflixMirror: ProviderType = {
   catalog: nfCatalog,
   genres: nfGenresList,
-  GetMetaData: (link: string) => nfGetInfo('netflixMirror', link),
+  GetMetaData: nfGetInfo,
   GetHomePosts: nfGetPost,
-  GetStream: (id: string) => nfGetStream('netflixMirror', id),
-  GetEpisodeLinks: (link: string) => nfGetEpisodes('netflixMirror', link),
+  GetStream: nfGetStream,
+  GetEpisodeLinks: nfGetEpisodes,
   GetSearchPosts: nfGetPostsSearch,
 };

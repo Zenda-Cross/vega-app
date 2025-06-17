@@ -1,14 +1,25 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from './headers';
-import {TextTracks} from 'react-native-video';
-import {TextTrackType} from 'react-native-video/lib/types/video';
+import {Stream, ProviderContext, TextTracks, TextTrackType} from '../types';
 
-export const multiGetStream = async (
-  url: string,
-  type: string,
-): Promise<Stream[]> => {
+export const multiGetStream = async function ({
+  link: url,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const {axios, cheerio} = providerContext;
+  const headers = {
+    'sec-ch-ua':
+      '"Not_A Brand";v="8", "Chromium";v="120", "Microsoft Edge";v="120"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    Referer: 'https://multimovies.online/',
+    'Sec-Fetch-User': '?1',
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+  };
+
   try {
     const res = await axios.get(url, {headers});
     const html = res.data;
@@ -88,7 +99,7 @@ export const multiGetStream = async (
     var match = functionRegex.exec(iframeData);
     let p = '';
     if (match) {
-      var params = match[1].split(',').map(param => param.trim());
+      // var params = match[1].split(',').map(param => param.trim());
       var encodedString = match[2];
 
       // console.log('Parameters:', params);

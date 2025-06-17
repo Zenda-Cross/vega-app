@@ -1,25 +1,26 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {Stream} from '../types';
-import {headers} from './header';
-import {hubcloudExtracter} from '../hubcloudExtractor';
+import {Stream, ProviderContext} from '../types';
 
-export const driveGetStream = async (
-  url: string,
-  type: string,
-  signal: AbortSignal,
-): Promise<Stream[]> => {
+export const driveGetStream = async function ({
+  link: url,
+  type,
+  signal,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const headers = providerContext.commonHeaders;
   try {
     if (type === 'movie') {
-      const res = await axios.get(url, {headers});
+      const res = await providerContext.axios.get(url, {headers});
       const html = res.data;
-      const $ = cheerio.load(html);
+      const $ = providerContext.cheerio.load(html);
       const link = $('a:contains("HubCloud")').attr('href');
       url = link || url;
     }
-    console.log('driveGetStream', type, url);
-    const res = await axios.get(url, {headers});
-    // console.log('res', res);
+    const res = await providerContext.axios.get(url, {headers});
     let redirectUrl = res.data.match(
       /<meta\s+http-equiv="refresh"\s+content="[^"]*?;\s*url=([^"]+)"\s*\/?>/i,
     )?.[1];
@@ -28,18 +29,14 @@ export const driveGetStream = async (
         /<a\s+[^>]*href="(https:\/\/hubcloud\.[^\/]+\/[^"]+)"/i,
       )?.[1];
     }
-    console.log('redirectUrl', redirectUrl);
     if (!redirectUrl) {
-      return await hubcloudExtracter(url, signal);
+      return await providerContext.extractors.hubcloudExtracter(url, signal);
     }
-    const res2 = await axios.get(redirectUrl, {headers});
+    const res2 = await providerContext.axios.get(redirectUrl, {headers});
     const data = res2.data;
-    // console.log('data', data);
-    const $ = cheerio.load(data);
+    const $ = providerContext.cheerio.load(data);
     const hubcloudLink = $('.fa-file-download').parent().attr('href');
-    console.log('hubcloudLink', hubcloudLink);
-
-    return await hubcloudExtracter(
+    return await providerContext.extractors.hubcloudExtracter(
       hubcloudLink?.includes('https://hubcloud') ? hubcloudLink : redirectUrl,
       signal,
     );

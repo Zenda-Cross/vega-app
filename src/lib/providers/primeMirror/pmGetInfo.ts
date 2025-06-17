@@ -1,11 +1,11 @@
 import {Info, Link} from '../types';
 
-export const nfGetInfo = async function ({
+export const pmGetInfo = async function ({
   link,
 }: {
   link: string;
 }): Promise<Info> {
-  let providerValue = 'netflixMirror';
+  let providerValue = 'primeMirror';
   try {
     const isPrime =
       providerValue === 'primeMirror' ? 'isPrime=true' : 'isPrime=false';

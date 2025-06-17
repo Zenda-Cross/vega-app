@@ -3,7 +3,7 @@ import {vegaGetStream} from './getStream';
 import {vegaGetEpisodeLinks} from './getEpisodesLink';
 import {vegaGetPosts, vegaGetPostsSearch} from './getPosts';
 import {homeList, genresList} from './catalog';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const vegaMovies: ProviderType = {
   catalog: homeList,

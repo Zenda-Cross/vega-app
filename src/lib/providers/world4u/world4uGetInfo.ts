@@ -1,12 +1,16 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const world4uGetInfo = async function (link: string): Promise<Info> {
+export const world4uGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const type = $('.entry-content')
@@ -33,10 +37,7 @@ export const world4uGetInfo = async function (link: string): Promise<Info> {
       $('.wp-caption').find('img').attr('data-src') ||
       $('.entry-content').find('img').attr('data-src') ||
       '';
-
-    // Links
     const links: Link[] = [];
-
     $('.my-button').map((i, element) => {
       const title = $(element).parent().parent().prev().text();
       const episodesLink = $(element).attr('href');
@@ -47,15 +48,18 @@ export const world4uGetInfo = async function (link: string): Promise<Info> {
           episodesLink: type === 'series' ? episodesLink : '',
           directLinks:
             type === 'movie'
-              ? [{link: episodesLink, title: 'Movie', type: 'movie'}]
+              ? [
+                  {
+                    link: episodesLink,
+                    title,
+                    type: 'movie',
+                  },
+                ]
               : [],
-          quality: quality,
+          quality,
         });
       }
     });
-
-    // console.log('drive meta', title, synopsis, image, imdbId, type, links);
-    // console.log('w4u meta', links, type);
     return {
       title,
       synopsis,
@@ -65,7 +69,6 @@ export const world4uGetInfo = async function (link: string): Promise<Info> {
       linkList: links,
     };
   } catch (err) {
-    console.error(err);
     return {
       title: '',
       synopsis: '',

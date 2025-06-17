@@ -1,6 +1,6 @@
 import {ProviderContext, Stream} from '../types';
 
-export const nfGetStream = async ({
+export const pmGetStream = async ({
   link: id,
   providerContext,
 }: {
@@ -9,7 +9,7 @@ export const nfGetStream = async ({
 }): Promise<Stream[]> => {
   const {getBaseUrl} = providerContext;
   try {
-    let providerValue = 'netflixMirror';
+    let providerValue = 'primeMirror';
     const baseUrl = await getBaseUrl('nfMirror');
     const url = `https://netmirror.8man.me/api/net-proxy?url=${baseUrl}${
       providerValue === 'netflixMirror'

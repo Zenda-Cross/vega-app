@@ -29,6 +29,7 @@ import Feather from '@expo/vector-icons/Feather';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
 import {TextInput} from 'react-native';
+import {providerContext} from '../lib/providers/providerContext';
 
 const SeasonList = ({
   LinkList,
@@ -167,11 +168,12 @@ const SeasonList = ({
     const controller = new AbortController();
 
     try {
-      const stream = await manifest[providerValue].GetStream(
+      const stream = await manifest[providerValue].GetStream({
         link,
         type,
-        controller.signal,
-      );
+        signal: controller.signal,
+        providerContext: providerContext,
+      });
 
       console.log('Original ServerLinks', stream); // Log all server links
 
@@ -324,9 +326,10 @@ const SeasonList = ({
           setEpisodeLoading(false);
         }
         const episodes = manifest[providerValue].GetEpisodeLinks
-          ? await manifest[providerValue].GetEpisodeLinks(
-              ActiveSeason.episodesLink,
-            )
+          ? await manifest[providerValue].GetEpisodeLinks({
+              url: ActiveSeason.episodesLink,
+              providerContext: providerContext,
+            })
           : [];
         if (episodes.length === 0) {
           return;

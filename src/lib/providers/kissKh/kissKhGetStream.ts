@@ -1,11 +1,14 @@
-import axios from 'axios';
-import {Stream} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
-import {TextTracks} from 'react-native-video';
-import {TextTrackType} from 'react-native-video/lib/types/video';
+import {Stream, ProviderContext, TextTrackType, TextTracks} from '../types';
 
-export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
+export const kissKhGetStream = async function ({
+  link: id,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
+    const {axios, getBaseUrl} = providerContext;
     const streamLinks: Stream[] = [];
     const subtitles: TextTracks = [];
     const baseUrl = await getBaseUrl('kissKh');
@@ -14,7 +17,6 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
       id;
     const res = await axios.get(streamUrl);
     const stream = res.data?.source?.Video;
-
     const subData = res.data?.subtitles;
     subData?.map((sub: any) => {
       subtitles.push({
@@ -26,7 +28,6 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
         uri: sub?.src,
       });
     });
-
     streamLinks.push({
       server: 'kissKh',
       link: stream,
@@ -36,8 +37,6 @@ export const kissKhGetStream = async (id: string): Promise<Stream[]> => {
         referer: baseUrl,
       },
     });
-
-    console.log('streamLinks: ', streamLinks);
     return streamLinks;
   } catch (err) {
     console.error(err);

@@ -3,7 +3,7 @@ import {modGetInfo} from './modGetInfo';
 import {modGetEpisodeLinks} from './modGetEpisodesList';
 import {modGetPosts, modGetPostsSearch} from './modGetPosts';
 import {modGetStream} from './modGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const modMovies: ProviderType = {
   catalog: catalogList,

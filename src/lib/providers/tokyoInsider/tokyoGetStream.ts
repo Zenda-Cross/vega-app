@@ -1,12 +1,16 @@
-import {Stream} from '../types';
-import {headers} from './header';
-import * as cheerio from 'cheerio';
+import {Stream, ProviderContext} from '../types';
 
-export const tokyoGetStream = async (link: string): Promise<Stream[]> => {
+export const tokyoGetStream = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
   try {
+    const {cheerio} = providerContext;
     const url = link;
-    console.log('url', url);
-    const res = await fetch(url, {headers});
+    const res = await fetch(url);
     const data = await res.text();
     const $ = cheerio.load(data);
     const streamLinks: Stream[] = [];
@@ -22,10 +26,8 @@ export const tokyoGetStream = async (link: string): Promise<Stream[]> => {
         });
       }
     });
-    console.log('streamLinks', streamLinks);
     return streamLinks;
   } catch (err) {
-    console.error(err);
     return [];
   }
 };

@@ -1,8 +1,14 @@
-import axios from 'axios';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const kissKhGetInfo = async function (link: string): Promise<Info> {
+export const kissKhGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios} = providerContext;
     const res = await axios.get(link);
     const data = res.data;
     const meta = {

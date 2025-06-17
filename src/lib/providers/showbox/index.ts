@@ -1,4 +1,4 @@
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 import {catalogList, sbGenresList} from './sbCatalog';
 import {sbGetEpisodeLinks} from './sbGetEpisodeList';
 import {sbGetInfo} from './sbGetMeta';

@@ -1,12 +1,16 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const katGetInfo = async function (link: string): Promise<Info> {
+export const katGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const container = $('.yQ8hqd.ksSzJd.LoQAYe').html()

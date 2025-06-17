@@ -1,24 +1,24 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const clsEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const clsEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
   try {
-    console.log('clsEpisodeLinks', url);
     if (!url.includes('luxelinks') || url.includes('luxecinema')) {
-      const res = await axios.get(url, {headers});
+      const res = await providerContext.axios.get(url, {
+        headers: providerContext.commonHeaders,
+      });
       const data = res.data;
-      // console.log('data', data);
       const encodedLink = data.match(/"link":"([^"]+)"/)?.[1];
-      console.log('encodedLink', encodedLink);
       if (encodedLink) {
         url = encodedLink ? atob(encodedLink) : url;
       } else {
         const redirectUrlRes = await fetch(
-          'https://ext.8man.me/api/cinemaluxe', /// Full function here => https://github.com/himanshu8443/extVidstream/blob/main/cinemaLuxeDecrypt.js
+          'https://ext.8man.me/api/cinemaluxe',
           {
             method: 'POST',
             headers: {
@@ -28,13 +28,14 @@ export const clsEpisodeLinks = async function (
           },
         );
         const redirectUrl = await redirectUrlRes.json();
-        console.log('redirectUrl', redirectUrl);
         url = redirectUrl?.redirectUrl || url;
       }
     }
-    const res = await axios.get(url, {headers});
+    const res = await providerContext.axios.get(url, {
+      headers: providerContext.commonHeaders,
+    });
     const html = res.data;
-    let $ = cheerio.load(html);
+    let $ = providerContext.cheerio.load(html);
     const episodeLinks: EpisodeLink[] = [];
     if (url.includes('luxedrive')) {
       episodeLinks.push({
@@ -43,10 +44,8 @@ export const clsEpisodeLinks = async function (
       });
       return episodeLinks;
     }
-
     $('a.maxbutton-4,a.maxbutton,.maxbutton-hubcloud,.ep-simple-button').map(
       (i, element) => {
-        console.log('element', $(element).text());
         const title = $(element).text()?.trim();
         const link = $(element).attr('href');
         if (
@@ -66,8 +65,6 @@ export const clsEpisodeLinks = async function (
         }
       },
     );
-
-    // console.log(episodeLinks);
     return episodeLinks;
   } catch (err) {
     console.error('cl episode links', err);

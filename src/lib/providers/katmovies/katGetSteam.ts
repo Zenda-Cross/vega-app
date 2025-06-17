@@ -1,34 +1,46 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Stream} from '../types';
-import {hubcloudExtracter} from '../hubcloudExtractor';
-import {extractKmhdLink} from './katGetEpsodes';
-import {gdFlixExtracter} from '../gdflixExtractor';
+import {Stream, ProviderContext} from '../types';
 
-export async function katGetStream(
-  link: string,
-  type: string,
-  signal: AbortSignal,
+async function extractKmhdLink(
+  katlink: string,
+  providerContext: ProviderContext,
 ) {
+  const {axios} = providerContext;
+  const res = await axios.get(katlink);
+  const data = res.data;
+  const hubDriveRes = data.match(/hubdrive_res:\s*"([^"]+)"/)[1];
+  const hubDriveLink = data.match(
+    /hubdrive_res\s*:\s*{[^}]*?link\s*:\s*"([^"]+)"/,
+  )[1];
+  return hubDriveLink + hubDriveRes;
+}
+export async function katGetStream({
+  link,
+  signal,
+  providerContext,
+}: {
+  link: string;
+  type: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Stream[]> {
+  const {axios, cheerio, extractors} = providerContext;
+  const {hubcloudExtracter, gdFlixExtracter} = extractors;
   const streamLinks: Stream[] = [];
   console.log('katGetStream', link);
   try {
     if (link.includes('gdflix')) {
-      const gdflixRes = await gdFlixExtracter(link, signal);
-      return gdflixRes;
+      return await gdFlixExtracter(link, signal);
     }
     if (link.includes('kmhd')) {
-      const hubcloudLink = await extractKmhdLink(link);
-      const stereams = await hubcloudExtracter(hubcloudLink, signal);
-      return stereams;
+      const hubcloudLink = await extractKmhdLink(link, providerContext);
+      return await hubcloudExtracter(hubcloudLink, signal);
     }
     if (link.includes('gdflix')) {
       // resume link
       try {
         const resumeDrive = link.replace('/file', '/zfile');
         //   console.log('resumeDrive', resumeDrive);
-        const resumeDriveRes = await axios.get(resumeDrive, {headers});
+        const resumeDriveRes = await axios.get(resumeDrive);
         const resumeDriveHtml = resumeDriveRes.data;
         const $resumeDrive = cheerio.load(resumeDriveHtml);
         const resumeLink = $resumeDrive('.btn-success').attr('href');
@@ -45,7 +57,7 @@ export async function katGetStream(
       }
       //instant link
       try {
-        const driveres = await axios.get(link, {headers, timeout: 10000});
+        const driveres = await axios.get(link, {timeout: 10000});
         const $drive = cheerio.load(driveres.data);
         const seed = $drive('.btn-danger').attr('href') || '';
         const instantToken = seed.split('=')[1];

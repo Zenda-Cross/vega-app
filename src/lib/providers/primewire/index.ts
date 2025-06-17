@@ -2,7 +2,7 @@ import {pwCatalogList, pwGenresList} from './pwCatalogl';
 import {pwGetPosts, pwGetPostsSearch} from './pwGetPosts';
 import {pwGetInfo} from './pwGetInfo';
 import {pwGetStream} from './pwGetStream';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const primewire: ProviderType = {
   catalog: pwCatalogList,

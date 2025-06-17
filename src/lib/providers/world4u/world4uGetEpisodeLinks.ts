@@ -1,16 +1,17 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
-import {EpisodeLink} from '../types';
+import {EpisodeLink, ProviderContext} from '../types';
 
-export const world4uGetEpisodeLinks = async function (
-  url: string,
-): Promise<EpisodeLink[]> {
+export const world4uGetEpisodeLinks = async function ({
+  url,
+  providerContext,
+}: {
+  url: string;
+  providerContext: ProviderContext;
+}): Promise<EpisodeLink[]> {
+  const {axios, cheerio} = providerContext;
   try {
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const html = res.data;
     let $ = cheerio.load(html);
-
     const episodeLinks: EpisodeLink[] = [];
     $(
       'strong:contains("Episode"),strong:contains("1080"),strong:contains("720"),strong:contains("480")',
@@ -29,11 +30,8 @@ export const world4uGetEpisodeLinks = async function (
         });
       }
     });
-
-    console.log('w4u eplinks', episodeLinks);
     return episodeLinks;
   } catch (err) {
-    console.error(err);
     return [
       {
         title: 'Server 1',

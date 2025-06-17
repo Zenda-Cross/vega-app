@@ -1,52 +1,64 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import Aes from 'react-native-aes-crypto';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-const getSHA256ofJSON = async function (input: any) {
-  return await Aes.sha1(input);
-};
+export const pwGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
 
-export const pwGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
   const baseUrl = await getBaseUrl('primewire');
   const url = `${baseUrl + filter}&page=${page}`;
-  // console.log(url);
-
-  return posts(baseUrl, url, signal);
+  return posts({baseUrl, url, signal, axios, cheerio});
 };
 
-export const pwGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const pwGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio, Aes} = providerContext;
+  const getSHA256ofJSON = async function (input: any) {
+    return await Aes.sha1(input);
+  };
   const baseUrl = await getBaseUrl('primewire');
   const hash = await getSHA256ofJSON(searchQuery + 'JyjId97F9PVqUPuMO0');
-  // console.log('hash', hash);
   const url = `${baseUrl}/filter?s=${searchQuery}&page=${page}&ds=${hash.slice(
     0,
     10,
   )}`;
-  // console.log(url);
-
-  return posts(baseUrl, url, signal);
+  return posts({baseUrl, url, signal, axios, cheerio});
 };
 
-async function posts(
-  baseUrl: string,
-  url: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+async function posts({
+  baseUrl,
+  url,
+  signal,
+  axios,
+  cheerio,
+}: {
+  baseUrl: string;
+  url: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
   try {
-    const res = await axios.get(url, {headers, signal});
+    const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -58,14 +70,13 @@ async function posts(
         catalog.push({
           title: title,
           link: baseUrl + link,
-          image: baseUrl + image,
+          image: image,
         });
       }
     });
-    // console.log(catalog);
     return catalog;
   } catch (err) {
-    console.error('pw error ', err);
+    console.error('primewire error ', err);
     return [];
   }
 }

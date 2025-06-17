@@ -1,27 +1,26 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Info, Link} from '../types';
-export async function pwGetInfo(link: string): Promise<Info> {
+import {Info, Link, ProviderContext} from '../types';
+
+export const pwGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
     const baseUrl = link.split('/').slice(0, 3).join('/');
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const html = await res.data;
     const $ = cheerio.load(html);
-
     const imdbId =
       $('.movie_info')
         .find('a[href*="imdb.com/title/tt"]:not([href*="imdb.com/title/tt/"])')
         .attr('href')
         ?.split('/')[4] || '';
-
     const type = $('.show_season').html() ? 'series' : 'movie';
-    console.log('pwGetInfo', imdbId, type);
-    // Links
     const linkList: Link[] = [];
-
-    // tv series
     $('.show_season').each((i, element) => {
       const seasonTitle = 'Season ' + $(element).attr('data-id');
       const episodes: Link['directLinks'] = [];
@@ -49,7 +48,6 @@ export async function pwGetInfo(link: string): Promise<Info> {
         directLinks: episodes,
       });
     });
-
     if (type === 'movie') {
       linkList.push({
         title: 'Movie',
@@ -81,4 +79,4 @@ export async function pwGetInfo(link: string): Promise<Info> {
       type: 'uhd',
     };
   }
-}
+};

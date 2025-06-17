@@ -1,12 +1,20 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from './header';
 import {Info, Link} from '../types';
 
-export const driveGetInfo = async function (link: string): Promise<Info> {
+export const driveGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: {
+    axios: any;
+    cheerio: any;
+    getBaseUrl: (provider: string) => Promise<string>;
+  };
+}): Promise<Info> {
   try {
+    const {axios, cheerio} = providerContext;
     const url = link;
-    const res = await axios.get(url, {headers});
+    const res = await axios.get(url);
     const data = res.data;
     const $ = cheerio.load(data);
     const type = $('.left-wrapper')
@@ -43,7 +51,7 @@ export const driveGetInfo = async function (link: string): Promise<Info> {
 
     $(
       'a:contains("1080")a:not(:contains("Zip")),a:contains("720")a:not(:contains("Zip")),a:contains("480")a:not(:contains("Zip")),a:contains("2160")a:not(:contains("Zip")),a:contains("4k")a:not(:contains("Zip"))',
-    ).map((i, element) => {
+    ).map((i: number, element: any) => {
       const title = $(element).parent('h5').prev().text();
       const episodesLink = $(element).attr('href');
       const quality = title.match(/\b(480p|720p|1080p|2160p)\b/i)?.[0] || '';

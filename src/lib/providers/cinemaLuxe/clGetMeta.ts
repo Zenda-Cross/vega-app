@@ -1,15 +1,19 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Info, Link} from '../types';
+import {Info, Link, ProviderContext} from '../types';
 
-export const clGetInfo = async function (link: string): Promise<Info> {
+export const clGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
     const url = link;
-    // console.log('url', url);
-    const res = await axios.get(url, {headers});
+    const res = await providerContext.axios.get(url, {
+      headers: providerContext.commonHeaders,
+    });
     const data = res.data;
-    const $ = cheerio.load(data);
+    const $ = providerContext.cheerio.load(data);
     const type = url.includes('tvshows') ? 'series' : 'movie';
     const imdbId = '';
     const title = url.split('/')[4].replace(/-/g, ' ');
@@ -23,18 +27,13 @@ export const clGetInfo = async function (link: string): Promise<Info> {
     const rating = Number($('#repimdb').find('strong').text())
       .toFixed(1)
       .toString();
-
-    // console.log(title, image, synopsis);
-
-    // Links
     const links: Link[] = [];
-
     $('.mb-center.maxbutton-5-center,.ep-button-container').map(
       (i, element) => {
         const title = $(element)
           .text()
-          .replace('⬇Download', '')
-          .replace('⬇ Download', '')
+          .replace('\u2b07Download', '')
+          .replace('\u2b07 Download', '')
           .trim();
         const link = $(element).find('a').attr('href');
         if (title && link) {
@@ -46,7 +45,6 @@ export const clGetInfo = async function (link: string): Promise<Info> {
         }
       },
     );
-
     return {
       title,
       tags,

@@ -1,36 +1,56 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import {headers} from '../headers';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const world4uGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const world4uGetPosts = async function ({
+  filter,
+  page,
+  // providerValue,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('w4u');
   const url = `${baseUrl + filter}/page/${page}/`;
-  // console.log('world4uGetPosts', url);
-  return posts(url, signal);
+  return posts({url, signal, axios, cheerio});
 };
 
-export const world4uGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const world4uGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  // providerValue,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios, cheerio} = providerContext;
   const baseUrl = await getBaseUrl('w4u');
   const url = `${baseUrl}/page/${page}/?s=${searchQuery}`;
-  // console.log('world4uGetPosts', url);
-  return posts(url, signal);
+  return posts({url, signal, axios, cheerio});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  axios,
+  cheerio,
+}: {
+  url: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+  cheerio: ProviderContext['cheerio'];
+}): Promise<Post[]> {
   try {
-    const res = await axios.get(url, {headers, signal});
+    const res = await axios.get(url, {signal});
     const data = res.data;
     const $ = cheerio.load(data);
     const catalog: Post[] = [];
@@ -50,10 +70,8 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
           });
         }
       });
-    // console.log('world4uGetPosts', catalog);
     return catalog;
   } catch (err) {
-    console.error('world4u error ', err);
     return [];
   }
 }

@@ -1,34 +1,50 @@
-import axios from 'axios';
-import {Post} from '../types';
-import {getBaseUrl} from '../getBaseUrl';
+import {Post, ProviderContext} from '../types';
 
-export const hiGetPosts = async function (
-  filter: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const hiGetPosts = async function ({
+  filter,
+  page,
+  signal,
+  providerContext,
+}: {
+  filter: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios} = providerContext;
   const baseUrl = await getBaseUrl('consumet');
   const url = `${baseUrl + filter}?page=${page}`;
-  // console.log(url);
-
-  return posts(url, signal);
+  return posts({url, signal, axios});
 };
 
-export const hiGetPostsSearch = async function (
-  searchQuery: string,
-  page: number,
-  providerValue: string,
-  signal: AbortSignal,
-): Promise<Post[]> {
+export const hiGetPostsSearch = async function ({
+  searchQuery,
+  page,
+  signal,
+  providerContext,
+}: {
+  searchQuery: string;
+  page: number;
+  providerValue: string;
+  signal: AbortSignal;
+  providerContext: ProviderContext;
+}): Promise<Post[]> {
+  const {getBaseUrl, axios} = providerContext;
   const baseUrl = await getBaseUrl('consumet');
   const url = `${baseUrl}/anime/zoro/${searchQuery}?page=${page}`;
-  // console.log(url);
-
-  return posts(url, signal);
+  return posts({url, signal, axios});
 };
 
-async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
+async function posts({
+  url,
+  signal,
+  axios,
+}: {
+  url: string;
+  signal: AbortSignal;
+  axios: ProviderContext['axios'];
+}): Promise<Post[]> {
   try {
     const res = await axios.get(url, {signal});
     const data = res.data?.results;
@@ -45,8 +61,6 @@ async function posts(url: string, signal: AbortSignal): Promise<Post[]> {
         });
       }
     });
-
-    // console.log(catalog);
     return catalog;
   } catch (err) {
     console.error('zoro error ', err);

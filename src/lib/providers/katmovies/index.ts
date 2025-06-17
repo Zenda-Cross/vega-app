@@ -3,7 +3,7 @@ import {katEpisodeLinks} from './katGetEpsodes';
 import {katGetInfo} from './katGetInfo';
 import {katGetPosts, katGetPostsSearch} from './katGetPosts';
 import {katGetStream} from './katGetSteam';
-import {ProviderType} from '../../Manifest';
+import {ProviderType} from '../types';
 
 export const katMoviesHd: ProviderType = {
   catalog: katCatalog,

@@ -1,10 +1,22 @@
-import axios from 'axios';
-import {EpisodeLink, Info, Link} from '../types';
-import {headers} from './headers';
+import {EpisodeLink, Info, Link, ProviderContext} from '../types';
 
-export const dooGetInfo = async function (link: string): Promise<Info> {
+const headers = {
+  'Accept-Encoding': 'gzip',
+  'API-KEY': '2pm95lc6prpdbk0ppji9rsqo',
+  Connection: 'Keep-Alive',
+  'If-Modified-Since': 'Wed, 14 Aug 2024 13:00:04 GMT',
+  'User-Agent': 'okhttp/3.14.9',
+};
+
+export const dooGetInfo = async function ({
+  link,
+  providerContext,
+}: {
+  link: string;
+  providerContext: ProviderContext;
+}): Promise<Info> {
   try {
-    // console.log('all', link);
+    const {axios} = providerContext;
     const res = await axios.get(link, {headers});
     const resData = res.data;
     const jsonStart = resData?.indexOf('{');
@@ -12,7 +24,6 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
     const data = JSON?.parse(resData?.substring(jsonStart, jsonEnd))?.title
       ? JSON?.parse(resData?.substring(jsonStart, jsonEnd))
       : resData;
-    // console.log('data🌏🌏', data);
     const title = data?.title || '';
     const synopsis = data?.description || '';
     const image = data?.poster_url || '';
@@ -20,11 +31,7 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
     const rating = data?.imdb_rating || '';
     const type = Number(data?.is_tvseries) ? 'series' : 'movie';
     const tags = data?.genre?.map((genre: any) => genre?.name) || [];
-
     const links: Link[] = [];
-
-    // console.log('data', title, synopsis, image, cast, tags, type);
-
     if (type === 'series') {
       data?.season?.map((season: any) => {
         const title = season?.seasons_name || '';
@@ -51,7 +58,6 @@ export const dooGetInfo = async function (link: string): Promise<Info> {
         });
       });
     }
-    console.log('links', links);
     return {
       image: image?.includes('https') ? image : image?.replace('http', 'https'),
       synopsis: synopsis,
