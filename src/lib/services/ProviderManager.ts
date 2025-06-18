@@ -2,7 +2,6 @@ import {ToastAndroid} from 'react-native';
 import {providerContext} from '../providers/providerContext';
 import {Catalog, EpisodeLink, Info, Post} from '../providers/types';
 import {extensionStorage} from '../storage';
-import {Content} from '../zustand/contentStore';
 
 export class ProviderManager {
   private createExecutionContext() {
@@ -191,11 +190,10 @@ export class ProviderManager {
     provider,
   }: {
     link: string;
-    provider: Content['provider'];
+    provider: string;
   }): Promise<Info> => {
-    const getMetaDataModule = extensionStorage.getProviderModules(
-      provider.value,
-    )?.modules.meta;
+    const getMetaDataModule =
+      extensionStorage.getProviderModules(provider)?.modules.meta;
     if (!getMetaDataModule) {
       return {} as Info;
     }
