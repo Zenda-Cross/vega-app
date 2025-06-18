@@ -51,7 +51,7 @@ function Hero({
           } else {
             info = await providerManager.getMetaData({
               link: hero.link,
-              provider,
+              provider: provider.value,
             });
             cacheStorage.setString(hero.link, JSON.stringify(info));
           }
@@ -122,12 +122,12 @@ function Hero({
                   searchNavigation.navigate('ScrollList', {
                     providerValue: provider.value,
                     filter: e.nativeEvent.text,
-                    title: `${provider.name}`,
+                    title: `${provider.display_name}`,
                     isSearch: true,
                   });
                 }
               }}
-              placeholder={`Search in ${provider.name}`}
+              placeholder={`Search in ${provider.display_name}`}
               className="w-[95%] px-4 h-10 rounded-full border-white border"
             />
           </MotiView>
