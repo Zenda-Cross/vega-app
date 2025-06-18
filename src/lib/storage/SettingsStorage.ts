@@ -9,9 +9,9 @@ export enum SettingsKeys {
   IS_CUSTOM_THEME = 'isCustomTheme',
   SHOW_TAB_BAR_LABELS = 'showTabBarLabels',
   CUSTOM_COLOR = 'customColor',
-
   // Feedback settings
   HAPTIC_FEEDBACK = 'hapticFeedback',
+  NOTIFICATIONS_ENABLED = 'notificationsEnabled',
 
   // Update settings
   AUTO_CHECK_UPDATE = 'autoCheckUpdate',
@@ -80,9 +80,18 @@ export class SettingsStorage {
       ? true
       : mainStorage.getBool(SettingsKeys.HAPTIC_FEEDBACK);
   }
-
   setHapticFeedbackEnabled(enabled: boolean): void {
     mainStorage.setBool(SettingsKeys.HAPTIC_FEEDBACK, enabled);
+  }
+
+  isNotificationsEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED) === null
+      ? true
+      : mainStorage.getBool(SettingsKeys.NOTIFICATIONS_ENABLED);
+  }
+
+  setNotificationsEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.NOTIFICATIONS_ENABLED, enabled);
   }
 
   // Update settings
