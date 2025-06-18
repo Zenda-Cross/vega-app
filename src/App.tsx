@@ -36,6 +36,12 @@ import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
+import {updateProvidersService} from './lib/services/UpdateProviders';
+import notifee, {EventDetail, EventType} from '@notifee/react-native';
+import RNFS from 'react-native-fs';
+import {downloadFolder} from './lib/constants';
+import {cancelHlsDownload} from './lib/hlsDownloader2';
+import useDownloadsStore from './lib/zustand/downloadsStore';
 
 enableScreens(true);
 enableFreeze(true);
@@ -147,6 +153,63 @@ const App = () => {
   const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
+
+  const downloadStore = useDownloadsStore(state => state);
+
+  useEffect(() => {
+    async function actionHandler({
+      type,
+      detail,
+    }: {
+      type: EventType;
+      detail: EventDetail;
+    }) {
+      if (
+        type === EventType.ACTION_PRESS &&
+        detail.pressAction?.id === detail.notification?.data?.fileName
+      ) {
+        console.log('Cancel download');
+        RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+        cancelHlsDownload(detail.notification?.data?.fileName!);
+        // FFMPEGKIT CANCEL
+        // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+
+        // setAlreadyDownloaded(false);
+        downloadStore.removeActiveDownload(
+          detail.notification?.data?.fileName!,
+        );
+        try {
+          const files = await RNFS.readDir(downloadFolder);
+          // Find a file with the given name (without extension)
+          const file = files.find(file => {
+            const nameWithoutExtension = file.name
+              .split('.')
+              .slice(0, -1)
+              .join('.');
+            return nameWithoutExtension === detail.notification?.data?.fileName;
+          });
+          if (file) {
+            await RNFS.unlink(file.path);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
+    notifee.onBackgroundEvent(actionHandler);
+    notifee.onForegroundEvent(actionHandler);
+  }, []);
+
+  // Initialize update service
+  useEffect(() => {
+    // Start automatic update checking at app startup
+    updateProvidersService.startAutomaticUpdateCheck();
+
+    // Cleanup on unmount
+    return () => {
+      updateProvidersService.stopAutomaticUpdateCheck();
+    };
+  }, []);
 
   function HomeStackScreen() {
     return (
