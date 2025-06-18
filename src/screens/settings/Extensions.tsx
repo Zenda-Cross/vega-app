@@ -251,129 +251,124 @@ const Extensions = ({navigation}: Props) => {
     }
   };
   const renderProviderCard = ({item}: {item: ProviderExtension}) => {
-    // Add null checks to prevent crashes
-    if (!item || !item.value) {
-      return null;
-    }
-
+    if (!item || !item.value) return null;
     const isActive = activeExtensionProvider?.value === item.value;
     const isInstalled = extensionStorage.isProviderInstalled(item.value);
     const isInstalling = installingProvider === item.value;
     const isUpdating = updatingProvider === item.value;
-
-    // Check if update is available for this provider
     const updateInfo = updateInfos.find(
       info => info.provider.value === item.value,
     );
     const hasUpdate = updateInfo?.hasUpdate || false;
 
     return (
-      <View className="bg-tertiary rounded-xl p-4 mb-3 mx-4">
-        <View className="flex-row justify-between items-center mb-3 gap-3">
+      <View
+        className="bg-tertiary rounded-2xl p-5 py-3 mb-4 mx-4 shadow-lg border border-quaternary"
+        style={{elevation: 4}}>
+        <View className="flex-row items-center mb-4 gap-4 justify-between">
+          {/* Left: Icon */}
           {item.icon ? (
             <Image
-              source={{
-                uri: item.icon,
-              }}
-              className="w-10 h-10 rounded-lg"
+              source={{uri: item.icon}}
+              className="w-12 h-12 rounded-xl border-2 border-primary bg-quaternary"
               style={{resizeMode: 'cover'}}
             />
           ) : (
-            <View className="px-3">
+            <View className="px-3 py-2 bg-quaternary rounded-xl border border-gray-700">
               <RenderProviderFlagIcon type={item.type} />
             </View>
           )}
-          <View className="flex-1">
-            <Text className="text-white text-lg font-semibold">
-              {item.display_name || 'Unknown Provider'}
-            </Text>
-            <Text className="text-gray-400 text-sm">
-              Version {item.version || 'Unknown'} • {item.type || 'Unknown'}
+          {/* Middle: Info */}
+          <View className="flex-1 mx-3">
+            <View className="flex-row items-center flex-wrap">
+              <Text className="text-white text-lg font-bold tracking-wide">
+                {item.display_name || 'Unknown Provider'}
+              </Text>
               {hasUpdate && updateInfo && (
-                <Text className="text-orange-400">
-                  • Update ({updateInfo.newVersion})
-                </Text>
+                <View
+                  style={{backgroundColor: primary}}
+                  className="px-2 py-0.5 rounded-full ml-1">
+                  <Text className="text-xs text-white font-semibold bg-gray-800">
+                    Update
+                  </Text>
+                </View>
               )}
+            </View>
+            <Text className="text-gray-400 text-sm ">
+              Version{' '}
+              <Text className="text-white font-medium">
+                {item.version || 'Unknown'}
+              </Text>{' '}
+              • {item.type || 'Unknown'}
             </Text>
           </View>
-        </View>
-        {/* Action buttons */}
-        <View className="flex-row gap-2">
-          {activeTab === 'installed' ? (
-            <>
-              {/* Set as active button */}
-              <TouchableOpacity
-                onPress={() => handleSetActiveProvider(item)}
-                className={`flex-1 flex-row justify-center items-center py-2 px-4 rounded-lg ${
-                  isActive ? 'bg-green-600' : 'bg-gray-600'
-                }`}>
-                <MaterialIcons
-                  name={isActive ? 'check-circle' : 'radio-button-unchecked'}
-                  size={16}
-                  color="white"
-                />
-                <Text className="text-white font-medium ml-2">
-                  {isActive ? 'Active' : 'Set Active'}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Update button - only show if update is available */}
-              {hasUpdate && (
+          {/* Right: Buttons */}
+          <View className="flex-row gap-3 items-center">
+            {activeTab === 'installed' ? (
+              <>
                 <TouchableOpacity
-                  onPress={() => handleUpdateProvider(updateInfo!.provider)}
-                  disabled={isUpdating}
-                  className="px-4 py-2 rounded-lg"
-                  style={{
-                    backgroundColor: '#F97316',
-                    opacity: isUpdating ? 0.7 : 1,
-                  }}>
-                  {isUpdating ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <MaterialCommunityIcons
-                      name="update"
-                      size={16}
-                      color="white"
-                    />
-                  )}
+                  onPress={() => handleSetActiveProvider(item)}
+                  className={`w-9 h-9 rounded-full items-center justify-center ${
+                    isActive ? 'bg-green-600' : 'bg-gray-700'
+                  }`}
+                  style={{opacity: isActive ? 1 : 0.9}}>
+                  <MaterialIcons
+                    name={isActive ? 'check-circle' : 'radio-button-unchecked'}
+                    size={20}
+                    color="white"
+                  />
                 </TouchableOpacity>
-              )}
-
-              {/* Uninstall button */}
-              <TouchableOpacity
-                onPress={() => handleUninstallProvider(item)}
-                className="bg-red-600 px-4 py-2 rounded-lg">
-                <MaterialCommunityIcons name="delete" size={16} color="white" />
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              {/* Install button */}
+                {hasUpdate && (
+                  <TouchableOpacity
+                    onPress={() => handleUpdateProvider(updateInfo!.provider)}
+                    disabled={isUpdating}
+                    className="w-9 h-9 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: primary,
+                      opacity: isUpdating ? 0.7 : 1,
+                    }}>
+                    {isUpdating ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name="update"
+                        size={20}
+                        color="white"
+                      />
+                    )}
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  onPress={() => handleUninstallProvider(item)}
+                  className="w-9 h-9 rounded-full items-center justify-center bg-red-600">
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={20}
+                    color="white"
+                  />
+                </TouchableOpacity>
+              </>
+            ) : (
               <TouchableOpacity
                 onPress={() => handleInstallProvider(item)}
                 disabled={isInstalled || isInstalling}
-                className="flex-1 flex-row justify-center items-center py-2 px-4 rounded-lg"
+                className={'w-9 h-9 rounded-full items-center justify-center'}
                 style={{
-                  backgroundColor: isInstalled ? '#6B7280' : primary,
                   opacity: isInstalling ? 0.7 : 1,
+                  backgroundColor: isInstalled ? 'gray' : primary,
                 }}>
                 {isInstalling ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <>
-                    <MaterialCommunityIcons
-                      name={isInstalled ? 'check' : 'download'}
-                      size={16}
-                      color="white"
-                    />
-                    <Text className="text-white font-medium ml-2">
-                      {isInstalled ? 'Installed' : 'Install'}
-                    </Text>
-                  </>
+                  <MaterialCommunityIcons
+                    name={isInstalled ? 'check' : 'download'}
+                    size={20}
+                    color="white"
+                  />
                 )}
               </TouchableOpacity>
-            </>
-          )}
+            )}
+          </View>
         </View>
       </View>
     );
@@ -391,7 +386,7 @@ const Extensions = ({navigation}: Props) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="white" />
         </TouchableOpacity>
-        <Text className="text-white text-xl font-semibold">Extensions</Text>
+        <Text className="text-white text-xl font-semibold">Providers</Text>
         <TouchableOpacity onPress={handleRefresh}>
           <Feather name="refresh-cw" size={24} color={primary} />
         </TouchableOpacity>
