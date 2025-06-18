@@ -12,13 +12,11 @@ import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
 import {mainStorage, cacheStorage} from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
-import {manifest} from '../../lib/Manifest';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNFS from 'react-native-fs';
 import useDownloadsStore from '../../lib/zustand/downloadsStore';
 // import {FFmpegKit} from 'ffmpeg-kit-react-native';
 // import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import Touturial from '../../components/Touturial';
 import {downloadFolder} from '../../lib/constants';
 import useThemeStore from '../../lib/zustand/themeStore';
 import ProviderDrawer from '../../components/ProviderDrawer';
@@ -28,6 +26,8 @@ import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ContinueWatching from '../../components/ContinueWatching';
 import {cancelHlsDownload} from '../../lib/hlsDownloader2';
+import {providerManager} from '../../lib/services/ProviderManager';
+import Tutorial from '../../components/Touturial';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 const Home = ({}: Props) => {
@@ -43,7 +43,7 @@ const Home = ({}: Props) => {
   const [isDrawerOpen] = useState(false);
   const disableDrawer = mainStorage.getBool('disableDrawer') || false;
 
-  const {provider} = useContentStore(state => state);
+  const {provider, installedProviders} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
 
   // change status bar color
@@ -137,6 +137,13 @@ const Home = ({}: Props) => {
   }
   notifee.onBackgroundEvent(actionHandler);
   notifee.onForegroundEvent(actionHandler);
+  if (
+    !installedProviders ||
+    installedProviders.length === 0 ||
+    !provider?.value
+  ) {
+    return <Tutorial />;
+  }
   return (
     <GestureHandlerRootView>
       <SafeAreaView className="bg-black flex-1">
@@ -161,7 +168,6 @@ const Home = ({}: Props) => {
           renderNavigationView={() =>
             !disableDrawer && <ProviderDrawer drawerRef={drawer} />
           }>
-          <Touturial />
           <StatusBar
             showHideTransition={'fade'}
             animated={true}
@@ -199,15 +205,19 @@ const Home = ({}: Props) => {
                   />
                 )} */}
               {loading
-                ? manifest[provider.value].catalog.map((item, index) => (
-                    <Slider
-                      isLoading={loading}
-                      key={index}
-                      title={item.title}
-                      posts={[]}
-                      filter={item.filter}
-                    />
-                  ))
+                ? providerManager
+                    .getCatalog({
+                      providerValue: provider.value,
+                    })
+                    .map((item, index) => (
+                      <Slider
+                        isLoading={loading}
+                        key={index}
+                        title={item.title}
+                        posts={[]}
+                        filter={item.filter}
+                      />
+                    ))
                 : homeData.map((item, index) => (
                     <Slider
                       isLoading={loading}

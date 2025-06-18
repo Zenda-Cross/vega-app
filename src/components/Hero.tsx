@@ -12,12 +12,11 @@ import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
 import {cacheStorage, settingsStorage} from '../lib/storage';
-import {manifest} from '../lib/Manifest';
 import {Info} from '../lib/providers/types';
 import {Feather} from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {DrawerLayout} from 'react-native-gesture-handler';
-import {providerContext} from '../lib/providers/providerContext';
+import {providerManager} from '../lib/services/ProviderManager';
 
 function Hero({
   isDrawerOpen,
@@ -50,10 +49,9 @@ function Hero({
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
-            info = await manifest[provider.value].GetMetaData({
+            info = await providerManager.getMetaData({
               link: hero.link,
               provider,
-              providerContext: providerContext,
             });
             cacheStorage.setString(hero.link, JSON.stringify(info));
           }

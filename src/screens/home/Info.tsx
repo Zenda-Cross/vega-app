@@ -30,12 +30,11 @@ import {
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
-import {manifest} from '../../lib/Manifest';
-import {BlurView} from 'expo-blur';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {useNavigation} from '@react-navigation/native';
 import useWatchListStore from '../../lib/zustand/watchListStore';
-import {providerContext} from '../../lib/providers/providerContext';
+import {providerManager} from '../../lib/services/ProviderManager';
+// import {BlurView} from 'expo-blur';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Info'>;
 export default function Info({route, navigation}: Props): React.JSX.Element {
@@ -103,9 +102,10 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           }
           // console.log('cache', cacheData);
         }
-        const data = await manifest[
-          route.params.provider || provider.value
-        ].GetMetaData({link: route.params.link, provider, providerContext});
+        const data = await providerManager.getMetaData({
+          link: route.params.link,
+          provider,
+        });
 
         try {
           const metaRes = await axios.get(
@@ -198,23 +198,26 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
             }
           </Skeleton>
         </View>
-        {manifest[route.params.provider || provider.value].blurImage && (
-          <BlurView
-            intensity={4}
-            blurReductionFactor={1}
-            experimentalBlurMethod="dimezisBlurView"
-            tint="default"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 256,
-              width: '100%',
-            }}
-          />
-        )}
+
+        {
+          // manifest[route.params.provider || provider.value].blurImage && (
+          //   <BlurView
+          //     intensity={4}
+          //     blurReductionFactor={1}
+          //     experimentalBlurMethod="dimezisBlurView"
+          //     tint="default"
+          //     style={{
+          //       position: 'absolute',
+          //       top: 0,
+          //       left: 0,
+          //       right: 0,
+          //       bottom: 0,
+          //       height: 256,
+          //       width: '100%',
+          //     }}
+          //   />
+          // )
+        }
         <FlatList
           data={[]}
           keyExtractor={(_, i) => i.toString()}

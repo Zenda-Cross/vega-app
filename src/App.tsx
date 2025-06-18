@@ -16,7 +16,7 @@ import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
-import DisableProviders from './screens/settings/DisableProviders';
+// import DisableProviders from './screens/settings/DisableProviders';
 import About, {checkForUpdate} from './screens/settings/About';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
@@ -34,6 +34,7 @@ import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
+import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
 
 enableScreens(true);
@@ -119,6 +120,7 @@ export type SettingsStackParamList = {
   Downloads: undefined;
   WatchHistoryStack: undefined;
   SubTitlesPreferences: undefined;
+  Extensions: undefined;
 };
 
 export type TabStackParamList = {
@@ -228,13 +230,14 @@ const App = () => {
           freezeOnBlur: true,
         }}>
         <SettingsStack.Screen name="Settings" component={Settings} />
-        <SettingsStack.Screen
+        {/* <SettingsStack.Screen
           name="DisableProviders"
           component={DisableProviders}
-        />
+        /> */}
         <SettingsStack.Screen name="About" component={About} />
         <SettingsStack.Screen name="Preferences" component={Preferences} />
         <SettingsStack.Screen name="Downloads" component={Downloads} />
+        <SettingsStack.Screen name="Extensions" component={Extensions} />
         <SettingsStack.Screen
           name="WatchHistoryStack"
           component={WatchHistoryStackScreen}

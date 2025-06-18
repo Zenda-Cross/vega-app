@@ -29,7 +29,6 @@ import {
   SelectedTrackType,
 } from 'react-native-video';
 import {MotiView} from 'moti';
-import {manifest} from '../../lib/Manifest';
 import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -42,7 +41,7 @@ import SearchSubtitles from '../../components/SearchSubtitles';
 import FullScreenChz from 'react-native-fullscreen-chz';
 import {ifExists} from '../../lib/file/ifExists';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import {providerContext} from '../../lib/providers/providerContext';
+import {providerManager} from '../../lib/services/ProviderManager';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -187,21 +186,20 @@ const Player = ({route}: Props): React.JSX.Element => {
           return;
         }
       }
-      const data = await manifest[
-        route.params?.providerValue || provider?.value
-      ].GetStream({
+      const data = await providerManager.getStream({
         link: activeEpisode.link,
         type: route.params?.type,
         signal: controller.signal,
-        providerContext: providerContext,
+        providerValue: route.params?.providerValue || provider.value,
       });
-      const streamAbleServers = data.filter(
-        // filter out non streamable servers
-        streamItem =>
-          !manifest[
-            route.params.providerValue || provider.value
-          ].nonStreamableServer?.includes(streamItem.server),
-      );
+      const streamAbleServers = data;
+      // .filter(
+      //   // filter out non streamable servers
+      //   streamItem =>
+      //     !manifest[
+      //       route.params.providerValue || provider.value
+      //     ].nonStreamableServer?.includes(streamItem.server),
+      // );
       const filteredQualities = streamAbleServers?.filter(
         // filter out excluded qualities
         streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
@@ -468,7 +466,9 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // set last selected audio and subtitle track
   useEffect(() => {
-    if (hasSetInitialTracksRef.current) return;
+    if (hasSetInitialTracksRef.current) {
+      return;
+    }
     const lastAudioTrack = cacheStorage.getString('lastAudioTrack') || 'auto';
     const lastTextTrack = cacheStorage.getString('lastTextTrack') || 'auto';
     const audioTrackIndex = audioTracks.findIndex(

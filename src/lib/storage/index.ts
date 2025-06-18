@@ -27,3 +27,11 @@ export type {ProvidersKeys} from './ProvidersStorage';
 // Export DownloadsStorage
 export {DownloadsStorage, downloadsStorage} from './DownloadsStorage';
 export type {DownloadsKeys} from './DownloadsStorage';
+
+// Export ExtensionStorage
+export {ExtensionStorage, extensionStorage} from './extensionStorage';
+export type {
+  ExtensionKeys,
+  ProviderExtension,
+  ProviderModule,
+} from './extensionStorage';
