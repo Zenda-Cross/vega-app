@@ -104,7 +104,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         }
         const data = await providerManager.getMetaData({
           link: route.params.link,
-          provider,
+          provider: route.params.provider || provider.value,
         });
 
         try {
@@ -121,7 +121,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
         } catch (e) {
           console.log('meta error', e);
         }
-        if (data.linkList?.length === 0 && data?.title && data?.imdbId) {
+        if (data?.linkList?.length === 0 && data?.title && data?.imdbId) {
           setInfoLoading(false);
           return;
         }
