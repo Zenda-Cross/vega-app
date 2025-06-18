@@ -10,7 +10,7 @@ import useThemeStore from '../lib/zustand/themeStore';
 import {MMKV} from '../lib/Mmkv';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Animated, {FadeInDown, SlideInRight} from 'react-native-reanimated';
-import {searchOMDB} from '../services/omdb';
+import {searchOMDB} from '../lib/services/omdb';
 import debounce from 'lodash/debounce';
 import {OMDBResult} from '../types/omdb';
 
