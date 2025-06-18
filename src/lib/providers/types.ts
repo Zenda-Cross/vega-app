@@ -2,7 +2,13 @@ import {AxiosStatic} from 'axios';
 import * as cheerio from 'cheerio';
 import {Content} from '../zustand/contentStore';
 
-// getPosts
+export interface ProvidersList {
+  name: string;
+  value: string;
+  type: string;
+  flag: string;
+}
+
 export interface Post {
   title: string;
   link: string;
