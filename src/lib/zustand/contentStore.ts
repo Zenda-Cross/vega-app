@@ -31,14 +31,20 @@ const useContentStore = create<Content>()(
         installedAt: 0,
         lastUpdated: 0,
       },
-      installedProviders: extensionStorage.getInstalledProviders(),
+      installedProviders: extensionStorage
+        .getInstalledProviders()
+        .sort((a, b) => a.display_name.localeCompare(b.display_name)),
       availableProviders: [],
       activeExtensionProvider: null,
 
       setProvider: (provider: ProviderExtension) => set({provider}),
 
       setInstalledProviders: (providers: ProviderExtension[]) =>
-        set({installedProviders: providers}),
+        set({
+          installedProviders: providers.sort((a, b) =>
+            a.display_name.localeCompare(b.display_name),
+          ),
+        }),
 
       setAvailableProviders: (providers: ProviderExtension[]) =>
         set({availableProviders: providers}),
