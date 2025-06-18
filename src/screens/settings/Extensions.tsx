@@ -25,6 +25,10 @@ import {
   ProviderExtension,
 } from '../../lib/storage/extensionStorage';
 import {extensionManager} from '../../lib/services/ExtensionManager';
+import {
+  updateProvidersService,
+  UpdateInfo,
+} from '../../lib/services/UpdateProviders';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {settingsStorage} from '../../lib/storage';
 import RenderProviderFlagIcon from '../../components/RenderProviderFLagIcon';
@@ -49,14 +53,16 @@ const Extensions = ({navigation}: Props) => {
   const [installingProvider, setInstallingProvider] = useState<string | null>(
     null,
   );
+  const [updatingProvider, setUpdatingProvider] = useState<string | null>(null);
+  const [updateInfos, setUpdateInfos] = useState<UpdateInfo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-
   // Load providers on component mount
   useEffect(() => {
     const initializeExtensions = async () => {
       try {
         await extensionManager.initialize();
         loadProviders();
+        await checkForUpdates();
 
         // Try to fetch latest providers if we don't have any
         if (!availableProviders || availableProviders.length === 0) {
@@ -75,6 +81,54 @@ const Extensions = ({navigation}: Props) => {
     const available = extensionStorage.getAvailableProviders() || [];
     setInstalledProviders(installed);
     setAvailableProviders(available);
+  };
+  const checkForUpdates = async () => {
+    try {
+      const updates = await updateProvidersService.checkForUpdatesManual();
+      setUpdateInfos(updates);
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+    }
+  };
+
+  const handleUpdateProvider = async (provider: ProviderExtension) => {
+    if (!provider || !provider.value) {
+      Alert.alert('Error', 'Invalid provider data');
+      return;
+    }
+
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('effectClick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+
+    setUpdatingProvider(provider.value);
+    try {
+      const success = await updateProvidersService.updateProvider(provider);
+      if (success) {
+        loadProviders();
+        await checkForUpdates();
+
+        Alert.alert(
+          'Success',
+          `${provider.display_name} has been updated successfully!`,
+        );
+
+        // Update the active provider if it was the one being updated
+        if (activeExtensionProvider?.value === provider.value) {
+          setActiveExtensionProvider(provider);
+        }
+      } else {
+        Alert.alert('Error', 'Failed to update provider. Please try again.');
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      Alert.alert('Error', 'Failed to update provider. Please try again.');
+    } finally {
+      setUpdatingProvider(null);
+    }
   };
 
   const handleTabChange = (tab: TabType) => {
@@ -185,6 +239,7 @@ const Extensions = ({navigation}: Props) => {
       setAvailableProviders(providers);
 
       loadProviders();
+      await checkForUpdates();
     } catch (error) {
       console.error('Refresh error:', error);
       Alert.alert(
@@ -204,6 +259,13 @@ const Extensions = ({navigation}: Props) => {
     const isActive = activeExtensionProvider?.value === item.value;
     const isInstalled = extensionStorage.isProviderInstalled(item.value);
     const isInstalling = installingProvider === item.value;
+    const isUpdating = updatingProvider === item.value;
+
+    // Check if update is available for this provider
+    const updateInfo = updateInfos.find(
+      info => info.provider.value === item.value,
+    );
+    const hasUpdate = updateInfo?.hasUpdate || false;
 
     return (
       <View className="bg-tertiary rounded-xl p-4 mb-3 mx-4">
@@ -227,10 +289,14 @@ const Extensions = ({navigation}: Props) => {
             </Text>
             <Text className="text-gray-400 text-sm">
               Version {item.version || 'Unknown'} • {item.type || 'Unknown'}
+              {hasUpdate && updateInfo && (
+                <Text className="text-orange-400">
+                  • Update ({updateInfo.newVersion})
+                </Text>
+              )}
             </Text>
           </View>
         </View>
-
         {/* Action buttons */}
         <View className="flex-row gap-2">
           {activeTab === 'installed' ? (
@@ -250,6 +316,28 @@ const Extensions = ({navigation}: Props) => {
                   {isActive ? 'Active' : 'Set Active'}
                 </Text>
               </TouchableOpacity>
+
+              {/* Update button - only show if update is available */}
+              {hasUpdate && (
+                <TouchableOpacity
+                  onPress={() => handleUpdateProvider(updateInfo!.provider)}
+                  disabled={isUpdating}
+                  className="px-4 py-2 rounded-lg"
+                  style={{
+                    backgroundColor: '#F97316',
+                    opacity: isUpdating ? 0.7 : 1,
+                  }}>
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="update"
+                      size={16}
+                      color="white"
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
 
               {/* Uninstall button */}
               <TouchableOpacity
