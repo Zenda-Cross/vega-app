@@ -1,7 +1,6 @@
 import {View, Text} from 'react-native';
 import React from 'react';
 import useContentStore from '../lib/zustand/contentStore';
-import {providersList} from '../lib/constants';
 import {ScrollView} from 'moti';
 import useThemeStore from '../lib/zustand/themeStore';
 import {TouchableOpacity} from 'react-native';
@@ -14,7 +13,9 @@ const ProviderDrawer = ({
 }: {
   drawerRef: React.RefObject<DrawerLayout>;
 }) => {
-  const {provider, setProvider} = useContentStore(state => state);
+  const {provider, setProvider, installedProviders} = useContentStore(
+    state => state,
+  );
   const {primary} = useThemeStore(state => state);
 
   return (
@@ -30,7 +31,7 @@ const ProviderDrawer = ({
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-2">
-        {providersList.map(item => (
+        {installedProviders.map(item => (
           <TouchableOpacity
             key={item.value}
             onPress={() => {
@@ -52,7 +53,7 @@ const ProviderDrawer = ({
                     ? 'text-white font-medium'
                     : 'text-gray-400'
                 }`}>
-                {item.name}
+                {item.display_name}
               </Text>
             </View>
             {provider.value === item.value && (

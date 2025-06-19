@@ -2,12 +2,11 @@ import {SafeAreaView, ScrollView, ActivityIndicator, Text} from 'react-native';
 import Slider from '../components/Slider';
 import React, {useEffect, useState, useRef} from 'react';
 import {View} from 'moti';
-import {providersList} from '../lib/constants';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
-import {manifest} from '../lib/Manifest';
-import {providersStorage} from '../lib/storage';
 import useThemeStore from '../lib/zustand/themeStore';
+import {providerManager} from '../lib/services/ProviderManager';
+import useContentStore from '../lib/zustand/contentStore';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
@@ -22,15 +21,14 @@ interface SearchPageData {
 
 const SearchResults = ({route}: Props): React.ReactElement => {
   const {primary} = useThemeStore(state => state);
+  const {installedProviders} = useContentStore(state => state);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
   const [emptyResults, setEmptyResults] = useState<SearchPageData[]>([]);
-  const trueLoading = providersList.map(item => {
-    return {name: item.name, value: item.value, isLoading: true};
+  const trueLoading = installedProviders.map(item => {
+    return {name: item.display_name, value: item.value, isLoading: true};
   });
   // Use settingsStorage instead of direct MMKV call
-  const updatedProvidersList = providersList.filter(provider =>
-    providersStorage.isProviderDisabled(provider.value),
-  );
+
   const [loading, setLoading] = useState(trueLoading);
   const abortController = useRef<AbortController | null>(null);
 
@@ -52,15 +50,15 @@ const SearchResults = ({route}: Props): React.ReactElement => {
     const fetchPromises: Promise<void>[] = [];
 
     const getSearchResults = () => {
-      updatedProvidersList.forEach(item => {
+      installedProviders.forEach(item => {
         const fetchPromise = (async () => {
           try {
-            const data = await manifest[item.value].GetSearchPosts(
-              route.params.filter,
-              1,
-              item.value,
-              signal,
-            );
+            const data = await providerManager.getSearchPosts({
+              searchQuery: route.params.filter,
+              page: 1,
+              providerValue: item.value,
+              signal: signal,
+            });
 
             // Skip updating state if request was aborted
             if (signal.aborted) return;
@@ -69,24 +67,24 @@ const SearchResults = ({route}: Props): React.ReactElement => {
               setSearchData(prev => [
                 ...prev,
                 {
-                  title: item.name,
+                  title: item.display_name,
                   Posts: data,
                   filter: route.params.filter,
                   providerValue: item.value,
                   value: item.value,
-                  name: item.name,
+                  name: item.display_name,
                 },
               ]);
             } else {
               setEmptyResults(prev => [
                 ...prev,
                 {
-                  title: item.name,
+                  title: item.display_name,
                   Posts: data || [],
                   filter: route.params.filter,
                   providerValue: item.value,
                   value: item.value,
-                  name: item.name,
+                  name: item.display_name,
                 },
               ]);
             }
@@ -99,7 +97,10 @@ const SearchResults = ({route}: Props): React.ReactElement => {
           } catch (error) {
             if (signal.aborted) return;
 
-            console.error(`Error fetching data for ${item.name}:`, error);
+            console.error(
+              `Error fetching data for ${item.display_name}:`,
+              error,
+            );
             setLoading(prev =>
               prev.map(i =>
                 i.value === item.value

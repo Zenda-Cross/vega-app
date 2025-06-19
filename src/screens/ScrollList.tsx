@@ -7,12 +7,12 @@ import {Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import useContentStore from '../lib/zustand/contentStore';
-import {manifest} from '../lib/Manifest';
 import {MaterialIcons} from '@expo/vector-icons';
 import {settingsStorage} from '../lib/storage';
 import {FlashList} from '@shopify/flash-list';
 import SkeletonLoader from '../components/Skeleton';
 import useThemeStore from '../lib/zustand/themeStore';
+import {providerManager} from '../lib/services/ProviderManager';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ScrollList'>;
 
@@ -73,15 +73,18 @@ const ScrollList = ({route}: Props): React.ReactElement => {
         if (!isMounted.current || signal.aborted) return;
 
         const getNewPosts = route.params.isSearch
-          ? manifest[
-              route.params.providerValue || provider.value
-            ].GetSearchPosts(filter, page, provider.value, signal)
-          : manifest[route.params.providerValue || provider.value].GetHomePosts(
+          ? providerManager.getSearchPosts({
+              searchQuery: filter,
+              page,
+              providerValue: provider.value,
+              signal,
+            })
+          : providerManager.getPosts({
               filter,
               page,
-              provider.value,
+              providerValue: provider.value,
               signal,
-            );
+            });
 
         const newPosts = await getNewPosts;
 

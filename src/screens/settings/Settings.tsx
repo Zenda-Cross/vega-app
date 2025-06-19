@@ -9,10 +9,14 @@ import {
   StatusBar,
 } from 'react-native';
 import React from 'react';
-import {settingsStorage, cacheStorageService} from '../../lib/storage';
+import {
+  settingsStorage,
+  cacheStorageService,
+  ProviderExtension,
+} from '../../lib/storage';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../../lib/zustand/contentStore';
-import {providersList, socialLinks} from '../../lib/constants';
+import {socialLinks} from '../../lib/constants';
 import {
   NativeStackScreenProps,
   NativeStackNavigationProp,
@@ -26,9 +30,9 @@ import {
 } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import {SvgUri} from 'react-native-svg';
 import {MotiView} from 'moti';
 import {useNavigation} from '@react-navigation/native';
+import RenderProviderFlagIcon from '../../components/RenderProviderFLagIcon';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
@@ -36,16 +40,12 @@ const Settings = ({navigation}: Props) => {
   const tabNavigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
   const {primary} = useThemeStore(state => state);
-  const {provider, setProvider} = useContentStore(state => state);
+  const {provider, setProvider, installedProviders} = useContentStore(
+    state => state,
+  );
   const {clearHistory} = useWatchHistoryStore(state => state);
 
-  const renderProviderIcon = (uri: string) => (
-    <Text>
-      <SvgUri width={28} height={28} uri={uri} />
-    </Text>
-  );
-
-  const renderProviderItem = (item: any, isSelected: boolean) => (
+  const renderProviderItem = (item: ProviderExtension, isSelected: boolean) => (
     <TouchableOpacity
       key={item.value}
       onPress={() => {
@@ -70,11 +70,11 @@ const Settings = ({navigation}: Props) => {
         borderColor: isSelected ? primary : '#333333',
       }}>
       <View className="flex-col items-center justify-center h-full p-2">
-        {renderProviderIcon(item.flag)}
+        <RenderProviderFlagIcon type={item.type} />
         <Text
           numberOfLines={1}
           className="text-white text-xs font-medium text-center mt-2">
-          {item.name}
+          {item.display_name}
         </Text>
         {isSelected && (
           <Text style={{position: 'absolute', top: 6, right: 6}}>
@@ -144,7 +144,7 @@ const Settings = ({navigation}: Props) => {
 
         {/* Content provider section */}
         <AnimatedSection delay={100}>
-          <View className="mb-6">
+          <View className="mb-6 flex-col gap-3">
             <Text className="text-gray-400 text-sm mb-1">Content Provider</Text>
             <View className="bg-[#1A1A1A] rounded-xl py-4">
               <ScrollView
@@ -153,10 +153,35 @@ const Settings = ({navigation}: Props) => {
                 contentContainerStyle={{
                   paddingHorizontal: 10,
                 }}>
-                {providersList.map(item =>
+                {installedProviders.map(item =>
                   renderProviderItem(item, provider.value === item.value),
                 )}
+                {installedProviders.length === 0 && (
+                  <Text className="text-gray-500 text-sm">
+                    No providers installed
+                  </Text>
+                )}
               </ScrollView>
+            </View>
+            {/* Extensions */}
+            <View className="bg-[#1A1A1A] rounded-xl overflow-hidden mb-3">
+              <TouchableNativeFeedback
+                onPress={() => navigation.navigate('Extensions')}
+                background={TouchableNativeFeedback.Ripple('#333333', false)}>
+                <View className="flex-row items-center justify-between p-4">
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons
+                      name="puzzle"
+                      size={22}
+                      color={primary}
+                    />
+                    <Text className="text-white ml-3 text-base">
+                      Provider Manager
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="gray" />
+                </View>
+              </TouchableNativeFeedback>
             </View>
           </View>
         </AnimatedSection>
@@ -205,7 +230,7 @@ const Settings = ({navigation}: Props) => {
               </TouchableNativeFeedback>
 
               {/* Disable Providers */}
-              <TouchableNativeFeedback
+              {/* <TouchableNativeFeedback
                 onPress={() => navigation.navigate('DisableProviders')}
                 background={TouchableNativeFeedback.Ripple('#333333', false)}>
                 <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
@@ -217,7 +242,7 @@ const Settings = ({navigation}: Props) => {
                   </View>
                   <Feather name="chevron-right" size={20} color="gray" />
                 </View>
-              </TouchableNativeFeedback>
+              </TouchableNativeFeedback> */}
 
               {/* Watch History */}
               <TouchableNativeFeedback

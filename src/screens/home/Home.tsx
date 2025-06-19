@@ -12,14 +12,8 @@ import {getHomePageData, HomePageData} from '../../lib/getHomepagedata';
 import {mainStorage, cacheStorage} from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
 import useHeroStore from '../../lib/zustand/herostore';
-import {manifest} from '../../lib/Manifest';
-import notifee, {EventDetail, EventType} from '@notifee/react-native';
-import RNFS from 'react-native-fs';
-import useDownloadsStore from '../../lib/zustand/downloadsStore';
 // import {FFmpegKit} from 'ffmpeg-kit-react-native';
 // import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import Touturial from '../../components/Touturial';
-import {downloadFolder} from '../../lib/constants';
 import useThemeStore from '../../lib/zustand/themeStore';
 import ProviderDrawer from '../../components/ProviderDrawer';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -27,7 +21,8 @@ import {HomeStackParamList} from '../../App';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ContinueWatching from '../../components/ContinueWatching';
-import {cancelHlsDownload} from '../../lib/hlsDownloader2';
+import {providerManager} from '../../lib/services/ProviderManager';
+import Tutorial from '../../components/Touturial';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 const Home = ({}: Props) => {
@@ -36,14 +31,13 @@ const Home = ({}: Props) => {
   const [homeData, setHomeData] = useState<HomePageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [backgroundColor, setBackgroundColor] = useState('transparent');
-  const downloadStore = useDownloadsStore(state => state);
   // const recentlyWatched = useWatchHistoryStore(state => state).history;
   // const ShowRecentlyWatched = MMKV.getBool('showRecentlyWatched');
   const drawer = useRef<DrawerLayout>(null);
   const [isDrawerOpen] = useState(false);
   const disableDrawer = mainStorage.getBool('disableDrawer') || false;
 
-  const {provider} = useContentStore(state => state);
+  const {provider, installedProviders} = useContentStore(state => state);
   const {setHero} = useHeroStore(state => state);
 
   // change status bar color
@@ -98,45 +92,13 @@ const Home = ({}: Props) => {
     };
   }, [refreshing, provider]);
 
-  async function actionHandler({
-    type,
-    detail,
-  }: {
-    type: EventType;
-    detail: EventDetail;
-  }) {
-    if (
-      type === EventType.ACTION_PRESS &&
-      detail.pressAction?.id === detail.notification?.data?.fileName
-    ) {
-      console.log('Cancel download');
-      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
-      cancelHlsDownload(detail.notification?.data?.fileName!);
-      // FFMPEGKIT CANCEL
-      // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
-
-      // setAlreadyDownloaded(false);
-      downloadStore.removeActiveDownload(detail.notification?.data?.fileName!);
-      try {
-        const files = await RNFS.readDir(downloadFolder);
-        // Find a file with the given name (without extension)
-        const file = files.find(file => {
-          const nameWithoutExtension = file.name
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          return nameWithoutExtension === detail.notification?.data?.fileName;
-        });
-        if (file) {
-          await RNFS.unlink(file.path);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
+  if (
+    !installedProviders ||
+    installedProviders.length === 0 ||
+    !provider?.value
+  ) {
+    return <Tutorial />;
   }
-  notifee.onBackgroundEvent(actionHandler);
-  notifee.onForegroundEvent(actionHandler);
   return (
     <GestureHandlerRootView>
       <SafeAreaView className="bg-black flex-1">
@@ -161,7 +123,6 @@ const Home = ({}: Props) => {
           renderNavigationView={() =>
             !disableDrawer && <ProviderDrawer drawerRef={drawer} />
           }>
-          <Touturial />
           <StatusBar
             showHideTransition={'fade'}
             animated={true}
@@ -199,15 +160,19 @@ const Home = ({}: Props) => {
                   />
                 )} */}
               {loading
-                ? manifest[provider.value].catalog.map((item, index) => (
-                    <Slider
-                      isLoading={loading}
-                      key={index}
-                      title={item.title}
-                      posts={[]}
-                      filter={item.filter}
-                    />
-                  ))
+                ? providerManager
+                    .getCatalog({
+                      providerValue: provider.value,
+                    })
+                    .map((item, index) => (
+                      <Slider
+                        isLoading={loading}
+                        key={index}
+                        title={item.title}
+                        posts={[]}
+                        filter={item.filter}
+                      />
+                    ))
                 : homeData.map((item, index) => (
                     <Slider
                       isLoading={loading}

@@ -1,39 +1,40 @@
-import {
-  View,
-  Text,
-  Modal,
-  Pressable,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import {View, Text, StatusBar, TouchableOpacity} from 'react-native';
 import React from 'react';
-import {settingsStorage} from '../lib/storage';
 import {useState} from 'react';
-import {providersList} from '../lib/constants';
 import useContentStore from '../lib/zustand/contentStore';
-import {SvgUri} from 'react-native-svg';
-import Animated, {FadeInRight, Layout} from 'react-native-reanimated';
-import {useFocusEffect} from '@react-navigation/native';
+import useThemeStore from '../lib/zustand/themeStore';
+import Animated, {FadeInRight} from 'react-native-reanimated';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {settingsStorage} from '../lib/storage';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import {RootStackParamList} from '../App';
 
-const Touturial = () => {
-  const {setProvider, provider: currentProvider} = useContentStore(
+const Tutorial = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {primary} = useThemeStore(state => state);
+  const {provider: currentProvider, installedProviders} = useContentStore(
     state => state,
   );
-  const [showTouturial, setShowTouturial] = useState<boolean>(
-    settingsStorage.getBool('showTouturial') ?? true,
-  );
+  const [showTutorial, setShowTutorial] = useState<boolean>(!currentProvider);
 
   // Handle default provider setup
   React.useEffect(() => {
-    if (settingsStorage.getBool('showTouturial') === undefined) {
-      const vegaProvider = providersList.find(p => p.name === 'Vega Movie');
-      if (vegaProvider) {
-        setProvider(vegaProvider);
-        settingsStorage.setBool('showTouturial', false);
-        setShowTouturial(false);
-      }
+    if (
+      !currentProvider ||
+      !currentProvider.value ||
+      !installedProviders ||
+      installedProviders.length === 0
+    ) {
+      setShowTutorial(true);
+    } else {
+      setShowTutorial(false);
     }
-  }, []);
+  }, [installedProviders, currentProvider]);
 
   // Handle status bar color
   useFocusEffect(
@@ -48,75 +49,53 @@ const Touturial = () => {
     }, []),
   );
 
-  return (
-    showTouturial && (
-      <View className="absolute inset-0 z-50">
-        <View className="absolute inset-0 bg-[#121212]" />
-        <Modal
-          animationType="fade"
-          visible={true}
-          transparent={true}
-          statusBarTranslucent={true}
-          onRequestClose={() => {}}>
-          <View className="flex-1 bg-[#121212]">
-            <View className="px-6 pt-12 pb-6">
-              <Text className="text-white text-2xl font-bold">
-                Choose Provider
-              </Text>
-              <Text className="text-gray-400 mt-2 text-base">
-                Select your streaming service to continue
-              </Text>
-            </View>
+  const handleGoToExtensions = () => {
+    // Add haptic feedback
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('effectClick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
 
-            <ScrollView
-              className="flex-1 px-4"
-              showsVerticalScrollIndicator={false}>
-              {providersList.map((provider, index) => {
-                const isSelected = currentProvider?.value === provider.value;
-                return (
-                  <Animated.View
-                    key={provider.value}
-                    entering={FadeInRight.delay(index * 100).springify()}
-                    layout={Layout.springify()}>
-                    <Pressable
-                      className={`mb-3 rounded-xl p-3 flex-row items-center border
-                        ${
-                          isSelected
-                            ? 'bg-[#FF6B00]/10 border-[#FF6B00]'
-                            : 'bg-[#1E1E1E] border-gray-800'
-                        }`}
-                      onPress={() => {
-                        setProvider(provider);
-                        settingsStorage.setBool('showTouturial', false);
-                        setShowTouturial(false);
-                      }}>
-                      <View
-                        className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-[#FF6B00]/20' : 'bg-[#2A2A2A]'
-                        }`}>
-                        <SvgUri width="24" height="24" uri={provider.flag} />
-                      </View>
-                      <Text className="text-white text-base font-medium ml-3 flex-1">
-                        {provider.name}
-                      </Text>
-                      {isSelected ? (
-                        <View className="bg-[#FF6B00] p-1 rounded-full">
-                          <Text className="text-white">✓</Text>
-                        </View>
-                      ) : (
-                        <Text className="text-gray-400 text-base">→</Text>
-                      )}
-                    </Pressable>
-                  </Animated.View>
-                );
-              })}
-              <View className="h-6" />
-            </ScrollView>
-          </View>
-        </Modal>
-      </View>
-    )
-  );
+    navigation.navigate('TabStack', {
+      screen: 'SettingsStack',
+      params: {
+        screen: 'Extensions',
+      },
+    });
+  };
+
+  return showTutorial ? (
+    <View className="absolute inset-0 z-50 bg-black/90 justify-center items-center w-full h-full">
+      <Animated.View
+        entering={FadeInRight.duration(500)}
+        className="rounded-2xl p-6 w-full max-w-sm items-center">
+        <MaterialCommunityIcons
+          name="package-variant-closed"
+          size={64}
+          color="#6B7280"
+          style={{marginBottom: 16}}
+        />
+        <Text className="text-white text-2xl font-bold text-center mb-4">
+          No Provider Installed
+        </Text>
+        <Text className="text-gray-400 text-base text-center mb-6 leading-6">
+          You need to install at least one provider to start watching content.
+          Providers give you access to different streaming sources.
+        </Text>
+        <TouchableOpacity
+          onPress={handleGoToExtensions}
+          className="px-6 py-3 rounded-xl w-full flex-row items-center justify-center"
+          style={{backgroundColor: primary}}>
+          <MaterialCommunityIcons name="download" size={20} color="white" />
+          <Text className="text-white font-semibold ml-2 text-base">
+            Install Providers
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  ) : null;
 };
 
-export default Touturial;
+export default Tutorial;

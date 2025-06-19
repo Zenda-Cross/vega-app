@@ -1,6 +1,6 @@
 import {Content} from './zustand/contentStore';
-import {manifest} from './Manifest';
 import {Post} from './providers/types';
+import {providerManager} from './services/ProviderManager';
 
 export interface HomePageData {
   title: string;
@@ -14,21 +14,21 @@ export const getHomePageData = async (
 ): Promise<HomePageData[]> => {
   console.log('activeProvider', activeProvider);
 
-  const fetchPromises = manifest[activeProvider.value].catalog.map(
-    async item => {
-      const data = await manifest[activeProvider.value].GetHomePosts(
-        item.filter,
-        1,
-        activeProvider.value,
+  const fetchPromises = providerManager
+    .getCatalog({providerValue: activeProvider.value})
+    .map(async item => {
+      const data = await providerManager.getPosts({
+        filter: item.filter,
+        page: 1,
+        providerValue: activeProvider.value,
         signal,
-      );
+      });
       return {
         title: item.title,
         Posts: data?.length > 0 ? data : [],
         filter: item.filter,
       };
-    },
-  );
+    });
 
   return Promise.all(fetchPromises);
 };

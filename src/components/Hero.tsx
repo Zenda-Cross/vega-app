@@ -12,11 +12,11 @@ import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
 import {cacheStorage, settingsStorage} from '../lib/storage';
-import {manifest} from '../lib/Manifest';
 import {Info} from '../lib/providers/types';
 import {Feather} from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {DrawerLayout} from 'react-native-gesture-handler';
+import {providerManager} from '../lib/services/ProviderManager';
 
 function Hero({
   isDrawerOpen,
@@ -49,10 +49,10 @@ function Hero({
           if (CacheInfo) {
             info = JSON.parse(CacheInfo);
           } else {
-            info = await manifest[provider.value].GetMetaData(
-              hero.link,
-              provider,
-            );
+            info = await providerManager.getMetaData({
+              link: hero.link,
+              provider: provider.value,
+            });
             cacheStorage.setString(hero.link, JSON.stringify(info));
           }
           // console.warn('info', info);
@@ -122,12 +122,12 @@ function Hero({
                   searchNavigation.navigate('ScrollList', {
                     providerValue: provider.value,
                     filter: e.nativeEvent.text,
-                    title: `${provider.name}`,
+                    title: `${provider.display_name}`,
                     isSearch: true,
                   });
                 }
               }}
-              placeholder={`Search in ${provider.name}`}
+              placeholder={`Search in ${provider.display_name}`}
               className="w-[95%] px-4 h-10 rounded-full border-white border"
             />
           </MotiView>

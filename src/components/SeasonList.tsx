@@ -18,17 +18,22 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
-import {cacheStorage, mainStorage, settingsStorage} from '../lib/storage';
+import {
+  cacheStorage,
+  extensionStorage,
+  mainStorage,
+  settingsStorage,
+} from '../lib/storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {ifExists} from '../lib/file/ifExists';
 import {Dropdown} from 'react-native-element-dropdown';
 import * as IntentLauncher from 'expo-intent-launcher';
-import {manifest} from '../lib/Manifest';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Feather from '@expo/vector-icons/Feather';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
 import {TextInput} from 'react-native';
+import {providerManager} from '../lib/services/ProviderManager';
 
 const SeasonList = ({
   LinkList,
@@ -167,11 +172,12 @@ const SeasonList = ({
     const controller = new AbortController();
 
     try {
-      const stream = await manifest[providerValue].GetStream(
+      const stream = await providerManager.getStream({
         link,
         type,
-        controller.signal,
-      );
+        signal: controller.signal,
+        providerValue,
+      });
 
       console.log('Original ServerLinks', stream); // Log all server links
 
@@ -323,10 +329,12 @@ const SeasonList = ({
           // console.log('cache', JSON.parse(cacheEpisodes as string));
           setEpisodeLoading(false);
         }
-        const episodes = manifest[providerValue].GetEpisodeLinks
-          ? await manifest[providerValue].GetEpisodeLinks(
-              ActiveSeason.episodesLink,
-            )
+        const episodes = extensionStorage.getProviderModules(providerValue)
+          ?.modules.episodes
+          ? await providerManager.getEpisodes({
+              url: ActiveSeason.episodesLink,
+              providerValue: providerValue,
+            })
           : [];
         if (episodes.length === 0) {
           return;

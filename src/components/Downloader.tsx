@@ -7,7 +7,6 @@ import {Stream} from '../lib/providers/types';
 import {MotiView} from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../lib/zustand/contentStore';
-import {manifest} from '../lib/Manifest';
 import * as IntentLauncher from 'expo-intent-launcher';
 import useDownloadsStore from '../lib/zustand/downloadsStore';
 import {downloadManager} from '../lib/downloader';
@@ -18,6 +17,7 @@ import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
 import {settingsStorage} from '../lib/storage';
+import {providerManager} from '../lib/services/ProviderManager';
 
 const DownloadComponent = ({
   link,
@@ -86,17 +86,19 @@ const DownloadComponent = ({
     }
     const getServer = async () => {
       setServerLoading(true);
-      const servers = await manifest[providerValue || provider.value].GetStream(
+      const servers = await providerManager.getStream({
         link,
         type,
-        controller.signal,
-      );
-      const filteredServers = servers.filter(
-        server =>
-          !manifest[
-            providerValue || provider.value
-          ].nonDownloadableServer?.includes(server.server),
-      );
+        signal: controller.signal,
+        providerValue: providerValue || provider.value,
+      });
+      const filteredServers = servers;
+      // .filter(
+      //   server =>
+      //     !manifest[
+      //       providerValue || provider.value
+      //     ].nonDownloadableServer?.includes(server.server),
+      // );
       setServerLoading(false);
       setServers(filteredServers);
     };

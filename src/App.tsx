@@ -16,7 +16,7 @@ import 'react-native-gesture-handler';
 import WebView from './screens/WebView';
 import SearchResults from './screens/SearchResults';
 import * as SystemUI from 'expo-system-ui';
-import DisableProviders from './screens/settings/DisableProviders';
+// import DisableProviders from './screens/settings/DisableProviders';
 import About, {checkForUpdate} from './screens/settings/About';
 import BootSplash from 'react-native-bootsplash';
 import {enableFreeze, enableScreens} from 'react-native-screens';
@@ -34,7 +34,14 @@ import Downloads from './screens/settings/Downloads';
 import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
+import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
+import {updateProvidersService} from './lib/services/UpdateProviders';
+import notifee, {EventDetail, EventType} from '@notifee/react-native';
+import RNFS from 'react-native-fs';
+import {downloadFolder} from './lib/constants';
+import {cancelHlsDownload} from './lib/hlsDownloader2';
+import useDownloadsStore from './lib/zustand/downloadsStore';
 
 enableScreens(true);
 enableFreeze(true);
@@ -119,6 +126,7 @@ export type SettingsStackParamList = {
   Downloads: undefined;
   WatchHistoryStack: undefined;
   SubTitlesPreferences: undefined;
+  Extensions: undefined;
 };
 
 export type TabStackParamList = {
@@ -145,6 +153,63 @@ const App = () => {
   const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
+
+  const downloadStore = useDownloadsStore(state => state);
+
+  useEffect(() => {
+    async function actionHandler({
+      type,
+      detail,
+    }: {
+      type: EventType;
+      detail: EventDetail;
+    }) {
+      if (
+        type === EventType.ACTION_PRESS &&
+        detail.pressAction?.id === detail.notification?.data?.fileName
+      ) {
+        console.log('Cancel download');
+        RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+        cancelHlsDownload(detail.notification?.data?.fileName!);
+        // FFMPEGKIT CANCEL
+        // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+
+        // setAlreadyDownloaded(false);
+        downloadStore.removeActiveDownload(
+          detail.notification?.data?.fileName!,
+        );
+        try {
+          const files = await RNFS.readDir(downloadFolder);
+          // Find a file with the given name (without extension)
+          const file = files.find(file => {
+            const nameWithoutExtension = file.name
+              .split('.')
+              .slice(0, -1)
+              .join('.');
+            return nameWithoutExtension === detail.notification?.data?.fileName;
+          });
+          if (file) {
+            await RNFS.unlink(file.path);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
+    notifee.onBackgroundEvent(actionHandler);
+    notifee.onForegroundEvent(actionHandler);
+  }, []);
+
+  // Initialize update service
+  useEffect(() => {
+    // Start automatic update checking at app startup
+    updateProvidersService.startAutomaticUpdateCheck();
+
+    // Cleanup on unmount
+    return () => {
+      updateProvidersService.stopAutomaticUpdateCheck();
+    };
+  }, []);
 
   function HomeStackScreen() {
     return (
@@ -228,13 +293,14 @@ const App = () => {
           freezeOnBlur: true,
         }}>
         <SettingsStack.Screen name="Settings" component={Settings} />
-        <SettingsStack.Screen
+        {/* <SettingsStack.Screen
           name="DisableProviders"
           component={DisableProviders}
-        />
+        /> */}
         <SettingsStack.Screen name="About" component={About} />
         <SettingsStack.Screen name="Preferences" component={Preferences} />
         <SettingsStack.Screen name="Downloads" component={Downloads} />
+        <SettingsStack.Screen name="Extensions" component={Extensions} />
         <SettingsStack.Screen
           name="WatchHistoryStack"
           component={WatchHistoryStackScreen}
