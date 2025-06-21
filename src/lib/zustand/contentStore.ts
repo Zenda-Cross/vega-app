@@ -26,6 +26,7 @@ const useContentStore = create<Content>()(
         display_name: '',
         type: 'global',
         installed: false,
+        disabled: false,
         version: '0.0.1',
         icon: '',
         installedAt: 0,
