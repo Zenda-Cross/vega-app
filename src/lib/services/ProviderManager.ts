@@ -1,7 +1,7 @@
 import {ToastAndroid} from 'react-native';
 import {providerContext} from '../providers/providerContext';
 import {Catalog, EpisodeLink, Info, Post} from '../providers/types';
-import {extensionStorage} from '../storage';
+import {extensionManager} from './ExtensionManager';
 
 export class ProviderManager {
   private createExecutionContext() {
@@ -66,10 +66,10 @@ export class ProviderManager {
     );
     return executeModule(context, ...args);
   }
-
   getCatalog = ({providerValue}: {providerValue: string}): Catalog[] => {
+    // Use extensionManager which now handles test mode automatically
     const catalogModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.catalog;
+      extensionManager.getProviderModules(providerValue)?.modules.catalog;
     if (!catalogModule) {
       return [];
     }
@@ -84,10 +84,10 @@ export class ProviderManager {
       throw new Error(`Invalid catalog module for provider: ${providerValue}`);
     }
   };
-
   getGenres = ({providerValue}: {providerValue: string}): Catalog[] => {
+    // Use extensionManager which now handles test mode automatically
     const catalogModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.catalog;
+      extensionManager.getProviderModules(providerValue)?.modules.catalog;
     if (!catalogModule) {
       return [];
     }
@@ -102,7 +102,6 @@ export class ProviderManager {
       throw new Error(`Invalid catalog module for provider: ${providerValue}`);
     }
   };
-
   getPosts = async ({
     filter,
     page,
@@ -114,8 +113,9 @@ export class ProviderManager {
     providerValue: string;
     signal: AbortSignal;
   }): Promise<Post[]> => {
+    // Use extensionManager which now handles test mode automatically
     const getPostsModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.posts;
+      extensionManager.getProviderModules(providerValue)?.modules.posts;
     if (!getPostsModule) {
       return [];
     }
@@ -143,7 +143,6 @@ export class ProviderManager {
       throw new Error(`Invalid posts module for provider: ${providerValue}`);
     }
   };
-
   getSearchPosts = async ({
     searchQuery,
     page,
@@ -155,8 +154,9 @@ export class ProviderManager {
     providerValue: string;
     signal: AbortSignal;
   }): Promise<Post[]> => {
+    // Use extensionManager which now handles test mode automatically
     const getPostsModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.posts;
+      extensionManager.getProviderModules(providerValue)?.modules.posts;
     if (!getPostsModule) {
       return [];
     }
@@ -184,7 +184,6 @@ export class ProviderManager {
       throw new Error(`Invalid posts module for provider: ${providerValue}`);
     }
   };
-
   getMetaData = async ({
     link,
     provider,
@@ -192,8 +191,9 @@ export class ProviderManager {
     link: string;
     provider: string;
   }): Promise<Info> => {
+    // Use extensionManager which now handles test mode automatically
     const getMetaDataModule =
-      extensionStorage.getProviderModules(provider)?.modules.meta;
+      extensionManager.getProviderModules(provider)?.modules.meta;
     if (!getMetaDataModule) {
       return {} as Info;
     }
@@ -217,7 +217,6 @@ export class ProviderManager {
       throw new Error(`Invalid meta data module for provider: ${provider}`);
     }
   };
-
   getStream = async ({
     link,
     type,
@@ -229,8 +228,9 @@ export class ProviderManager {
     signal: AbortSignal;
     providerValue: string;
   }): Promise<any[]> => {
+    // Use extensionManager which now handles test mode automatically
     const getStreamModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.stream;
+      extensionManager.getProviderModules(providerValue)?.modules.stream;
     if (!getStreamModule) {
       return [];
     }
@@ -256,7 +256,6 @@ export class ProviderManager {
       throw new Error(`Invalid stream module for provider: ${providerValue}`);
     }
   };
-
   getEpisodes = async ({
     url,
     providerValue,
@@ -264,8 +263,9 @@ export class ProviderManager {
     url: string;
     providerValue: string;
   }): Promise<EpisodeLink[]> => {
+    // Use extensionManager which now handles test mode automatically
     const getEpisodeLinksModule =
-      extensionStorage.getProviderModules(providerValue)?.modules.episodes;
+      extensionManager.getProviderModules(providerValue)?.modules.episodes;
     if (!getEpisodeLinksModule) {
       return [];
     }
