@@ -8,6 +8,7 @@ export interface ProviderExtension {
   display_name: string;
   version: string;
   icon: string;
+  disabled: boolean;
   type: 'global' | 'english' | 'india' | 'italy' | 'anime' | 'drama';
   installed: boolean;
   installedAt?: number;

@@ -80,7 +80,7 @@ const Extensions = ({navigation}: Props) => {
     const installed = extensionStorage.getInstalledProviders() || [];
     const available = extensionStorage.getAvailableProviders() || [];
     setInstalledProviders(installed);
-    setAvailableProviders(available);
+    setAvailableProviders(available.filter(item => item && !item.disabled));
   };
   const checkForUpdates = async () => {
     try {
@@ -383,7 +383,7 @@ const Extensions = ({navigation}: Props) => {
       <StatusBar backgroundColor="black" barStyle="light-content" />
       {/* Header */}
       <View className="flex-row items-center justify-between p-4 border-b border-gray-800">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <AntDesign name="arrowleft" size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-xl font-semibold">Providers</Text>

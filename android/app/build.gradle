@@ -86,8 +86,8 @@ android {
         applicationId 'com.vega'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 130
-        versionName "3.0.0"
+        versionCode 132
+        versionName "3.1.0"
     }
     
     // Add kotlin compiler options to skip metadata version checks
