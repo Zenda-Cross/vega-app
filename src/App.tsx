@@ -42,6 +42,8 @@ import RNFS from 'react-native-fs';
 import {downloadFolder} from './lib/constants';
 import {cancelHlsDownload} from './lib/hlsDownloader2';
 import useDownloadsStore from './lib/zustand/downloadsStore';
+import {QueryClientProvider} from '@tanstack/react-query';
+import {queryClient} from './lib/client';
 
 enableScreens(true);
 enableFreeze(true);
@@ -459,63 +461,65 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView
-        edges={{
-          right: 'off',
-          top: 'off',
-          left: 'off',
-          bottom: 'additive',
-        }}
-        className="flex-1"
-        style={{backgroundColor: 'black'}}>
-        <NavigationContainer
-          onReady={async () => await BootSplash.hide({fade: true})}
-          theme={{
-            fonts: {
-              regular: {
-                fontFamily: 'Inter_400Regular',
-                fontWeight: '400',
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaView
+          edges={{
+            right: 'off',
+            top: 'off',
+            left: 'off',
+            bottom: 'additive',
+          }}
+          className="flex-1"
+          style={{backgroundColor: 'black'}}>
+          <NavigationContainer
+            onReady={async () => await BootSplash.hide({fade: true})}
+            theme={{
+              fonts: {
+                regular: {
+                  fontFamily: 'Inter_400Regular',
+                  fontWeight: '400',
+                },
+                medium: {
+                  fontFamily: 'Inter_500Medium',
+                  fontWeight: '500',
+                },
+                bold: {
+                  fontFamily: 'Inter_700Bold',
+                  fontWeight: '700',
+                },
+                heavy: {
+                  fontFamily: 'Inter_800ExtraBold',
+                  fontWeight: '800',
+                },
               },
-              medium: {
-                fontFamily: 'Inter_500Medium',
-                fontWeight: '500',
+              dark: true,
+              colors: {
+                background: 'transparent',
+                card: 'black',
+                primary: primary,
+                text: 'white',
+                border: 'black',
+                notification: primary,
               },
-              bold: {
-                fontFamily: 'Inter_700Bold',
-                fontWeight: '700',
-              },
-              heavy: {
-                fontFamily: 'Inter_800ExtraBold',
-                fontWeight: '800',
-              },
-            },
-            dark: true,
-            colors: {
-              background: 'transparent',
-              card: 'black',
-              primary: primary,
-              text: 'white',
-              border: 'black',
-              notification: primary,
-            },
-          }}>
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
-              animation: 'ios_from_right',
-              animationDuration: 200,
-              freezeOnBlur: true,
-              contentStyle: {backgroundColor: 'transparent'},
             }}>
-            <Stack.Screen name="TabStack" component={TabStack} />
-            <Stack.Screen
-              name="Player"
-              component={Player}
-              options={{orientation: 'landscape'}}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </SafeAreaView>
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+                animation: 'ios_from_right',
+                animationDuration: 200,
+                freezeOnBlur: true,
+                contentStyle: {backgroundColor: 'transparent'},
+              }}>
+              <Stack.Screen name="TabStack" component={TabStack} />
+              <Stack.Screen
+                name="Player"
+                component={Player}
+                options={{orientation: 'landscape'}}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaView>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 };

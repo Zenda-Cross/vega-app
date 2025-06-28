@@ -117,7 +117,7 @@ export class ProviderManager {
     const getPostsModule =
       extensionManager.getProviderModules(providerValue)?.modules.posts;
     if (!getPostsModule) {
-      return [];
+      throw new Error(`No posts module found for provider: ${providerValue}`);
     }
     try {
       const moduleExports = this.executeModule(
@@ -158,7 +158,7 @@ export class ProviderManager {
     const getPostsModule =
       extensionManager.getProviderModules(providerValue)?.modules.posts;
     if (!getPostsModule) {
-      return [];
+      throw new Error(`No posts module found for provider: ${providerValue}`);
     }
     try {
       const moduleExports = this.executeModule(
@@ -195,7 +195,7 @@ export class ProviderManager {
     const getMetaDataModule =
       extensionManager.getProviderModules(provider)?.modules.meta;
     if (!getMetaDataModule) {
-      return {} as Info;
+      throw new Error(`No meta data module found for provider: ${provider}`);
     }
     try {
       const moduleExports = this.executeModule(
@@ -232,7 +232,7 @@ export class ProviderManager {
     const getStreamModule =
       extensionManager.getProviderModules(providerValue)?.modules.stream;
     if (!getStreamModule) {
-      return [];
+      throw new Error(`No stream module found for provider: ${providerValue}`);
     }
     try {
       const moduleExports = this.executeModule(
@@ -267,7 +267,9 @@ export class ProviderManager {
     const getEpisodeLinksModule =
       extensionManager.getProviderModules(providerValue)?.modules.episodes;
     if (!getEpisodeLinksModule) {
-      return [];
+      throw new Error(
+        `No episode links module found for provider: ${providerValue}`,
+      );
     }
     try {
       const moduleExports = this.executeModule(
