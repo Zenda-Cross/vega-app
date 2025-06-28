@@ -1,8 +1,12 @@
-import axios from 'axios';
 import {Image, MotiView, View} from 'moti';
-import React, {useEffect, useState} from 'react';
-import {Keyboard, Pressable, Text, TextInput} from 'react-native';
-import {TouchableOpacity} from 'react-native';
+import React, {memo, useState, useCallback} from 'react';
+import {
+  Keyboard,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome';
 import {useNavigation} from '@react-navigation/native';
@@ -11,81 +15,120 @@ import {HomeStackParamList, SearchStackParamList} from '../App';
 import useContentStore from '../lib/zustand/contentStore';
 import useHeroStore from '../lib/zustand/herostore';
 import {Skeleton} from 'moti/skeleton';
-import {cacheStorage, settingsStorage} from '../lib/storage';
-import {Info} from '../lib/providers/types';
+import {settingsStorage} from '../lib/storage';
 import {Feather} from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {DrawerLayout} from 'react-native-gesture-handler';
-import {providerManager} from '../lib/services/ProviderManager';
+import {useHeroMetadata} from '../lib/hooks/useHomePageData';
 
-function Hero({
-  isDrawerOpen,
-  drawerRef,
-}: {
+interface HeroProps {
   isDrawerOpen: boolean;
   drawerRef: React.RefObject<DrawerLayout>;
-}) {
-  const [post, setPost] = useState<any>();
-  const [loading, setLoading] = useState(true);
+}
+
+const Hero = memo(({isDrawerOpen, drawerRef}: HeroProps) => {
   const [searchActive, setSearchActive] = useState(false);
   const {provider} = useContentStore(state => state);
   const {hero} = useHeroStore(state => state);
-  const [showHamburgerMenu] = useState(settingsStorage.showHamburgerMenu());
-  const [isDrawerDisabled] = useState(
-    settingsStorage.getBool('disableDrawer') || false,
+
+  // Memoize settings to prevent re-renders
+  const [showHamburgerMenu] = useState(() =>
+    settingsStorage.showHamburgerMenu(),
   );
+  const [isDrawerDisabled] = useState(
+    () => settingsStorage.getBool('disableDrawer') || false,
+  );
+
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const searchNavigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      if (hero?.link) {
-        const CacheInfo = cacheStorage.getString(hero.link);
-        try {
-          let info: Info;
-          if (CacheInfo) {
-            info = JSON.parse(CacheInfo);
-          } else {
-            info = await providerManager.getMetaData({
-              link: hero.link,
-              provider: provider.value,
-            });
-            cacheStorage.setString(hero.link, JSON.stringify(info));
-          }
-          // console.warn('info', info);
-          if (info.imdbId) {
-            const data = await axios(
-              `https://v3-cinemeta.strem.io/meta/${info.type}/${info.imdbId}.json`,
-            );
-            // console.log('streamiodata', data.data?.meta);
-            setPost(data.data?.meta);
-          } else {
-            setPost(info);
-          }
-        } catch (error) {
-          console.log('hero fetch error', error);
-        }
-        setLoading(false);
-      }
-      // else {
-      //   const data = await axios(
-      //     'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
-      //   );
-      //   const list = data.data.metas?.slice(0, 5);
-      //   setPost(list[Math.floor(Math.random() * list.length)]);
-      // }
-    };
-    fetchPosts();
-  }, [hero]);
+  // Use React Query for hero metadata
+  const {
+    data: heroData,
+    isLoading,
+    error,
+  } = useHeroMetadata(hero?.link || '', provider.value);
 
-  Keyboard.addListener('keyboardDidHide', () => {
+  // Memoized keyboard handler
+  const handleKeyboardHide = useCallback(() => {
     setSearchActive(false);
-  });
+  }, []);
+
+  // Set up keyboard listener once
+  React.useEffect(() => {
+    const subscription = Keyboard.addListener(
+      'keyboardDidHide',
+      handleKeyboardHide,
+    );
+    return () => subscription?.remove();
+  }, [handleKeyboardHide]);
+
+  // Memoized handlers
+  const handleSearchSubmit = useCallback(
+    (text: string) => {
+      if (text.startsWith('https://')) {
+        navigation.navigate('Info', {link: text});
+      } else {
+        searchNavigation.navigate('ScrollList', {
+          providerValue: provider.value,
+          filter: text,
+          title: provider.display_name,
+          isSearch: true,
+        });
+      }
+    },
+    [navigation, searchNavigation, provider.value, provider.display_name],
+  );
+
+  const handlePlayPress = useCallback(() => {
+    if (hero?.link) {
+      navigation.navigate('Info', {
+        link: hero.link,
+        provider: provider.value,
+        poster: heroData?.image || heroData?.poster || heroData?.background,
+      });
+    }
+  }, [navigation, hero?.link, provider.value, heroData]);
+
+  const handleImageError = useCallback(() => {
+    // Handle image error silently - React Query will manage retries
+    console.warn('Hero image failed to load');
+  }, []);
+
+  // Memoized image source
+  const imageSource = React.useMemo(() => {
+    const fallbackImage =
+      'https://placehold.jp/24/363636/ffffff/500x500.png?text=Vega';
+    if (!heroData) {
+      return {uri: fallbackImage};
+    }
+
+    return {
+      uri:
+        heroData.background ||
+        heroData.image ||
+        heroData.poster ||
+        fallbackImage,
+    };
+  }, [heroData]);
+
+  // Memoized genres
+  const displayGenres = React.useMemo(() => {
+    if (!heroData) {
+      return [];
+    }
+    return (heroData.genre || heroData.tags || []).slice(0, 3);
+  }, [heroData]);
+
+  if (error) {
+    console.error('Hero metadata error:', error);
+  }
+
   return (
     <View className="relative h-[55vh]">
+      {/* Header Controls */}
       <View className="absolute pt-3 w-full top-6 px-3 mt-2 z-30 flex-row justify-between items-center">
         {!searchActive && (
           <View
@@ -96,13 +139,12 @@ function Hero({
             }`}>
             <Pressable
               className={`${isDrawerOpen ? 'opacity-0' : 'opacity-100'}`}
-              onPress={() => {
-                drawerRef.current?.openDrawer();
-              }}>
+              onPress={() => drawerRef.current?.openDrawer()}>
               <Ionicons name="menu-sharp" size={27} color="white" />
             </Pressable>
           </View>
         )}
+
         {searchActive && (
           <MotiView
             from={{opacity: 0, scale: 0.5}}
@@ -113,112 +155,72 @@ function Hero({
             <TextInput
               onBlur={() => setSearchActive(false)}
               autoFocus={true}
-              onSubmitEditing={e => {
-                if (e.nativeEvent.text.startsWith('https://')) {
-                  navigation.navigate('Info', {
-                    link: e.nativeEvent.text,
-                  });
-                } else {
-                  searchNavigation.navigate('ScrollList', {
-                    providerValue: provider.value,
-                    filter: e.nativeEvent.text,
-                    title: `${provider.display_name}`,
-                    isSearch: true,
-                  });
-                }
-              }}
+              onSubmitEditing={e => handleSearchSubmit(e.nativeEvent.text)}
               placeholder={`Search in ${provider.display_name}`}
               className="w-[95%] px-4 h-10 rounded-full border-white border"
+              placeholderTextColor="#999"
             />
           </MotiView>
         )}
+
         {!searchActive && (
-          <Pressable className="" onPress={() => setSearchActive(true)}>
+          <Pressable onPress={() => setSearchActive(true)}>
             <Feather name="search" size={24} color="white" />
           </Pressable>
         )}
       </View>
 
-      <Skeleton show={loading} colorMode="dark">
+      {/* Hero Image */}
+      <Skeleton show={isLoading} colorMode="dark">
         <Image
-          source={{
-            uri:
-              post?.background ||
-              post?.image ||
-              post?.poster ||
-              'https://placehold.jp/24/363636/ffffff/500x500.png?text=Vega',
-          }}
-          onError={() =>
-            setPost((prev: any) => {
-              return {
-                ...prev,
-                background: '',
-              };
-            })
-          }
+          source={imageSource}
+          onError={handleImageError}
           className="h-full w-full"
           style={{resizeMode: 'cover'}}
         />
       </Skeleton>
+
+      {/* Hero Content */}
       <View className="absolute bottom-12 w-full z-20 px-6">
-        {!loading && (
+        {!isLoading && heroData && (
           <View className="gap-4 items-center">
-            {post?.logo ? (
+            {/* Title/Logo */}
+            {heroData.logo ? (
               <Image
-                onError={() => {
-                  setPost((prev: any) => {
-                    return {
-                      ...prev,
-                      logo: '',
-                    };
-                  });
-                }}
-                source={{uri: post?.logo}}
+                source={{uri: heroData.logo}}
                 style={{
                   width: 200,
                   height: 100,
                   resizeMode: 'contain',
                 }}
+                onError={() => console.warn('Logo failed to load')}
               />
             ) : (
               <Text className="text-white text-center text-2xl font-bold">
-                {post?.name || post?.title}
+                {heroData.name || heroData.title}
               </Text>
             )}
 
-            <View className="flex-row items-center justify-center space-x-2">
-              {post?.genre?.slice(0, 3)?.map((item: string, index: number) => {
-                return (
+            {/* Genres */}
+            {displayGenres.length > 0 && (
+              <View className="flex-row items-center justify-center space-x-2">
+                {displayGenres.map((genre: string, index: number) => (
                   <Text
                     key={index}
                     className="text-white text-sm font-semibold">
-                    • {item}
+                    • {genre}
                   </Text>
-                );
-              })}
-              {!post?.genre &&
-                post?.tags?.slice(0, 3)?.map((item: string, index: number) => {
-                  return (
-                    <Text
-                      key={index}
-                      className="text-white text-sm font-semibold">
-                      • {item}
-                    </Text>
-                  );
-                })}
-            </View>
+                ))}
+              </View>
+            )}
 
+            {/* Play Button */}
             <View className="flex-1 items-center justify-center">
               {hero?.link && (
                 <TouchableOpacity
                   className="bg-white px-10 py-2 rounded-lg flex-row items-center space-x-2"
-                  onPress={() => {
-                    navigation.navigate('Info', {
-                      link: hero.link,
-                      provider: provider.value,
-                      poster: post?.image || post?.poster || post?.background,
-                    });
-                  }}>
+                  onPress={handlePlayPress}
+                  activeOpacity={0.8}>
                   <FontAwesome6 name="play" size={20} color="black" />
                   <Text className="text-black font-bold text-lg">Play</Text>
                 </TouchableOpacity>
@@ -226,13 +228,34 @@ function Hero({
             </View>
           </View>
         )}
+
+        {/* Loading state */}
+        {isLoading && (
+          <View className="items-center">
+            <Skeleton show={true} height={45} width={140} colorMode="dark" />
+          </View>
+        )}
+
+        {/* Error state */}
+        {error && !isLoading && (
+          <View className="items-center">
+            <Text className="text-white text-center text-xl font-bold">
+              {hero?.title || 'Content Unavailable'}
+            </Text>
+            <Text className="text-gray-400 text-sm mt-2">
+              Unable to load details
+            </Text>
+          </View>
+        )}
       </View>
 
+      {/* Gradients */}
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.8)', 'black']}
         locations={[0, 0.7, 1]}
         className="absolute h-full w-full"
       />
+
       {searchActive && (
         <LinearGradient
           colors={['black', 'transparent']}
@@ -242,6 +265,8 @@ function Hero({
       )}
     </View>
   );
-}
+});
+
+Hero.displayName = 'Hero';
 
 export default Hero;

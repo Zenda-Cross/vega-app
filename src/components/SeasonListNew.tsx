@@ -77,41 +77,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
   const {addItem} = useWatchHistoryStore(state => state);
   const {fetchStreams} = useStreamData();
 
-  // Early return if no LinkList provided
-  if (!LinkList || LinkList.length === 0) {
-    return (
-      <View className="p-4">
-        <Text className="text-white text-center">No content available</Text>
-      </View>
-    );
-  }
-
   // Memoized initial active season
   const [activeSeason, setActiveSeason] = useState<Link>(() => {
-    if (!LinkList || LinkList.length === 0) {
-      return {} as Link;
-    }
-
     const cached = cacheStorage.getString(
       `ActiveSeason${metaTitle + providerValue}`,
     );
-
-    if (cached) {
-      try {
-        const parsedSeason = JSON.parse(cached);
-        // Verify the cached season still exists in LinkList
-        const seasonExists = LinkList.find(
-          link => link.title === parsedSeason.title,
-        );
-        if (seasonExists) {
-          return parsedSeason;
-        }
-      } catch (error) {
-        console.warn('Failed to parse cached season:', error);
-      }
-    }
-
-    return LinkList[0];
+    return cached ? JSON.parse(cached) : LinkList[0];
   });
 
   // React Query for episodes
@@ -145,19 +116,12 @@ const SeasonList: React.FC<SeasonListProps> = ({
 
   // Memoized filtering and sorting logic for episodes
   const filteredAndSortedEpisodes = useMemo(() => {
-    if (!episodeList || !Array.isArray(episodeList)) {
-      return [];
-    }
-
-    let episodes = episodeList.filter(
-      episode => episode && episode.title && episode.link,
-    );
+    let episodes = episodeList;
 
     // Apply search filter
     if (searchText.trim()) {
-      episodes = episodes.filter(
-        episode =>
-          episode?.title?.toLowerCase().includes(searchText.toLowerCase()),
+      episodes = episodes.filter(episode =>
+        episode.title.toLowerCase().includes(searchText.toLowerCase()),
       );
     }
 
@@ -171,21 +135,16 @@ const SeasonList: React.FC<SeasonListProps> = ({
 
   // Memoized direct links processing
   const filteredAndSortedDirectLinks = useMemo(() => {
-    if (
-      !activeSeason?.directLinks ||
-      !Array.isArray(activeSeason.directLinks)
-    ) {
+    if (!activeSeason?.directLinks) {
       return [];
     }
 
-    let links = activeSeason.directLinks.filter(
-      link => link && link.title && link.link,
-    );
+    let links = activeSeason.directLinks;
 
     // Apply search filter
     if (searchText.trim()) {
-      links = links.filter(
-        link => link?.title?.toLowerCase().includes(searchText.toLowerCase()),
+      links = links.filter(link =>
+        link.title.toLowerCase().includes(searchText.toLowerCase()),
       );
     }
 
@@ -200,10 +159,8 @@ const SeasonList: React.FC<SeasonListProps> = ({
   // Memoized title alignment
   const titleAlignment = useMemo(() => {
     const hasLongTitles =
-      filteredAndSortedEpisodes.some(ep => ep?.title && ep.title.length > 27) ||
-      filteredAndSortedDirectLinks.some(
-        link => link?.title && link.title.length > 27,
-      );
+      filteredAndSortedEpisodes.some(ep => ep.title.length > 27) ||
+      filteredAndSortedDirectLinks.some(link => link.title.length > 27);
 
     return hasLongTitles ? 'justify-start' : 'justify-center';
   }, [filteredAndSortedEpisodes, filteredAndSortedDirectLinks]);
@@ -319,7 +276,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
       const file = (
         metaTitle +
         seasonTitle +
-        episodeData[linkIndex]?.title
+        episodeData[linkIndex].title
       ).replaceAll(/[^a-zA-Z0-9]/g, '_');
 
       const externalPlayer = settingsStorage.getBool('useExternalPlayer');
@@ -415,11 +372,6 @@ const SeasonList: React.FC<SeasonListProps> = ({
   // Memoized episode render item
   const renderEpisodeItem = useCallback(
     ({item, index}: {item: EpisodeLink; index: number}) => {
-      if (!item || !item.link || !item.title) {
-        console.warn('Invalid episode item at index', index, item);
-        return null; // Skip rendering if item is invalid
-      }
-
       return (
         <View
           key={item.link + index}
@@ -439,7 +391,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   type: 'series',
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
-                  seasonTitle: activeSeason?.title || '',
+                  seasonTitle: activeSeason.title,
                   episodeData: filteredAndSortedEpisodes,
                 })
               }
@@ -462,7 +414,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               fileName={(
                 metaTitle +
-                (activeSeason?.title || '') +
+                activeSeason.title +
                 item.title
               ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
@@ -476,7 +428,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
       titleAlignment,
       playHandler,
       metaTitle,
-      activeSeason?.title,
+      activeSeason.title,
       filteredAndSortedEpisodes,
       onLongPressHandler,
       primary,
@@ -487,11 +439,6 @@ const SeasonList: React.FC<SeasonListProps> = ({
   // Memoized direct link render item
   const renderDirectLinkItem = useCallback(
     ({item, index}: {item: any; index: number}) => {
-      if (!item || !item.link || !item.title) {
-        console.warn('Invalid direct link item at index', index, item);
-        return null; // Skip rendering if item is invalid
-      }
-
       return (
         <View
           key={item.link + index}
@@ -511,7 +458,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   type: item.type || 'series',
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
-                  seasonTitle: activeSeason?.title || '',
+                  seasonTitle: activeSeason.title,
                   episodeData: filteredAndSortedDirectLinks,
                 })
               }
@@ -537,7 +484,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               fileName={(
                 metaTitle +
-                (activeSeason?.title || '') +
+                activeSeason.title +
                 item.title
               ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
@@ -551,7 +498,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
       titleAlignment,
       playHandler,
       metaTitle,
-      activeSeason?.title,
+      activeSeason.title,
       activeSeason?.directLinks,
       filteredAndSortedDirectLinks,
       onLongPressHandler,
@@ -621,7 +568,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
                 className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${
                   activeSeason === item ? 'bg-quaternary' : ''
                 }`}>
-                <Text className="text-white">{item?.title || 'Unknown'}</Text>
+                <Text className="text-white">{item.title}</Text>
               </View>
             )}
           />
@@ -705,13 +652,13 @@ const SeasonList: React.FC<SeasonListProps> = ({
               className={`px-3 py-2 bg-black text-white flex-row justify-start items-center border-b border-gray-500 text-center ${
                 activeSeason === item ? 'bg-quaternary' : ''
               }`}>
-              <Text className="text-white">{item?.title || 'Unknown'}</Text>
+              <Text className="text-white">{item.title}</Text>
             </View>
           )}
         />
       ) : (
         <Text className="text-red-600 text-lg font-semibold px-2">
-          {LinkList[0]?.title || 'Unknown Season'}
+          {LinkList[0]?.title}
         </Text>
       )}
 
