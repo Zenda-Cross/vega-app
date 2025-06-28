@@ -66,16 +66,52 @@ export async function gdFlixExtracter(link: string, signal: AbortSignal) {
     //   console.log('ResumeBot link not found', err);
     // }
 
+    // r2
+    try {
+      const r2Link =
+        $drive('..btn.btn-outline-success').attr('href') ||
+        $drive('a:contains("CLOUD DOWNLOAD")').attr('href') ||
+        '';
+      console.log('r2Link', r2Link);
+      if (r2Link) {
+        streamLinks.push({
+          server: 'R2',
+          link: r2Link,
+          type: 'mkv',
+        });
+      }
+    } catch (err) {
+      console.log('R2 link not found', err);
+    }
+
+    // pixel drain
+    try {
+      const pixelDrainLink = $drive('.btn.btn-success').attr('href') || '';
+      console.log('pixelDrainLink', pixelDrainLink);
+      if (pixelDrainLink) {
+        streamLinks.push({
+          server: 'PixelDrain',
+          link: pixelDrainLink,
+          type: 'mkv',
+        });
+      }
+    } catch (err) {
+      console.log('PixelDrain link not found', err);
+    }
     /// resume cloud
     try {
       const baseUrl = link.split('/').slice(0, 3).join('/');
       const resumeDrive = $drive('.btn-secondary').attr('href') || '';
       console.log('resumeDrive', resumeDrive);
-      if (resumeDrive.includes('indexbot')) {
+      const hostname = resumeDrive.split('/')[2] || '';
+      console.log('hostname', hostname);
+      if (resumeDrive.includes('indexbot') || hostname.includes('bot')) {
         const resumeBotRes = await axios.get(resumeDrive, {headers});
+        console.log('resumeBotRes', resumeBotRes.data);
         const resumeBotToken = resumeBotRes.data.match(
           /formData\.append\('token', '([a-f0-9]+)'\)/,
         )[1];
+        console.log('resumeBotToken', resumeBotToken);
         const resumeBotBody = new FormData();
         resumeBotBody.append('token', resumeBotToken);
         const resumeBotPath = resumeBotRes.data.match(
@@ -122,7 +158,7 @@ export async function gdFlixExtracter(link: string, signal: AbortSignal) {
         }
       }
     } catch (err) {
-      console.log('Resume link not found');
+      console.log('Resume link not found', err);
     }
 
     //instant link
