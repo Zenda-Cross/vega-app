@@ -21,7 +21,7 @@ const ScrollList = ({route}: Props): React.ReactElement => {
   const navigation =
     useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
   const [posts, setPosts] = useState<Post[]>([]);
-  const {filter} = route.params;
+  const {filter, providerValue} = route.params;
   const [page, setPage] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEnd, setIsEnd] = useState<boolean>(false);
@@ -76,13 +76,13 @@ const ScrollList = ({route}: Props): React.ReactElement => {
           ? providerManager.getSearchPosts({
               searchQuery: filter,
               page,
-              providerValue: provider.value,
+              providerValue: providerValue || provider.value,
               signal,
             })
           : providerManager.getPosts({
               filter,
               page,
-              providerValue: provider.value,
+              providerValue: providerValue || provider.value,
               signal,
             });
 
