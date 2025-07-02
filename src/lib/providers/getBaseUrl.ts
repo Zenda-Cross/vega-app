@@ -1,4 +1,4 @@
-import { cacheStorageService } from '../storage';
+import {cacheStorageService} from '../storage';
 
 // 1 hour
 const expireTime = 60 * 60 * 1000;
@@ -8,15 +8,11 @@ export const getBaseUrl = async (providerValue: string) => {
     let baseUrl = '';
     const cacheKey = 'CacheBaseUrl' + providerValue;
     const timeKey = 'baseUrlTime' + providerValue;
-    
+
     const cachedUrl = cacheStorageService.getString(cacheKey);
     const cachedTime = cacheStorageService.getObject<number>(timeKey);
-    
-    if (
-      cachedUrl && 
-      cachedTime && 
-      Date.now() - cachedTime < expireTime
-    ) {
+
+    if (cachedUrl && cachedTime && Date.now() - cachedTime < expireTime) {
       baseUrl = cachedUrl;
     } else {
       const baseUrlRes = await fetch(
