@@ -11,11 +11,13 @@ export class ExtensionManager {
   private static instance: ExtensionManager;
   private baseUrl =
     'https://raw.githubusercontent.com/Zenda-Cross/vega-providers/refs/heads/main';
-  private baseUrlTestMode = 'http://localhost:3001';
+
+  private testMode = false;
+  private baseUrlTestMode = '';
+
   private manifestUrl = `${this.baseUrl}/manifest.json`;
 
   // Test mode configuration
-  private testMode = false; // process.env.NODE_ENV === 'development'
   private testModuleCacheExpiry = 200000;
   private testModuleCache = new Map<
     string,
@@ -89,6 +91,9 @@ export class ExtensionManager {
     providerValue: string,
     version: string,
   ): Promise<ProviderModule> {
+    if (this.testMode) {
+      return this.downloadTestProviderModule(providerValue);
+    }
     try {
       const requiredFiles = ['posts', 'meta', 'stream', 'catalog'];
       const optionalFiles = ['episodes'];
