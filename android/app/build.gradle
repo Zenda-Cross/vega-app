@@ -86,8 +86,8 @@ android {
         applicationId 'com.vega'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 132
-        versionName "3.1.0"
+        versionCode 134
+        versionName "3.1.1"
     }
     
     // Add kotlin compiler options to skip metadata version checks
@@ -98,11 +98,15 @@ android {
     
     signingConfigs {
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
-                storeFile file(MYAPP_UPLOAD_STORE_FILE)
-                storePassword MYAPP_UPLOAD_STORE_PASSWORD
-                keyAlias MYAPP_UPLOAD_KEY_ALIAS
-                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            def envStoreFile = System.getenv("MYAPP_UPLOAD_STORE_FILE")
+            def envStorePassword = System.getenv("MYAPP_UPLOAD_STORE_PASSWORD")
+            def envKeyAlias = System.getenv("MYAPP_UPLOAD_KEY_ALIAS")
+            def envKeyPassword = System.getenv("MYAPP_UPLOAD_KEY_PASSWORD")
+            if (envStoreFile && envStorePassword && envKeyAlias && envKeyPassword) {
+                storeFile file(envStoreFile)
+                storePassword envStorePassword
+                keyAlias envKeyAlias
+                keyPassword envKeyPassword
             }
         }
         debug {
@@ -115,6 +119,8 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            debuggable true
+            minifyEnabled false
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
