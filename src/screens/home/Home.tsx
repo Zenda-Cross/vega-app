@@ -129,7 +129,7 @@ const Home = ({}: Props) => {
     }
 
     return (
-      <View className="p-4 m-4 bg-red-500/20 rounded-lg">
+      <View className="p-4 m-4 bg-red-500/20 rounded-lg min-h-64 flex-1 justify-center items-center">
         <Text className="text-red-400 text-center font-medium">
           {error?.message || 'Failed to load content'}
         </Text>
