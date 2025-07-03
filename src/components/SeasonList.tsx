@@ -81,7 +81,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
   if (!LinkList || LinkList.length === 0) {
     return (
       <View className="p-4">
-        <Text className="text-white text-center">No content available</Text>
+        <Text className="text-white text-center">No Streams Available</Text>
       </View>
     );
   }
@@ -123,7 +123,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
   } = useEpisodes(
     activeSeason?.episodesLink,
     providerValue,
-    !!activeSeason?.episodesLink,
+    activeSeason?.episodesLink ? true : false,
   );
 
   // UI state
