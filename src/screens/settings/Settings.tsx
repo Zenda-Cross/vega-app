@@ -8,7 +8,7 @@ import {
   Dimensions,
   StatusBar,
 } from 'react-native';
-import React from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {
   settingsStorage,
   cacheStorageService,
@@ -30,7 +30,7 @@ import {
 } from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
-import {MotiView} from 'moti';
+import Animated, {FadeInDown, FadeInUp, Layout} from 'react-native-reanimated';
 import {useNavigation} from '@react-navigation/native';
 import RenderProviderFlagIcon from '../../components/RenderProviderFLagIcon';
 
@@ -45,45 +45,81 @@ const Settings = ({navigation}: Props) => {
   );
   const {clearHistory} = useWatchHistoryStore(state => state);
 
-  const renderProviderItem = (item: ProviderExtension, isSelected: boolean) => (
-    <TouchableOpacity
-      key={item.value}
-      onPress={() => {
-        setProvider(item);
-        // Add haptic feedback
-        if (settingsStorage.isHapticFeedbackEnabled()) {
-          ReactNativeHapticFeedback.trigger('virtualKey', {
-            enableVibrateFallback: true,
-            ignoreAndroidSystemSettings: false,
-          });
-        }
-        // Navigate to home screen
-        tabNavigation.navigate('HomeStack');
-      }}
-      className={`mr-3 rounded-lg ${
-        isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
-      }`}
-      style={{
-        width: Dimensions.get('window').width * 0.3, // Shows 2.5 items
-        height: 65, // Increased height
-        borderWidth: 1.5,
-        borderColor: isSelected ? primary : '#333333',
-      }}>
-      <View className="flex-col items-center justify-center h-full p-2">
-        <RenderProviderFlagIcon type={item.type} />
-        <Text
-          numberOfLines={1}
-          className="text-white text-xs font-medium text-center mt-2">
-          {item.display_name}
-        </Text>
-        {isSelected && (
-          <Text style={{position: 'absolute', top: 6, right: 6}}>
-            <MaterialIcons name="check-circle" size={16} color={primary} />
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
+  const handleProviderSelect = useCallback(
+    (item: ProviderExtension) => {
+      setProvider(item);
+      // Add haptic feedback
+      if (settingsStorage.isHapticFeedbackEnabled()) {
+        ReactNativeHapticFeedback.trigger('virtualKey', {
+          enableVibrateFallback: true,
+          ignoreAndroidSystemSettings: false,
+        });
+      }
+      // Navigate to home screen
+      tabNavigation.navigate('HomeStack');
+    },
+    [setProvider, tabNavigation],
   );
+
+  const renderProviderItem = useCallback(
+    (item: ProviderExtension, isSelected: boolean) => (
+      <TouchableOpacity
+        key={item.value}
+        onPress={() => handleProviderSelect(item)}
+        className={`mr-3 rounded-lg ${
+          isSelected ? 'bg-[#333333]' : 'bg-[#262626]'
+        }`}
+        style={{
+          width: Dimensions.get('window').width * 0.3, // Shows 2.5 items
+          height: 65, // Increased height
+          borderWidth: 1.5,
+          borderColor: isSelected ? primary : '#333333',
+        }}>
+        <View className="flex-col items-center justify-center h-full p-2">
+          <RenderProviderFlagIcon type={item.type} />
+          <Text
+            numberOfLines={1}
+            className="text-white text-xs font-medium text-center mt-2">
+            {item.display_name}
+          </Text>
+          {isSelected && (
+            <Text style={{position: 'absolute', top: 6, right: 6}}>
+              <MaterialIcons name="check-circle" size={16} color={primary} />
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    ),
+    [handleProviderSelect, primary],
+  );
+
+  const providersList = useMemo(
+    () =>
+      installedProviders.map(item =>
+        renderProviderItem(item, provider.value === item.value),
+      ),
+    [installedProviders, provider.value, renderProviderItem],
+  );
+
+  const clearCacheHandler = useCallback(() => {
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('virtualKey', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+    cacheStorageService.clearAll();
+  }, []);
+
+  const clearHistoryHandler = useCallback(() => {
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('virtualKey', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+    clearHistory();
+  }, [clearHistory]);
 
   const AnimatedSection = ({
     delay,
@@ -92,55 +128,30 @@ const Settings = ({navigation}: Props) => {
     delay: number;
     children: React.ReactNode;
   }) => (
-    <MotiView
-      from={{opacity: 0, translateY: 20}}
-      animate={{opacity: 1, translateY: 0}}
-      transition={{
-        translateY: {
-          delay,
-          type: 'timing',
-          duration: 500,
-        },
-        opacity: {
-          delay,
-          type: 'timing',
-          duration: 500,
-        },
-      }}
-      style={{
-        opacity: 1,
-      }}>
+    <Animated.View
+      entering={FadeInDown.delay(delay).springify()}
+      layout={Layout.springify()}>
       {children}
-    </MotiView>
+    </Animated.View>
   );
 
   return (
-    <ScrollView
+    <Animated.ScrollView
       className="w-full h-full bg-black"
       showsVerticalScrollIndicator={false}
       bounces={true}
       overScrollMode="always"
+      entering={FadeInUp.springify()}
+      layout={Layout.springify()}
       contentContainerStyle={{
         paddingTop: StatusBar.currentHeight || 0,
         paddingBottom: 24,
         flexGrow: 1,
       }}>
       <View className="p-5">
-        <MotiView
-          from={{opacity: 0, scale: 0.9}}
-          animate={{opacity: 1, scale: 1}}
-          transition={{
-            opacity: {
-              type: 'timing',
-              duration: 400,
-            },
-            scale: {
-              type: 'timing',
-              duration: 400,
-            },
-          }}>
+        <Animated.View entering={FadeInUp.springify()}>
           <Text className="text-2xl font-bold text-white mb-6">Settings</Text>
-        </MotiView>
+        </Animated.View>
 
         {/* Content provider section */}
         <AnimatedSection delay={100}>
@@ -153,9 +164,7 @@ const Settings = ({navigation}: Props) => {
                 contentContainerStyle={{
                   paddingHorizontal: 10,
                 }}>
-                {installedProviders.map(item =>
-                  renderProviderItem(item, provider.value === item.value),
-                )}
+                {providersList}
                 {installedProviders.length === 0 && (
                   <Text className="text-gray-500 text-sm">
                     No providers installed
@@ -295,15 +304,7 @@ const Settings = ({navigation}: Props) => {
                 <Text className="text-white text-base">Clear Cache</Text>
                 <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
-                  onPress={() => {
-                    if (settingsStorage.isHapticFeedbackEnabled()) {
-                      ReactNativeHapticFeedback.trigger('virtualKey', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
-                    }
-                    cacheStorageService.clearAll();
-                  }}>
+                  onPress={clearCacheHandler}>
                   <MaterialCommunityIcons
                     name="delete-outline"
                     size={20}
@@ -319,15 +320,7 @@ const Settings = ({navigation}: Props) => {
                 </Text>
                 <TouchableOpacity
                   className="bg-[#262626] px-4 py-2 rounded-lg"
-                  onPress={() => {
-                    if (settingsStorage.isHapticFeedbackEnabled()) {
-                      ReactNativeHapticFeedback.trigger('virtualKey', {
-                        enableVibrateFallback: true,
-                        ignoreAndroidSystemSettings: false,
-                      });
-                    }
-                    clearHistory();
-                  }}>
+                  onPress={clearHistoryHandler}>
                   <MaterialCommunityIcons
                     name="delete-outline"
                     size={20}
@@ -390,7 +383,7 @@ const Settings = ({navigation}: Props) => {
           </View>
         </AnimatedSection>
       </View>
-    </ScrollView>
+    </Animated.ScrollView>
   );
 };
 
