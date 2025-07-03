@@ -1,7 +1,8 @@
 import {useQuery} from '@tanstack/react-query';
 import {providerManager} from '../services/ProviderManager';
-import {cacheStorage, extensionStorage} from '../storage';
+import {cacheStorage} from '../storage';
 import {EpisodeLink} from '../providers/types';
+import {extensionManager} from '../services';
 
 export const useEpisodes = (
   episodesLink: string | undefined,
@@ -11,7 +12,7 @@ export const useEpisodes = (
   return useQuery<EpisodeLink[], Error>({
     queryKey: ['episodes', episodesLink, providerValue],
     queryFn: async () => {
-      if (!episodesLink) {
+      if (!episodesLink || !providerValue || !enabled) {
         return [];
       }
 
@@ -19,7 +20,9 @@ export const useEpisodes = (
 
       // Check if provider has episodes module
       const hasEpisodesModule =
-        extensionStorage.getProviderModules(providerValue)?.modules.episodes;
+        extensionManager.getProviderModules(providerValue)?.modules.episodes;
+
+      console.log('Has episodes module:', !!hasEpisodesModule);
 
       if (!hasEpisodesModule) {
         return [];
@@ -91,7 +94,7 @@ export const useStreamData = () => {
       return stream || [];
     } catch (error) {
       console.error('Error fetching streams:', error);
-      throw error;
+      throw `Failed to fetch streams for ${type} at ${link} : ${error}`;
     }
   };
 
