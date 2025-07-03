@@ -55,7 +55,9 @@
     "react-native-system-setting": "^1.7.6",
     "react-native-video": "^6.11.0",
     "react-native-webview": "13.8.6",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "expo-application": "~5.9.1",
+    "expo-updates": "~0.25.28"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
