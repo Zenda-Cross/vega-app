@@ -56,6 +56,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [readMore, setReadMore] = useState(false);
   const [menuPosition, setMenuPosition] = useState({top: -1000, right: 0});
   const [backgroundColor, setBackgroundColor] = useState('transparent');
+  const [logoError, setLogoError] = useState(false);
 
   const threeDotsRef = useRef<any>();
 
@@ -251,14 +252,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                     className="absolute h-full w-full"
                   />
                   <View className="absolute bottom-0 right-0 w-screen flex-row justify-between items-baseline px-2">
-                    {meta?.logo ? (
+                    {(meta?.logo && !logoError) || infoLoading ? (
                       <Image
-                        onError={() => console.warn('Logo failed to load')}
+                        onError={() => setLogoError(true)}
                         source={{uri: meta?.logo}}
                         style={{width: 200, height: 100, resizeMode: 'contain'}}
                       />
                     ) : (
-                      <Text className="text-white text-2xl mb-3 capitalize font-semibold w-3/4 truncate">
+                      <Text className="text-white text-2xl mt-3 capitalize font-semibold w-3/4 truncate">
                         {displayTitle}
                       </Text>
                     )}
