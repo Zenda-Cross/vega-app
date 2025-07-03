@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity} from 'react-native';
+import useThemeStore from '../lib/zustand/themeStore';
 
 interface ErrorFallbackProps {
   error: Error;
@@ -10,6 +11,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   error,
   resetError,
 }) => {
+  const {primary} = useThemeStore();
   return (
     <View className="flex-1 justify-center items-center p-4 bg-black">
       <Text className="text-red-400 text-lg font-bold mb-4 text-center">
@@ -20,7 +22,8 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
       </Text>
       <TouchableOpacity
         onPress={resetError}
-        className="bg-red-600 px-6 py-3 rounded-lg">
+        className="px-6 py-3 rounded-lg"
+        style={{backgroundColor: primary}}>
         <Text className="text-white font-semibold">Try Again</Text>
       </TouchableOpacity>
     </View>
