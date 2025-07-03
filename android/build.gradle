@@ -1,12 +1,10 @@
 buildscript {
     ext {
-        buildToolsVersion = "34.0.0"
         minSdkVersion = 24
         compileSdkVersion = 34
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
         kotlinVersion = "1.9.22"
-        // ffmpegKitPackage = "https-gpl"
         castFrameworkVersion = "21.4.0" // Use a version compatible with Kotlin 1.9.x
     }
     repositories {
