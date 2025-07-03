@@ -122,15 +122,6 @@ const Home = ({}: Props) => {
     ));
   }, [homeData]);
 
-  // Early return for no providers
-  if (
-    !installedProviders ||
-    installedProviders.length === 0 ||
-    !provider?.value
-  ) {
-    return <Tutorial />;
-  }
-
   // Memoized error message
   const errorComponent = useMemo(() => {
     if (!error && (isLoading || homeData.length > 0)) {
@@ -148,6 +139,15 @@ const Home = ({}: Props) => {
       </View>
     );
   }, [error, isLoading, homeData.length]);
+
+  // Early return for no providers
+  if (
+    !installedProviders ||
+    installedProviders.length === 0 ||
+    !provider?.value
+  ) {
+    return <Tutorial />;
+  }
 
   return (
     <QueryErrorBoundary>
