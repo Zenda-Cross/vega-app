@@ -7,7 +7,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import pkg from '../../../package.json';
+// import pkg from '../../../package.json';
 import React, {useState} from 'react';
 import {Feather} from '@expo/vector-icons';
 import {settingsStorage} from '../../lib/storage';
@@ -16,6 +16,7 @@ import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
+import * as Application from 'expo-application';
 
 // download update
 const downloadUpdate = async (url: string, name: string, theme: string) => {
@@ -58,7 +59,7 @@ const downloadUpdate = async (url: string, name: string, theme: string) => {
       notifee.displayNotification({
         id: 'downloadUpdate',
         title: 'Downloading Update',
-        body: `Version ${pkg.version} -> ${name}`,
+        body: `Version ${Application.nativeApplicationVersion} -> ${name}`,
         android: {
           smallIcon: 'ic_notification',
           channelId,
@@ -105,13 +106,13 @@ export const checkForUpdate = async (
       'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
     );
     const data = await res.json();
-    const localVersion = Number(pkg.version?.split('.').join(''));
+    const localVersion = Application.nativeApplicationVersion;
     const remoteVersion = Number(
       data.tag_name.replace('v', '')?.split('.').join(''),
     );
-    if (compareVersions(pkg.version, data.tag_name.replace('v', ''))) {
+    if (compareVersions(localVersion || '', data.tag_name.replace('v', ''))) {
       ToastAndroid.show('New update available', ToastAndroid.SHORT);
-      Alert.alert(`Update v${pkg.version} -> ${data.tag_name}`, data.body, [
+      Alert.alert(`Update v${localVersion} -> ${data.tag_name}`, data.body, [
         {text: 'Cancel'},
         {
           text: 'Update',
@@ -200,7 +201,9 @@ const About = () => {
         {/* Version */}
         <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center">
           <Text className="text-white text-base">Version</Text>
-          <Text className="text-white/70">v{pkg.version}</Text>
+          <Text className="text-white/70">
+            v{Application.nativeApplicationVersion}
+          </Text>
         </View>
 
         {/* Auto Install Updates */}
