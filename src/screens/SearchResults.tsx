@@ -1,7 +1,12 @@
-import {SafeAreaView, ScrollView, ActivityIndicator, Text} from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  Text,
+  View,
+} from 'react-native';
 import Slider from '../components/Slider';
-import React, {useEffect, useState, useRef} from 'react';
-import {View} from 'moti';
+import React, {useEffect, useState, useRef, useCallback, useMemo} from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SearchStackParamList} from '../App';
 import useThemeStore from '../lib/zustand/themeStore';
@@ -24,13 +29,41 @@ const SearchResults = ({route}: Props): React.ReactElement => {
   const {installedProviders} = useContentStore(state => state);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
   const [emptyResults, setEmptyResults] = useState<SearchPageData[]>([]);
-  const trueLoading = installedProviders.map(item => {
-    return {name: item.display_name, value: item.value, isLoading: true};
-  });
-  // Use settingsStorage instead of direct MMKV call
+
+  const trueLoading = useMemo(
+    () =>
+      installedProviders.map(item => ({
+        name: item.display_name,
+        value: item.value,
+        isLoading: true,
+      })),
+    [installedProviders],
+  );
 
   const [loading, setLoading] = useState(trueLoading);
   const abortController = useRef<AbortController | null>(null);
+
+  const updateSearchData = useCallback((newData: SearchPageData) => {
+    setSearchData(prev => [...prev, newData]);
+  }, []);
+
+  const updateEmptyResults = useCallback((newData: SearchPageData) => {
+    setEmptyResults(prev => [...prev, newData]);
+  }, []);
+
+  const updateLoading = useCallback(
+    (value: string, updates: Partial<{isLoading: boolean; error: boolean}>) => {
+      setLoading(prev =>
+        prev.map(i => (i.value === value ? {...i, ...updates} : i)),
+      );
+    },
+    [],
+  );
+
+  const isAllLoaded = useMemo(
+    () => loading.every(i => !i.isLoading),
+    [loading],
+  );
 
   useEffect(() => {
     // Clean up previous controller if exists
@@ -64,36 +97,28 @@ const SearchResults = ({route}: Props): React.ReactElement => {
             if (signal.aborted) return;
 
             if (data && data.length > 0) {
-              setSearchData(prev => [
-                ...prev,
-                {
-                  title: item.display_name,
-                  Posts: data,
-                  filter: route.params.filter,
-                  providerValue: item.value,
-                  value: item.value,
-                  name: item.display_name,
-                },
-              ]);
+              const newData = {
+                title: item.display_name,
+                Posts: data,
+                filter: route.params.filter,
+                providerValue: item.value,
+                value: item.value,
+                name: item.display_name,
+              };
+              updateSearchData(newData);
             } else {
-              setEmptyResults(prev => [
-                ...prev,
-                {
-                  title: item.display_name,
-                  Posts: data || [],
-                  filter: route.params.filter,
-                  providerValue: item.value,
-                  value: item.value,
-                  name: item.display_name,
-                },
-              ]);
+              const newData = {
+                title: item.display_name,
+                Posts: data || [],
+                filter: route.params.filter,
+                providerValue: item.value,
+                value: item.value,
+                name: item.display_name,
+              };
+              updateEmptyResults(newData);
             }
 
-            setLoading(prev =>
-              prev.map(i =>
-                i.value === item.value ? {...i, isLoading: false} : i,
-              ),
-            );
+            updateLoading(item.value, {isLoading: false});
           } catch (error) {
             if (signal.aborted) return;
 
@@ -101,13 +126,7 @@ const SearchResults = ({route}: Props): React.ReactElement => {
               `Error fetching data for ${item.display_name}:`,
               error,
             );
-            setLoading(prev =>
-              prev.map(i =>
-                i.value === item.value
-                  ? {...i, isLoading: false, error: true}
-                  : i,
-              ),
-            );
+            updateLoading(item.value, {isLoading: false, error: true});
           }
         })();
 
@@ -127,19 +146,56 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         abortController.current = null;
       }
     };
-  }, [route.params.filter]);
+  }, [
+    route.params.filter,
+    trueLoading,
+    installedProviders,
+    updateSearchData,
+    updateEmptyResults,
+    updateLoading,
+  ]);
+
+  const renderSlider = useCallback(
+    (item: SearchPageData, index: number, isEmptyResult: boolean = false) => {
+      const loadingState = loading.find(i => i.value === item.value);
+      const posts = isEmptyResult
+        ? emptyResults.find(i => i.providerValue === item.value)?.Posts || []
+        : searchData.find(i => i.providerValue === item.value)?.Posts || [];
+
+      return (
+        <Slider
+          isLoading={loadingState?.isLoading || false}
+          key={`${item.value}-${isEmptyResult ? 'empty' : 'data'}`}
+          title={item.name}
+          posts={posts}
+          filter={route.params.filter}
+          providerValue={item.value}
+          isSearch={true}
+        />
+      );
+    },
+    [loading, searchData, emptyResults, route.params.filter],
+  );
+
+  const searchSliders = useMemo(
+    () => searchData.map((item, index) => renderSlider(item, index, false)),
+    [searchData, renderSlider],
+  );
+
+  const emptySliders = useMemo(
+    () => emptyResults.map((item, index) => renderSlider(item, index, true)),
+    [emptyResults, renderSlider],
+  );
 
   return (
     <SafeAreaView className="bg-black h-full w-full">
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="mt-14 px-4 flex flex-row justify-between items-center gap-x-3">
           <Text className="text-white text-2xl font-semibold ">
-            {loading?.every(i => !i.isLoading)
-              ? 'Searched for'
-              : 'Searching for'}{' '}
+            {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
             <Text style={{color: primary}}>"{route?.params?.filter}"</Text>
           </Text>
-          {!loading?.every(i => !i.isLoading) && (
+          {!isAllLoaded && (
             <View className="flex justify-center items-center h-20">
               <ActivityIndicator
                 size="small"
@@ -151,38 +207,8 @@ const SearchResults = ({route}: Props): React.ReactElement => {
         </View>
 
         <View className="px-4">
-          {searchData?.map((item, index) => (
-            <Slider
-              isLoading={
-                loading?.find(i => i.value === item.value)?.isLoading || false
-              }
-              key={index}
-              title={item.name}
-              posts={
-                searchData?.find(i => i.providerValue === item.value)?.Posts ||
-                []
-              }
-              filter={route.params.filter}
-              providerValue={item.value}
-              isSearch={true}
-            />
-          ))}
-          {emptyResults?.map((item, index) => (
-            <Slider
-              isLoading={
-                loading?.find(i => i.value === item.value)?.isLoading || false
-              }
-              key={index}
-              title={item.name}
-              posts={
-                emptyResults?.find(i => i.providerValue === item.value)
-                  ?.Posts || []
-              }
-              filter={route.params.filter}
-              providerValue={item.value}
-              isSearch={true}
-            />
-          ))}
+          {searchSliders}
+          {emptySliders}
         </View>
         <View className="h-16" />
       </ScrollView>
