@@ -53,7 +53,15 @@ export const useEnhancedMetadata = (imdbId: string, type: string) => {
     queryKey: ['enhancedMeta', imdbId, type],
     queryFn: async () => {
       console.log('Fetching enhanced metadata for:', imdbId);
-
+      try {
+        // Validate imdbId and type
+        if (!imdbId || !type) {
+          throw new Error('Invalid imdbId or type');
+        }
+      } catch (error) {
+        console.log('Error validating imdbId or type:', error);
+        return {};
+      }
       const response = await axios.get(
         `https://v3-cinemeta.strem.io/meta/${type}/${imdbId}.json`,
         {timeout: 10000},
@@ -109,7 +117,7 @@ export const useContentDetails = (link: string, providerValue: string) => {
   return {
     info,
     meta,
-    isLoading: infoLoading || (info?.imdbId && metaLoading),
+    isLoading: infoLoading || metaLoading,
     error: infoError || metaError,
     refetch: async () => {
       await Promise.all([refetchInfo(), refetchMeta()]);
