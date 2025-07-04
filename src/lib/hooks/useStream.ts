@@ -112,8 +112,6 @@ export const useStream = ({
         }
       });
       setExternalSubs(subs);
-
-      ToastAndroid.show('Stream found, Playing...', ToastAndroid.SHORT);
     }
   }, [streamData]);
 
