@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@8man/react-native-media-console": "^2.2.4-alpha.20",
+    "@8man/react-native-media-console": "^2.2.4-alpha.21",
     "@dominicvonk/react-native-apk-installer": "^2.2.2",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@notifee/react-native": "^7.8.2",
@@ -24,10 +24,12 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "cheerio": "^1.0.0-rc.12",
     "expo": "^51.0.0",
+    "expo-application": "~5.9.1",
     "expo-blur": "~13.0.2",
     "expo-build-properties": "~0.12.5",
     "expo-intent-launcher": "~11.0.1",
     "expo-system-ui": "~3.0.4",
+    "expo-updates": "~0.25.28",
     "expo-video-thumbnails": "~8.0.0",
     "moti": "^0.28.1",
     "nativewind": "^2.0.11",
@@ -55,9 +57,7 @@
     "react-native-system-setting": "^1.7.6",
     "react-native-video": "^6.11.0",
     "react-native-webview": "13.8.6",
-    "zustand": "^4.5.2",
-    "expo-application": "~5.9.1",
-    "expo-updates": "~0.25.28"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
