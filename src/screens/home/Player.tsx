@@ -7,6 +7,7 @@ import {
   View,
   StatusBar,
   Platform,
+  TouchableNativeFeedback,
 } from 'react-native';
 import {Easing} from 'react-native-reanimated';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -269,6 +270,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // Exit fullscreen on back
   useEffect(() => {
+    FullScreenChz.enable();
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       FullScreenChz.disable();
     });
@@ -404,7 +406,6 @@ const Player = ({route}: Props): React.JSX.Element => {
         playerRef?.current?.seek(watchedDuration);
         playerRef?.current?.resume();
         setPlaybackRate(1.0);
-        FullScreenChz.enable();
       },
       videoRef: playerRef,
       rate: playbackRate,
@@ -479,10 +480,50 @@ const Player = ({route}: Props): React.JSX.Element => {
   // Show loading state
   if (streamLoading) {
     return (
-      <SafeAreaView className="bg-black flex-1 justify-center items-center">
+      <SafeAreaView
+        edges={{right: 'off', top: 'off', left: 'off', bottom: 'off'}}
+        className="bg-black flex-1 justify-center items-center">
         <StatusBar translucent={true} hidden={true} />
         <OrientationLocker orientation={LANDSCAPE} />
-        <Text className="text-white text-lg">Loading stream...</Text>
+        {/* create ripple effect */}
+        <TouchableNativeFeedback
+          background={TouchableNativeFeedback.Ripple(
+            'rgba(255,255,255,0.15)',
+            false, // ripple shows at tap location
+          )}>
+          <View className="w-full h-full justify-center items-center">
+            <MotiView
+              from={{opacity: 0, scale: 0.8}}
+              animate={{opacity: 1, scale: 1}}
+              transition={
+                {
+                  type: 'timing',
+                  duration: 800,
+                } as any
+              }
+              className="justify-center items-center">
+              <MotiView
+                from={{rotate: '0deg'}}
+                animate={{
+                  rotate: ['0deg', '180deg', '180deg', '360deg', '360deg'],
+                }}
+                transition={
+                  {
+                    type: 'timing',
+                    duration: 3000,
+                    loop: true,
+                    repeatReverse: false,
+                    delay: 500,
+                    keyframes: [0, 0.3, 0.5, 0.8, 1],
+                  } as any
+                }
+                className="mb-2">
+                <MaterialIcons name="hourglass-empty" size={60} color="white" />
+              </MotiView>
+              <Text className="text-white text-lg mt-4">Loading stream...</Text>
+            </MotiView>
+          </View>
+        </TouchableNativeFeedback>
       </SafeAreaView>
     );
   }
@@ -547,8 +588,14 @@ const Player = ({route}: Props): React.JSX.Element => {
           }}
           //@ts-ignore
           transition={{
-            type: 'timing',
-            duration: 227,
+            translateY: {
+              type: 'timing',
+              duration: 227,
+            },
+            opacity: {
+              type: 'timing',
+              duration: 227,
+            },
           }}
           className="absolute top-5 right-5 flex-row items-center gap-2 z-50">
           <TouchableOpacity
