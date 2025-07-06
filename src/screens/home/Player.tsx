@@ -30,7 +30,7 @@ import useContentStore from '../../lib/zustand/contentStore';
 import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import GoogleCast from 'react-native-google-cast';
-import DocumentPicker, {isCancel} from 'react-native-document-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
@@ -904,30 +904,31 @@ const Player = ({route}: Props): React.JSX.Element => {
                       className="flex-row gap-3 items-center rounded-md my-1 overflow-hidden ml-2"
                       onPress={async () => {
                         try {
-                          const res = await DocumentPicker.pick({
+                          const res = await DocumentPicker.getDocumentAsync({
                             type: [
                               'text/vtt',
                               'application/x-subrip',
                               'text/srt',
                               'application/ttml+xml',
                             ],
-                            allowMultiSelection: false,
-                            presentationStyle: 'pageSheet',
+                            multiple: false,
                           });
-                          const track = {
-                            type: res?.[0]?.type as any,
-                            title:
-                              res?.[0]?.name && res?.[0]?.name?.length > 20
-                                ? res?.[0]?.name?.slice(0, 20) + '...'
-                                : res?.[0]?.name || 'undefined',
-                            language: 'und',
-                            uri: res?.[0]?.uri,
-                          };
-                          setExternalSubs((prev: any) => [track, ...prev]);
-                        } catch (err) {
-                          if (!isCancel(err)) {
-                            console.log(err);
+
+                          if (!res.canceled && res.assets?.[0]) {
+                            const asset = res.assets[0];
+                            const track = {
+                              type: asset.mimeType as any,
+                              title:
+                                asset.name && asset.name.length > 20
+                                  ? asset.name.slice(0, 20) + '...'
+                                  : asset.name || 'undefined',
+                              language: 'und',
+                              uri: asset.uri,
+                            };
+                            setExternalSubs((prev: any) => [track, ...prev]);
                           }
+                        } catch (err) {
+                          console.log(err);
                         }
                       }}>
                       <MaterialIcons name="add" size={20} color="white" />
