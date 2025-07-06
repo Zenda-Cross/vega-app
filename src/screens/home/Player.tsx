@@ -27,9 +27,9 @@ import {
 } from 'react-native-video';
 import {MotiView} from 'moti';
 import useContentStore from '../../lib/zustand/contentStore';
-import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
+// import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import GoogleCast from 'react-native-google-cast';
+// import GoogleCast from 'react-native-google-cast';
 import * as DocumentPicker from 'expo-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
@@ -171,7 +171,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     });
 
   // Remote media client for casting
-  const remoteMediaClient = Platform.isTV ? null : useRemoteMediaClient();
+  // const remoteMediaClient = Platform.isTV ? null : useRemoteMediaClient();
 
   // Memoized format quality function
   const formatQuality = useCallback((quality: string) => {
@@ -231,42 +231,42 @@ const Player = ({route}: Props): React.JSX.Element => {
   );
 
   // Memoized cast effect
-  useEffect(() => {
-    if (remoteMediaClient && !Platform.isTV && selectedStream?.link) {
-      remoteMediaClient.loadMedia({
-        startTime: watchedDuration,
-        playbackRate: playbackRate,
-        autoplay: true,
-        mediaInfo: {
-          contentUrl: selectedStream.link,
-          contentType: 'video/x-matroska',
-          metadata: {
-            title: route.params?.primaryTitle,
-            subtitle: route.params?.secondaryTitle,
-            type: 'movie',
-            images: [
-              {
-                url: route.params?.poster?.poster || '',
-              },
-            ],
-          },
-        },
-      });
-      playerRef?.current?.pause();
-      GoogleCast.showExpandedControls();
-    }
-    return () => {
-      if (remoteMediaClient) {
-        remoteMediaClient?.stop();
-      }
-    };
-  }, [
-    remoteMediaClient,
-    selectedStream,
-    watchedDuration,
-    playbackRate,
-    route.params,
-  ]);
+  // useEffect(() => {
+  //   if (remoteMediaClient && !Platform.isTV && selectedStream?.link) {
+  //     remoteMediaClient.loadMedia({
+  //       startTime: watchedDuration,
+  //       playbackRate: playbackRate,
+  //       autoplay: true,
+  //       mediaInfo: {
+  //         contentUrl: selectedStream.link,
+  //         contentType: 'video/x-matroska',
+  //         metadata: {
+  //           title: route.params?.primaryTitle,
+  //           subtitle: route.params?.secondaryTitle,
+  //           type: 'movie',
+  //           images: [
+  //             {
+  //               url: route.params?.poster?.poster || '',
+  //             },
+  //           ],
+  //         },
+  //       },
+  //     });
+  //     playerRef?.current?.pause();
+  //     GoogleCast.showExpandedControls();
+  //   }
+  //   return () => {
+  //     if (remoteMediaClient) {
+  //       remoteMediaClient?.stop();
+  //     }
+  //   };
+  // }, [
+  //   remoteMediaClient,
+  //   selectedStream,
+  //   watchedDuration,
+  //   playbackRate,
+  //   route.params,
+  // ]);
 
   // Exit fullscreen on back
   useEffect(() => {
@@ -606,11 +606,11 @@ const Player = ({route}: Props): React.JSX.Element => {
               size={24}
             />
           </TouchableOpacity>
-          {!isPlayerLocked && (
+          {/* {!isPlayerLocked && (
             <CastButton
               style={{width: 40, height: 40, opacity: 0.5, tintColor: 'white'}}
             />
-          )}
+          )} */}
         </MotiView>
       )}
 
