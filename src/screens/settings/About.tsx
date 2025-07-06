@@ -11,7 +11,7 @@ import {
 import React, {useState} from 'react';
 import {Feather} from '@expo/vector-icons';
 import {settingsStorage} from '../../lib/storage';
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
 import {
   checkAppInstallPermission,

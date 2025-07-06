@@ -38,7 +38,7 @@ import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
 import {updateProvidersService} from './lib/services/UpdateProviders';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import {downloadFolder} from './lib/constants';
 import {cancelHlsDownload} from './lib/hlsDownloader2';
 import useDownloadsStore from './lib/zustand/downloadsStore';

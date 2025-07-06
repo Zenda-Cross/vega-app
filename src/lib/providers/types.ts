@@ -1,6 +1,7 @@
 import {AxiosStatic} from 'axios';
 import * as cheerio from 'cheerio';
 import {Content} from '../zustand/contentStore';
+import * as Crypto from 'expo-crypto';
 
 export interface ProvidersList {
   name: string;
@@ -138,7 +139,7 @@ export interface ProviderType {
 
 export type ProviderContext = {
   axios: AxiosStatic;
-  Aes: any; // AES encryption utility, if used
+  Crypto: typeof Crypto;
   getBaseUrl: (providerValue: string) => Promise<string>;
   commonHeaders: Record<string, string>;
   cheerio: typeof cheerio;

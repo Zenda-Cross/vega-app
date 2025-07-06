@@ -1,4 +1,4 @@
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import axios from 'axios';
 import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';

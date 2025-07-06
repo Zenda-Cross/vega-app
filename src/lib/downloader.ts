@@ -1,6 +1,6 @@
 import {ifExists} from './file/ifExists';
 // import {hlsDownloader} from './hlsDownloader';
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import notifee from '@notifee/react-native';
 import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
