@@ -13,7 +13,10 @@ import {Feather} from '@expo/vector-icons';
 import {settingsStorage} from '../../lib/storage';
 import RNFS from 'react-native-fs';
 import notifee, {EventDetail, EventType} from '@notifee/react-native';
-import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
+import {
+  checkAppInstallPermission,
+  requestAppInstallPermission,
+} from 'react-native-install-unknown-apps';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import * as Application from 'expo-application';
@@ -162,16 +165,18 @@ async function handleAction({
     );
     console.log('install', res);
     if (res) {
-      const installPermission =
-        await RNApkInstaller.haveUnknownAppSourcesPermission();
-      console.log('installPermission', installPermission);
-      if (!installPermission) {
-        RNApkInstaller.showUnknownAppSourcesPermission();
+      const hasPermission = await checkAppInstallPermission();
+      console.log('installPermission', hasPermission);
+      if (!hasPermission) {
+        await requestAppInstallPermission();
       }
 
-      RNApkInstaller.install(
-        `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
-      );
+      // Since react-native-install-unknown-apps doesn't have direct install functionality,
+      // we'll use Linking to open the APK file
+      const fileUri = `file://${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`;
+      Linking.openURL(fileUri).catch(err => {
+        console.error('Failed to open APK file:', err);
+      });
     }
   }
 }
