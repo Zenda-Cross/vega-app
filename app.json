@@ -15,7 +15,35 @@
           "android": {
             "extraMavenRepos": [
               "../../node_modules/@notifee/react-native/android/libs"
-            ]
+            ],
+            "minSdkVersion": 24,
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0",
+            "ndkVersion": "26.1.10909125",
+            "kotlinVersion": "1.9.22",
+            "extraProguardRules": "-keep class com.google.android.gms.** { *; }",
+            "enableProguardInReleaseBuilds": true,
+            "packagingOptions": {
+              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"]
+            },
+            "splits": {
+              "abi": {
+                "enable": true,
+                "universalApk": true,
+                "include": ["armeabi-v7a", "arm64-v8a"]
+              }
+            },
+            "buildVariants": {
+              "release": {
+                "minifyEnabled": true,
+                "shrinkResources": true
+              },
+              "debug": {
+                "minifyEnabled": false,
+                "debuggable": true
+              }
+            }
           },
           "ios": {}
         }
@@ -26,8 +54,70 @@
     "sdkVersion": "51.0.0",
     "android": {
       "minSdkVersion": 24,
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
       "package": "com.vega",
-      "versionCode": 134
+      "versionCode": 134,
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "INTERNET",
+        "MANAGE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_VIDEO",
+        "WRITE_EXTERNAL_STORAGE",
+        "WRITE_SETTINGS"
+      ],
+      "manifestPermissions": [
+        {
+          "name": "READ_EXTERNAL_STORAGE",
+          "maxSdkVersion": 32
+        },
+        {
+          "name": "WRITE_EXTERNAL_STORAGE",
+          "maxSdkVersion": 32
+        }
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": "BROWSABLE",
+          "data": {
+            "scheme": "com.vega"
+          }
+        }
+      ],
+      "queries": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "http"
+          }
+        },
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "https"
+          }
+        },
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "vlc"
+          }
+        }
+      ],
+      "config": {
+        "requestLegacyExternalStorage": true
+      },
+      "allowBackup": true,
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive_icon.png",
+        "backgroundColor": "#000000"
+      },
+      "launchMode": "singleTask",
+      "supportsPictureInPicture": true
     },
     "platforms": ["ios", "android"]
   }

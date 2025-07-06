@@ -3,15 +3,21 @@
   "version": "3.1.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "android": "expo run:android",
+    "android:build": "eas build --platform android",
+    "android:setup": "node scripts/setup-expo-android.js",
+    "android:backup": "node scripts/backup-android-files.js",
+    "ios": "expo run:ios",
     "lint": "eslint .",
-    "start": "react-native start",
-    "test": "jest"
+    "start": "expo start",
+    "test": "jest",
+    "prebuild": "expo prebuild",
+    "prebuild:clean": "expo prebuild --clean"
   },
   "dependencies": {
     "@8man/react-native-media-console": "^2.2.4-alpha.21",
     "@dr.pogodin/react-native-fs": "^2.34.0",
+    "@expo/config-plugins": "^10.1.1",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@notifee/react-native": "^7.8.2",
     "@react-native-community/blur": "^4.4.1",
@@ -44,7 +50,6 @@
     "react-native-fs": "^2.20.0",
     "react-native-fullscreen-chz": "^4.0.13",
     "react-native-gesture-handler": "~2.16.1",
-    "react-native-google-cast": "^4.8.0",
     "react-native-haptic-feedback": "^2.2.0",
     "react-native-install-unknown-apps": "^0.1.1",
     "react-native-linear-gradient": "^2.8.3",
