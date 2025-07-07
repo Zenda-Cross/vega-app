@@ -1,14 +1,30 @@
 {
-  "name": "Vega",
-  "displayName": "Vega",
   "expo": {
     "name": "Vega",
     "displayName": "Vega",
+    "newArchEnabled": true,
     "autolinking": {
       "exclude": ["expo-splash-screen"]
     },
     "plugins": [
-      ["react-native-bootsplash", {"assetsDir": "assets/bootsplash"}],
+      [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "parentTheme": "Default",
+            "enforceNavigationBarContrast": false
+          }
+        }
+      ],
+      [
+        "react-native-bootsplash",
+        {
+          "assetsDir": "assets/bootsplash",
+          "android": {
+            "parentTheme": "EdgeToEdge"
+          }
+        }
+      ],
       [
         "expo-build-properties",
         {
@@ -16,28 +32,24 @@
             "extraMavenRepos": [
               "../../node_modules/@notifee/react-native/android/libs"
             ],
-            "minSdkVersion": 24,
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
-            "buildToolsVersion": "34.0.0",
-            "ndkVersion": "26.1.10909125",
-            "kotlinVersion": "1.9.22",
-            "extraProguardRules": "-keep class com.google.android.gms.** { *; }",
             "enableProguardInReleaseBuilds": true,
-            "packagingOptions": {
-              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"]
-            },
             "splits": {
               "abi": {
                 "enable": true,
-                "universalApk": true,
-                "include": ["armeabi-v7a", "arm64-v8a"]
+                "universalApk": true
               }
             },
             "buildVariants": {
               "release": {
                 "minifyEnabled": true,
-                "shrinkResources": true
+                "shrinkResources": true,
+                "splits": {
+                  "abi": {
+                    "enable": true,
+                    "reset": false,
+                    "include": ["armeabi-v7a", "arm64-v8a"]
+                  }
+                }
               },
               "debug": {
                 "minifyEnabled": false,
@@ -47,16 +59,16 @@
           },
           "ios": {}
         }
-      ]
+      ],
+      "./plugins/android-native-config.js"
     ],
     "slug": "vega",
     "version": "3.1.1",
-    "sdkVersion": "51.0.0",
+    "sdkVersion": "52.0.0",
     "userInterfaceStyle": "dark",
     "android": {
       "minSdkVersion": 24,
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
+      "edgeToEdgeEnabled": true,
       "package": "com.vega",
       "versionCode": 134,
       "permissions": [

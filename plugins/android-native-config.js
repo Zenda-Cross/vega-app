@@ -1,6 +1,64 @@
-const {withAndroidManifest} = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withAndroidStyles,
+} = require('@expo/config-plugins');
 
 const withAndroidNativeConfig = config => {
+  // Configure Android styles
+  config = withAndroidStyles(config, config => {
+    const styles = config.modResults;
+
+    // Find the AppTheme style
+    const appThemeStyle = styles.resources.style?.find(
+      style => style.$.name === 'AppTheme',
+    );
+
+    if (appThemeStyle) {
+      // Add or update the text color item
+      const textColorItem = appThemeStyle.item?.find(
+        item => item.$.name === 'android:textColor',
+      );
+
+      if (textColorItem) {
+        textColorItem._ = '@android:color/white';
+      } else {
+        if (!appThemeStyle.item) {
+          appThemeStyle.item = [];
+        }
+        appThemeStyle.item.push({
+          $: {name: 'android:textColor'},
+          _: '@android:color/white',
+        });
+      }
+    }
+
+    // Find the ResetEditText style
+    const resetEditTextStyle = styles.resources.style?.find(
+      style => style.$.name === 'ResetEditText',
+    );
+
+    if (resetEditTextStyle) {
+      // Add or update the text color item
+      const textColorItem = resetEditTextStyle.item?.find(
+        item => item.$.name === 'android:textColor',
+      );
+
+      if (textColorItem) {
+        textColorItem._ = '@android:color/white';
+      } else {
+        if (!resetEditTextStyle.item) {
+          resetEditTextStyle.item = [];
+        }
+        resetEditTextStyle.item.push({
+          $: {name: 'android:textColor'},
+          _: '@android:color/white',
+        });
+      }
+    }
+
+    return config;
+  });
+
   return withAndroidManifest(config, config => {
     const {manifest} = config.modResults;
 
