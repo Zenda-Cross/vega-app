@@ -1,13 +1,12 @@
 import {ifExists} from './file/ifExists';
 // import {hlsDownloader} from './hlsDownloader';
 import * as RNFS from '@dr.pogodin/react-native-fs';
-import notifee from '@notifee/react-native';
 import {Alert} from 'react-native';
 import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
-import {settingsStorage} from './storage';
 import {hlsDownloader2} from './hlsDownloader2';
+import {notificationService} from './services/Notification';
 
 export const downloadManager = async ({
   title,
@@ -30,32 +29,11 @@ export const downloadManager = async ({
   setDownloadId: (value: number) => void;
   deleteDownload: () => void;
 }) => {
-  const primary = settingsStorage.getPrimaryColor();
   await requestStoragePermission();
   const {addActiveDownload, removeActiveDownload, activeDownloads} =
     downloadStore;
-  const channelId = await notifee.createChannel({
-    id: 'download',
-    name: 'Download Notifications',
-  });
-  notifee.displayNotification({
-    id: fileName,
-    title: title,
-    body: 'Starting download',
-    android: {
-      smallIcon: 'ic_notification',
-      channelId,
-      color: primary,
-      pressAction: {
-        id: 'default',
-      },
-      progress: {
-        max: 100,
-        current: 0,
-        indeterminate: true,
-      },
-    },
-  });
+
+  await notificationService.showDownloadStarting(title, fileName);
   if (await ifExists(fileName)) {
     console.log('File already exists');
     setAlreadyDownloaded(true);
@@ -87,7 +65,7 @@ export const downloadManager = async ({
     if (!(await RNFS.exists(downloadFolder))) {
       await RNFS.mkdir(downloadFolder);
     }
-    await notifee.requestPermission();
+    await notificationService.requestPermission();
 
     if (fileType === 'm3u8') {
       // hlsDownloader({
@@ -148,53 +126,19 @@ export const downloadManager = async ({
               parseFloat((res.contentLength / 1024 / 1024 / 1024).toFixed(2)) +
               ' GB';
         // console.log('Download progress:', progress * 100);
-        notifee.displayNotification({
-          id: fileName,
-          title: title,
-          data: {jobId: ret.jobId, fileName},
-          body: body,
-          android: {
-            smallIcon: 'ic_notification',
-            channelId,
-            color: primary,
-            onlyAlertOnce: true,
-            progress: {
-              max: 100,
-              current: Math.abs(progress) * 100 > 100 ? 100 : progress * 100,
-              indeterminate: false,
-            },
-            pressAction: {
-              id: 'default',
-            },
-            actions: [
-              {
-                title: 'Cancel',
-                pressAction: {
-                  id: fileName,
-                },
-              },
-            ],
-          },
-        });
+        notificationService.showDownloadProgress(
+          title,
+          fileName,
+          progress,
+          body,
+          ret.jobId,
+        );
       },
     });
     ret.promise.then(res => {
       console.log('Download complete', res);
       setAlreadyDownloaded(true);
-      notifee.cancelNotification(fileName);
-      notifee.displayNotification({
-        id: 'downloadComplete' + fileName,
-        title: 'Download complete',
-        body: title,
-        android: {
-          pressAction: {
-            id: 'default',
-          },
-          smallIcon: 'ic_notification',
-          channelId,
-          color: primary,
-        },
-      });
+      notificationService.showDownloadComplete(title, fileName);
       removeActiveDownload(fileName);
       // downloadManager({
       //   ...activeDownloads[0],
@@ -206,23 +150,9 @@ export const downloadManager = async ({
       deleteDownload();
       console.log('Download error:', err);
       Alert.alert('Download failed', err.message || 'Failed to download');
-      notifee.cancelNotification(fileName);
-      notifee.displayNotification({
-        id: 'downloadFailed' + fileName,
-        title: 'Download failed',
-        body: title,
-        android: {
-          pressAction: {
-            id: 'default',
-          },
-          smallIcon: 'ic_notification',
-          channelId,
-          color: primary,
-        },
-      });
+      notificationService.showDownloadFailed(title, fileName);
       removeActiveDownload(fileName);
       setAlreadyDownloaded(false);
-      notifee.cancelNotification(fileName);
       console.log('Retrying download', activeDownloads[0]);
       // downloadManager({
       //   ...activeDownloads[0],

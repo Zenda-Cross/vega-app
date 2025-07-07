@@ -37,7 +37,7 @@ import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
 import {updateProvidersService} from './lib/services/UpdateProviders';
-import notifee, {EventDetail, EventType} from '@notifee/react-native';
+import {EventDetail, EventType} from '@notifee/react-native';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import {downloadFolder} from './lib/constants';
 import {cancelHlsDownload} from './lib/hlsDownloader2';
@@ -45,6 +45,7 @@ import useDownloadsStore from './lib/zustand/downloadsStore';
 import {QueryClientProvider} from '@tanstack/react-query';
 import {queryClient} from './lib/client';
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
+import {notificationService} from './lib/services/Notification';
 
 enableScreens(true);
 enableFreeze(true);
@@ -199,8 +200,7 @@ const App = () => {
         }
       }
     }
-    notifee.onBackgroundEvent(actionHandler);
-    notifee.onForegroundEvent(actionHandler);
+    notificationService.setupEventHandlers(actionHandler, actionHandler);
   }, []);
 
   // Initialize update service
@@ -451,12 +451,7 @@ const App = () => {
 
   useEffect(() => {
     if (settingsStorage.isAutoCheckUpdateEnabled()) {
-      checkForUpdate(
-        () => {},
-        settingsStorage.isAutoDownloadEnabled(),
-        false,
-        primary,
-      );
+      checkForUpdate(() => {}, settingsStorage.isAutoDownloadEnabled(), false);
     }
   }, []);
 

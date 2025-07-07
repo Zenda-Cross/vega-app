@@ -1,8 +1,7 @@
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import axios from 'axios';
-import notifee from '@notifee/react-native';
 import {Downloads} from './zustand/downloadsStore';
-import {settingsStorage} from './storage';
+import {notificationService} from './services/Notification';
 
 interface SegmentInfo {
   duration: number;
@@ -230,12 +229,6 @@ export const hlsDownloader2 = async ({
   hlsDownloadMap.set(hlsJobId, fileName);
   setDownloadId(hlsJobId);
 
-  const channelId = await notifee.createChannel({
-    id: 'download',
-    name: 'Download Notifications',
-  });
-
-  const primary = settingsStorage.getPrimaryColor();
   const tempDir = RNFS.CachesDirectoryPath + '/hls_segments/';
 
   try {
@@ -283,34 +276,13 @@ export const hlsDownloader2 = async ({
               m3u8Data.segments.length
             } (${progress.toFixed(1)}%)`,
           );
-          await notifee.displayNotification({
-            title: title,
-            body: `Downloaded ${progress.toFixed(1)}%`,
-            id: fileName,
-            data: {fileName, jobId: hlsJobId},
-            android: {
-              pressAction: {
-                id: 'default',
-              },
-              smallIcon: 'ic_notification',
-              onlyAlertOnce: true,
-              progress: {
-                max: 100,
-                indeterminate: false,
-                current: Math.round(progress),
-              },
-              color: primary,
-              channelId,
-              actions: [
-                {
-                  title: 'Cancel',
-                  pressAction: {
-                    id: fileName,
-                  },
-                },
-              ],
-            },
-          });
+          await notificationService.showDownloadProgress(
+            title,
+            fileName,
+            progress / 100,
+            `Downloaded ${progress.toFixed(1)}%`,
+            hlsJobId,
+          );
         } catch (error) {
           console.error(`Failed to download segment ${segment.index}:`, error);
           throw error;
@@ -331,26 +303,13 @@ export const hlsDownloader2 = async ({
 
     // Merge all segments into final file
     console.log('Merging segments...');
-    await notifee.displayNotification({
-      title: title,
-      body: 'Merging video segments...',
-      id: fileName,
-      data: {fileName, jobId: hlsJobId},
-      android: {
-        pressAction: {
-          id: 'default',
-        },
-        smallIcon: 'ic_notification',
-        onlyAlertOnce: true,
-        progress: {
-          max: 100,
-          indeterminate: true,
-          current: 100,
-        },
-        color: primary,
-        channelId,
-      },
-    });
+    await notificationService.showDownloadProgress(
+      title,
+      fileName,
+      1,
+      'Merging video segments...',
+      hlsJobId,
+    );
 
     await mergeSegments(segmentPaths, path);
 
@@ -371,20 +330,8 @@ export const hlsDownloader2 = async ({
     console.log('Download completed successfully');
     setAlreadyDownloaded(true);
     downloadStore.removeActiveDownload(fileName);
-    await notifee.cancelNotification(fileName);
 
-    await notifee.displayNotification({
-      title: 'Download completed',
-      body: `Downloaded ${title}`,
-      android: {
-        pressAction: {
-          id: 'default',
-        },
-        color: primary,
-        smallIcon: 'ic_notification',
-        channelId,
-      },
-    });
+    await notificationService.showDownloadComplete(title, fileName);
   } catch (error) {
     console.error('HLS download failed:', error);
 
@@ -400,24 +347,15 @@ export const hlsDownloader2 = async ({
       await RNFS.unlink(path);
     }
 
-    await notifee.cancelNotification(fileName);
-
     const errorMessage = downloadCancelled
       ? 'Download cancelled'
       : `Failed to download ${title}`;
 
-    await notifee.displayNotification({
-      title: downloadCancelled ? 'Download cancelled' : 'Download failed',
-      body: errorMessage,
-      android: {
-        pressAction: {
-          id: 'default',
-        },
-        color: primary,
-        smallIcon: 'ic_notification',
-        channelId,
-      },
-    });
+    if (downloadCancelled) {
+      await notificationService.cancelNotification(fileName);
+    } else {
+      await notificationService.showDownloadFailed(title, fileName);
+    }
   } finally {
     currentDownloadId = null;
     // Clean up the mapping

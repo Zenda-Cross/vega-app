@@ -1,7 +1,8 @@
-import notifee, {AndroidImportance} from '@notifee/react-native';
+import {AndroidImportance} from '@notifee/react-native';
 import {extensionStorage, ProviderExtension} from '../storage/extensionStorage';
 import {extensionManager} from './ExtensionManager';
 import {settingsStorage} from '../storage';
+import {notificationService} from './Notification';
 
 export interface UpdateInfo {
   provider: ProviderExtension;
@@ -192,49 +193,31 @@ class UpdateProvidersService {
   private async showUpdatingNotification(
     providers: ProviderExtension[],
   ): Promise<void> {
-    const channelId = await notifee.createChannel({
-      id: 'provider-updates',
-      name: 'Provider Updates',
-      importance: AndroidImportance.LOW,
-    });
-
-    await notifee.displayNotification({
-      id: 'updating-providers',
-      title: 'Updating Providers',
-      body: `Updating ${providers.length} provider${
+    await notificationService.showUpdateProgress(
+      'Updating Providers',
+      `Updating ${providers.length} provider${
         providers.length > 1 ? 's' : ''
       }...`,
-      android: {
-        smallIcon: 'ic_notification',
-        channelId,
-        importance: AndroidImportance.LOW,
-        ongoing: true,
-        progress: {
-          indeterminate: true,
-        },
+      {
+        max: 100,
+        current: 0,
+        indeterminate: true,
       },
-    });
+    );
   }
 
-  /**
-   * Show notification when updates are complete
+  /**   * Show notification when updates are complete
    */
   private async showUpdateCompleteNotification(
     updated: ProviderExtension[],
     failed: ProviderExtension[],
   ): Promise<void> {
     // Cancel the updating notification
-    await notifee.cancelNotification('updating-providers');
+    await notificationService.cancelNotification('updateProgress');
 
     if (updated.length === 0 && failed.length === 0) {
       return;
     }
-
-    const channelId = await notifee.createChannel({
-      id: 'provider-updates',
-      name: 'Provider Updates',
-      importance: AndroidImportance.DEFAULT,
-    });
 
     let title = '';
     let body = '';
@@ -254,16 +237,10 @@ class UpdateProvidersService {
       }`;
     }
 
-    await notifee.displayNotification({
+    await notificationService.displayUpdateNotification({
       id: 'providers-updated',
       title,
       body,
-      android: {
-        smallIcon: 'ic_notification',
-
-        channelId,
-        importance: AndroidImportance.DEFAULT,
-      },
     });
   }
 
