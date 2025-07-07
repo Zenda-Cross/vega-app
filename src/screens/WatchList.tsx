@@ -16,7 +16,7 @@ import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-const Library = () => {
+const WatchList = () => {
   const {primary} = useThemeStore(state => state);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
@@ -127,4 +127,4 @@ const Library = () => {
   );
 };
 
-export default Library;
+export default WatchList;
