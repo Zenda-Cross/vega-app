@@ -603,6 +603,7 @@ const Player = ({route}: Props): React.JSX.Element => {
             className="opacity-70 p-2 rounded-full">
             <MaterialIcons
               name={isPlayerLocked ? 'lock' : 'lock-open'}
+              color={'hsl(0, 0%, 70%)'}
               size={24}
             />
           </TouchableOpacity>
@@ -674,7 +675,7 @@ const Player = ({route}: Props): React.JSX.Element => {
               size={26}
               color="white"
             />
-            <Text className="capitalize text-xs">
+            <Text className="capitalize text-xs text-white opacity-70">
               {audioTracks[selectedAudioTrackIndex]?.language || 'auto'}
             </Text>
           </TouchableOpacity>
@@ -692,7 +693,7 @@ const Player = ({route}: Props): React.JSX.Element => {
               size={24}
               color="white"
             />
-            <Text className="text-xs opacity-100 capitalize">
+            <Text className="text-xs capitalize text-white opacity-70">
               {selectedTextTrackIndex === 1000
                 ? 'none'
                 : textTracks[selectedTextTrackIndex]?.language}
