@@ -1,12 +1,4 @@
-import {
-  View,
-  Text,
-  StatusBar,
-  Platform,
-  Image,
-  Dimensions,
-  FlatList,
-} from 'react-native';
+import {View, Text, Platform, Image, Dimensions, FlatList} from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {WatchListStackParamList} from '../App';
@@ -15,6 +7,7 @@ import {TouchableOpacity} from 'react-native';
 import useThemeStore from '../lib/zustand/themeStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import {StatusBar} from 'expo-status-bar';
 
 const WatchList = () => {
   const {primary} = useThemeStore(state => state);
@@ -82,7 +75,7 @@ const WatchList = () => {
       <View
         className="w-full bg-black"
         style={{
-          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+          paddingTop: Platform.OS === 'android' ? 15 : 0, // Adjust for Android status bar height
         }}
       />
 

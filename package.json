@@ -19,7 +19,7 @@
     "expo-font": "13.0.4"
   },
   "dependencies": {
-    "@8man/react-native-media-console": "^2.2.4-alpha.23",
+    "@8man/react-native-media-console": "^2.2.4-alpha.24",
     "@dr.pogodin/react-native-fs": "^2.34.0",
     "@expo/config-plugins": "~9.0.0",
     "@gorhom/bottom-sheet": "^4.6.4",
@@ -41,6 +41,7 @@
     "expo-crypto": "~14.0.2",
     "expo-document-picker": "~13.0.3",
     "expo-intent-launcher": "~12.0.2",
+    "expo-status-bar": "~2.0.1",
     "expo-system-ui": "~4.0.9",
     "expo-updates": "~0.27.4",
     "expo-video-thumbnails": "~9.0.3",
@@ -64,7 +65,7 @@
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
-    "react-native-video": "^6.11.0",
+    "react-native-video": "^6.16.1",
     "react-native-volume-manager": "^2.0.8",
     "react-native-webview": "13.12.5",
     "zustand": "^4.5.2"

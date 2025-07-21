@@ -9,7 +9,14 @@ import {
   Platform,
   TouchableNativeFeedback,
 } from 'react-native';
-import {Easing} from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {cacheStorage, settingsStorage} from '../../lib/storage';
@@ -25,7 +32,6 @@ import {
   SelectedTrack,
   SelectedTrackType,
 } from 'react-native-video';
-import {MotiView} from 'moti';
 import useContentStore from '../../lib/zustand/contentStore';
 // import {CastButton, useRemoteMediaClient} from 'react-native-google-cast';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -54,6 +60,50 @@ const Player = ({route}: Props): React.JSX.Element => {
   // Player ref
   const playerRef: React.RefObject<VideoRef> = useRef(null);
   const hasSetInitialTracksRef = useRef(false);
+
+  // Shared values for animations
+  const loadingOpacity = useSharedValue(0);
+  const loadingScale = useSharedValue(0.8);
+  const loadingRotation = useSharedValue(0);
+  const lockButtonTranslateY = useSharedValue(-150);
+  const lockButtonOpacity = useSharedValue(0);
+  const textVisibility = useSharedValue(0);
+  const speedIconOpacity = useSharedValue(1);
+  const controlsTranslateY = useSharedValue(150);
+  const controlsOpacity = useSharedValue(0);
+  const toastOpacity = useSharedValue(0);
+  const settingsTranslateY = useSharedValue(10000);
+  const settingsOpacity = useSharedValue(0);
+
+  // Animated styles
+  const loadingContainerStyle = useAnimatedStyle(() => ({
+    opacity: loadingOpacity.value,
+    transform: [{scale: loadingScale.value}],
+  }));
+
+  const loadingIconStyle = useAnimatedStyle(() => ({
+    transform: [{rotate: `${loadingRotation.value}deg`}],
+  }));
+
+  const lockButtonStyle = useAnimatedStyle(() => ({
+    transform: [{translateY: lockButtonTranslateY.value}],
+    opacity: lockButtonOpacity.value,
+  }));
+
+  const controlsStyle = useAnimatedStyle(() => ({
+    transform: [{translateY: controlsTranslateY.value}],
+    opacity: controlsOpacity.value,
+  }));
+
+  const toastStyle = useAnimatedStyle(() => ({
+    opacity: toastOpacity.value,
+  }));
+
+  const settingsStyle = useAnimatedStyle(() => ({
+    transform: [{translateY: settingsTranslateY.value}],
+
+    opacity: settingsOpacity.value,
+  }));
 
   // Active episode state
   const [activeEpisode, setActiveEpisode] = useState(
@@ -111,9 +161,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     toastMessage,
     showToast,
     isTextVisible,
-    setIsTextVisible,
     handleResizeMode,
-    setToast,
     togglePlayerLock,
     handleLockedScreenTap,
     unlockButtonTimerRef,
@@ -136,10 +184,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     () => settingsStorage.hideSeekButtons() || false,
     [],
   );
-  const enable2xGesture = useMemo(
-    () => settingsStorage.isEnable2xGestureEnabled() || false,
-    [],
-  );
+
   const enableSwipeGesture = useMemo(
     () => settingsStorage.isSwipeGestureEnabled(),
     [],
@@ -379,6 +424,80 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [unlockButtonTimerRef]);
 
+  // Animation effects
+  useEffect(() => {
+    // Loading animations
+    if (streamLoading) {
+      loadingOpacity.value = withTiming(1, {duration: 800});
+      loadingScale.value = withTiming(1, {duration: 800});
+      loadingRotation.value = withRepeat(
+        withSequence(
+          withDelay(500, withTiming(180, {duration: 900})),
+          withTiming(180, {duration: 600}),
+          withTiming(360, {duration: 900}),
+          withTiming(360, {duration: 600}),
+        ),
+        -1,
+      );
+    }
+  }, [streamLoading]);
+
+  useEffect(() => {
+    // Lock button animations
+    const shouldShow =
+      (isPlayerLocked && showUnlockButton) || (!isPlayerLocked && showControls);
+    lockButtonTranslateY.value = withTiming(shouldShow ? 0 : -150, {
+      duration: 250,
+    });
+    lockButtonOpacity.value = withTiming(shouldShow ? 1 : 0, {
+      duration: 250,
+    });
+  }, [isPlayerLocked, showUnlockButton, showControls]);
+
+  useEffect(() => {
+    // 2x speed text visibility
+    textVisibility.value = withTiming(isTextVisible ? 1 : 0, {duration: 250});
+
+    // Speed icon blinking animation
+    if (isTextVisible) {
+      speedIconOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, {duration: 250}),
+          withTiming(0, {duration: 150}),
+          withTiming(1, {duration: 150}),
+        ),
+        -1,
+      );
+    } else {
+      speedIconOpacity.value = withTiming(1, {duration: 150});
+    }
+  }, [isTextVisible]);
+
+  useEffect(() => {
+    // Controls visibility
+    controlsTranslateY.value = withTiming(showControls ? 0 : 150, {
+      duration: 250,
+    });
+    controlsOpacity.value = withTiming(showControls ? 1 : 0, {
+      duration: 250,
+    });
+  }, [showControls]);
+
+  useEffect(() => {
+    // Toast visibility
+    toastOpacity.value = withTiming(showToast ? 1 : 0, {duration: 250});
+  }, [showToast]);
+
+  useEffect(() => {
+    // Settings modal visibility
+    settingsTranslateY.value = withTiming(showSettings ? 0 : 5000, {
+      duration: 250,
+    });
+    settingsOpacity.value = withTiming(showSettings ? 1 : 0, {
+      duration: 250,
+    });
+  }, [showSettings]);
+
   // Memoized video player props
   const videoPlayerProps = useMemo(
     () => ({
@@ -492,36 +611,14 @@ const Player = ({route}: Props): React.JSX.Element => {
             false, // ripple shows at tap location
           )}>
           <View className="w-full h-full justify-center items-center">
-            <MotiView
-              from={{opacity: 0, scale: 0.8}}
-              animate={{opacity: 1, scale: 1}}
-              transition={
-                {
-                  type: 'timing',
-                  duration: 800,
-                } as any
-              }
+            <Animated.View
+              style={[loadingContainerStyle]}
               className="justify-center items-center">
-              <MotiView
-                from={{rotate: '0deg'}}
-                animate={{
-                  rotate: ['0deg', '180deg', '180deg', '360deg', '360deg'],
-                }}
-                transition={
-                  {
-                    type: 'timing',
-                    duration: 3000,
-                    loop: true,
-                    repeatReverse: false,
-                    delay: 500,
-                    keyframes: [0, 0.3, 0.5, 0.8, 1],
-                  } as any
-                }
-                className="mb-2">
+              <Animated.View style={[loadingIconStyle]} className="mb-2">
                 <MaterialIcons name="hourglass-empty" size={60} color="white" />
-              </MotiView>
+              </Animated.View>
               <Text className="text-white text-lg mt-4">Loading stream...</Text>
-            </MotiView>
+            </Animated.View>
           </View>
         </TouchableNativeFeedback>
       </SafeAreaView>
@@ -572,31 +669,8 @@ const Player = ({route}: Props): React.JSX.Element => {
 
       {/* Lock/Unlock button */}
       {!streamLoading && !Platform.isTV && (
-        <MotiView
-          from={{translateY: 0, opacity: 1}}
-          animate={{
-            translateY:
-              (isPlayerLocked && showUnlockButton) ||
-              (!isPlayerLocked && showControls)
-                ? 0
-                : -150,
-            opacity:
-              (isPlayerLocked && showUnlockButton) ||
-              (!isPlayerLocked && showControls)
-                ? 1
-                : 0,
-          }}
-          //@ts-ignore
-          transition={{
-            translateY: {
-              type: 'timing',
-              duration: 227,
-            },
-            opacity: {
-              type: 'timing',
-              duration: 227,
-            },
-          }}
+        <Animated.View
+          style={[lockButtonStyle]}
           className="absolute top-5 right-5 flex-row items-center gap-2 z-50">
           <TouchableOpacity
             onPress={togglePlayerLock}
@@ -612,55 +686,13 @@ const Player = ({route}: Props): React.JSX.Element => {
               style={{width: 40, height: 40, opacity: 0.5, tintColor: 'white'}}
             />
           )} */}
-        </MotiView>
+        </Animated.View>
       )}
-
-      {/* 2x speed gesture */}
-      {!streamLoading &&
-        !Platform.isTV &&
-        enable2xGesture &&
-        !isPlayerLocked && (
-          <TouchableOpacity
-            onLongPress={() => {
-              setPlaybackRate(2);
-              setIsTextVisible(true);
-              setToast('2x Speed', 1000);
-            }}
-            onPressOut={() => {
-              setPlaybackRate(1.0);
-              setIsTextVisible(false);
-            }}
-            className="absolute top-[20%] right-[10%] w-[15%] h-[60%] justify-center items-center">
-            {isTextVisible && (
-              <View className="flex flex-row items-center bg-white p-2 rounded-full">
-                <MotiView
-                  animate={{opacity: [1, 0, 1]}}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 300,
-                    loop: true,
-                    easing: Easing.inOut(Easing.ease),
-                  }}>
-                  <MaterialIcons name="fast-forward" size={40} color="black" />
-                </MotiView>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
 
       {/* Bottom controls */}
       {!isPlayerLocked && (
-        <MotiView
-          from={{translateY: 0}}
-          animate={{
-            translateY: showControls ? 0 : 150,
-            opacity: showControls ? 1 : 0,
-          }}
-          //@ts-ignore
-          transition={{
-            type: 'timing',
-            duration: 227,
-          }}
+        <Animated.View
+          style={[controlsStyle]}
           className="absolute bottom-3 right-6 flex flex-row justify-center w-full gap-x-16">
           {/* Audio controls */}
           <TouchableOpacity
@@ -776,32 +808,23 @@ const Player = ({route}: Props): React.JSX.Element => {
                 <MaterialIcons name="skip-next" size={28} color="white" />
               </TouchableOpacity>
             )}
-        </MotiView>
+        </Animated.View>
       )}
 
       {/* Toast message */}
-      <MotiView
-        from={{opacity: 0}}
-        animate={{opacity: showToast ? 1 : 0}}
-        //@ts-ignore
-        transition={{type: 'timing', duration: 150}}
+      <Animated.View
+        style={[toastStyle]}
         pointerEvents="none"
         className="absolute w-full top-12 justify-center items-center px-2">
         <Text className="text-white bg-black/50 p-2 rounded-full text-base">
           {toastMessage}
         </Text>
-      </MotiView>
+      </Animated.View>
 
       {/* Settings Modal */}
       {!streamLoading && !isPlayerLocked && showSettings && (
-        <MotiView
-          from={{translateY: 0, opacity: 0}}
-          animate={{
-            translateY: showSettings ? 0 : 5000,
-            opacity: showSettings ? 1 : 0,
-          }}
-          //@ts-ignore
-          transition={{type: 'timing', duration: 250}}
+        <Animated.View
+          style={[settingsStyle]}
           className="absolute opacity-0 top-0 left-0 w-full h-full bg-black/20 justify-end items-center"
           onTouchEnd={() => setShowSettings(false)}>
           <View
@@ -1104,7 +1127,7 @@ const Player = ({route}: Props): React.JSX.Element => {
               </ScrollView>
             )}
           </View>
-        </MotiView>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
