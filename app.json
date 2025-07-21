@@ -59,8 +59,7 @@
           },
           "ios": {}
         }
-      ],
-      "./plugins/android-native-config.js"
+      ]
     ],
     "slug": "vega",
     "version": "3.1.2",
@@ -70,7 +69,7 @@
       "minSdkVersion": 24,
       "edgeToEdgeEnabled": true,
       "package": "com.vega",
-      "versionCode": 140,
+      "versionCode": 141,
       "permissions": [
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
