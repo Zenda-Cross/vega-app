@@ -37,6 +37,7 @@ interface SeasonListProps {
     poster?: string;
     background?: string;
   };
+  type: string;
   metaTitle: string;
   providerValue: string;
   refreshing?: boolean;
@@ -65,6 +66,7 @@ interface StickyMenuState {
 const SeasonList: React.FC<SeasonListProps> = ({
   LinkList,
   poster,
+  type,
   metaTitle,
   providerValue,
   refreshing: _refreshing,
@@ -435,7 +437,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onPress={() =>
                 playHandler({
                   linkIndex: index,
-                  type: 'series',
+                  type: type,
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
                   seasonTitle: activeSeason?.title || '',
@@ -453,7 +455,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type="series"
+              type={type}
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -507,14 +509,16 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onPress={() =>
                 playHandler({
                   linkIndex: index,
-                  type: item.type || 'series',
+                  type: type,
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
                   seasonTitle: activeSeason?.title || '',
                   episodeData: filteredAndSortedDirectLinks,
                 })
               }
-              onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
+              onLongPress={() =>
+                onLongPressHandler(true, item.link, item?.type || 'series')
+              }>
               <Ionicons name="play-circle" size={28} color={primary} />
               <Text className="text-white">
                 {activeSeason?.directLinks?.length &&
@@ -528,7 +532,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type="series"
+              type={type}
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
