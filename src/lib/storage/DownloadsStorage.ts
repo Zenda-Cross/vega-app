@@ -1,4 +1,4 @@
-import {cacheStorage} from './StorageService';
+import {cacheStorage, mainStorage} from './StorageService';
 import * as FileSystem from 'expo-file-system';
 
 /**
@@ -7,12 +7,55 @@ import * as FileSystem from 'expo-file-system';
 export enum DownloadsKeys {
   FILES = 'downloadFiles',
   THUMBNAILS = 'downloadThumbnails',
+  DOWNLOADED_FILES = 'downloadedFiles',
+}
+
+export interface DownloadPayload {
+  id?: number;
+  url?: string;
+  fileName: string;
+  provider: string;
+  progress?: number;
+  folderName: string;
+  fileType: string;
+  status: 'downloading' | 'paused' | 'downloaded';
 }
 
 /**
  * Downloads storage manager
  */
+
 export class DownloadsStorage {
+  /**
+   * Get all downloaded files
+   */
+  getDownloads(): Map<string, DownloadPayload> {
+    const downloadsString = mainStorage.getString(
+      DownloadsKeys.DOWNLOADED_FILES,
+    );
+    if (!downloadsString) {
+      return new Map<string, DownloadPayload>();
+    }
+    try {
+      const downloads: Record<string, DownloadPayload> =
+        JSON.parse(downloadsString);
+      return new Map(Object.entries(downloads));
+    } catch (error) {
+      console.error('Failed to parse downloads:', error);
+      return new Map<string, DownloadPayload>();
+    }
+  }
+
+  /**
+   * Save downloaded files information
+   */
+  saveDownloads(downloads: Map<string, DownloadPayload>): void {
+    mainStorage.setString(
+      DownloadsKeys.DOWNLOADED_FILES,
+      JSON.stringify(Object.fromEntries(downloads)),
+    );
+  }
+
   /**
    * Save download files information
    */

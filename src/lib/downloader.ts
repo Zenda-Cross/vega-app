@@ -2,7 +2,6 @@ import {ifExists} from './file/ifExists';
 // import {hlsDownloader} from './hlsDownloader';
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import {Alert} from 'react-native';
-import {Downloads} from './zustand/downloadsStore';
 import {downloadFolder} from './constants';
 import requestStoragePermission from './file/getStoragePermission';
 import {hlsDownloader2} from './hlsDownloader2';
@@ -13,7 +12,7 @@ export const downloadManager = async ({
   url,
   fileName,
   fileType,
-  downloadStore,
+  setDownloadActive,
   setAlreadyDownloaded,
   setDownloadId,
   headers,
@@ -23,24 +22,22 @@ export const downloadManager = async ({
   url: string;
   fileName: string;
   fileType: string;
-  downloadStore: Downloads;
+  setDownloadActive: (value: boolean) => void;
   headers?: any;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
   deleteDownload: () => void;
 }) => {
   await requestStoragePermission();
-  const {addActiveDownload, removeActiveDownload, activeDownloads} =
-    downloadStore;
 
   await notificationService.showDownloadStarting(title, fileName);
   if (await ifExists(fileName)) {
     console.log('File already exists');
     setAlreadyDownloaded(true);
-    removeActiveDownload(fileName);
+    setDownloadActive(false);
     return;
   }
-  addActiveDownload({title, url, fileName, fileType});
+  setDownloadActive(true);
   // if (activeDownloads.length > 0) {
   //   notifee.displayNotification({
   //     id: 'downloadQueue',
@@ -80,7 +77,7 @@ export const downloadManager = async ({
       // });
       hlsDownloader2({
         videoUrl: url,
-        downloadStore,
+        setDownloadActive,
         path: `${downloadFolder}/${fileName}.mp4`,
         fileName,
         title,
@@ -139,7 +136,7 @@ export const downloadManager = async ({
       console.log('Download complete', res);
       setAlreadyDownloaded(true);
       notificationService.showDownloadComplete(title, fileName);
-      removeActiveDownload(fileName);
+      setDownloadActive(false);
       // downloadManager({
       //   ...activeDownloads[0],
       //   downloadStore,
@@ -151,9 +148,8 @@ export const downloadManager = async ({
       console.log('Download error:', err);
       Alert.alert('Download failed', err.message || 'Failed to download');
       notificationService.showDownloadFailed(title, fileName);
-      removeActiveDownload(fileName);
+      setDownloadActive(false);
       setAlreadyDownloaded(false);
-      console.log('Retrying download', activeDownloads[0]);
       // downloadManager({
       //   ...activeDownloads[0],
       //   downloadStore,
@@ -165,7 +161,7 @@ export const downloadManager = async ({
     console.error('Download error:', error);
     deleteDownload();
     Alert.alert('Download failed', 'Failed to download');
-    removeActiveDownload(fileName);
+    setDownloadActive(false);
     setAlreadyDownloaded(false);
   }
 };

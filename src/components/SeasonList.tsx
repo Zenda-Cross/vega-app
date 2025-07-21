@@ -21,7 +21,6 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import * as IntentLauncher from 'expo-intent-launcher';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
-
 import {EpisodeLink, Link} from '../lib/providers/types';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
@@ -30,6 +29,7 @@ import {ifExists} from '../lib/file/ifExists';
 import {useEpisodes, useStreamData} from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
+import {formatName} from '../lib/utils/helpers';
 
 interface SeasonListProps {
   LinkList: Link[];
@@ -460,11 +460,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
-              fileName={(
-                metaTitle +
-                (activeSeason?.title || '') +
-                item.title
-              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+              fileName={formatName(item.title)}
+              folderName={formatName(
+                metaTitle + activeSeason?.title || 'Unknown',
+              )}
             />
           </View>
         </View>
@@ -535,11 +534,10 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
-              fileName={(
-                metaTitle +
-                (activeSeason?.title || '') +
-                item.title
-              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
+              fileName={formatName(item.title)}
+              folderName={formatName(
+                metaTitle + activeSeason?.title || 'Unknown',
+              )}
             />
           </View>
         </View>

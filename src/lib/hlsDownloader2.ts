@@ -1,6 +1,5 @@
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import axios from 'axios';
-import {Downloads} from './zustand/downloadsStore';
 import {notificationService} from './services/Notification';
 
 interface SegmentInfo {
@@ -207,7 +206,7 @@ export const hlsDownloader2 = async ({
   path,
   fileName,
   title,
-  downloadStore,
+  setDownloadActive,
   setAlreadyDownloaded,
   setDownloadId,
   headers = {},
@@ -216,7 +215,7 @@ export const hlsDownloader2 = async ({
   path: string;
   fileName: string;
   title: string;
-  downloadStore: Downloads;
+  setDownloadActive: (value: boolean) => void;
   setAlreadyDownloaded: (value: boolean) => void;
   setDownloadId: (value: number) => void;
   headers?: any;
@@ -329,7 +328,7 @@ export const hlsDownloader2 = async ({
     // Success
     console.log('Download completed successfully');
     setAlreadyDownloaded(true);
-    downloadStore.removeActiveDownload(fileName);
+    setDownloadActive(false);
 
     await notificationService.showDownloadComplete(title, fileName);
   } catch (error) {
@@ -337,7 +336,7 @@ export const hlsDownloader2 = async ({
 
     // Clean up on error
     setAlreadyDownloaded(false);
-    downloadStore.removeActiveDownload(fileName);
+    setDownloadActive(false);
 
     if (await RNFS.exists(tempDir)) {
       await RNFS.unlink(tempDir);
@@ -350,6 +349,7 @@ export const hlsDownloader2 = async ({
     const errorMessage = downloadCancelled
       ? 'Download cancelled'
       : `Failed to download ${title}`;
+    console.error(errorMessage);
 
     if (downloadCancelled) {
       await notificationService.cancelNotification(fileName);
