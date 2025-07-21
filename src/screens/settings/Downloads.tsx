@@ -6,7 +6,7 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 import React, {useState, useEffect} from 'react';
 import {settingsStorage, downloadsStorage} from '../../lib/storage';
 import useThemeStore from '../../lib/zustand/themeStore';
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';

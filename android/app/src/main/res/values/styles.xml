@@ -1,11 +1,20 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-  <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+  <style name="AppTheme" parent="Theme.EdgeToEdge">
+    <item name="android:textColor">@android:color/white</item>
+    <item name="android:editTextStyle">@style/ResetEditText</item>
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-    <item name="android:statusBarColor">@android:color/transparent</item>
-    <item name="android:navigationBarColor">@android:color/transparent</item>
-    <item name="android:windowLightStatusBar">true</item>
-    <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item>
-    <item name="android:forceDarkAllowed">true</item>
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:windowLightNavigationBar">false</item>
+    <item name="enforceNavigationBarContrast">false</item>
+  </style>
+  <style name="ResetEditText" parent="@android:style/Widget.EditText">
+    <item name="android:padding">0dp</item>
+    <item name="android:textColorHint">#c8c8c8</item>
+    <item name="android:textColor">@android:color/white</item>
+  </style>
+  <style name="Theme.App.SplashScreen" parent="AppTheme">
+    <item name="android:windowBackground">@drawable/splashscreen_logo</item>
   </style>
   <style name="BootTheme" parent="Theme.BootSplash.EdgeToEdge">
     <item name="postBootSplashTheme">@style/AppTheme</item>

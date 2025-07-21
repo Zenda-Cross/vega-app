@@ -6,7 +6,6 @@ import {
   TouchableNativeFeedback,
   ScrollView,
   Dimensions,
-  StatusBar,
 } from 'react-native';
 import React, {useCallback, useMemo} from 'react';
 import {
@@ -144,7 +143,7 @@ const Settings = ({navigation}: Props) => {
       entering={FadeInUp.springify()}
       layout={Layout.springify()}
       contentContainerStyle={{
-        paddingTop: StatusBar.currentHeight || 0,
+        paddingTop: 15,
         paddingBottom: 24,
         flexGrow: 1,
       }}>

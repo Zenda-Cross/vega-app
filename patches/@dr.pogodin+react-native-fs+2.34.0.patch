@@ -1,0 +1,12 @@
+diff --git a/node_modules/@dr.pogodin/react-native-fs/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsPackage.kt b/node_modules/@dr.pogodin/react-native-fs/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsPackage.kt
+index 6cda7fd..9449dd4 100644
+--- a/node_modules/@dr.pogodin/react-native-fs/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsPackage.kt
++++ b/node_modules/@dr.pogodin/react-native-fs/android/src/main/java/com/drpogodin/reactnativefs/ReactNativeFsPackage.kt
+@@ -24,6 +24,7 @@ class ReactNativeFsPackage : BaseReactPackage() {
+         ReactNativeFsModule.NAME,
+         canOverrideExistingModule = false,  // canOverrideExistingModule
+         needsEagerInit = false,  // needsEagerInit
++        hasConstants = true, // hasConstants (set to true or false as needed)
+         isCxxModule = false,  // isCxxModule
+         isTurboModule = true // isTurboModule
+       )

@@ -129,7 +129,7 @@ export default function Slider({
           ListFooterComponent={
             !isLoading && posts.length === 0 ? (
               <View className="flex flex-row w-96 justify-center h-10 items-center">
-                <Text className="text-whiter text-center">
+                <Text className="text-whiter text-center text-white">
                   No content found
                 </Text>
               </View>

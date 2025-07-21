@@ -8,11 +8,10 @@ import {MotiView} from 'moti';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import useContentStore from '../lib/zustand/contentStore';
 import * as IntentLauncher from 'expo-intent-launcher';
-import useDownloadsStore from '../lib/zustand/downloadsStore';
 import {downloadManager} from '../lib/downloader';
 import {cancelHlsDownload} from '../lib/hlsDownloader2';
 // import {FFmpegKit} from 'ffmpeg-kit-react-native';
-import RNFS from 'react-native-fs';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import {downloadFolder} from '../lib/constants';
 import useThemeStore from '../lib/zustand/themeStore';
 import DownloadBottomSheet from './DownloadBottomSheet';
@@ -44,8 +43,7 @@ const DownloadComponent = ({
   const [downloadId, setDownloadId] = useState<number | null>(null);
   const [servers, setServers] = useState<Stream[]>([]);
   const [serverLoading, setServerLoading] = useState(false);
-
-  const downloadStore = useDownloadsStore(state => state);
+  const [downloadActive, setDownloadActive] = useState(false);
 
   // check if file already exists
   useLayoutEffect(() => {
@@ -124,9 +122,7 @@ const DownloadComponent = ({
   return (
     <>
       <View className="flex-row items-center mt-1 justify-between rounded-full bg-white/30 p-1">
-        {downloadStore.activeDownloads.find(
-          item => item.fileName === fileName,
-        ) ? (
+        {downloadActive ? (
           <MotiView
             style={{
               marginHorizontal: 4,
@@ -217,7 +213,7 @@ const DownloadComponent = ({
               url: server.link,
               fileName: fileName,
               fileType: server.type,
-              downloadStore: downloadStore,
+              setDownloadActive: setDownloadActive,
               setAlreadyDownloaded: setAlreadyDownloaded,
               setDownloadId: setDownloadId,
               headers: server?.headers,
@@ -230,7 +226,7 @@ const DownloadComponent = ({
               url: sub.link,
               fileName: fileName + '-' + sub.title,
               fileType: sub.type,
-              downloadStore: downloadStore,
+              setDownloadActive: setDownloadActive,
               setAlreadyDownloaded: () => {},
               setDownloadId: setDownloadId,
               deleteDownload: () => {},
@@ -267,8 +263,8 @@ const DownloadComponent = ({
                 //FFMPEGKIT CANCEL
                 // FFmpegKit.cancel(downloadId);
               }
+              setDownloadActive(false);
 
-              downloadStore.removeActiveDownload(fileName);
               const files = await RNFS.readDir(downloadFolder);
               // Find a file with the given name (without extension)
               const foundFile = files.find(fileItem => {

@@ -2,7 +2,6 @@ import {
   SafeAreaView,
   ScrollView,
   RefreshControl,
-  StatusBar,
   View,
   Text,
 } from 'react-native';
@@ -26,6 +25,7 @@ import ContinueWatching from '../../components/ContinueWatching';
 import {providerManager} from '../../lib/services/ProviderManager';
 import Tutorial from '../../components/Touturial';
 import {QueryErrorBoundary} from '../../components/ErrorBoundary';
+import {StatusBar} from 'expo-status-bar';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -166,7 +166,7 @@ const Home = ({}: Props) => {
               !disableDrawer && <ProviderDrawer drawerRef={drawer} />
             }>
             <StatusBar
-              showHideTransition="fade"
+              style="auto"
               animated={true}
               translucent={true}
               backgroundColor={backgroundColor}

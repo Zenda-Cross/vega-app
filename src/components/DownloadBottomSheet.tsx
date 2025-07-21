@@ -45,7 +45,6 @@ const DownloadBottomSheet = ({
       return server.subtitles;
     }
   });
-  console.log(subtitle);
   useEffect(() => {
     if (showModal) {
       bottomSheetRef.current?.expand();

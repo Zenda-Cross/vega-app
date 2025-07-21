@@ -7,7 +7,7 @@ import {gofileExtracter} from './gofileExtracter';
 import {superVideoExtractor} from './superVideoExtractor';
 import {gdFlixExtracter} from './gdflixExtractor';
 import {ProviderContext} from './types';
-import Aes from 'react-native-aes-crypto';
+import * as Crypto from 'expo-crypto';
 
 /**
  * Context for provider functions.
@@ -25,7 +25,7 @@ export const providerContext: ProviderContext = {
   axios,
   getBaseUrl,
   commonHeaders: headers,
-  Aes,
+  Crypto,
   cheerio,
   extractors,
 };

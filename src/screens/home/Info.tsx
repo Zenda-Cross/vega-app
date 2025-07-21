@@ -514,6 +514,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                         poster: posterImage,
                         background: backgroundImage,
                       }}
+                      type={info?.type || 'series'}
                       metaTitle={displayTitle}
                       routeParams={route.params}
                     />

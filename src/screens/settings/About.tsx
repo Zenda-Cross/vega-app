@@ -11,36 +11,32 @@ import {
 import React, {useState} from 'react';
 import {Feather} from '@expo/vector-icons';
 import {settingsStorage} from '../../lib/storage';
-import RNFS from 'react-native-fs';
-import notifee, {EventDetail, EventType} from '@notifee/react-native';
-import RNApkInstaller from '@dominicvonk/react-native-apk-installer';
+import * as RNFS from '@dr.pogodin/react-native-fs';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import useThemeStore from '../../lib/zustand/themeStore';
 import * as Application from 'expo-application';
+import {notificationService} from '../../lib/services/Notification';
 
 // download update
-const downloadUpdate = async (url: string, name: string, theme: string) => {
+const downloadUpdate = async (url: string, name: string) => {
   console.log('downloading', url, name);
-  await notifee.requestPermission();
-  // Create a channel (required for Android)
-  const channelId = await notifee.createChannel({
-    id: 'download',
-    name: 'Download Notifications',
-  });
+  await notificationService.requestPermission();
+
   try {
     if (await RNFS.exists(`${RNFS.DownloadDirectoryPath}/${name}`)) {
-      notifee.displayNotification({
+      await notificationService.displayUpdateNotification({
+        id: 'downloadComplete',
         title: 'Download Completed',
         body: 'Tap to install',
         data: {name: `${name}`},
-        android: {
-          color: theme,
-          smallIcon: 'ic_notification',
-          channelId,
-          pressAction: {
-            id: 'install',
+        actions: [
+          {
+            title: 'Install',
+            pressAction: {
+              id: 'install',
+            },
           },
-        },
+        ],
       });
       return;
     }
@@ -56,38 +52,33 @@ const downloadUpdate = async (url: string, name: string, theme: string) => {
     },
     progress: res => {
       console.log('progress', res.bytesWritten, res.contentLength);
-      notifee.displayNotification({
-        id: 'downloadUpdate',
-        title: 'Downloading Update',
-        body: `Version ${Application.nativeApplicationVersion} -> ${name}`,
-        android: {
-          smallIcon: 'ic_notification',
-          channelId,
-          color: theme,
-          onlyAlertOnce: true,
-          progress: {
-            current: res.bytesWritten,
-            max: res.contentLength,
-          },
+      notificationService.showUpdateProgress(
+        'Downloading Update',
+        `Version ${Application.nativeApplicationVersion} -> ${name}`,
+        {
+          current: res.bytesWritten,
+          max: res.contentLength,
+          indeterminate: false,
         },
-      });
+      );
     },
   });
   promise.then(async res => {
     if (res.statusCode === 200) {
-      notifee.cancelNotification('downloadUpdate');
-      notifee.displayNotification({
+      await notificationService.cancelNotification('updateProgress');
+      await notificationService.displayUpdateNotification({
+        id: 'downloadComplete',
         title: 'Download Complete',
         body: 'Tap to install',
         data: {name},
-        android: {
-          color: theme,
-          smallIcon: 'ic_notification',
-          channelId,
-          pressAction: {
-            id: 'install',
+        actions: [
+          {
+            title: 'Install',
+            pressAction: {
+              id: 'install',
+            },
           },
-        },
+        ],
       });
     }
   });
@@ -98,7 +89,6 @@ export const checkForUpdate = async (
   setUpdateLoading: React.Dispatch<React.SetStateAction<boolean>>,
   autoDownload: boolean,
   showToast: boolean = true,
-  primary: string,
 ) => {
   setUpdateLoading(true);
   try {
@@ -121,7 +111,6 @@ export const checkForUpdate = async (
               ? downloadUpdate(
                   data?.assets?.[2]?.browser_download_url,
                   data.assets?.[2]?.name,
-                  primary,
                 )
               : Linking.openURL(data.html_url),
         },
@@ -147,36 +136,6 @@ export const checkForUpdate = async (
   }
   setUpdateLoading(false);
 };
-
-async function handleAction({
-  type,
-  detail,
-}: {
-  type: EventType;
-  detail: EventDetail;
-}) {
-  console.log('handleAction', type, detail.pressAction?.id);
-  if (type === EventType.PRESS && detail.pressAction?.id === 'install') {
-    const res = await RNFS.exists(
-      `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
-    );
-    console.log('install', res);
-    if (res) {
-      const installPermission =
-        await RNApkInstaller.haveUnknownAppSourcesPermission();
-      console.log('installPermission', installPermission);
-      if (!installPermission) {
-        RNApkInstaller.showUnknownAppSourcesPermission();
-      }
-
-      RNApkInstaller.install(
-        `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
-      );
-    }
-  }
-}
-notifee.onForegroundEvent(handleAction);
-notifee.onBackgroundEvent(handleAction);
 
 const About = () => {
   const {primary} = useThemeStore(state => state);
@@ -239,9 +198,7 @@ const About = () => {
 
         {/* Check Updates Button */}
         <TouchableNativeFeedback
-          onPress={() =>
-            checkForUpdate(setUpdateLoading, autoDownload, true, primary)
-          }
+          onPress={() => checkForUpdate(setUpdateLoading, autoDownload, true)}
           disabled={updateLoading}
           background={TouchableNativeFeedback.Ripple('#ffffff20', false)}>
           <View className="bg-white/10 p-4 rounded-lg flex-row justify-between items-center mt-4">

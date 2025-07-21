@@ -21,7 +21,6 @@ import {MotiView} from 'moti';
 import {Skeleton} from 'moti/skeleton';
 import * as IntentLauncher from 'expo-intent-launcher';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
-
 import {EpisodeLink, Link} from '../lib/providers/types';
 import {RootStackParamList} from '../App';
 import Downloader from './Downloader';
@@ -38,6 +37,7 @@ interface SeasonListProps {
     poster?: string;
     background?: string;
   };
+  type: string;
   metaTitle: string;
   providerValue: string;
   refreshing?: boolean;
@@ -66,6 +66,7 @@ interface StickyMenuState {
 const SeasonList: React.FC<SeasonListProps> = ({
   LinkList,
   poster,
+  type,
   metaTitle,
   providerValue,
   refreshing: _refreshing,
@@ -436,7 +437,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onPress={() =>
                 playHandler({
                   linkIndex: index,
-                  type: 'series',
+                  type: type,
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
                   seasonTitle: activeSeason?.title || '',
@@ -454,7 +455,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type="series"
+              type={type}
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -462,7 +463,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               fileName={(
                 metaTitle +
-                (activeSeason?.title || '') +
+                activeSeason.title +
                 item.title
               ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
@@ -508,14 +509,16 @@ const SeasonList: React.FC<SeasonListProps> = ({
               onPress={() =>
                 playHandler({
                   linkIndex: index,
-                  type: item.type || 'series',
+                  type: type,
                   primaryTitle: metaTitle,
                   secondaryTitle: item.title,
                   seasonTitle: activeSeason?.title || '',
                   episodeData: filteredAndSortedDirectLinks,
                 })
               }
-              onLongPress={() => onLongPressHandler(true, item.link, 'series')}>
+              onLongPress={() =>
+                onLongPressHandler(true, item.link, item?.type || 'series')
+              }>
               <Ionicons name="play-circle" size={28} color={primary} />
               <Text className="text-white">
                 {activeSeason?.directLinks?.length &&
@@ -529,7 +532,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type={item.type || 'series'}
+              type={type}
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
@@ -537,7 +540,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
               }
               fileName={(
                 metaTitle +
-                (activeSeason?.title || '') +
+                activeSeason.title +
                 item.title
               ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
