@@ -29,7 +29,6 @@ import {ifExists} from '../lib/file/ifExists';
 import {useEpisodes, useStreamData} from '../lib/hooks/useEpisodes';
 import useWatchHistoryStore from '../lib/zustand/watchHistrory';
 import useThemeStore from '../lib/zustand/themeStore';
-import {formatName} from '../lib/utils/helpers';
 
 interface SeasonListProps {
   LinkList: Link[];
@@ -460,10 +459,11 @@ const SeasonList: React.FC<SeasonListProps> = ({
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
-              fileName={formatName(item.title)}
-              folderName={formatName(
-                metaTitle + activeSeason?.title || 'Unknown',
-              )}
+              fileName={(
+                metaTitle +
+                activeSeason.title +
+                item.title
+              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
           </View>
         </View>
@@ -528,16 +528,17 @@ const SeasonList: React.FC<SeasonListProps> = ({
             <Downloader
               providerValue={providerValue}
               link={item.link}
-              type={item.type || 'series'}
+              type="series"
               title={
                 metaTitle.length > 30
                   ? metaTitle.slice(0, 30) + '... ' + item.title
                   : metaTitle + ' ' + item.title
               }
-              fileName={formatName(item.title)}
-              folderName={formatName(
-                metaTitle + activeSeason?.title || 'Unknown',
-              )}
+              fileName={(
+                metaTitle +
+                activeSeason.title +
+                item.title
+              ).replaceAll(/[^a-zA-Z0-9]/g, '_')}
             />
           </View>
         </View>
