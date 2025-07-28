@@ -136,7 +136,7 @@ const SearchSubtitles = ({
           <View className="flex-row justify-between items-center px-4 py-2">
             <TextInput
               placeholder="Name or IMDB ID"
-              className="bg-quaternary w-[60%] rounded-md p-2"
+              className="bg-quaternary w-[60%] rounded-md p-2 text-white"
               onChangeText={text => setSearchQuery(text)}
               value={searchQuery}
             />
@@ -175,14 +175,14 @@ const SearchSubtitles = ({
             <TextInput
               placeholder="Season"
               keyboardType="numeric"
-              className="bg-quaternary w-[10%] rounded-md p-2"
+              className="bg-quaternary text-white w-[10%] rounded-md p-2"
               onChangeText={text => setSeason(text)}
               value={season}
             />
             <TextInput
               placeholder="Episode"
               keyboardType="numeric"
-              className="bg-quaternary w-[10%] rounded-md p-2"
+              className="bg-quaternary text-white w-[10%] rounded-md p-2"
               onChangeText={text => setEpisode(text)}
               value={episode}
             />
