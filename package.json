@@ -19,7 +19,7 @@
     "expo-font": "13.0.4"
   },
   "dependencies": {
-    "@8man/react-native-media-console": "^2.2.4-alpha.24",
+    "@8man/react-native-media-console": "^2.2.4-alpha.25",
     "@dr.pogodin/react-native-fs": "^2.34.0",
     "@expo/config-plugins": "~9.0.0",
     "@gorhom/bottom-sheet": "^4.6.4",
