@@ -62,14 +62,14 @@
       ]
     ],
     "slug": "vega",
-    "version": "3.2.1",
+    "version": "3.2.2",
     "sdkVersion": "52.0.0",
     "userInterfaceStyle": "dark",
     "android": {
       "minSdkVersion": 24,
       "edgeToEdgeEnabled": true,
       "package": "com.vega",
-      "versionCode": 144,
+      "versionCode": 145,
       "permissions": [
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
