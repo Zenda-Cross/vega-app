@@ -1,6 +1,6 @@
 {
   "name": "vega",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "private": true,
   "scripts": {
     "android": "expo run:android",
@@ -64,7 +64,7 @@
     "react-native-safe-area-context": "4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
-    "react-native-video": "^6.11.0",
+    "react-native-video": "^6.16.1",
     "react-native-volume-manager": "^2.0.8",
     "react-native-webview": "13.12.5",
     "zustand": "^4.5.2"
