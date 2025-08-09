@@ -1,5 +1,13 @@
-import notifee, {AndroidImportance} from '@notifee/react-native';
+import notifee, {
+  AndroidImportance,
+  EventDetail,
+  EventType,
+} from '@notifee/react-native';
 import {settingsStorage} from '../storage';
+import * as RNFS from '@dr.pogodin/react-native-fs';
+import {downloadFolder} from '../constants';
+import {cancelHlsDownload} from '../hlsDownloader2';
+import RNApkInstaller from '@himanshu8443/react-native-apk-installer';
 
 export interface NotificationOptions {
   id: string;
@@ -118,6 +126,7 @@ class NotificationService {
         pressAction: {
           id: 'default',
         },
+
         progress: options.progress,
         actions: options.actions,
         onlyAlertOnce: options.onlyAlertOnce || false,
@@ -155,17 +164,6 @@ class NotificationService {
   async cancelAllNotifications(): Promise<void> {
     await this.ensureInitialized();
     await notifee.cancelAllNotifications();
-  }
-
-  /**
-   * Set up event handlers for notification actions
-   */
-  setupEventHandlers(
-    foregroundHandler: (event: any) => void,
-    backgroundHandler: (event: any) => Promise<void>,
-  ) {
-    notifee.onForegroundEvent(foregroundHandler);
-    notifee.onBackgroundEvent(backgroundHandler);
   }
 
   /**
@@ -254,6 +252,68 @@ class NotificationService {
       body: body,
       actions: actions,
     });
+  }
+
+  async actionHandler({type, detail}: {type: EventType; detail: EventDetail}) {
+    console.log('Notification action', type, detail);
+    console.log('EventType.PRESS:', EventType.PRESS);
+    console.log('EventType.ACTION_PRESS:', EventType.ACTION_PRESS);
+    console.log('Actual type received:', type);
+    console.log('pressAction:', detail.pressAction);
+
+    // Handle download cancellation
+    if (
+      type === EventType.ACTION_PRESS &&
+      detail.pressAction?.id === detail.notification?.data?.fileName
+    ) {
+      // console.log('Cancel download');
+      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
+      cancelHlsDownload(detail.notification?.data?.fileName!);
+      // FFMPEGKIT CANCEL
+      // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
+
+      // setAlreadyDownloaded(false);
+      try {
+        const files = await RNFS.readDir(downloadFolder);
+        // Find a file with the given name (without extension)
+        const foundFile = files.find(fileItem => {
+          const nameWithoutExtension = fileItem.name
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          return nameWithoutExtension === detail.notification?.data?.fileName;
+        });
+        if (foundFile) {
+          await RNFS.unlink(foundFile.path);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    // Handle app update installation - check for both PRESS and ACTION_PRESS
+    if (
+      (type === EventType.PRESS || type === EventType.ACTION_PRESS) &&
+      (detail.pressAction?.id === 'install' ||
+        detail.notification?.data?.action === 'install')
+    ) {
+      console.log('Install action pressed');
+      const apkPath = `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`;
+      console.log('APK path:', apkPath);
+      const res = await RNFS.exists(apkPath);
+      console.log('APK exists:', res);
+      if (res) {
+        console.log('Starting APK installation...');
+        try {
+          await RNApkInstaller.install(apkPath);
+          console.log('APK installation initiated successfully');
+        } catch (error) {
+          console.error('APK installation error:', error);
+        }
+      } else {
+        console.error('APK file not found at path:', apkPath);
+      }
+    }
   }
 
   /**

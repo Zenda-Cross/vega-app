@@ -37,19 +37,11 @@ import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
 import {settingsStorage} from './lib/storage';
 import {updateProvidersService} from './lib/services/UpdateProviders';
-import {EventDetail, EventType} from '@notifee/react-native';
-import * as RNFS from '@dr.pogodin/react-native-fs';
-import {downloadFolder} from './lib/constants';
-import {cancelHlsDownload} from './lib/hlsDownloader2';
 import {QueryClientProvider} from '@tanstack/react-query';
 import {queryClient} from './lib/client';
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import notifee from '@notifee/react-native';
-import {
-  checkAppInstallPermission,
-  requestAppInstallPermission,
-} from 'react-native-install-unknown-apps';
-import {Linking} from 'react-native';
+import notificationService from './lib/services/Notification';
 
 enableScreens(true);
 enableFreeze(true);
@@ -162,69 +154,9 @@ const App = () => {
 
   SystemUI.setBackgroundColorAsync('black');
 
-  async function actionHandler({
-    type,
-    detail,
-  }: {
-    type: EventType;
-    detail: EventDetail;
-  }) {
-    // Handle download cancellation
-    if (
-      type === EventType.ACTION_PRESS &&
-      detail.pressAction?.id === detail.notification?.data?.fileName
-    ) {
-      // console.log('Cancel download');
-      RNFS.stopDownload(Number(detail.notification?.data?.jobId));
-      cancelHlsDownload(detail.notification?.data?.fileName!);
-      // FFMPEGKIT CANCEL
-      // FFmpegKit.cancel(Number(detail.notification?.data?.jobId));
-
-      // setAlreadyDownloaded(false);
-      try {
-        const files = await RNFS.readDir(downloadFolder);
-        // Find a file with the given name (without extension)
-        const foundFile = files.find(fileItem => {
-          const nameWithoutExtension = fileItem.name
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          return nameWithoutExtension === detail.notification?.data?.fileName;
-        });
-        if (foundFile) {
-          await RNFS.unlink(foundFile.path);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    // Handle app update installation
-    if (type === EventType.PRESS && detail.pressAction?.id === 'install') {
-      const res = await RNFS.exists(
-        `${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`,
-      );
-      console.log('install', res);
-      if (res) {
-        const hasPermission = await checkAppInstallPermission();
-        console.log('installPermission', hasPermission);
-        if (!hasPermission) {
-          await requestAppInstallPermission();
-        }
-
-        // Since react-native-install-unknown-apps doesn't have direct install functionality,
-        // we'll use Linking to open the APK file
-        const fileUri = `file://${RNFS.DownloadDirectoryPath}/${detail.notification?.data?.name}`;
-        Linking.openURL(fileUri).catch(err => {
-          console.error('Failed to open APK file:', err);
-        });
-      }
-    }
-  }
-
   useEffect(() => {
     const unsubscribe = notifee.onForegroundEvent(({type, detail}) => {
-      actionHandler({type, detail});
+      notificationService.actionHandler({type, detail});
     });
     return () => {
       unsubscribe();

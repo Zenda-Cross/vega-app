@@ -187,10 +187,18 @@ android {
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
-    implementation("com.facebook.react:react-android")
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12'
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.12'
-    implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.0.0-alpha.12'
+     implementation "com.squareup.okhttp3:okhttp:4.12.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.12.0"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.12.0"
+
+    // Force resolution in case React Native or other libs pull old versions
+    configurations.all {
+        resolutionStrategy {
+            force "com.squareup.okhttp3:okhttp:4.12.0"
+            force "com.squareup.okhttp3:logging-interceptor:4.12.0"
+            force "com.squareup.okhttp3:okhttp-urlconnection:4.12.0"
+        }
+    }
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

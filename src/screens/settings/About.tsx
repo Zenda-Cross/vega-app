@@ -28,15 +28,7 @@ const downloadUpdate = async (url: string, name: string) => {
         id: 'downloadComplete',
         title: 'Download Completed',
         body: 'Tap to install',
-        data: {name: `${name}`},
-        actions: [
-          {
-            title: 'Install',
-            pressAction: {
-              id: 'install',
-            },
-          },
-        ],
+        data: {name: `${name}`, action: 'install'},
       });
       return;
     }
@@ -70,15 +62,7 @@ const downloadUpdate = async (url: string, name: string) => {
         id: 'downloadComplete',
         title: 'Download Complete',
         body: 'Tap to install',
-        data: {name},
-        actions: [
-          {
-            title: 'Install',
-            pressAction: {
-              id: 'install',
-            },
-          },
-        ],
+        data: {name, action: 'install'},
       });
     }
   });
