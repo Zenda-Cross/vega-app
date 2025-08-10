@@ -33,6 +33,9 @@ export enum SettingsKeys {
   SUBTITLE_BOTTOM_PADDING = 'subtitleBottomPadding',
 
   LIST_VIEW_TYPE = 'viewType',
+
+  // Telemetry (privacy)
+  TELEMETRY_OPT_IN = 'telemetryOptIn',
 }
 
 /**
@@ -204,6 +207,17 @@ export class SettingsStorage {
 
   setListViewType(type: number): void {
     mainStorage.setString(SettingsKeys.LIST_VIEW_TYPE, type.toString());
+  }
+
+  // Telemetry / Privacy
+  isTelemetryOptIn(): boolean {
+    const val = mainStorage.getBool(SettingsKeys.TELEMETRY_OPT_IN);
+    // Default to true (opted in) unless explicitly disabled
+    return val === null ? true : (val as boolean);
+  }
+
+  setTelemetryOptIn(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.TELEMETRY_OPT_IN, enabled);
   }
 
   // Generic get/set methods for settings not covered by specific methods

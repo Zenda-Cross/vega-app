@@ -15,8 +15,29 @@ import useThemeStore from '../../lib/zustand/themeStore';
 import {Dropdown} from 'react-native-element-dropdown';
 import {themes} from '../../lib/constants';
 import {TextInput} from 'react-native';
+import Constants from 'expo-constants';
+// Lazy-load Firebase to allow running without google-services.json
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getAnalytics = (): any | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@react-native-firebase/analytics').default;
+  } catch {
+    return null;
+  }
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getCrashlytics = (): any | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@react-native-firebase/crashlytics').default;
+  } catch {
+    return null;
+  }
+};
 
 const Preferences = () => {
+  const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
   const {primary, setPrimary, isCustom, setCustom} = useThemeStore(
     state => state,
   );
@@ -47,7 +68,7 @@ const Preferences = () => {
     settingsStorage.hideSeekButtons(),
   );
 
-  const [enable2xGesture, setEnable2xGesture] = useState<boolean>(
+  const [_enable2xGesture, _setEnable2xGesture] = useState<boolean>(
     settingsStorage.isEnable2xGestureEnabled(),
   );
 
@@ -69,6 +90,10 @@ const Preferences = () => {
 
   const [alwaysUseExternalDownload, setAlwaysUseExternalDownload] = useState(
     settingsStorage.getBool('alwaysExternalDownloader') || false,
+  );
+
+  const [telemetryOptIn, setTelemetryOptIn] = useState<boolean>(
+    settingsStorage.isTelemetryOptIn(),
   );
 
   return (
@@ -178,6 +203,44 @@ const Preferences = () => {
                 onValueChange={() => {
                   settingsStorage.setHapticFeedbackEnabled(!hapticFeedback);
                   setHapticFeedback(!hapticFeedback);
+                }}
+              />
+            </View>
+
+            {/* Analytics & Crashlytics Opt-In */}
+            <View className="flex-row items-center justify-between p-4 border-b border-[#262626]">
+              <Text className="text-white text-base">
+                Usage & Crash Reports
+              </Text>
+              <Switch
+                thumbColor={telemetryOptIn ? primary : 'gray'}
+                value={telemetryOptIn}
+                onValueChange={async () => {
+                  const next = !telemetryOptIn;
+                  setTelemetryOptIn(next);
+                  settingsStorage.setTelemetryOptIn(next);
+                  if (hasFirebase) {
+                    try {
+                      const crashlytics = getCrashlytics();
+                      crashlytics &&
+                        (await crashlytics().setCrashlyticsCollectionEnabled(
+                          next,
+                        ));
+                    } catch {}
+                    try {
+                      const analytics = getAnalytics();
+                      analytics &&
+                        (await analytics().setAnalyticsCollectionEnabled(next));
+                      // Also update consent for completeness
+                      analytics &&
+                        (await analytics().setConsent({
+                          analytics_storage: next,
+                          ad_storage: next,
+                          ad_user_data: next,
+                          ad_personalization: next,
+                        }));
+                    } catch {}
+                  }
                 }}
               />
             </View>

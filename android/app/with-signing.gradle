@@ -1,0 +1,55 @@
+// Auto-applied by with-android-signing config plugin
+android {
+    signingConfigs {
+        release {
+            def envStoreFile = System.getenv('MYAPP_UPLOAD_STORE_FILE')
+            def envStorePassword = System.getenv('MYAPP_UPLOAD_STORE_PASSWORD')
+            def envKeyAlias = System.getenv('MYAPP_UPLOAD_KEY_ALIAS')
+            def envKeyPassword = System.getenv('MYAPP_UPLOAD_KEY_PASSWORD')
+            
+            if (envStoreFile && envStorePassword && envKeyAlias && envKeyPassword) {
+                def keystoreFile = file(envStoreFile)
+                println "Keystore file path: ${envStoreFile}"
+                println "Keystore file exists: ${keystoreFile.exists()}"
+                
+                if (keystoreFile.exists()) {
+                    storeFile keystoreFile
+                    storePassword envStorePassword
+                    keyAlias envKeyAlias
+                    keyPassword envKeyPassword
+                    println "Release signing config configured successfully"
+                } else {
+                    println "Keystore file not found: ${envStoreFile}"
+                }
+            } else {
+                println "Missing signing environment variables:"
+                println "  MYAPP_UPLOAD_STORE_FILE: ${envStoreFile}"
+                println "  MYAPP_UPLOAD_STORE_PASSWORD: ${envStorePassword ? '***' : 'null'}"
+                println "  MYAPP_UPLOAD_KEY_ALIAS: ${envKeyAlias}"
+                println "  MYAPP_UPLOAD_KEY_PASSWORD: ${envKeyPassword ? '***' : 'null'}"
+            }
+        }
+    }
+}
+
+// Use afterEvaluate to forcefully override the release signing config
+afterEvaluate {
+    def releaseSigningConfig = android.signingConfigs.release
+    println "🔧 Final signing config check:"
+    println "  Release signingConfig storeFile: ${releaseSigningConfig.storeFile}"
+    println "  Current release buildType signingConfig: ${android.buildTypes.release.signingConfig?.name}"
+    
+    if (releaseSigningConfig.storeFile && releaseSigningConfig.storeFile.exists()) {
+        // Force override the signing config
+        android.buildTypes.release.signingConfig = releaseSigningConfig
+        println "✅ Applied release signing config: ${releaseSigningConfig.storeFile.absolutePath}"
+        println "  Final release buildType signingConfig: ${android.buildTypes.release.signingConfig?.name}"
+    } else {
+        println "❌ Release signing config not applied, using debug keystore"
+        if (releaseSigningConfig.storeFile) {
+            println "   Keystore file does not exist: ${releaseSigningConfig.storeFile.absolutePath}"
+        } else {
+            println "   No keystore file configured"
+        }
+    }
+}

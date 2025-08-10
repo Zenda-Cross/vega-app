@@ -1,6 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: 'with-okhttp.gradle'
+apply from: 'with-signing.gradle'
+apply from: 'with-release-config.gradle'
+apply from: 'with-abi-splits.gradle'
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -81,41 +85,20 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
-
     ndkVersion rootProject.ext.ndkVersion
-    compileSdk rootProject.ext.compileSdkVersion
 
-    // Ensure APK splitting by ABI
-    splits {
-        abi {
-            enable true
-            reset() // clear any previous settings
-            include 'armeabi-v7a', 'arm64-v8a'
-            universalApk true
-        }
-    }
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
 
     namespace 'com.vega'
     defaultConfig {
         applicationId 'com.vega'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 146
-        versionName "3.2.3"
+        versionCode 152
+        versionName "3.2.4"
     }
     signingConfigs {
-        release {
-            def envStoreFile = System.getenv("MYAPP_UPLOAD_STORE_FILE")
-            def envStorePassword = System.getenv("MYAPP_UPLOAD_STORE_PASSWORD")
-            def envKeyAlias = System.getenv("MYAPP_UPLOAD_KEY_ALIAS")
-            def envKeyPassword = System.getenv("MYAPP_UPLOAD_KEY_PASSWORD")
-            if (envStoreFile && envStorePassword && envKeyAlias && envKeyPassword) {
-                storeFile file(envStoreFile)
-                storePassword envStorePassword
-                keyAlias envKeyAlias
-                keyPassword envKeyPassword
-            }
-        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
@@ -125,9 +108,11 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
         }
         release {
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
@@ -143,26 +128,6 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
-
-    applicationVariants.all{
-            // this method is use to rename your release apk only
-            variant ->
-                variant.outputs.each{
-                    // on below line we are setting a name to our apk
-                    output->
-                        // on below line we are specifying our app name.
-                        project.ext { appName = 'Vega' }
-                        // on below line we are adding the formatted date to our apk file name.
-                        def version = variant.versionName
-                        def newName = output.outputFile.name
-                        // on below line we are replacing our previous name with our app name.
-                        newName = newName.replace("app-", "$project.ext.appName-")
-                        // on below line we are replacing -release with our formatted date.
-                        newName = newName.replace("-release", "-v" + version )
-                        // at last we are setting our apk name to it.
-                        output.outputFileName  = newName
-                }
-        }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -188,9 +153,6 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12'
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.12'
-    implementation 'com.squareup.okhttp3:okhttp-urlconnection:5.0.0-alpha.12'
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
@@ -216,3 +178,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'

@@ -12,6 +12,17 @@ import useThemeStore from '../lib/zustand/themeStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
+import Constants from 'expo-constants';
+// Lazy-load Crashlytics to avoid requiring Firebase when not configured
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getCrashlytics = (): any | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@react-native-firebase/crashlytics').default;
+  } catch {
+    return null;
+  }
+};
 
 interface GlobalErrorBoundaryProps {
   children: React.ReactNode;
@@ -57,6 +68,20 @@ export default class GlobalErrorBoundary extends React.Component<
 
     // Log error details for debugging
     this.logErrorDetails(error, errorInfo);
+
+    // Report to Crashlytics
+    try {
+      const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
+      if (hasFirebase) {
+        const crashlytics = getCrashlytics();
+        crashlytics &&
+          crashlytics().setAttributes({
+            app_version: String(Application.nativeApplicationVersion || ''),
+            build_version: String(Application.nativeBuildVersion || ''),
+          });
+        crashlytics && crashlytics().recordError(error);
+      }
+    } catch {}
   }
 
   logErrorDetails = (error: Error, errorInfo: React.ErrorInfo) => {
@@ -98,7 +123,9 @@ export default class GlobalErrorBoundary extends React.Component<
 
   showErrorReport = () => {
     const {error, errorInfo} = this.state;
-    if (!error) return;
+    if (!error) {
+      return;
+    }
 
     const errorReport = `
 App Version: ${Application.nativeApplicationVersion}
