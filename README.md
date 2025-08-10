@@ -55,7 +55,11 @@ ___
      ```
      npm install
      ```
-3. Open metro dev server
+3. Prebuild
+   ```
+    npx expo prebuild -p android --clean
+   ```
+5. Open metro dev server
 Dev
      ```
      npm run android
