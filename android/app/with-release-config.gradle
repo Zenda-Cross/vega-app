@@ -1,0 +1,14 @@
+// Auto-applied by with-android-release-gradle config plugin
+if (project.android) {
+  project.android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+      project.ext { appName = 'Vega' }
+      def version = variant.versionName
+      def newName = output.outputFile.name
+            // Keep project.ext.appName as a Gradle variable (escaped from Node template evaluation)
+      newName = newName.replace("app-", "${project.ext.appName}-")
+      newName = newName.replace("-release", "-v" + version)
+      output.outputFileName = newName
+    }
+  }
+}
