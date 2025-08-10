@@ -6,7 +6,10 @@ import Settings from './screens/settings/Settings';
 import WatchList from './screens/WatchList';
 import Search from './screens/Search';
 import ScrollList from './screens/ScrollList';
-import {NavigationContainer} from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -35,6 +38,7 @@ import SeriesEpisodes from './screens/settings/SeriesEpisodes';
 import WatchHistory from './screens/WatchHistory';
 import SubtitlePreference from './screens/settings/SubtitleSettings';
 import Extensions from './screens/settings/Extensions';
+import Constants from 'expo-constants';
 import {settingsStorage} from './lib/storage';
 import {updateProvidersService} from './lib/services/UpdateProviders';
 import {QueryClientProvider} from '@tanstack/react-query';
@@ -42,6 +46,25 @@ import {queryClient} from './lib/client';
 import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import notifee from '@notifee/react-native';
 import notificationService from './lib/services/Notification';
+// Lazy-load Firebase modules so app runs without google-services files
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getAnalytics = (): any | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@react-native-firebase/analytics').default;
+  } catch {
+    return null;
+  }
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getCrashlytics = (): any | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('@react-native-firebase/crashlytics').default;
+  } catch {
+    return null;
+  }
+};
 
 enableScreens(true);
 enableFreeze(true);
@@ -136,6 +159,7 @@ export type TabStackParamList = {
   SettingsStack: undefined;
 };
 const Tab = createBottomTabNavigator<TabStackParamList>();
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const App = () => {
   LogBox.ignoreLogs([
     'You have passed a style to FlashList',
@@ -149,12 +173,57 @@ const App = () => {
   const WatchHistoryStack =
     createNativeStackNavigator<WatchHistoryStackParamList>();
   const {primary} = useThemeStore(state => state);
+  const hasFirebase = Boolean(Constants?.expoConfig?.extra?.hasFirebase);
 
   const showTabBarLables = settingsStorage.showTabBarLabels();
 
   SystemUI.setBackgroundColorAsync('black');
 
   useEffect(() => {
+    // Apply telemetry preference before using analytics
+    const optIn = settingsStorage.isTelemetryOptIn();
+    if (hasFirebase) {
+      try {
+        const crashlytics = getCrashlytics();
+        crashlytics && crashlytics().setCrashlyticsCollectionEnabled(optIn);
+      } catch {}
+      try {
+        const analytics = getAnalytics();
+        analytics && analytics().setAnalyticsCollectionEnabled(optIn);
+      } catch {}
+      try {
+        const analytics = getAnalytics();
+        analytics &&
+          analytics().setConsent({
+            analytics_storage: optIn,
+            ad_storage: optIn,
+            ad_user_data: optIn,
+            ad_personalization: optIn,
+          });
+      } catch {}
+
+      // Mark app open
+      try {
+        const analytics = getAnalytics();
+        analytics && analytics().logAppOpen();
+      } catch {}
+      // Example user property: theme
+      try {
+        const analytics = getAnalytics();
+        analytics &&
+          analytics().setUserProperty(
+            'theme_preference',
+            primary ? 'custom' : 'default',
+          );
+      } catch {}
+
+      // Initial Crashlytics log
+      try {
+        const crashlytics = getCrashlytics();
+        crashlytics && crashlytics().log('App mounted');
+      } catch {}
+    }
+
     const unsubscribe = notifee.onForegroundEvent(({type, detail}) => {
       notificationService.actionHandler({type, detail});
     });
@@ -429,7 +498,40 @@ const App = () => {
             className="flex-1"
             style={{backgroundColor: 'black'}}>
             <NavigationContainer
-              onReady={async () => await BootSplash.hide({fade: true})}
+              ref={navigationRef}
+              onReady={async () => {
+                // Hide bootsplash
+                await BootSplash.hide({fade: true});
+                // Track initial screen
+                if (hasFirebase) {
+                  try {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route?.name) {
+                      const analytics = getAnalytics();
+                      analytics &&
+                        (await analytics().logScreenView({
+                          screen_name: route.name,
+                          screen_class: 'Navigation',
+                        }));
+                    }
+                  } catch {}
+                }
+              }}
+              onStateChange={async () => {
+                if (hasFirebase) {
+                  try {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route?.name) {
+                      const analytics = getAnalytics();
+                      analytics &&
+                        (await analytics().logScreenView({
+                          screen_name: route.name,
+                          screen_class: 'Navigation',
+                        }));
+                    }
+                  } catch {}
+                }
+              }}
               theme={{
                 fonts: {
                   regular: {
