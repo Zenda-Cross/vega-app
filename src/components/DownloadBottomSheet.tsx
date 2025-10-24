@@ -40,7 +40,7 @@ const DownloadBottomSheet = ({
   const {primary} = useThemeStore(state => state);
   const [activeTab, setActiveTab] = React.useState<1 | 2>(1);
 
-  const subtitle = data?.map(server => {
+  const subtitle = data.map(server => {
     if (server.subtitles && server.subtitles.length > 0) {
       return server.subtitles;
     }
@@ -79,32 +79,34 @@ const DownloadBottomSheet = ({
               <BottomSheetScrollView
                 style={{padding: 5, marginBottom: 5}}
                 showsVerticalScrollIndicator={false}>
-                {subtitle.length > 0 && subtitle[0] !== undefined && (
-                  <View className="flex-row items-center justify-center gap-x-3 w-full my-5">
-                    <Text
-                      className={'text-lg p-1 font-semibold text-center'}
-                      style={{
-                        color: activeTab === 1 ? primary : 'white',
-                        borderBottomWidth: activeTab === 1 ? 2 : 0,
-                        borderBottomColor:
-                          activeTab === 1 ? 'white' : 'transparent',
-                      }}
-                      onPress={() => setActiveTab(1)}>
-                      Video
-                    </Text>
-                    <Text
-                      className={'text-lg p-1 font-semibold text-center'}
-                      style={{
-                        color: activeTab === 2 ? primary : 'white',
-                        borderBottomWidth: activeTab === 2 ? 2 : 0,
-                        borderBottomColor:
-                          activeTab === 2 ? 'white' : 'transparent',
-                      }}
-                      onPress={() => setActiveTab(2)}>
-                      Subtitle
-                    </Text>
-                  </View>
-                )}
+                {subtitle &&
+                  subtitle.length > 0 &&
+                  subtitle[0] !== undefined && (
+                    <View className="flex-row items-center justify-center gap-x-3 w-full my-5">
+                      <Text
+                        className={'text-lg p-1 font-semibold text-center'}
+                        style={{
+                          color: activeTab === 1 ? primary : 'white',
+                          borderBottomWidth: activeTab === 1 ? 2 : 0,
+                          borderBottomColor:
+                            activeTab === 1 ? 'white' : 'transparent',
+                        }}
+                        onPress={() => setActiveTab(1)}>
+                        Video
+                      </Text>
+                      <Text
+                        className={'text-lg p-1 font-semibold text-center'}
+                        style={{
+                          color: activeTab === 2 ? primary : 'white',
+                          borderBottomWidth: activeTab === 2 ? 2 : 0,
+                          borderBottomColor:
+                            activeTab === 2 ? 'white' : 'transparent',
+                        }}
+                        onPress={() => setActiveTab(2)}>
+                        Subtitle
+                      </Text>
+                    </View>
+                  )}
                 {loading
                   ? Array.from({length: 4}).map((_, index) => (
                       <SkeletonLoader
