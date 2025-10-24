@@ -52,22 +52,27 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
         }
         streamLinks.push({server: 'Pixeldrain', link: link, type: 'mkv'});
       }
-      if (link?.includes('hubcloud') || link?.includes('/?id=')) {
-        try {
-          const newLinkRes = await axios.head(link, {headers, signal});
-          const newLink =
-            newLinkRes.request?.responseURL?.split('link=')?.[1] || link;
-          streamLinks.push({server: 'hubcloud', link: newLink, type: 'mkv'});
-        } catch (error) {
-          console.log('hubcloudExtracter error in hubcloud link: ', error);
-        }
-      }
       if (link?.includes('cloudflarestorage')) {
         streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
       }
       if (link?.includes('fastdl')) {
         streamLinks.push({server: 'FastDl', link: link, type: 'mkv'});
       }
+      if (link?.includes('hubcloud') || link?.includes('/?id=')) {
+        try {
+          const newLinkRes = await axios.head(link, {headers, signal});
+          const newLink =
+            newLinkRes.request?.responseURL?.split('link=')?.[1] || link;
+          streamLinks.push({
+            server: 'hubcloud (Downloading Only)',
+            link: newLink,
+            type: 'mkv',
+          });
+        } catch (error) {
+          console.log('hubcloudExtracter error in hubcloud link: ', error);
+        }
+      }
+
       if (link.includes('hubcdn')) {
         streamLinks.push({
           server: 'HubCdn',
