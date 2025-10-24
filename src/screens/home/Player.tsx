@@ -5,7 +5,6 @@ import {
   ToastAndroid,
   TouchableOpacity,
   View,
-  StatusBar,
   Platform,
   TouchableNativeFeedback,
 } from 'react-native';
@@ -22,7 +21,7 @@ import {RootStackParamList} from '../../App';
 import {cacheStorage, settingsStorage} from '../../lib/storage';
 import {OrientationLocker, LANDSCAPE} from 'react-native-orientation-locker';
 import VideoPlayer from '@8man/react-native-media-console';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   VideoRef,
@@ -40,15 +39,37 @@ import * as DocumentPicker from 'expo-document-picker';
 import useThemeStore from '../../lib/zustand/themeStore';
 import {FlashList} from '@shopify/flash-list';
 import SearchSubtitles from '../../components/SearchSubtitles';
-import FullScreenChz from 'react-native-fullscreen-chz';
 import useWatchHistoryStore from '../../lib/zustand/watchHistrory';
 import {useStream, useVideoSettings} from '../../lib/hooks/useStream';
 import {
   usePlayerProgress,
   usePlayerSettings,
 } from '../../lib/hooks/usePlayerSettings';
+import * as NavigationBar from 'expo-navigation-bar';
+import {StatusBar} from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
+
+const goFullScreen = () => {
+  if (Platform.OS === 'android') {
+    // Hide the navigation bar
+    NavigationBar.setVisibilityAsync('hidden');
+    // Make it "sticky immersive" (appears on swipe, then hides again)
+    NavigationBar.setBehaviorAsync('overlay-swipe');
+    StatusBar.setHidden(true, 'slide');
+  }
+  // `expo-status-bar` handles the top bar
+};
+
+const exitFullScreen = () => {
+  if (Platform.OS === 'android') {
+    // Show the navigation bar
+    NavigationBar.setVisibilityAsync('visible');
+    // Reset behavior
+    NavigationBar.setBehaviorAsync('overlay-swipe');
+    StatusBar.setHidden(false, 'slide');
+  }
+};
 
 const Player = ({route}: Props): React.JSX.Element => {
   const {primary} = useThemeStore(state => state);
@@ -161,8 +182,10 @@ const Player = ({route}: Props): React.JSX.Element => {
     toastMessage,
     showToast,
     isTextVisible,
+    isFullScreen,
     handleResizeMode,
     togglePlayerLock,
+    toggleFullScreen,
     handleLockedScreenTap,
     unlockButtonTimerRef,
   } = usePlayerSettings();
@@ -314,13 +337,18 @@ const Player = ({route}: Props): React.JSX.Element => {
   // ]);
 
   // Exit fullscreen on back
-  useEffect(() => {
-    FullScreenChz.enable();
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
-      FullScreenChz.disable();
-    });
-    return unsubscribe;
-  }, [navigation]);
+  useFocusEffect(
+    useCallback(() => {
+      // This code now runs every time the screen is focused
+      if (isFullScreen) {
+        goFullScreen();
+      } else {
+        exitFullScreen();
+      }
+
+      return () => {};
+    }, [isFullScreen]),
+  );
 
   // Reset track selections when stream changes
   useEffect(() => {
@@ -497,6 +525,15 @@ const Player = ({route}: Props): React.JSX.Element => {
       duration: 250,
     });
   }, [showSettings]);
+
+  useEffect(() => {
+    // Handle fullscreen toggle
+    if (isFullScreen) {
+      goFullScreen();
+    } else {
+      exitFullScreen();
+    }
+  }, [isFullScreen]);
 
   // Memoized video player props
   const videoPlayerProps = useMemo(
@@ -681,6 +718,15 @@ const Player = ({route}: Props): React.JSX.Element => {
               size={24}
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={toggleFullScreen}
+            className="opacity-70 p-2 rounded-full">
+            <MaterialIcons
+              name={isFullScreen ? 'fullscreen-exit' : 'fullscreen'}
+              color={'hsl(0, 0%, 70%)'}
+              size={24}
+            />
+          </TouchableOpacity>
           {/* {!isPlayerLocked && (
             <CastButton
               style={{width: 40, height: 40, opacity: 0.5, tintColor: 'white'}}
@@ -783,7 +829,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           <TouchableOpacity
             className="flex-row gap-1 items-center opacity-60"
             onPress={handleResizeMode}>
-            <MaterialIcons name="fullscreen" size={28} color="white" />
+            <MaterialIcons name="fit-screen" size={28} color="white" />
             <Text className="text-white text-sm min-w-[38px]">
               {resizeMode === ResizeMode.NONE
                 ? 'Fit'

@@ -133,6 +133,7 @@ export const usePlayerSettings = () => {
   const [toastMessage, setToastMessage] = useState<string>('');
   const [showToast, setShowToast] = useState(false);
   const [isTextVisible, setIsTextVisible] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(true);
 
   const unlockButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -196,6 +197,11 @@ export const usePlayerSettings = () => {
     }, 10000);
   }, [showUnlockButton]);
 
+  // Memoized fullscreen toggle
+  const toggleFullScreen = useCallback(() => {
+    setIsFullScreen(prev => !prev);
+  }, []);
+
   return {
     showControls,
     setShowControls,
@@ -213,9 +219,12 @@ export const usePlayerSettings = () => {
     showToast,
     isTextVisible,
     setIsTextVisible,
+    isFullScreen,
+    setIsFullScreen,
     handleResizeMode,
     setToast,
     togglePlayerLock,
+    toggleFullScreen,
     handleLockedScreenTap,
     unlockButtonTimerRef,
   };
