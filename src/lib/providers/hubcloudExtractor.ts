@@ -58,39 +58,46 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
 
         case link?.includes('hubcloud') || link?.includes('/?id='):
           try {
-            const newLinkRes = await axios.get(link, {
+            const newLinkRes = await fetch(link, {
+              method: 'HEAD',
               headers,
               signal,
-              maxRedirects: 0,
-              validateStatus: status => status < 400,
+              redirect: 'manual',
             });
-            // response content is html
-            if (newLinkRes.headers['content-type']?.includes('text/html')) {
-              const $page = cheerio.load(newLinkRes.data);
-              const directLink = $page('a#vd').attr('href');
-              if (directLink) {
-                streamLinks.push({
-                  server: 'hubcloud',
-                  link: directLink,
-                  type: 'mkv',
-                });
-                break;
-              }
-            }
 
-            let newLink = newLinkRes.headers.location || link;
+            // Check if response is a redirect (301, 302, etc.)
+            let newLink = link;
+            if (newLinkRes.status >= 300 && newLinkRes.status < 400) {
+              newLink = newLinkRes.headers.get('location') || link;
+            } else if (newLinkRes.url && newLinkRes.url !== link) {
+              // Fallback: check if URL changed (redirect was followed)
+              newLink = newLinkRes.url;
+            } else {
+              newLink = newLinkRes.headers.get('location') || link;
+            }
             if (newLink.includes('googleusercontent')) {
               newLink = newLink.split('?link=')[1];
             } else {
-              const newLinkRes2 = await axios.head(newLink, {
+              const newLinkRes2 = await fetch(newLink, {
+                method: 'HEAD',
                 headers,
                 signal,
-                maxRedirects: 0,
-                validateStatus: status => status < 400,
+                redirect: 'manual',
               });
 
-              newLink =
-                newLinkRes2.headers.location?.split('?link=')[1] || newLink;
+              // Check if response is a redirect
+              if (newLinkRes2.status >= 300 && newLinkRes2.status < 400) {
+                newLink =
+                  newLinkRes2.headers.get('location')?.split('?link=')[1] ||
+                  newLink;
+              } else if (newLinkRes2.url && newLinkRes2.url !== newLink) {
+                // Fallback: URL changed due to redirect
+                newLink = newLinkRes2.url.split('?link=')[1] || newLinkRes2.url;
+              } else {
+                newLink =
+                  newLinkRes2.headers.get('location')?.split('?link=')[1] ||
+                  newLink;
+              }
             }
 
             streamLinks.push({
@@ -107,7 +114,7 @@ export async function hubcloudExtracter(link: string, signal: AbortSignal) {
           streamLinks.push({server: 'CfStorage', link: link, type: 'mkv'});
           break;
 
-        case link?.includes('fastdl') || link?.includes('fls.'):
+        case link?.includes('fastdl') || link?.includes('fsl.'):
           streamLinks.push({server: 'FastDl', link: link, type: 'mkv'});
           break;
 
