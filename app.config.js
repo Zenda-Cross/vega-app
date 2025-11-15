@@ -92,7 +92,7 @@ module.exports = () => {
       autolinking: {exclude: ['expo-splash-screen']},
       plugins,
       slug: 'vega',
-      version: '3.2.5',
+      version: '3.2.6',
       sdkVersion: '52.0.0',
       userInterfaceStyle: 'dark',
       android: {
@@ -102,7 +102,7 @@ module.exports = () => {
         minSdkVersion: 24,
         edgeToEdgeEnabled: true,
         package: 'com.vega',
-        versionCode: 154,
+        versionCode: 155,
         permissions: [
           'FOREGROUND_SERVICE',
           'FOREGROUND_SERVICE_MEDIA_PLAYBACK',
