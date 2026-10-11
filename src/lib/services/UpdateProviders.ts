@@ -132,8 +132,7 @@ class UpdateProvidersService {
    */
   async updateProvider(provider: ProviderExtension): Promise<boolean> {
     try {
-      await extensionManager.updateProvider(provider);
-      return true;
+      return await extensionManager.updateProvider(provider);
     } catch (error) {
       const isRateLimit =
         error instanceof Error &&

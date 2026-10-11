@@ -37,6 +37,7 @@ export enum SettingsKeys {
   SHOW_SLEEP_TIMER = 'showSleepTimer',
   ENABLE_2X_GESTURE = 'enable2xGesture',
   ENABLE_SWIPE_GESTURE = 'enableSwipeGesture',
+  ENABLE_VOLUME_BOOST = 'enableVolumeBoost',
   FORWARD_BUFFER_MB = 'forwardBufferMB',
   BACK_BUFFER_MB = 'backBufferMB',
   SEEK_INTERVAL = 'seekInterval',
@@ -365,6 +366,14 @@ export class SettingsStorage {
 
   setSwipeGestureEnabled(enabled: boolean): void {
     mainStorage.setBool(SettingsKeys.ENABLE_SWIPE_GESTURE, enabled);
+  }
+
+  isVolumeBoostEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.ENABLE_VOLUME_BOOST, true);
+  }
+
+  setVolumeBoostEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.ENABLE_VOLUME_BOOST, enabled);
   }
 
   getSeekInterval(): number {

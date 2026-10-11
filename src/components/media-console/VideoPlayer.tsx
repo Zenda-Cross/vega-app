@@ -8,7 +8,9 @@ import React, {
   useRef,
   useMemo,
 } from 'react';
-import {NativeModules, Platform, View} from 'react-native';
+import {DeviceEventEmitter, NativeModules, Platform, ToastAndroid, View} from 'react-native';
+import {settingsStorage} from '../../lib/storage';
+import {useFocusEffect} from '@react-navigation/native';
 import * as Brightness from 'expo-brightness';
 import Video, {
   OnLoadData,
@@ -108,6 +110,28 @@ const AnimatedVideoPlayer = (
   const endedRef = useRef(false);
   const [_muted, setMuted] = useState<boolean>(muted);
   const [_volume, setVolume] = useState<number>(volume);
+  const [volumeBoost, setVolumeBoost] = useState(1);
+  const [volumeBoostEnabled, setVolumeBoostEnabled] = useState(() =>
+    Platform.OS === 'android' && settingsStorage.isVolumeBoostEnabled(),
+  );
+  const volumeBoostAvailable = volumeBoostEnabled;
+  const subtitleUrisRef = useRef(new Set<string>());
+  subtitleUrisRef.current = new Set(source?.textTracks?.map(track => track.uri) || []);
+  const failedSubtitleUrisRef = useRef(new Set<string>());
+  useEffect(() => { failedSubtitleUrisRef.current.clear(); }, [source?.uri]);
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('VegaExternalSubtitleLoadFailed', (uri: string) => {
+      if (!subtitleUrisRef.current.has(uri) || failedSubtitleUrisRef.current.has(uri)) return;
+      failedSubtitleUrisRef.current.add(uri);
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Could not load an external subtitle. Try adding it again.', ToastAndroid.LONG);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+  useFocusEffect(useCallback(() => {
+    setVolumeBoostEnabled(Platform.OS === 'android' && settingsStorage.isVolumeBoostEnabled());
+  }, []));
   const [_isFullscreen, setIsFullscreen] = useState<boolean>(
     isFullscreen || resizeMode === 'cover' || false,
   );
@@ -963,7 +987,7 @@ const AnimatedVideoPlayer = (
             {...events}
             ref={videoRef || _videoRef}
             resizeMode={resizeMode}
-            volume={_volume}
+            volume={_volume * (volumeBoostAvailable ? volumeBoost : 1)}
             paused={_paused}
             muted={_muted}
             rate={_playbackRate}
@@ -1012,6 +1036,8 @@ const AnimatedVideoPlayer = (
                   />
                 )}
                 <Gestures
+                  maxVolume={volumeBoostAvailable ? 2 : 1}
+                  onVolumeBoostChange={setVolumeBoost}
                   forward={forward}
                   rewind={rewind}
                   togglePlayPause={togglePlayPause}

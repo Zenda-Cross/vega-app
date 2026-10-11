@@ -116,6 +116,9 @@ const Preferences = ({navigation}: any) => {
   const [enableSwipeGesture, setEnableSwipeGesture] = useState<boolean>(() =>
     settingsStorage.isSwipeGestureEnabled(),
   );
+  const [enableVolumeBoost, setEnableVolumeBoost] = useState(() =>
+    settingsStorage.isVolumeBoostEnabled(),
+  );
 
   const [showTabBarLables, setShowTabBarLables] = useState<boolean>(() =>
     settingsStorage.showTabBarLabels(),
@@ -407,6 +410,15 @@ const Preferences = ({navigation}: any) => {
               onValueChange={next => {
                 settingsStorage.setSwipeGestureEnabled(next);
                 setEnableSwipeGesture(next);
+              }}
+            />
+            <SettingsSwitchRow
+              title="Volume boost"
+              description="Allow volume up to 200% in the built-in Android player"
+              value={enableVolumeBoost}
+              onValueChange={next => {
+                settingsStorage.setVolumeBoostEnabled(next);
+                setEnableVolumeBoost(next);
               }}
             />
             <SettingsSwitchRow

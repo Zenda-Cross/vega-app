@@ -268,6 +268,25 @@ const withAlpha = (hex: string, opacity: number) => {
   return `#${alpha}${rgb}`;
 };
 
+const readSubtitleStyle = () => ({
+  fontSize: settingsStorage.getSubtitleFontSize() ?? 16,
+  opacity: settingsStorage.getSubtitleOpacity() ?? 1,
+  paddingBottom: settingsStorage.getSubtitleBottomPadding() ?? 10,
+  textColor: withAlpha(
+    settingsStorage.getSubtitleTextColor(),
+    settingsStorage.getSubtitleTextOpacity(),
+  ),
+  fontFamily: settingsStorage.getSubtitleFontFamily(),
+  edgeType: settingsStorage.getSubtitleEdgeType(),
+  edgeColor: withAlpha(
+    settingsStorage.getSubtitleEdgeColor(),
+    settingsStorage.getSubtitleTextOpacity(),
+  ),
+  outlineWidth: settingsStorage.getSubtitleOutlineWidth() ?? 2,
+  subtitlesFollowVideo: false,
+});
+
+
 type QualityIconName = '8k' | '4k' | '2k' | 'hd' | 'sd' | 'video-settings';
 
 const getQualityIconName = (
@@ -1340,6 +1359,13 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   // Sync fixes for the current video. Each source can be off by a different
   // amount, so both reset when the stream changes.
+  const [subtitleStyle, setSubtitleStyle] = useState(readSubtitleStyle);
+  useFocusEffect(useCallback(() => {
+    const nextStyle = readSubtitleStyle();
+    setSubtitleStyle(previous =>
+      JSON.stringify(previous) === JSON.stringify(nextStyle) ? previous : nextStyle,
+    );
+  }, []));
   const [subtitleDelayMs, setSubtitleDelayMs] = useState(0);
   const [audioDelayMs, setAudioDelayMs] = useState(0);
   useEffect(() => {
@@ -2824,23 +2850,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       rate: playbackRate,
       subtitleDelayMs,
       audioDelayMs,
-      subtitleStyle: {
-        fontSize: settingsStorage.getSubtitleFontSize() ?? 16,
-        opacity: settingsStorage.getSubtitleOpacity() ?? 1,
-        paddingBottom: settingsStorage.getSubtitleBottomPadding() ?? 10,
-        textColor: withAlpha(
-          settingsStorage.getSubtitleTextColor(),
-          settingsStorage.getSubtitleTextOpacity(),
-        ),
-        fontFamily: settingsStorage.getSubtitleFontFamily(),
-        edgeType: settingsStorage.getSubtitleEdgeType(),
-        edgeColor: withAlpha(
-          settingsStorage.getSubtitleEdgeColor(),
-          settingsStorage.getSubtitleTextOpacity(),
-        ),
-        outlineWidth: settingsStorage.getSubtitleOutlineWidth() ?? 2,
-        subtitlesFollowVideo: false,
-      },
+      subtitleStyle,
       title: {
         primary:
           route.params?.primaryTitle && route.params?.primaryTitle?.length > 70
@@ -2902,6 +2912,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       handleVideoLoadCallback,
       playbackRate,
       subtitleDelayMs,
+      subtitleStyle,
       audioDelayMs,
       primary,
       navigation,

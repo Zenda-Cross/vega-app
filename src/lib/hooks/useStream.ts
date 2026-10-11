@@ -391,6 +391,7 @@ export const useStream = ({
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
 
   const activeEpisodeKey = getEpisodeIdentity(activeEpisode);
+  const subtitleSourcesRef = useRef({episodeKey: activeEpisodeKey, uris: new Set<string>()});
   const activeEpisodeKeyRef = useRef(activeEpisodeKey);
   activeEpisodeKeyRef.current = activeEpisodeKey;
   const previousEpisodeKeyRef = useRef(activeEpisodeKey);
@@ -614,10 +615,22 @@ export const useStream = ({
       }
     });
 
+    const previousSources = subtitleSourcesRef.current;
+    subtitleSourcesRef.current = {
+      episodeKey: activeEpisodeKey,
+      uris: new Set(mergedSubs.map((sub: any) => sub.uri)),
+    };
     setExternalSubs(prev => {
+      // Refetching provider streams must not discard subtitles added by the user.
+      // Their lifetime is the episode; managed provider/download tracks can refresh.
+      const imported = previousSources.episodeKey === activeEpisodeKey
+        ? prev.filter((sub: any) => !previousSources.uris.has(sub.uri)
+          && !mergedSubs.some((managed: any) => managed.uri === sub.uri))
+        : [];
+      const next = [...mergedSubs, ...imported];
       const prevKey = prev.map((s: any) => s.uri || '').join('|');
-      const nextKey = mergedSubs.map((s: any) => s.uri || '').join('|');
-      return prevKey === nextKey ? prev : mergedSubs;
+      const nextKey = next.map((s: any) => s.uri || '').join('|');
+      return prevKey === nextKey ? prev : next;
     });
   }, [streamData, activeEpisodeKey]);
 

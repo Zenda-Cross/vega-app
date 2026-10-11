@@ -122,6 +122,27 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+it('keeps imported subtitles when provider streams refresh', async () => {
+  mockGetStream.mockResolvedValue([remote]);
+  await mount();
+  const imported = {uri: 'file:///picked.srt', title: 'Picked subtitle'};
+  act(() => streams.setExternalSubs(previous => [...previous, imported]));
+  const refreshed = {...remote, subtitles: [{uri: 'https://cdn.test/new.vtt', title: 'Updated English'}]};
+  act(() => client.setQueryData(['stream', episode.link, params.type, 'test'], [refreshed]));
+  await flush();
+  expect(streams.externalSubs).toEqual([...refreshed.subtitles, imported]);
+});
+
+it('does not carry imported subtitles into the next episode', async () => {
+  mockGetStream.mockResolvedValue([remote]);
+  await mount();
+  act(() => streams.setExternalSubs(previous => [...previous, {uri: 'file:///picked.srt'}]));
+  probeEpisode = {...episode, link: 'https://provider.test/episode-2', title: 'Episode 2'};
+  act(() => tree.update(<QueryClientProvider client={client}><Probe /></QueryClientProvider>));
+  await flush();
+  expect(streams.externalSubs).toEqual(remote.subtitles);
+});
+
 it('starts an asynchronously discovered download while remote servers are pending', async () => {
   let resolve!: (value: unknown) => void;
   mockGetStream.mockReturnValue(

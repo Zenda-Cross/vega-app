@@ -17,6 +17,7 @@ import * as Brightness from 'expo-brightness';
 import { VolumeManager } from 'react-native-volume-manager';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { settingsStorage } from '../../../lib/storage';
+import {getPlayerVolumeLevels} from '../../../lib/playerVolume';
 
 import {
   GestureDetector,
@@ -25,6 +26,8 @@ import {
 } from 'react-native-gesture-handler';
 
 type GesturesProps = {
+  maxVolume: number;
+  onVolumeBoostChange: (boost: number) => void;
   forward: (time?: number) => void;
   rewind: (time?: number) => void;
   togglePlayPause: () => void;
@@ -182,10 +185,12 @@ const ControlOverlay = React.memo(
     value,
     isVisible,
     isVolume,
+    maximum = 1,
   }: {
     value: number;
     isVisible: boolean;
     isVolume: boolean;
+    maximum?: number;
   }) => {
     const opacity = useSharedValue(0);
     // Stays mounted for the length of the fade out. Unmounting straight from
@@ -267,12 +272,12 @@ const ControlOverlay = React.memo(
       () => ({
         width: '100%' as const,
         height: `${Math.round(
-          Math.max(0, Math.min(1, value)) * 100,
+          Math.max(0, Math.min(1, value / maximum)) * 100,
         )}%` as `${number}%`,
         borderRadius: 3,
-        backgroundColor: 'white',
+        backgroundColor: isVolume && value > 1 ? '#FFB74D' : 'white',
       }),
-      [value],
+      [value, maximum, isVolume],
     );
 
     const iconStyle = useMemo(() => ({ marginTop: 10 }), []);
@@ -305,6 +310,8 @@ const ControlOverlay = React.memo(
 );
 
 const Gestures = ({
+  maxVolume,
+  onVolumeBoostChange,
   forward,
   rewind,
   togglePlayPause,
@@ -623,11 +630,37 @@ const Gestures = ({
     ],
   );
 
+  const lastSystemVolume = useRef<number | null>(null);
   const updateSystemVolume = useCallback((newVolume: number) => {
-    const clampedVolume = Math.max(0, Math.min(1, newVolume));
-    VolumeManager.setVolume(clampedVolume);
-    setDisplayVolume(clampedVolume);
-  }, []);
+    const {level, system, boost} = getPlayerVolumeLevels(newVolume, maxVolume);
+    // Raising gain above 100% does not repeatedly write unchanged system volume.
+    if (lastSystemVolume.current !== system) {
+      lastSystemVolume.current = system;
+      VolumeManager.setVolume(system).catch(() => {});
+    }
+    onVolumeBoostChange(boost);
+    setDisplayVolume(level);
+  }, [maxVolume, onVolumeBoostChange]);
+
+  useEffect(() => {
+    if (volumeValue.value > maxVolume) {
+      volumeValue.value = maxVolume;
+      updateSystemVolume(maxVolume);
+    }
+  }, [maxVolume, updateSystemVolume, volumeValue]);
+
+  useEffect(() => {
+    const listener = VolumeManager.addVolumeListener(({volume: system}) => {
+      if (isPanActive.value) return;
+      lastSystemVolume.current = system;
+      // Ignore our own 100% system event while the player is boosted.
+      if (system >= 1 && volumeValue.value > 1) return;
+      volumeValue.value = system;
+      setDisplayVolume(system);
+      onVolumeBoostChange(1);
+    });
+    return () => listener.remove();
+  }, [isPanActive, onVolumeBoostChange, volumeValue]);
 
   const updateSystemBrightness = useCallback((newBrightness: number) => {
     const clampedBrightness = Math.max(0, Math.min(1, newBrightness));
@@ -706,7 +739,7 @@ const Gestures = ({
             // Volume control
             const newVolume = Math.max(
               0,
-              Math.min(1, startVolume.value + change),
+              Math.min(maxVolume, startVolume.value + change),
             );
             volumeValue.value = newVolume;
             runOnJS(updateSystemVolume)(newVolume);
@@ -732,6 +765,7 @@ const Gestures = ({
       cancel2x,
       updateSystemBrightness,
       updateSystemVolume,
+      maxVolume,
     ],
   );
 
@@ -755,6 +789,7 @@ const Gestures = ({
 
           // Set initial values
           volumeValue.value = currentVolume.volume;
+          lastSystemVolume.current = currentVolume.volume;
           brightnessValue.value = currentBrightness;
           setDisplayVolume(currentVolume.volume);
           setDisplayBrightness(currentBrightness);
@@ -911,6 +946,7 @@ const Gestures = ({
         ) : null}
         <ControlOverlay
           value={displayVolume}
+          maximum={maxVolume}
           isVisible={isVolumeVisible}
           isVolume={true}
         />

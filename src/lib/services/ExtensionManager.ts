@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   extensionStorage,
+  ExtensionKeys,
   ProviderExtension,
   ProviderModule,
   ProviderSource,
@@ -440,7 +441,10 @@ export class ExtensionManager {
   /**
    * Update a provider
    */
-  async updateProvider(provider: ProviderExtension): Promise<void> {
+  async updateProvider(provider: ProviderExtension): Promise<boolean> {
+    if (!extensionStorage.isProviderInstalled(provider.value, provider.source.author)) {
+      return false;
+    }
     try {
       // Download updated modules
       await this.downloadProviderModules(
@@ -451,10 +455,17 @@ export class ExtensionManager {
         provider.path,
       );
 
-      // Update installation record
+      // Uninstall or source removal during the download takes precedence.
+      if (!extensionStorage.isProviderInstalled(provider.value, provider.source.author)) {
+        extensionStorage.removeProviderModules(provider.value, provider.source.author);
+        return false;
+      }
+
+      // Update the existing installation record.
       extensionStorage.installProvider(provider);
 
       console.log(`Successfully updated provider: ${provider.display_name}`);
+      return true;
     } catch (error) {
       console.error(
         `Failed to update provider ${provider.display_name}:`,
@@ -508,7 +519,12 @@ export class ExtensionManager {
     try {
       this.migrateLegacyCustomProviderSource();
 
-      if (extensionStorage.getProviderSources().length === 0) {
+      // Seed only a new installation. A stored empty list means the user
+      // deliberately removed their sources and must remain empty.
+      if (
+        extensionStorage.getProviderSources().length === 0 &&
+        !mainStorage.contains(ExtensionKeys.PROVIDER_SOURCES)
+      ) {
         try {
           const defaultSource = createProviderSource('Zenda-Cross');
           extensionStorage.addProviderSources(defaultSource.author, defaultSource.url);
