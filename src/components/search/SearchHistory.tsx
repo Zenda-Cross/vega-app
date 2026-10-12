@@ -1,5 +1,5 @@
-import React, {memo, useCallback, useState, useRef, useEffect} from 'react';
-import {View, ScrollView, Pressable, findNodeHandle} from 'react-native';
+import React, {memo, useCallback, useState, useRef, useEffect, useMemo} from 'react';
+import {View, ScrollView, Pressable, findNodeHandle, UIManager} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import AppText from '../ui/Text';
@@ -42,6 +42,16 @@ const HistoryRow = memo(
   }: HistoryRowProps) => {
     const colors = useM3Colors();
     const [isFocused, setIsFocused] = useState(false);
+    const [removeFocused, setRemoveFocused] = useState(false);
+    const [rowNode, setRowNode] = useState<number | null>(null);
+    const [removeNode, setRemoveNode] = useState<number | null>(null);
+    const setRowRef = useCallback((el: View | null) => {
+      itemRef?.(el);
+      if (isTV) setRowNode(el ? findNodeHandle(el) : null);
+    }, [itemRef]);
+    const setRemoveRef = useCallback((el: View | null) => {
+      setRemoveNode(el ? findNodeHandle(el) : null);
+    }, []);
 
     const handlePress = useCallback(() => {
       onPress(search);
@@ -63,9 +73,10 @@ const HistoryRow = memo(
     return (
       <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 8}}>
         <Pressable
-          ref={itemRef as any}
+          ref={setRowRef}
           focusable={true}
           isTVSelectable={true}
+          nextFocusRight={isTV ? removeNode ?? undefined : undefined}
           nextFocusUp={nextFocusUp ?? undefined}
           nextFocusDown={nextFocusDown ?? undefined}
           onFocus={handleFocus}
@@ -125,6 +136,42 @@ const HistoryRow = memo(
             </Pressable>
           )}
         </Pressable>
+        {isTV && (
+          <Pressable
+            ref={setRemoveRef}
+            focusable
+            isTVSelectable
+            nextFocusLeft={rowNode ?? undefined}
+            nextFocusUp={nextFocusUp ?? undefined}
+            nextFocusDown={nextFocusDown ?? undefined}
+            onFocus={() => {
+              setRemoveFocused(true);
+              onItemFocus(index);
+            }}
+            onBlur={() => setRemoveFocused(false)}
+            onPress={handleRemove}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove ${search} from recent searches`}
+            style={{
+              marginLeft: 8,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: removeFocused
+                ? colors.surfaceContainerHigh
+                : colors.surfaceContainerLow,
+              borderWidth: 2.5,
+              borderColor: removeFocused ? focusBorderColor : 'transparent',
+            }}>
+            <MaterialCommunityIcons
+              name="close"
+              size={22}
+              color={removeFocused ? colors.primary : colors.onSurfaceVariant}
+            />
+          </Pressable>
+        )}
       </View>
     );
   },
@@ -144,7 +191,36 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
   const itemRefs = useRef<(View | null)[]>([]);
   const [nodeHandles, setNodeHandles] = useState<(number | null)[]>([]);
 
-  const visibleHistory = isTV ? history.slice(0, 10) : history;
+  const [clearNode, setClearNode] = useState<number | null>(null);
+  const pendingFocusIndex = useRef<number | null>(null);
+  const visibleHistory = useMemo(
+    () => isTV ? history.slice(0, 10) : history,
+    [history],
+  );
+  const setClearRef = useCallback((el: View | null) => {
+    if (isTV) setClearNode(el ? findNodeHandle(el) : null);
+  }, []);
+  const rowRefs = useMemo(() => visibleHistory.map((_, index) =>
+    (el: View | null) => { itemRefs.current[index] = el; },
+  ), [visibleHistory]);
+  const focusSearchField = useCallback(() => {
+    onFirstItemNodeHandle?.(null);
+    if (searchFieldNodeHandle) {
+      UIManager.dispatchViewManagerCommand(searchFieldNodeHandle, 'requestTVFocus', []);
+    }
+  }, [onFirstItemNodeHandle, searchFieldNodeHandle]);
+  const handleRemove = useCallback((text: string) => {
+    if (isTV) {
+      // Removing the last entry unmounts this component in Search.
+      if (history.length === 1) focusSearchField();
+      else pendingFocusIndex.current = Math.max(0, visibleHistory.indexOf(text));
+    }
+    onRemoveSearch(text);
+  }, [history.length, visibleHistory, focusSearchField, onRemoveSearch]);
+  const handleClear = useCallback(() => {
+    if (isTV) focusSearchField();
+    onClearHistory();
+  }, [focusSearchField, onClearHistory]);
 
   useEffect(() => {
     if (!isTV) return;
@@ -152,10 +228,19 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
       itemRefs.current[i] ? findNodeHandle(itemRefs.current[i]) : null,
     );
     setNodeHandles(handles);
-    if (handles[0] && onFirstItemNodeHandle) {
-      onFirstItemNodeHandle(handles[0]);
+    onFirstItemNodeHandle?.(handles[0] ?? null);
+    if (pendingFocusIndex.current !== null) {
+      const index = Math.min(pendingFocusIndex.current, handles.length - 1);
+      const target = handles[index] ?? searchFieldNodeHandle;
+      pendingFocusIndex.current = null;
+      if (target) {
+        const frame = requestAnimationFrame(() => {
+          UIManager.dispatchViewManagerCommand(target, 'requestTVFocus', []);
+        });
+        return () => cancelAnimationFrame(frame);
+      }
     }
-  }, [visibleHistory, onFirstItemNodeHandle]);
+  }, [visibleHistory, onFirstItemNodeHandle, searchFieldNodeHandle]);
 
   const handleSelect = useCallback(
     (text: string) => {
@@ -187,11 +272,15 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
         <AppText role="titleMediumEmphasized" style={{color: colors.onSurface}}>
           Recent Searches
         </AppText>
-        {!isTV && (
-          <Button compact variant="text" onPress={onClearHistory}>
-            Clear all
-          </Button>
-        )}
+        <Button
+          ref={setClearRef}
+          compact
+          variant="text"
+          nextFocusUp={searchFieldNodeHandle}
+          nextFocusDown={nodeHandles[0]}
+          onPress={handleClear}>
+          Clear all
+        </Button>
       </View>
 
       {isTV ? (
@@ -200,7 +289,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
             const isFirst = index === 0;
             const isLast = index === visibleHistory.length - 1;
             const nextUp = isFirst
-              ? searchFieldNodeHandle
+              ? clearNode ?? searchFieldNodeHandle
               : nodeHandles[index - 1];
             const nextDown = isLast
               ? nodeHandles[index]
@@ -208,16 +297,14 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
 
             return (
               <HistoryRow
-                key={`history-${item}-${index}`}
+                key={`history-${item}`}
                 search={item}
                 index={index}
-                itemRef={el => {
-                  itemRefs.current[index] = el;
-                }}
+                itemRef={rowRefs[index]}
                 nextFocusUp={nextUp}
                 nextFocusDown={nextDown}
                 onPress={handleSelect}
-                onRemove={onRemoveSearch}
+                onRemove={handleRemove}
                 onItemFocus={handleItemFocus}
                 focusBorderColor={focusBorderColor}
               />
@@ -232,11 +319,11 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
           contentContainerStyle={{paddingBottom: 20}}>
           {visibleHistory.map((item, index) => (
             <HistoryRow
-              key={`history-${item}-${index}`}
+              key={`history-${item}`}
               search={item}
               index={index}
               onPress={handleSelect}
-              onRemove={onRemoveSearch}
+              onRemove={handleRemove}
               onItemFocus={handleItemFocus}
               focusBorderColor={focusBorderColor}
             />
