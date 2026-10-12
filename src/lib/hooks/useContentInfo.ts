@@ -20,12 +20,13 @@ export const useContentInfo = (link: string, providerValue: string, enabled = tr
   const cacheKey = getContentInfoCacheKey(link, providerValue);
   const query = useQuery({
     queryKey: ['contentInfo', link, providerValue],
-    queryFn: async () => {
+    queryFn: async ({signal}) => {
       console.log('Fetching content info for:', link);
 
       const data = await providerManager.getMetaData({
         link,
         provider: providerValue,
+        signal,
       });
       if (!data || (!data?.title && !data?.synopsis && !data?.image)) {
         throw new Error('Error: No data returned from provider');
@@ -36,7 +37,7 @@ export const useContentInfo = (link: string, providerValue: string, enabled = tr
     enabled: enabled && !!link && !!providerValue,
     staleTime: 5 * 60 * 1000,
     gcTime: 60 * 60 * 1000, // 1 hour
-    retry: 1,
+    retry: (count, error) => !error.message?.includes('WAF') && count < 1,
     initialData: () => {
       if (!enabled) return undefined;
       const cached = cacheStorage.getString(cacheKey);

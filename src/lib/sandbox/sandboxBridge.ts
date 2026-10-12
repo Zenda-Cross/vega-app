@@ -6,6 +6,7 @@ import {
 } from './protocol';
 import {handleProviderRpc} from './providerRpc';
 import {providerAbortError} from './abort';
+import {registerWafOperation} from '../services/wafSession';
 
 /**
  * Native side transport for the provider sandbox.
@@ -18,6 +19,8 @@ import {providerAbortError} from './abort';
 type Injector = (script: string) => void;
 
 interface PendingInvoke {
+  wafScope: AbortSignal;
+  releaseWafScope: () => void;
   controller: AbortController;
   started: boolean;
   providerValue: string;
@@ -148,6 +151,7 @@ class SandboxBridge {
       return;
     }
     this.pending.delete(token);
+    entry.releaseWafScope();
     entry.controller.abort();
     if (entry.started) this.activeInvokes--;
     for (let i = this.queue.length - 1; i >= 0; i--) {
@@ -209,6 +213,7 @@ class SandboxBridge {
           message.operation,
           message.args,
           entry.controller.signal,
+          entry.wafScope,
         )
           .then(result => {
             if (this.pending.get(message.token) !== entry) return;
@@ -283,8 +288,12 @@ class SandboxBridge {
       };
       signal?.addEventListener('abort', onAbort, {once: true});
 
+      const controller = new AbortController();
+      const wafScope = signal ?? controller.signal;
       this.pending.set(token, {
-        controller: new AbortController(),
+        controller,
+        wafScope,
+        releaseWafScope: registerWafOperation(wafScope),
         started: false,
         providerValue,
         author,

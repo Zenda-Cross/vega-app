@@ -551,7 +551,8 @@ export const useStream = ({
     placeholderData: localPlaceholder,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: (failureCount, _error) => {
+    retry: (failureCount, streamFailure) => {
+      if (streamFailure.message?.includes('WAF')) return false;
       if (failureCount >= 2) {
         return false;
       }

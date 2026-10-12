@@ -7,6 +7,7 @@ import {useWafStore} from '../zustand/wafStore';
 import {buildCookieString, pickUserAgent} from './cookieManager';
 import {providerAuthor} from '../sandbox/providerScope';
 import {deleteJarCookie, getJarCookieMap} from '../sandbox/providerCookieJar';
+import {isWafOperationDismissed, registerWafOperation, wafCancelledError} from './wafSession';
 
 /**
  * Opens a dialog WebView so the user can solve a WAF / captcha challenge
@@ -39,11 +40,21 @@ import {deleteJarCookie, getJarCookieMap} from '../sandbox/providerCookieJar';
 // Dictionary to store pending WAF resolution promises by URL/cookie
 const pendingRequests: Record<string, Promise<OpenWebViewResult>> = {};
 
+const trackScope = (promise: Promise<OpenWebViewResult>, scope?: AbortSignal) => {
+  if (scope) {
+    const release = registerWafOperation(scope);
+    promise.then(release, release);
+  }
+  return promise;
+};
+
 export const openWebView = (
   url: string,
   options?: OpenWebViewOptions,
   authorRaw?: string,
+  scope?: AbortSignal,
 ): Promise<OpenWebViewResult> => {
+  if (isWafOperationDismissed(scope)) return Promise.reject(wafCancelledError());
   const author = providerAuthor(authorRaw);
   if (!url) {
     return Promise.reject(new Error('openWebView: a url is required'));
@@ -64,7 +75,7 @@ export const openWebView = (
   // Request coalescing: if a WAF resolution is already pending for this URL/cookie, return its promise
   // We ALWAYS coalesce, even if force: true, to prevent multiple dialogs for the same domain
   if (cacheKey in pendingRequests) {
-    return pendingRequests[cacheKey];
+    return trackScope(pendingRequests[cacheKey], scope);
   }
 
   const execute = async (): Promise<OpenWebViewResult> => {
@@ -112,5 +123,5 @@ export const openWebView = (
   };
   promise.then(cleanup, cleanup);
 
-  return promise;
+  return trackScope(promise, scope);
 };

@@ -150,7 +150,7 @@ const WafWebViewDialog = () => {
     [remove, userAgent],
   );
 
-  const cancel = useCallback(() => {
+  const cancel = useCallback((all = true) => {
     if (!request || settledRef.current) {
       return;
     }
@@ -159,7 +159,8 @@ const WafWebViewDialog = () => {
       clearTimeout(fallbackTimerRef.current);
       fallbackTimerRef.current = null;
     }
-    request.reject(new Error('WAF_DIALOG_CANCELLED'));
+    if (all) useWafStore.getState().cancelAll();
+    else request.reject(new Error('WAF_DIALOG_CANCELLED'));
     const id = request.id;
     clearSiteCookies(request.url)
       .catch(() => {})
@@ -259,7 +260,7 @@ const WafWebViewDialog = () => {
     if (!request?.timeoutMs) {
       return;
     }
-    const timer = setTimeout(() => cancel(), request.timeoutMs);
+    const timer = setTimeout(() => cancel(false), request.timeoutMs);
     return () => clearTimeout(timer);
   }, [request, cancel]);
 
@@ -272,7 +273,7 @@ const WafWebViewDialog = () => {
       animationType="slide"
       visible={true}
       transparent={true}
-      onRequestClose={cancel}>
+      onRequestClose={() => cancel()}>
       <View className="flex-1 bg-black/60 justify-center items-center p-4">
         <View
           className="bg-tertiary rounded-2xl overflow-hidden w-full"
@@ -290,7 +291,7 @@ const WafWebViewDialog = () => {
                   'Complete the challenge below, then tap Done.'}
               </AppText>
             </View>
-            <TVTouchable onPress={cancel} className="p-1">
+            <TVTouchable accessibilityLabel="Cancel verification" onPress={() => cancel()} className="p-1">
               <MaterialIcons name="close" size={22} color="#c1c4c9" />
             </TVTouchable>
           </View>

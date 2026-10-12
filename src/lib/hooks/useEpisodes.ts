@@ -19,7 +19,7 @@ export const useEpisodes = (
 
   const query = useQuery<EpisodeLink[], Error>({
     queryKey: ['episodes', episodesLink, providerValue],
-    queryFn: async () => {
+    queryFn: async ({signal}) => {
       if (!episodesLink || !providerValue || !enabled) {
         return [];
       }
@@ -39,6 +39,7 @@ export const useEpisodes = (
       const episodes = await providerManager.getEpisodes({
         url: episodesLink,
         providerValue: providerValue,
+        signal,
       });
 
       return episodes || [];
@@ -46,7 +47,8 @@ export const useEpisodes = (
     enabled: enabled && !!episodesLink && !!providerValue,
     staleTime: 0,
     gcTime: 60 * 60 * 1000, // 1 hour (was cacheTime)
-    retry: (failureCount, _error) => {
+    retry: (failureCount, error) => {
+      if (error.message?.includes('WAF')) return false;
       // Don't retry on provider/network errors
       if (failureCount >= 2) {
         return false;
