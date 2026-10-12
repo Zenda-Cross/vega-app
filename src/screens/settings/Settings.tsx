@@ -260,7 +260,7 @@ const Settings = ({navigation}: Props) => {
       showAppDialog({
         title: 'Restore backup?',
         message:
-          'This replaces your settings and installed providers with the ones in the backup. Vega will restart after restoring.',
+          'This replaces your settings and installed providers, and your library if included in the backup. Vega will restart after restoring.',
         actions: [
           {label: 'Cancel'},
           {
@@ -444,13 +444,13 @@ const Settings = ({navigation}: Props) => {
                 />
                 <SettingsRow
                   title="Export backup"
-                  description="Save settings and providers to a file"
+                  description="Save settings, providers and library to a file"
                   icon="content-save-outline"
                   onPress={exportBackupHandler}
                 />
                 <SettingsRow
                   title="Import backup"
-                  description="Restore settings and providers from a file"
+                  description="Restore settings, providers and library from a file"
                   icon="backup-restore"
                   onPress={importBackupHandler}
                 />

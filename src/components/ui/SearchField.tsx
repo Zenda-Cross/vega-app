@@ -11,10 +11,11 @@ import {
 } from '@expo/ui/jetpack-compose';
 import {fillMaxWidth} from '@expo/ui/jetpack-compose/modifiers';
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
-import {View, TextInput, Keyboard, Pressable, BackHandler, Text as RNText, findNodeHandle} from 'react-native';
+import {View, TextInput, Keyboard, Pressable, BackHandler, Text as RNText, findNodeHandle, UIManager} from 'react-native';
 import {useM3Colors, useM3HostTheme} from '../../theme/M3PaletteContext';
 import {isTV} from '../../lib/tv';
 import {useTVFocusBorderColor} from '../../lib/tv/useTVFocusBorderColor';
+import {useSafeIsNavFocused, useTVNavFocusMemory} from '../../lib/tv/useTVNavFocusMemory';
 
 interface SearchFieldProps {
   value: string;
@@ -64,6 +65,12 @@ const SearchField = forwardRef<SearchFieldRef, SearchFieldProps>(
     const [hasPreferredFocus, setHasPreferredFocus] = useState(true);
     const [containerHandle, setContainerHandle] = useState<number | null>(null);
     const tvFocusBorderColor = useTVFocusBorderColor();
+    const isNavFocused = useSafeIsNavFocused();
+    const {onFocus: rememberFocus, onBlur: forgetFocus} = useTVNavFocusMemory({
+      ref: containerRef,
+      isNavFocused,
+      hasTVPreferredFocus: hasPreferredFocus,
+    });
     // Text the native field already shows. Pushing it back with setText moves
     // the cursor to the end, so only outside changes (clear, history pick) sync.
     const nativeTextRef = useRef(value);
@@ -105,9 +112,12 @@ const SearchField = forwardRef<SearchFieldRef, SearchFieldProps>(
     useImperativeHandle(ref, () => ({
       focus: () => {
         if (isTV) {
-          (containerRef.current as any)?.focus?.();
-          setTvFocused(true);
-          onFocusChange?.(true);
+          // A Pressable ref has no TextInput-style focus method. Ask native TV
+          // focus and keep preferred focus set until onFocus confirms arrival.
+          setHasPreferredFocus(true);
+          setIsEditing(false);
+          const handle = containerRef.current ? findNodeHandle(containerRef.current) : null;
+          if (handle) UIManager.dispatchViewManagerCommand(handle, 'requestTVFocus', []);
         } else {
           fieldRef.current?.focus();
         }
@@ -180,11 +190,13 @@ const SearchField = forwardRef<SearchFieldRef, SearchFieldProps>(
             nextFocusLeft={nextFocusLeft ?? undefined}
             nextFocusRight={nextFocusRight ?? undefined}
             onFocus={() => {
+              rememberFocus();
               setHasPreferredFocus(false);
               setTvFocused(true);
               onFocusChange?.(true);
             }}
             onBlur={() => {
+              forgetFocus();
               setHasPreferredFocus(false);
               setTvFocused(false);
               onFocusChange?.(false);

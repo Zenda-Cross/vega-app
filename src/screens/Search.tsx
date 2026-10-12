@@ -1,4 +1,4 @@
-import {View, FlatList, Text, Keyboard} from 'react-native';
+import {View, FlatList, Keyboard} from 'react-native';
 import React, {useState, useEffect, useCallback, memo, useRef} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
@@ -14,7 +14,6 @@ import {fetchIMDbSuggestions, type IMDbSuggestion} from '../lib/services/imdbSug
 import {sanitizeSearchQuery} from '../lib/utils/helpers';
 import SearchSuggestions from '../components/search/SearchSuggestions';
 import SearchHistory from '../components/search/SearchHistory';
-import Button from '../components/ui/Button';
 import IconButton from '../components/ui/IconButton';
 import AppText from '../components/ui/Text';
 import SearchField, {type SearchFieldRef} from '../components/ui/SearchField';
@@ -112,6 +111,7 @@ const Search = () => {
   const [searchResults, setSearchResults] = useState<OMDBResult[]>([]);
   const searchFieldRef = useRef<SearchFieldRef>(null);
   const focusAfterTabResetRef = useRef(false);
+  const focusAfterHistoryDeleteRef = useRef(false);
   const suppressSuggestionsRef = useRef(false);
 
   useEffect(() => {
@@ -153,6 +153,17 @@ const Search = () => {
       unsubscribeFocus();
     };
   }, [navigation]);
+
+  // History deletion unmounts the focused control. Restore focus only after
+  // that native update, using the live field handle rather than a cached tag.
+  useEffect(() => {
+    if (!isTV || !focusAfterHistoryDeleteRef.current || searchHistory.length > 0) return;
+    const frame = requestAnimationFrame(() => {
+      searchFieldRef.current?.focus();
+      focusAfterHistoryDeleteRef.current = false;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [searchHistory]);
 
   // Debounced IMDb search suggestions (spelling completer). The timers live
   // in effects so the screen stays compatible with React Compiler.
@@ -268,6 +279,10 @@ const Search = () => {
   const removeHistoryItem = useCallback(
     (search: string) => {
       const newSearches = searchHistory.filter(item => item !== search);
+      if (isTV && newSearches.length === 0) {
+        focusAfterHistoryDeleteRef.current = true;
+        setFirstItemNode(null);
+      }
       MMKV.setArray('searchHistory', newSearches);
       setSearchHistory(newSearches);
     },
@@ -275,6 +290,10 @@ const Search = () => {
   );
 
   const clearHistory = useCallback(() => {
+    if (isTV) {
+      focusAfterHistoryDeleteRef.current = true;
+      setFirstItemNode(null);
+    }
     MMKV.setArray('searchHistory', []);
     setSearchHistory([]);
   }, []);

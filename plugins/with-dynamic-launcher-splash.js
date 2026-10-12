@@ -1,4 +1,5 @@
 const fs = require('fs');
+const {addVideoPlayerAlias} = require('./video-player-intents');
 const path = require('path');
 const {
   withAndroidManifest,
@@ -101,6 +102,7 @@ const withLauncherManifest = config =>
       createLauncherAlias(packageName, variants[0], '.LauncherDefault', true),
       ...variants.map(variant => createLauncherAlias(packageName, variant)),
     ];
+    addVideoPlayerAlias(application);
     return manifestConfig;
   });
 

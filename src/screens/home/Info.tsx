@@ -23,6 +23,7 @@ import Button from '../../components/ui/Button';
 import AppText from '../../components/ui/Text';
 import {QueryErrorBoundary} from '../../components/ErrorBoundary';
 import SeasonList from '../../components/SeasonList';
+import LocalSeasonList from '../../components/local-content/LocalSeasonList';
 import SkeletonLoader from '../../components/Skeleton';
 import {useContentDetails} from '../../lib/hooks/useContentInfo';
 import {useArtworkShape} from '../../lib/hooks/useHomePageData';
@@ -67,10 +68,12 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     isSynopsisLoading,
     error,
     refetch,
+    localTitle,
   } = useContentDetails(route.params.link, providerValue);
-  const inLibrary = useWatchListStore(state =>
+  const remoteInLibrary = useWatchListStore(state =>
     state.watchList.some(item => item.link === route.params.link),
   );
+  const inLibrary = localTitle ? localTitle.inLibrary !== false : remoteInLibrary;
   const [collectionPickerVisible, setCollectionPickerVisible] = useState(false);
   const [readMore, setReadMore] = useState(false);
   const [storyVisible, setStoryVisible] = useState(false);
@@ -131,7 +134,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const dynamicInfoAccentEnabled = settingsStorage.isDynamicInfoAccentEnabled();
   const contentProviderName = useMemo(
     () =>
-      installedProviders.find(item => item.value === providerValue)
+      providerValue === 'local' ? 'Local content' : installedProviders.find(item => item.value === providerValue)
         ?.display_name || providerValue,
     [installedProviders, providerValue],
   );
@@ -226,7 +229,9 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     return Promise.race([
       refetch(),
       new Promise(resolve => setTimeout(resolve, 10000)),
-    ]).finally(() => {
+    ]).catch(cause => {
+      ToastAndroid.show(cause instanceof Error ? cause.message : 'Unable to refresh this title', ToastAndroid.LONG);
+    }).finally(() => {
       setTimeout(() => {
         setRefreshing(false);
       }, 50);
@@ -248,7 +253,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     }
     // With one category, save to it or remove directly. With none or several,
     // ask where to save.
-    if (!onlyCollectionId) {
+    if (localTitle || !onlyCollectionId) {
       setCollectionPickerVisible(true);
       return;
     }
@@ -267,6 +272,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     );
   }, [
     displayTitle,
+    localTitle,
     inLibrary,
     onlyCollectionId,
     posterImage,
@@ -430,6 +436,10 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                       <SkeletonLoader show height={28} width={120} />
                       <SkeletonLoader show height={72} width="100%" />
                     </View>
+                  ) : localTitle ? (
+                    <LocalSeasonList title={localTitle} onEditMetadata={() => searchNavigation.navigate('WatchListStack', {
+                      screen: 'LocalContent', params: {editId: localTitle.id},
+                    } as never)} />
                   ) : (
                     <SeasonList
                       refreshing={refreshing}

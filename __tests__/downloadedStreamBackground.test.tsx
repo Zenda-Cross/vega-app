@@ -43,10 +43,13 @@ let tree: renderer.ReactTestRenderer;
 let client: QueryClient;
 let probeEpisode = episode;
 let localPlaybackReady = true;
+let localContent = false;
+let externalParams: Record<string, unknown> = {};
 const Probe = () => {
   streams = useStream({
     activeEpisode: probeEpisode,
-    routeParams: params,
+    routeParams: {...params, localContent, ...externalParams},
+    enabled: !localContent,
     provider: 'test',
     localPlaybackReady,
   });
@@ -72,6 +75,8 @@ const mount = async () => {
 beforeEach(() => {
   probeEpisode = episode;
   localPlaybackReady = true;
+  localContent = false;
+  externalParams = {};
   for (const key of Object.keys(mockDownloads)) delete mockDownloads[key];
   mockGetStream.mockReset();
   mockDownloadExists.mockReset().mockResolvedValue(true);
@@ -282,4 +287,46 @@ it('surfaces an error when the download fails and no remote server loads', async
   expect(mockGetStream).toHaveBeenCalledTimes(3);
   expect(streams.selectedStream.link).toBe('');
   expect(streams.error).not.toBeNull();
+});
+
+
+it('plays imported SAF files immediately and never fetches providers, even on retry or failure', async () => {
+  localContent = true;
+  probeEpisode = {...episode, link: 'content://tree/document/video.mkv', sourceLink: episode.link} as typeof episode;
+  await mount();
+  expect(streams.selectedStream).toEqual({server: 'Local file', link: probeEpisode.link, type: 'local'});
+  expect(streams.isLoading).toBe(false);
+  expect(mockGetStream).not.toHaveBeenCalled();
+  expect(streams.switchToNextStream()).toBe(false);
+  await act(async () => {await streams.refetch();});
+  await flush();
+  expect(mockGetStream).not.toHaveBeenCalled();
+});
+
+it('switches imported episodes to their own local URI without provider work', async () => {
+  localContent = true;
+  probeEpisode = {...episode, link: 'content://tree/document/episode-1.mkv'};
+  await mount();
+  probeEpisode = {...episode, link: 'content://tree/document/episode-2.mkv', title: 'Episode 2'};
+  act(() => tree.update(<QueryClientProvider client={client}><Probe /></QueryClientProvider>));
+  await flush();
+  expect(streams.selectedStream.link).toBe(probeEpisode.link);
+  expect(streams.isLoading).toBe(false);
+  expect(mockGetStream).not.toHaveBeenCalled();
+});
+
+
+it.each([
+  ['content://files/shared.mkv', 'video/x-matroska', ''],
+  ['https://cdn.test/videoplayback?sig=a%2Bb', 'video/mp4', ''],
+  ['https://cdn.test/manifest', 'application/vnd.apple.mpegurl', 'm3u8'],
+])('plays an incoming video directly without provider work or a remote-fetch loader: %s', async (uri, mimeType, type) => {
+  localContent = true;
+  probeEpisode = {...episode, link: uri};
+  externalParams = {directUrl: uri, externalVideo: {mimeType}};
+  await mount();
+  expect(streams.selectedStream).toEqual({server: 'Opened video', link: uri, type});
+  expect(streams.streamData).toEqual([streams.selectedStream]);
+  expect(streams.isLoading).toBe(false);
+  expect(mockGetStream).not.toHaveBeenCalled();
 });

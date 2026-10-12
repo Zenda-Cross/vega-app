@@ -10,8 +10,10 @@ import './global.css';
 import Home from './screens/home/Home';
 import Info from './screens/home/Info';
 import Player from './screens/home/Player';
+import {getInitialVideoIntent, subscribeVideoIntent, setVideoIntentsEnabled, supportsVideoIntents, videoIntentPlayerParams, type VideoIntentPayload} from './lib/services/videoIntent';
 import Settings from './screens/settings/Settings';
 import Library from './screens/Library';
+import LocalContent from './screens/LocalContent';
 import Search from './screens/Search';
 import {isTV} from './lib/tv';
 import ScrollList from './screens/ScrollList';
@@ -114,6 +116,8 @@ export type RootStackParamList = {
     linkIndex: number;
     episodeList: EpisodeLink[];
     directUrl?: string;
+    localContent?: boolean;
+    externalVideo?: {mimeType: string};
     type: string;
     primaryTitle?: string;
     secondaryTitle?: string;
@@ -142,6 +146,7 @@ export type SearchStackParamList = {
 };
 
 export type WatchListStackParamList = {
+  LocalContent: {editId?: string; collectionId?: string} | undefined;
   WatchList: undefined;
   Info: {link: string; provider?: string; poster?: string};
 };
@@ -179,6 +184,20 @@ const WatchListStack = createNativeStackNavigator<WatchListStackParamList>();
 const DownloadsStack = createNativeStackNavigator<DownloadsStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+let pendingVideo: VideoIntentPayload | undefined;
+const openVideoIntent = (payload: VideoIntentPayload): void => {
+  if (!settingsStorage.isOpenVideosFromOtherAppsEnabled()) return;
+  if (!navigationRef.isReady()) {
+    pendingVideo = payload;
+    return;
+  }
+  pendingVideo = undefined;
+  // Replace an already-open player so its episode and stream state is reset.
+  navigationRef.dispatch({
+    type: navigationRef.getCurrentRoute()?.name === 'Player' ? 'REPLACE' : 'PUSH',
+    payload: {name: 'Player', params: videoIntentPlayerParams(payload)},
+  });
+};
 let pendingDownloadsNavigation = false;
 let pendingAddSource: SourceIntentPayload | undefined;
 
@@ -367,6 +386,7 @@ function WatchListStackScreen() {
       screenListeners={navigationWorkListeners}
       screenOptions={stackScreenOptions}>
       <WatchListStack.Screen name="WatchList" component={Library} />
+      <WatchListStack.Screen name="LocalContent" component={LocalContent} />
       <WatchListStack.Screen name="Info" component={Info} />
     </WatchListStack.Navigator>
   );
@@ -661,6 +681,12 @@ const App = () => {
   }, []);
 
   useEffect(() => subscribeSourceIntent(openAddSourceScreen), []);
+  useEffect(() => subscribeVideoIntent(openVideoIntent), []);
+  useEffect(() => {
+    if (supportsVideoIntents)
+      setVideoIntentsEnabled(settingsStorage.isOpenVideosFromOtherAppsEnabled())
+        .catch(error => console.warn('Failed to update video Open with support:', error));
+  }, []);
 
   const handleNavigationReady = useCallback(async () => {
     if (pendingDownloadsNavigation) {
@@ -671,6 +697,12 @@ const App = () => {
     const initialSource = pendingAddSource ?? (await getInitialSourceIntent());
     if (initialSource) {
       openAddSourceScreen(initialSource);
+    }
+    try {
+      const initialVideo = pendingVideo ?? (await getInitialVideoIntent());
+      if (initialVideo) openVideoIntent(initialVideo);
+    } catch (error) {
+      console.warn('Failed to open incoming video:', error);
     }
     // Track initial screen
     if (hasFirebase) {

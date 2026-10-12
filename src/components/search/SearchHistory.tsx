@@ -203,24 +203,12 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
   const rowRefs = useMemo(() => visibleHistory.map((_, index) =>
     (el: View | null) => { itemRefs.current[index] = el; },
   ), [visibleHistory]);
-  const focusSearchField = useCallback(() => {
-    onFirstItemNodeHandle?.(null);
-    if (searchFieldNodeHandle) {
-      UIManager.dispatchViewManagerCommand(searchFieldNodeHandle, 'requestTVFocus', []);
-    }
-  }, [onFirstItemNodeHandle, searchFieldNodeHandle]);
   const handleRemove = useCallback((text: string) => {
-    if (isTV) {
-      // Removing the last entry unmounts this component in Search.
-      if (history.length === 1) focusSearchField();
-      else pendingFocusIndex.current = Math.max(0, visibleHistory.indexOf(text));
+    if (isTV && history.length > 1) {
+      pendingFocusIndex.current = Math.max(0, visibleHistory.indexOf(text));
     }
     onRemoveSearch(text);
-  }, [history.length, visibleHistory, focusSearchField, onRemoveSearch]);
-  const handleClear = useCallback(() => {
-    if (isTV) focusSearchField();
-    onClearHistory();
-  }, [focusSearchField, onClearHistory]);
+  }, [history.length, visibleHistory, onRemoveSearch]);
 
   useEffect(() => {
     if (!isTV) return;
@@ -278,7 +266,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
           variant="text"
           nextFocusUp={searchFieldNodeHandle}
           nextFocusDown={nodeHandles[0]}
-          onPress={handleClear}>
+          onPress={onClearHistory}>
           Clear all
         </Button>
       </View>

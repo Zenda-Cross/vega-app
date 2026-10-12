@@ -1,3 +1,4 @@
+import {externalVideoStream} from '../services/videoIntent';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ToastAndroid } from 'react-native';
@@ -384,9 +385,9 @@ export const useStream = ({
 }: UseStreamOptions) => {
   const [selectedStream, setSelectedStream] = useState<Stream>(() => {
     const path = getCompletedDownloadPathSync(activeEpisode, routeParams);
-    return path
-      ? { server: 'Downloaded', link: path, type: 'mp4' }
-      : { server: '', link: '', type: '' };
+    return externalVideoStream(routeParams) || (path
+      ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
+      : { server: '', link: '', type: '' });
   });
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
 
@@ -408,16 +409,18 @@ export const useStream = ({
     previousEpisodeKeyRef.current = activeEpisodeKey;
     const path = getCompletedDownloadPathSync(activeEpisode, routeParams);
     setSelectedStream(
-      path
-        ? { server: 'Downloaded', link: path, type: 'mp4' }
-        : { server: '', link: '', type: '' },
+      externalVideoStream(routeParams) || (path
+        ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
+        : { server: '', link: '', type: '' }),
     );
   }, [activeEpisode, activeEpisodeKey, routeParams]);
 
   const localPlaceholder = useMemo(() => {
+    const openedStream = externalVideoStream(routeParams);
+    if (openedStream) return [openedStream];
     const path = getCompletedDownloadPathSync(activeEpisode, routeParams);
     return path
-      ? [{ server: 'Downloaded', link: path, type: 'mp4' }]
+      ? [{ server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }]
       : undefined;
   }, [activeEpisode, routeParams]);
 
@@ -436,6 +439,13 @@ export const useStream = ({
     queryFn: async () => {
       if (!activeEpisode?.link && !activeEpisode?.id && !activeEpisode?.title) {
         return [];
+      }
+
+      if (routeParams?.externalVideo) return [externalVideoStream(routeParams)!];
+      if (routeParams?.localContent) {
+        return isLocalPath(activeEpisode?.link)
+          ? [{server: 'Local file', link: activeEpisode.link, type: 'local'}]
+          : [];
       }
 
       console.log('Fetching stream for:', activeEpisode);
@@ -531,6 +541,7 @@ export const useStream = ({
     },
     enabled:
       enabled &&
+      !routeParams?.localContent &&
       (!localPlaceholder || localPlaybackReady || localFailed) &&
       Boolean(
         activeEpisode?.link || activeEpisode?.id || activeEpisode?.title,
@@ -644,6 +655,7 @@ export const useStream = ({
   }, [error, isPlayingLocal]);
 
   const switchToNextStream = () => {
+    if (routeParams?.localContent) return false;
     if (streamData && streamData.length > 0) {
       const nextStream = getNextStream(streamData, selectedStream);
       if (nextStream) {

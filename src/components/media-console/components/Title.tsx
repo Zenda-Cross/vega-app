@@ -5,6 +5,7 @@ import {styles} from './styles';
 interface TitleProps {
   primary: string;
   secondary?: string;
+  status?: string;
 }
 
 export const Title = (title: TitleProps) => {
@@ -21,6 +22,11 @@ export const Title = (title: TitleProps) => {
             {title.secondary}
           </Text>
         )}
+        {title.status ? (
+          <Text style={_styles.statusText} numberOfLines={1}>
+            {title.status}
+          </Text>
+        ) : null}
       </View>
     );
   }
@@ -38,10 +44,15 @@ const _styles = StyleSheet.create({
     padding: 0,
     marginRight: 16,
     marginTop: 15,
-    height: 37,
+    minHeight: 37,
   },
   titleText: {
     textAlign: 'center',
+  },
+  statusText: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
   },
   secondaryText: {
     fontSize: 12,

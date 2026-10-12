@@ -11,6 +11,7 @@ import {
 } from './storage/extensionStorage';
 import useContentStore from './zustand/contentStore';
 import useThemeStore from './zustand/themeStore';
+import {createLibraryBackup, restoreLibraryBackup, validateLibraryBackup, type LibraryBackup} from './libraryBackup';
 
 export const BACKUP_VERSION = 1;
 
@@ -33,6 +34,7 @@ const BACKUP_SETTINGS: Record<string, SettingType> = {
   [SettingsKeys.NOTIFICATIONS_ENABLED]: 'bool',
   [SettingsKeys.AUTO_CHECK_UPDATE]: 'bool',
   [SettingsKeys.AUTO_DOWNLOAD]: 'bool',
+  [SettingsKeys.OPEN_VIDEOS_FROM_OTHER_APPS]: 'bool',
   [SettingsKeys.SHOW_MEDIA_CONTROLS]: 'bool',
   [SettingsKeys.SHOW_HAMBURGER_MENU]: 'bool',
   [SettingsKeys.HIDE_SEEK_BUTTONS]: 'bool',
@@ -81,6 +83,7 @@ const BACKUP_SETTINGS: Record<string, SettingType> = {
 type SettingValue = boolean | string | number | string[];
 
 export interface VegaBackup {
+  library?: LibraryBackup;
   app: 'vega';
   version: number;
   createdAt: string;
@@ -177,6 +180,7 @@ export const createBackup = (): VegaBackup => {
   const selected = useContentStore.getState().provider;
 
   return {
+    library: createLibraryBackup(),
     app: 'vega',
     version: BACKUP_VERSION,
     createdAt: new Date().toISOString(),
@@ -222,10 +226,13 @@ export const parseBackup = (text: string): VegaBackup => {
   ) {
     throw new Error('This backup file is incomplete');
   }
+  validateLibraryBackup(data.library);
   return data;
 };
 
 export const restoreBackup = (backup: VegaBackup): void => {
+  validateLibraryBackup(backup.library);
+  restoreLibraryBackup(backup.library);
   const settings = backup.settings || {};
   for (const [key, type] of Object.entries(BACKUP_SETTINGS)) {
     const value = settings[key];

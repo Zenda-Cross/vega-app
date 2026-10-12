@@ -25,6 +25,43 @@ class UriPermissionModule(private val reactContext: ReactApplicationContext) : R
   override fun getName(): String = "UriPermissionModule"
 
   @ReactMethod
+  fun listDirectory(uriString: String, promise: Promise) {
+    java.util.concurrent.Executors.newSingleThreadExecutor().let { executor ->
+      executor.execute {
+        try {
+          val uri = Uri.parse(uriString)
+          val documentId = if (uri.path?.contains("/document/") == true)
+            android.provider.DocumentsContract.getDocumentId(uri)
+          else android.provider.DocumentsContract.getTreeDocumentId(uri)
+          val childrenUri = android.provider.DocumentsContract.buildChildDocumentsUriUsingTree(uri, documentId)
+          val result = com.facebook.react.bridge.Arguments.createArray()
+          val columns = arrayOf(
+            android.provider.DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            android.provider.DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE
+          )
+          val cursor = reactContext.contentResolver.query(childrenUri, columns, null, null, null)
+            ?: throw IllegalStateException("Cannot read this folder")
+          cursor.use {
+            while (it.moveToNext()) {
+              val entry = com.facebook.react.bridge.Arguments.createMap()
+              entry.putString("uri", android.provider.DocumentsContract.buildDocumentUriUsingTree(uri, it.getString(0)).toString())
+              entry.putString("name", it.getString(1) ?: "")
+              entry.putBoolean("directory", it.getString(2) == android.provider.DocumentsContract.Document.MIME_TYPE_DIR)
+              result.pushMap(entry)
+            }
+          }
+          promise.resolve(result)
+        } catch (error: Exception) {
+          promise.reject("LOCAL_FOLDER_ACCESS_FAILED", "Cannot read folder. Select it again to restore access.", error)
+        } finally {
+          executor.shutdown()
+        }
+      }
+    }
+  }
+
+  @ReactMethod
   fun takePersistableUriPermission(uriString: String, promise: Promise) {
     try {
       val uri = Uri.parse(uriString)

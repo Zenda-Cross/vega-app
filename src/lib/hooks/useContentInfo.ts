@@ -1,4 +1,8 @@
 import {useEffect} from 'react';
+import useLocalContentStore from '../zustand/localContentStore';
+import {localContentId, localContentInfo} from '../localContent/library';
+import {scanEpisodes} from '../localContent/model';
+import {listLocalFolder} from '../localContent/files';
 import {useQuery} from '@tanstack/react-query';
 import {providerManager} from '../services/ProviderManager';
 import {cacheStorage} from '../storage';
@@ -12,7 +16,7 @@ const getEnhancedMetadataCacheKey = (imdbId: string, type: string) =>
   `enhancedMeta:${type}:${imdbId}`;
 
 // Hook for fetching content info/metadata
-export const useContentInfo = (link: string, providerValue: string) => {
+export const useContentInfo = (link: string, providerValue: string, enabled = true) => {
   const cacheKey = getContentInfoCacheKey(link, providerValue);
   const query = useQuery({
     queryKey: ['contentInfo', link, providerValue],
@@ -29,11 +33,12 @@ export const useContentInfo = (link: string, providerValue: string) => {
 
       return data;
     },
-    enabled: !!link && !!providerValue,
+    enabled: enabled && !!link && !!providerValue,
     staleTime: 5 * 60 * 1000,
     gcTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
     initialData: () => {
+      if (!enabled) return undefined;
       const cached = cacheStorage.getString(cacheKey);
       if (cached) {
         try {
@@ -118,6 +123,8 @@ export const useEnhancedMetadata = (
 
 // Combined hook for both info and metadata
 export const useContentDetails = (link: string, providerValue: string) => {
+  const localId = localContentId(link);
+  const localTitle = useLocalContentStore(state => state.titles.find(title => title.id === localId));
   // First, get the basic content info
   const {
     data: info,
@@ -125,7 +132,7 @@ export const useContentDetails = (link: string, providerValue: string) => {
     isFetching: infoFetching,
     error: infoError,
     refetch: refetchInfo,
-  } = useContentInfo(link, providerValue);
+  } = useContentInfo(link, providerValue, !localId);
 
   const imdbId = info?.imdbId || '';
   const contentType = info?.type || '';
@@ -142,7 +149,23 @@ export const useContentDetails = (link: string, providerValue: string) => {
   const metaLoading = shouldPopulateMeta && enhancedMetaLoading;
   const metaFetching = shouldPopulateMeta && enhancedMetaFetching;
 
+  if (localId) {
+    return {
+      info: localTitle ? localContentInfo(localTitle) : undefined,
+      meta: localTitle?.metadata ? {...localTitle.metadata, name: localTitle.metadata.title,
+        imdbRating: localTitle.metadata.rating} : null,
+      localTitle,
+      isLoading: false, isMetaLoading: false, isRefetching: false, isSynopsisLoading: false,
+      error: localTitle ? null : new Error('This local title is no longer imported'),
+      refetch: async () => {
+        if (!localTitle) return;
+        const episodes = await scanEpisodes(localTitle.folderUri, listLocalFolder, undefined, !localTitle.rootFilesOnly);
+        useLocalContentStore.getState().saveTitles([{...localTitle, episodes}]);
+      },
+    };
+  }
   return {
+    localTitle: undefined,
     info,
     meta,
     isLoading: infoLoading,

@@ -4,6 +4,7 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 
 const mockCache = new Map<string, string>();
 const mockGetMetaData = jest.fn();
+jest.mock('../src/lib/localContent/files', () => ({listLocalFolder: jest.fn()}));
 
 jest.mock('../src/lib/storage', () => ({
   cacheStorage: {
@@ -14,6 +15,8 @@ jest.mock('../src/lib/storage', () => ({
 jest.mock('../src/lib/services/ProviderManager', () => ({
   providerManager: {getMetaData: (args: object) => mockGetMetaData(args)},
 }));
+jest.mock('../src/lib/zustand/localContentStore', () => ({__esModule: true, default: (selector: any) => selector({titles: []})}));
+
 jest.mock('axios', () => ({get: jest.fn()}));
 
 import {useContentInfo} from '../src/lib/hooks/useContentInfo';

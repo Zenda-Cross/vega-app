@@ -60,6 +60,7 @@ const AnimatedVideoPlayer = (
     muted = false,
     volume = 1,
     title = {primary: '', secondary: ''},
+    headerStatus,
     rate = 1,
     showDuration = false,
     showTimeRemaining = false,
@@ -1010,6 +1011,7 @@ const AnimatedVideoPlayer = (
                 {!disableOverlay && <Overlay animations={animations} />}
                 <TopControls
                   title={title}
+                  headerStatus={headerStatus}
                   panHandlers={volumePanResponder.panHandlers}
                   animations={animations}
                   disableBack={disableBack}

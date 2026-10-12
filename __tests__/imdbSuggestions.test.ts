@@ -9,15 +9,15 @@ describe('fetchIMDbSuggestions', () => {
     jest.clearAllMocks();
   });
 
-  it('returns empty array if query length is less than 3 characters', async () => {
+  it('returns empty array if query length is less than 2 characters', async () => {
     const result1 = await fetchIMDbSuggestions('');
-    const result2 = await fetchIMDbSuggestions('ev');
+    const result2 = await fetchIMDbSuggestions('e');
     expect(result1).toEqual([]);
     expect(result2).toEqual([]);
     expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 
-  it('fetches and formats pure title suggestions from IMDb endpoint', async () => {
+  it('fetches and formats title suggestions retaining IMDb IDs from IMDb endpoint', async () => {
     mockedAxios.get.mockResolvedValueOnce({
       data: {
         d: [
@@ -36,7 +36,7 @@ describe('fetchIMDbSuggestions', () => {
             q: 'movie',
             y: 1997,
           },
-          // Duplicate title with different case
+          // Different IMDb IDs with the same title remain selectable
           {
             id: 'tt9999999',
             l: 'neon genesis evangelion',
@@ -54,8 +54,9 @@ describe('fetchIMDbSuggestions', () => {
     );
 
     expect(suggestions).toEqual([
-      'Neon Genesis Evangelion',
-      'Neon Genesis Evangelion: The End of Evangelion',
+      {imdbId: 'tt0112159', poster: 'https://example.com/poster.jpg', title: 'Neon Genesis Evangelion', type: 'tv', year: 1995},
+      {imdbId: 'tt0169858', title: 'Neon Genesis Evangelion: The End of Evangelion', type: 'movie', year: 1997},
+      {imdbId: 'tt9999999', title: 'neon genesis evangelion', type: 'tv', year: undefined},
     ]);
   });
 
@@ -78,7 +79,7 @@ describe('fetchIMDbSuggestions', () => {
       'https://v3.sg.media-imdb.com/suggestion/titles/x/.hack.json',
       expect.objectContaining({timeout: 5000}),
     );
-    expect(suggestions).toEqual(['The Hack']);
+    expect(suggestions).toEqual([{imdbId: 'tt1234567', title: 'The Hack', type: 'movie', year: undefined}]);
   });
 
   it('handles API errors gracefully and returns empty array', async () => {

@@ -609,6 +609,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [syncReady, setSyncReady] = useState(false);
 
   useEffect(() => {
+    if (route.params.localContent) {
+      setSyncReady(true);
+      return;
+    }
     let mounted = true;
     syncFromSharedFolder()
       .catch(error => console.warn('[VegaSync] Player sync failed:', error))
@@ -620,7 +624,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [route.params.localContent]);
 
   const colors = useM3Colors();
   const primary = colors.primary;
@@ -805,6 +809,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   const skipLocalPrompt = useMemo(
     () =>
       isTV ||
+      Boolean(route.params.externalVideo) ||
       !settingsStorage.isAskLocalFileFirst() ||
       Boolean((route.params as any)?.alwaysCast) ||
       settingsStorage.isAlwaysCastMode() ||
@@ -847,7 +852,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     activeEpisode,
     routeParams: route.params,
     provider: provider.value,
-    enabled: localDecision === 'online',
+    enabled: !route.params.localContent && localDecision === 'online',
     // Let the local loading overlay clear before provider work starts.
     // Receivers need online sources without loading a local player first.
     localPlaybackReady:
@@ -898,6 +903,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   useEffect(() => {
     if (
+      route.params.localContent ||
       !syncReady ||
       !continueWatchingId ||
       !route.params.infoUrl ||
@@ -933,6 +939,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     activeEpisode,
     continueWatchingId,
     route.params.infoUrl,
+    route.params.localContent,
     route.params.poster?.background,
     route.params.poster?.poster,
     route.params.primaryTitle,
@@ -949,7 +956,7 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const saveContinueWatchingProgress = useCallback(
     (position: number, duration: number) => {
-      if (continueWatchingId) {
+      if (!route.params.localContent && continueWatchingId) {
         updateContinueWatchingProgress(
           continueWatchingId,
           position,
@@ -958,7 +965,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         );
       }
     },
-    [activeEpisode, continueWatchingId, updateContinueWatchingProgress],
+    [activeEpisode, continueWatchingId, route.params.localContent, updateContinueWatchingProgress],
   );
 
   // currentPlaybackTime is render state. The video reports progress every
@@ -1484,6 +1491,19 @@ const Player = ({route}: Props): React.JSX.Element => {
     torrentState,
   ]);
 
+  const torrentHeaderStatus =
+    selectedStream?.type === 'torrent' && !streamLoading &&
+    torrentState !== 'seeding' && torrentState !== 'finished'
+      ? torrentState === 'Fetching Metadata...'
+        ? 'Fetching Metadata'
+        : [
+            torrentDownloaded > 0 ? `${torrentDownloaded.toFixed(1)} MB` : '',
+            torrentDownloadSpeed > 0
+              ? `${(torrentDownloadSpeed / 1024 / 1024).toFixed(1)} MB/s`
+              : '',
+          ].filter(Boolean).join(' @ ')
+      : undefined;
+
   // Handle torrent proxy resolution
   useEffect(() => {
     let isMounted = true;
@@ -1769,6 +1789,12 @@ const Player = ({route}: Props): React.JSX.Element => {
     (e: any) => {
       console.log('PlayerError', e);
 
+      if (route.params.localContent) {
+        ToastAndroid.show('Cannot play this local file. Check the file and reselect its folder if access was lost.', ToastAndroid.LONG);
+        navigation.goBack();
+        return;
+      }
+
       if (selectedStreamRef.current?.type === 'local') {
         if (activeEpisodeKey) {
           clearLocalVideoAssociation(activeEpisodeKey);
@@ -1801,6 +1827,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       clearLocalVideoAssociation,
       markStreamsOnline,
       navigation,
+      route.params.localContent,
       setSelectedStream,
       setShowControls,
       switchToNextStream,
@@ -3207,7 +3234,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           onSkipPress={handleSkip}
         />
       ) : processedStreamUrl ? (
-        <VideoPlayer {...videoPlayerProps} />
+        <VideoPlayer {...videoPlayerProps} headerStatus={torrentHeaderStatus} />
       ) : (
         <View className="flex-1 justify-center items-center">
           <Animated.View style={[loadingContainerStyle]}>
@@ -3363,35 +3390,6 @@ const Player = ({route}: Props): React.JSX.Element => {
               </Text>
             </Pressable>
           </>
-        )}
-
-      {/* Non-intrusive Torrent Status Overlay */}
-      {!isCasting &&
-        selectedStream?.type === 'torrent' &&
-        !streamLoading &&
-        torrentState !== 'seeding' &&
-        torrentState !== 'finished' && (
-          <NativeAnimated.View
-            className="absolute top-4 self-center px-3 py-1.5 rounded-full items-center"
-            style={controlsOpacityStyle}
-            pointerEvents="none">
-            {torrentState !== 'Fetching Metadata...' ? (
-              <Text className="text-white/70 text-[10px] mt-0.5">
-                {torrentDownloaded > 0
-                  ? `${torrentDownloaded.toFixed(1)} MB`
-                  : ''}
-                {torrentDownloadSpeed > 0
-                  ? ` @ ${(torrentDownloadSpeed / 1024 / 1024).toFixed(1)} MB/s`
-                  : ''}
-              </Text>
-            ) : (
-              <Text className="text-white/90 text-xs font-medium">
-                {torrentState === 'Fetching Metadata...'
-                  ? 'Fetching Metadata'
-                  : ''}
-              </Text>
-            )}
-          </NativeAnimated.View>
         )}
 
       {/* Full-screen overlay to detect taps when locked */}

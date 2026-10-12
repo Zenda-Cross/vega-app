@@ -8,6 +8,7 @@ import React, {useState, useCallback} from 'react';
 import {settingsStorage, SEEK_INTERVAL_OPTIONS} from '../../lib/storage';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Constants from 'expo-constants';
+import {setVideoIntentsEnabled, supportsVideoIntents} from '../../lib/services/videoIntent';
 import DownloadLocationPreference from './components/DownloadLocationPreference';
 import useNavigationPreferencesStore from '../../lib/zustand/navigationPreferencesStore';
 import DownloadConcurrencyPreference from './components/DownloadConcurrencyPreference';
@@ -136,6 +137,11 @@ const Preferences = ({navigation}: any) => {
     state => state.setShowContinueWatching,
   );
 
+  const [openVideosFromOtherApps, setOpenVideosFromOtherApps] = useState(() =>
+    settingsStorage.isOpenVideosFromOtherAppsEnabled(),
+  );
+  const updatingVideoIntents = React.useRef(false);
+
   const [OpenExternalPlayer, setOpenExternalPlayer] = useState(() =>
     settingsStorage.getBool('useExternalPlayer', false),
   );
@@ -260,6 +266,26 @@ const Preferences = ({navigation}: any) => {
                 setDisableDrawer(next);
               }}
             />
+            {supportsVideoIntents && (
+              <SettingsSwitchRow
+                title="Open videos from other apps"
+                description="Show Vega in Android’s Open with and video sharing options"
+                value={openVideosFromOtherApps}
+                onValueChange={async next => {
+                  if (updatingVideoIntents.current) return;
+                  updatingVideoIntents.current = true;
+                  try {
+                    await setVideoIntentsEnabled(next);
+                    settingsStorage.setOpenVideosFromOtherAppsEnabled(next);
+                    setOpenVideosFromOtherApps(next);
+                  } catch {
+                    ToastAndroid.show('Unable to update video opening support', ToastAndroid.SHORT);
+                  } finally {
+                    updatingVideoIntents.current = false;
+                  }
+                }}
+              />
+            )}
             <SettingsSwitchRow
               title="External downloader"
               description="Send every download to another app"

@@ -33,6 +33,8 @@ import {
 import {syncFromSharedFolder} from '../lib/sync/syncService';
 import {showAppDialog} from '../lib/zustand/appDialogStore';
 import useWatchListStore from '../lib/zustand/watchListStore';
+import useLocalContentStore from '../lib/zustand/localContentStore';
+import {localLibraryItem} from '../lib/localContent/library';
 import {useM3Colors} from '../theme/M3PaletteContext';
 import {isTV} from '../lib/tv';
 import {TVFocusable, TVFocusGuide} from '../components/tv';
@@ -55,7 +57,9 @@ const Library = () => {
   const {width: screenWidth} = useWindowDimensions();
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
-  const watchList = useWatchListStore(state => state.watchList);
+  const remoteWatchList = useWatchListStore(state => state.watchList);
+  const localTitles = useLocalContentStore(state => state.titles);
+  const watchList = useMemo(() => [...remoteWatchList, ...localTitles.filter(title => title.inLibrary !== false).map(localLibraryItem)], [remoteWatchList, localTitles]);
   const collections = useWatchListStore(state => state.collections);
   const removeItem = useWatchListStore(state => state.removeItem);
   const removeFromCollection = useWatchListStore(
@@ -575,6 +579,15 @@ const Library = () => {
               </AppText>
               <View
                 style={{alignItems: 'center', flexDirection: 'row', gap: 8}}>
+                <TVFocusable
+                  accessibilityRole="button"
+                  accessibilityLabel="Local content"
+                  onPress={() => navigation.navigate('LocalContent', {collectionId: activeCollection?.id})}
+                  borderRadius={18}
+                  focusBorderColor={focusBorderColor}
+                  style={{padding: 8, borderRadius: 18, backgroundColor: colors.surfaceContainerHigh}}>
+                  <MaterialCommunityIcons name="folder-play-outline" size={22} color={colors.primary} />
+                </TVFocusable>
                 {editableCollection ? (
                   <TVFocusable
                     accessibilityRole="button"
@@ -646,6 +659,7 @@ const Library = () => {
 
         {visibleItems.length > 0 ? (
           <FlatList
+            style={{flex: 1, minHeight: 0}}
             key={`library-cols-${numColumns}-${filter}`}
             data={visibleItems}
             renderItem={({item, index}) => {

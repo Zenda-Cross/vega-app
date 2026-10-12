@@ -87,6 +87,7 @@ function withCustomNativeModules(config) {
       'ProviderHttpPackage()',
       'RemoteDeliveryPackage()',
       'DlnaPackage()',
+      'VideoIntentPackage()',
     ];
 
     for (const pkg of packagesToAdd) {

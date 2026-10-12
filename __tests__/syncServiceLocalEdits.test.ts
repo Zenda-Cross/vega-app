@@ -196,6 +196,19 @@ describe('shared folder sync keeps local edits made during sync', () => {
     jest.useRealTimers();
   });
 
+  it('never publishes local folder imports or overwrites them during shared-folder sync', async () => {
+    const local = JSON.stringify({state: {titles: [{id: 'local-only-series', folderUri: 'content://private/video-folder',
+      episodes: [{uri: 'content://private/episode.mkv'}], metadata: {imdbId: 'tt123'}}]}, version: 0});
+    m.mainStorage.setString('device-local-content-v1', local);
+    m.readManifests.mockResolvedValue([]);
+    await m.initializeSyncService();
+    const {writeMobileSyncManifest} = require('../src/lib/sync/mobileManifestStorage');
+    expect(writeMobileSyncManifest).toHaveBeenCalled();
+    expect(JSON.stringify(writeMobileSyncManifest.mock.calls)).not.toContain('local-only-series');
+    expect(JSON.stringify(writeMobileSyncManifest.mock.calls)).not.toContain('content://private');
+    expect(m.mainStorage.getString('device-local-content-v1')).toBe(local);
+  });
+
   it('keeps a watchlist item added while the folder is read', async () => {
     const finish = await startSlowSync(remoteManifest({}));
 

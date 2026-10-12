@@ -1,6 +1,6 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import EpisodeThumbnail from './EpisodeThumbnail';
 import React, {useEffect, useState} from 'react';
-import {Image, TouchableOpacity, View} from 'react-native';
+import {TouchableOpacity, View} from 'react-native';
 import Text from './ui/Text';
 import {isTV} from '../lib/tv';
 
@@ -8,6 +8,7 @@ type EpisodeRowContentProps = {
   title: string;
   description?: string;
   image?: string;
+  thumbnail?: React.ReactNode;
   accentColor: string;
   textColor: string;
   mutedTextColor: string;
@@ -30,6 +31,7 @@ const EpisodeRowContent = ({
   title,
   description,
   image,
+  thumbnail,
   accentColor,
   textColor,
   mutedTextColor,
@@ -41,7 +43,6 @@ const EpisodeRowContent = ({
   const sourceEndsWithEllipsis = Boolean(
     descriptionText && /(?:\u2026|\.{3})\s*$/.test(descriptionText),
   );
-  const [imageFailed, setImageFailed] = useState(false);
   const [descriptionTruncated, setDescriptionTruncated] = useState(
     sourceEndsWithEllipsis,
   );
@@ -58,10 +59,6 @@ const EpisodeRowContent = ({
     descriptionWidth > 0 &&
     descriptionText.length * 6.1 > descriptionWidth * 1.9,
   );
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [imageUri]);
 
   useEffect(() => {
     setDescriptionTruncated(sourceEndsWithEllipsis);
@@ -87,25 +84,8 @@ const EpisodeRowContent = ({
 
   return (
     <>
-      {imageUri && !imageFailed ? (
-        <Image
-          source={{uri: imageUri}}
-          resizeMode="cover"
-          resizeMethod="resize"
-          onError={() => setImageFailed(true)}
-          style={{borderRadius: 4, height: 56, width: 88}}
-        />
-      ) : (
-        <View
-          className="items-center justify-center"
-          style={{
-            backgroundColor: '#171717',
-            borderRadius: 4,
-            height: 56,
-            width: 88,
-          }}>
-          <Ionicons name="play-circle" size={32} color={accentColor} />
-        </View>
+      {thumbnail ?? (
+        <EpisodeThumbnail uri={imageUri} accentColor={accentColor} />
       )}
       <View className="min-w-0 flex-1">
         <Text

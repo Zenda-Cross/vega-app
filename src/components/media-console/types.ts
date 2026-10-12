@@ -83,6 +83,9 @@ export interface VideoPlayerProps extends ReactVideoProps {
    */
   title?: {primary: string; secondary?: string};
 
+  /** Optional stream status displayed below the title and episode. */
+  headerStatus?: string;
+
   /**
    * If true, show the time remaing, else show the current time in the Player.
    *

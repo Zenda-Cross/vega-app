@@ -29,6 +29,7 @@ export enum SettingsKeys {
   AUTO_DOWNLOAD = 'autoDownload',
 
   // Player settings
+  OPEN_VIDEOS_FROM_OTHER_APPS = 'openVideosFromOtherApps',
   SHOW_MEDIA_CONTROLS = 'showMediaControls',
   SHOW_HAMBURGER_MENU = 'showHamburgerMenu',
   HIDE_SEEK_BUTTONS = 'hideSeekButtons',
@@ -152,6 +153,14 @@ const clampBufferMB = (
 };
 
 export class SettingsStorage {
+  isOpenVideosFromOtherAppsEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.OPEN_VIDEOS_FROM_OTHER_APPS, true);
+  }
+
+  setOpenVideosFromOtherAppsEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.OPEN_VIDEOS_FROM_OTHER_APPS, enabled);
+  }
+
   isAlwaysCastMode(): boolean {
     return mainStorage.getBool(SettingsKeys.ALWAYS_CAST_MODE);
   }

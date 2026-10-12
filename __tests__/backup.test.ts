@@ -9,6 +9,10 @@ const mockContentState = {
   setInstalledProviders: jest.fn(),
 };
 const mockSetThemeState = jest.fn();
+const mockSetLibraryState = jest.fn();
+jest.mock('../src/lib/zustand/watchListStore', () => ({
+  __esModule: true, default: {setState: (state: unknown) => mockSetLibraryState(state)},
+}));
 
 jest.mock('../src/lib/storage/StorageService', () => ({
   mainStorage: {
@@ -182,6 +186,50 @@ describe('backup', () => {
     });
 
     expect(mockValues.get('installedProviders')).toEqual([provider]);
+  });
+
+  it('round trips titles, categories and assignments and updates the live library', () => {
+    const library = {
+      items: [{title: 'Saved show', poster: 'poster', link: 'episode', provider: 'vega', collections: ['custom']}],
+      collections: [{id: 'custom', name: 'Favorites', icon: 'star', color: '#123456', createdAt: 1, updatedAt: 2}],
+    };
+    mockValues.set('watchlist', library.items);
+    mockValues.set('library-collections', library.collections);
+    mockValues.set('library-default-collection-added', true);
+    const backup = parseBackup(JSON.stringify(createBackup()));
+    expect(backup.library).toEqual(library);
+    mockValues.clear();
+    restoreBackup(backup);
+    expect(mockValues.get('watchlist')).toEqual(library.items);
+    expect(mockValues.get('library-collections')).toEqual(library.collections);
+    expect(mockValues.get('library-default-collection-added')).toBe(true);
+    expect(mockSetLibraryState).toHaveBeenCalledWith({watchList: library.items, collections: library.collections});
+  });
+
+  it('leaves the library alone when restoring an older backup', () => {
+    const backup = createBackup();
+    delete backup.library;
+    mockValues.set('watchlist', ['existing']);
+    restoreBackup(backup);
+    expect(mockValues.get('watchlist')).toEqual(['existing']);
+    expect(mockSetLibraryState).not.toHaveBeenCalled();
+  });
+
+  it('restores an empty library without recreating the default category', () => {
+    const backup = createBackup();
+    backup.library = {items: [], collections: []};
+    restoreBackup(backup);
+    expect(mockValues.get('library-collections')).toEqual([]);
+    expect(mockValues.get('library-default-collection-added')).toBe(true);
+  });
+
+  it('rejects malformed library before changing settings', () => {
+    const backup = createBackup();
+    backup.library = {items: [null], collections: []} as any;
+    backup.settings.hapticFeedback = true;
+    expect(() => parseBackup(JSON.stringify(backup))).toThrow('invalid library');
+    expect(() => restoreBackup(backup)).toThrow('invalid library');
+    expect(mockValues.has('hapticFeedback')).toBe(false);
   });
 
   it('rejects files that are not a Vega backup', () => {

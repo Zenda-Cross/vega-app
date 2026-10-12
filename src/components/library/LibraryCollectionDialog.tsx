@@ -24,6 +24,8 @@ import {
 import {isTV} from '../../lib/tv';
 import {useTVFocusBorderColor} from '../../lib/tv/useTVFocusBorderColor';
 import useWatchListStore from '../../lib/zustand/watchListStore';
+import useLocalContentStore from '../../lib/zustand/localContentStore';
+import {localContentId, localLibraryItem} from '../../lib/localContent/library';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import {readableOnColor} from '../../theme/seeds';
 import {TVFocusable} from '../tv';
@@ -62,6 +64,7 @@ const LibraryCollectionDialog = ({
   const focusBorderColor = useTVFocusBorderColor();
   const {width: screenWidth, height: screenHeight} = useWindowDimensions();
   const watchList = useWatchListStore(state => state.watchList);
+  const localTitles = useLocalContentStore(state => state.titles);
   const collections = useWatchListStore(state => state.collections);
   const setItemCollections = useWatchListStore(
     state => state.setItemCollections,
@@ -120,9 +123,10 @@ const LibraryCollectionDialog = ({
     () => new Set(collections.map(c => c.id)),
     [collections],
   );
-  const savedItem = item
-    ? watchList.find(saved => saved.link === item.link)
-    : undefined;
+  const localTitle = localTitles.find(title => title.id === localContentId(item?.link || ''));
+  const savedItem = localTitle
+    ? localTitle.inLibrary !== false ? localLibraryItem(localTitle) : undefined
+    : item ? watchList.find(saved => saved.link === item.link) : undefined;
   const selectedIds = savedItem
     ? getItemCollectionIds(savedItem, existingIds)
     : [];

@@ -15,6 +15,7 @@ import {Title} from './Title';
 
 interface TopControlProps {
   title: {primary: string; secondary?: string};
+  headerStatus?: string;
   showControls: boolean;
   panHandlers: GestureResponderHandlers;
   animations: VideoAnimations;
@@ -30,6 +31,7 @@ interface TopControlProps {
 export const TopControls = memo(
   ({
     title,
+    headerStatus,
     showControls,
     panHandlers,
     animations: {AnimatedView, controlsOpacity, topControl},
@@ -69,7 +71,7 @@ export const TopControls = memo(
         <SafeAreaView style={_styles.topControlGroup}>
           <View style={_styles.sideControl}>
             {backControl}
-            <Title {...title} />
+            <Title {...title} status={headerStatus} />
           </View>
           <View style={_styles.pullRight}>{volumeControl}</View>
         </SafeAreaView>
