@@ -1,3 +1,4 @@
+jest.mock('../src/lib/zustand/metadataOverrideStore', () => ({__esModule: true, default: (selector: any) => selector({overrides: {}}), metadataOverrideKey: (provider: string, link: string) => JSON.stringify([provider, link]), applyMetadataOverride: (info: any) => info}));
 import React from 'react';
 import renderer, {act} from 'react-test-renderer';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';

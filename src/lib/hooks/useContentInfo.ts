@@ -1,4 +1,5 @@
 import {useEffect} from 'react';
+import useMetadataOverrideStore, {metadataOverrideKey, applyMetadataOverride} from '../zustand/metadataOverrideStore';
 import useLocalContentStore from '../zustand/localContentStore';
 import {localContentId, localContentInfo} from '../localContent/library';
 import {scanEpisodes} from '../localContent/model';
@@ -128,16 +129,18 @@ export const useContentDetails = (link: string, providerValue: string) => {
   const localTitle = useLocalContentStore(state => state.titles.find(title => title.id === localId));
   // First, get the basic content info
   const {
-    data: info,
+    data: providerInfo,
     isLoading: infoLoading,
     isFetching: infoFetching,
     error: infoError,
     refetch: refetchInfo,
   } = useContentInfo(link, providerValue, !localId);
 
+  const manualMetadata = useMetadataOverrideStore(state => state.overrides[metadataOverrideKey(providerValue, link)]);
+  const info = providerInfo ? applyMetadataOverride(providerInfo, manualMetadata) : undefined;
   const imdbId = info?.imdbId || '';
   const contentType = info?.type || '';
-  const shouldPopulateMeta = info?.populateMeta === true;
+  const shouldPopulateMeta = !manualMetadata && info?.populateMeta === true;
 
   // Only enrich providers that explicitly opt in to Cinemeta metadata.
   const {
@@ -146,7 +149,7 @@ export const useContentDetails = (link: string, providerValue: string) => {
     isFetching: enhancedMetaFetching,
     refetch: refetchMeta,
   } = useEnhancedMetadata(imdbId, contentType, shouldPopulateMeta);
-  const meta = shouldPopulateMeta ? enhancedMeta : null;
+  const meta = manualMetadata ? {...manualMetadata, name: manualMetadata.title, imdbRating: manualMetadata.rating} : shouldPopulateMeta ? enhancedMeta : null;
   const metaLoading = shouldPopulateMeta && enhancedMetaLoading;
   const metaFetching = shouldPopulateMeta && enhancedMetaFetching;
 

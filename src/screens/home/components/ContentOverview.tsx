@@ -1,7 +1,7 @@
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, {useEffect, useMemo, useState} from 'react';
-import {Image, Linking, Pressable, TouchableOpacity, View, findNodeHandle} from 'react-native';
+import {Image, Linking, Pressable, View, findNodeHandle} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useM3Colors} from '../../../theme/M3PaletteContext';
 import SkeletonLoader from '../../../components/Skeleton';
@@ -19,6 +19,7 @@ interface ContentOverviewProps {
   isLoading: boolean;
   logo?: string;
   onBack: () => void;
+  onOpenMenu?: () => void;
   backButtonRef?: React.RefObject<View | null>;
   onBackButtonLayout?: () => void;
   onOpenStory?: () => void;
@@ -47,12 +48,14 @@ const HeaderIconButton = ({
   onPress,
   focusRef,
   onLayout,
+  preferredFocus = true,
 }: {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   label: string;
   onPress: () => void;
   focusRef?: React.RefObject<View | null>;
   onLayout?: () => void;
+  preferredFocus?: boolean;
 }) => {
   const colors = useM3Colors();
 
@@ -66,7 +69,8 @@ const HeaderIconButton = ({
           if (handle) useTVNavigationStore.getState().setActiveScreenFocusHandle(handle);
         }
       }}
-      hasTVPreferredFocus={isTV}
+      hasTVPreferredFocus={isTV && preferredFocus}
+      accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       style={{
@@ -148,13 +152,13 @@ const CompactChip = ({label}: {label: string}) => {
 };
 
 const ContentOverview = ({
-  backgroundImage,
   headerPoster,
   genres,
   inLibrary,
   isLoading,
   logo,
   onBack,
+  onOpenMenu,
   backButtonRef,
   onBackButtonLayout,
   onOpenStory,
@@ -245,6 +249,11 @@ const ContentOverview = ({
           </View>
         ) : null}
 
+        {onOpenMenu && (
+          <View style={{position: 'absolute', right: 18, top: isTV ? 42 : insets.top + 12, zIndex: 2}}>
+            <HeaderIconButton icon="dots-vertical" label="More options" onPress={onOpenMenu} preferredFocus={false} />
+          </View>
+        )}
         <View
           style={{
             alignItems: 'center',

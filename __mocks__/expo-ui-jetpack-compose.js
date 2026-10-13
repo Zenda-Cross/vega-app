@@ -41,7 +41,17 @@ alertDialog.Text = slotComponent;
 alertDialog.DismissButton = slotComponent;
 alertDialog.ConfirmButton = slotComponent;
 
+const dropdownMenu = passthrough;
+dropdownMenu.Trigger = slotComponent;
+dropdownMenu.Items = slotComponent;
+const dropdownMenuItem = button;
+dropdownMenuItem.Text = slotComponent;
+dropdownMenuItem.LeadingIcon = slotComponent;
+
 module.exports = {
+  DropdownMenu: dropdownMenu,
+  DropdownMenuItem: dropdownMenuItem,
+  Box: passthrough,
   AlertDialog: alertDialog,
   BasicAlertDialog: passthrough,
   Host: passthrough,

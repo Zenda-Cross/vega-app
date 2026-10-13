@@ -38,6 +38,7 @@ import {buildDetailPalette} from '../../theme/detailPalette';
 import ContentOverview from './components/ContentOverview';
 import InfoStoryModal from './components/InfoStoryModal';
 import LibraryCollectionDialog from '../../components/library/LibraryCollectionDialog';
+import ProviderMetadataDialog from '../../components/metadata/ProviderMetadataDialog';
 import InfoSkeleton from './components/InfoSkeleton';
 import StatusBarScrim from '../../components/ui/StatusBarScrim';
 import {TVFocusGuide} from '../../components/tv';
@@ -75,6 +76,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   );
   const inLibrary = localTitle ? localTitle.inLibrary !== false : remoteInLibrary;
   const [collectionPickerVisible, setCollectionPickerVisible] = useState(false);
+  const [metadataMenuVisible, setMetadataMenuVisible] = useState(false);
   const [readMore, setReadMore] = useState(false);
   const [storyVisible, setStoryVisible] = useState(false);
   const screenFocused = useIsFocused();
@@ -402,6 +404,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
                   isLoading={isLoading && !info}
                   logo={displayLogo}
                   onBack={navigation.goBack}
+                  onOpenMenu={!localTitle ? () => setMetadataMenuVisible(true) : undefined}
                   backButtonRef={backButtonRef}
                   onBackButtonLayout={registerBackFocus}
                   onOpenStory={
@@ -504,6 +507,13 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
               provider: providerValue,
             }}
           />
+          {info && !localTitle && <ProviderMetadataDialog
+            visible={metadataMenuVisible}
+            onClose={() => setMetadataMenuVisible(false)}
+            info={info}
+            provider={providerValue}
+            link={route.params.link}
+          />}
         </View>
       </M3PaletteContext.Provider>
     </QueryErrorBoundary>
