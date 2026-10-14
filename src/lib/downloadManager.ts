@@ -27,6 +27,10 @@ import {
 import {getCachedImageAccent} from './imageAccent';
 import {mixHex} from '../theme/seeds';
 import {formatDownloadProgressLabel} from './downloadFormatting';
+import {
+  isExpiredLinkError,
+  refreshDownloadSource,
+} from './downloadSourceRefresh';
 
 const activeDownloads = new Set<string>();
 const occupiedDownloadSlots = new Set<string>();
@@ -227,6 +231,37 @@ const getQueuedDownloads = (): DownloadItem[] =>
         : left.createdAt - right.createdAt,
     );
 
+// A link that expired before any data arrived (a queued download that waited
+// too long) is fetched again once from the same server. Partial data stays
+// with its original link, as a new link cannot resume it safely.
+const startBackendWithFreshLink = async (
+  backend: DownloadBackend,
+  context: DownloadBackendContext,
+): Promise<void> => {
+  try {
+    await startBackendWithRetry(backend, context);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (
+      cancelledDownloads.has(context.record.id) ||
+      pauseFailedDownloads.has(context.record.id) ||
+      getRecord(context.record.id).downloadedBytes > 0 ||
+      !isExpiredLinkError(message)
+    ) {
+      throw error;
+    }
+    const fresh = await refreshDownloadSource(context.record);
+    if (!fresh || cancelledDownloads.has(context.record.id)) {
+      throw error;
+    }
+    useDownloadsStore.getState().updateDownload(context.record.id, fresh);
+    await startBackendWithRetry(backend, {
+      ...context,
+      record: getRecord(context.record.id),
+    });
+  }
+};
+
 export const scheduleQueuedDownloads = async (): Promise<void> => {
   if (schedulerRunning) {
     return;
@@ -352,7 +387,7 @@ export const startDownload = async (
       finalDocumentUri: destination.directFinalDocumentUri,
       downloadLocation: location,
     });
-    await startBackendWithRetry(backend, {record, destination});
+    await startBackendWithFreshLink(backend, {record, destination});
     throwIfCancelled();
 
     store.markFinalizing(downloadId);
@@ -593,7 +628,13 @@ export const retryDownload = async (downloadId: string): Promise<void> => {
     return;
   }
   settingsStorage.setDownloadLocation(location);
+  // The link that failed may have expired; ask the provider for it again.
+  const fresh =
+    !record.downloadedBytes && isExpiredLinkError(record.errorMessage)
+      ? await refreshDownloadSource(record)
+      : undefined;
   useDownloadsStore.getState().updateDownload(downloadId, {
+    ...fresh,
     downloadLocation: location,
     errorCode: undefined,
     errorMessage: undefined,
