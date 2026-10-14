@@ -79,6 +79,11 @@ const isTransientHttpStartError = (error: unknown): boolean => {
   );
 };
 
+// Android reports a full disk as ENOSPC. The next queued download would fail
+// the same way, so the queue waits for the user to free space and retry.
+export const isStorageFullError = (message: string): boolean =>
+  /ENOSPC|no space left/i.test(message);
+
 const isDnsResolutionError = (error: unknown): boolean => {
   const message = error instanceof Error ? error.message : String(error);
   const normalized = message.toLowerCase();
@@ -293,6 +298,7 @@ export const startDownload = async (
   store.markStarting(downloadId);
   const subscriptions: Array<() => void> = [];
   let destination: PreparedDownloadDestination | undefined;
+  let storageFull = false;
   const throwIfCancelled = (): void => {
     if (cancelledDownloads.has(downloadId)) {
       throw new Error('Download cancelled');
@@ -404,9 +410,16 @@ export const startDownload = async (
 
     const message = error instanceof Error ? error.message : String(error);
     const pauseUnsupported = error instanceof DownloadPauseSupportError;
+    storageFull = !pauseUnsupported && isStorageFullError(message);
     store.markError(downloadId, {
-      code: pauseUnsupported ? 'PAUSE_UNSUPPORTED' : undefined,
-      message,
+      code: pauseUnsupported
+        ? 'PAUSE_UNSUPPORTED'
+        : storageFull
+          ? 'STORAGE_FULL'
+          : undefined,
+      message: storageFull
+        ? 'Not enough storage space. Free some space and retry.'
+        : message,
       retryable: !pauseUnsupported,
     });
     await notificationService.showDownloadFailed(
@@ -424,7 +437,9 @@ export const startDownload = async (
     pauseFailedDownloads.delete(downloadId);
     lastNotificationAt.delete(downloadId);
     downloadNotificationColors.delete(downloadId);
-    await scheduleQueuedDownloads();
+    if (!storageFull) {
+      await scheduleQueuedDownloads();
+    }
     await notificationService
       .stopForegroundTask(downloadId)
       .catch(() => undefined);

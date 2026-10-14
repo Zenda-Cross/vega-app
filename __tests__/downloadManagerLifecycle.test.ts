@@ -84,6 +84,7 @@ import {
   cancelDownload,
   pauseDownload,
   resumeDownload,
+  retryDownload,
   scheduleQueuedDownloads,
   startDownload,
   startQueuedDownloadNow,
@@ -680,6 +681,72 @@ describe('download manager foreground lifecycle', () => {
     expect(mockBackendCleanup).not.toHaveBeenCalled();
     expect(useDownloadsStore.getState().downloads.movie_direct_0?.status).toBe(
       'completed',
+    );
+  });
+  const enqueueThree = () => {
+    for (const [index, id] of ['first', 'second', 'third'].entries()) {
+      useDownloadsStore.getState().enqueueDownload({
+        id,
+        title: id,
+        type: 'movie',
+        url: `https://example.com/${id}.mp4`,
+        sourceType: 'http',
+        videoType: 'mp4',
+        downloadLocation: location,
+        createdAt: index + 1,
+      });
+    }
+  };
+  const settle = async () => {
+    for (let i = 0; i < 10; i++) {
+      await flushAsyncWork();
+    }
+  };
+
+  it('keeps the rest of the queue waiting when storage is full', async () => {
+    mockDownloadConcurrency = 1;
+    mockBackendStart.mockRejectedValue(
+      new Error(
+        'Unable to write to the SAF destination: write failed: ENOSPC (No space left on device)',
+      ),
+    );
+    enqueueThree();
+
+    await scheduleQueuedDownloads();
+    await settle();
+
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+    const {downloads} = useDownloadsStore.getState();
+    expect(downloads.first).toMatchObject({
+      status: 'error',
+      errorCode: 'STORAGE_FULL',
+      retryable: true,
+    });
+    expect(downloads.first.errorMessage).toMatch(/storage/i);
+    expect(downloads.second.status).toBe('queued');
+    expect(downloads.third.status).toBe('queued');
+
+    mockBackendStart.mockResolvedValue(undefined);
+    await retryDownload('first');
+    await settle();
+
+    expect(mockBackendStart).toHaveBeenCalledTimes(4);
+    expect(useDownloadsStore.getState().downloads.third.status).toBe(
+      'completed',
+    );
+  });
+
+  it('moves on to the next queued download after other errors', async () => {
+    mockDownloadConcurrency = 1;
+    mockBackendStart.mockRejectedValue(new Error('HTTP 404'));
+    enqueueThree();
+
+    await scheduleQueuedDownloads();
+    await settle();
+
+    expect(mockBackendStart).toHaveBeenCalledTimes(3);
+    expect(useDownloadsStore.getState().downloads.first.errorCode).toBe(
+      undefined,
     );
   });
 });
