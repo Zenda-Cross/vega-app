@@ -376,6 +376,19 @@ export const getNextStream = (
   return streams[currentIndex + 1];
 };
 
+// A stream handed to the player for its first episode, such as the one an
+// unfinished download reads. It plays before online servers load.
+export const getInitialStream = (
+  activeEpisode: any,
+  routeParams: any,
+): Stream | undefined => {
+  const initialEpisode = routeParams?.episodeList?.[routeParams?.linkIndex];
+  return routeParams?.initialStream?.link &&
+    getEpisodeIdentity(activeEpisode) === getEpisodeIdentity(initialEpisode)
+    ? routeParams.initialStream
+    : undefined;
+};
+
 export const useStream = ({
   activeEpisode,
   routeParams,
@@ -387,7 +400,7 @@ export const useStream = ({
     const path = getCompletedDownloadPathSync(activeEpisode, routeParams);
     return externalVideoStream(routeParams) || (path
       ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
-      : { server: '', link: '', type: '' });
+      : getInitialStream(activeEpisode, routeParams) || { server: '', link: '', type: '' });
   });
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
 
@@ -411,7 +424,7 @@ export const useStream = ({
     setSelectedStream(
       externalVideoStream(routeParams) || (path
         ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
-        : { server: '', link: '', type: '' }),
+        : getInitialStream(activeEpisode, routeParams) || { server: '', link: '', type: '' }),
     );
   }, [activeEpisode, activeEpisodeKey, routeParams]);
 
@@ -424,6 +437,13 @@ export const useStream = ({
       : undefined;
   }, [activeEpisode, routeParams]);
 
+  const initialStream = getInitialStream(activeEpisode, routeParams);
+  // Shown at once; online servers load behind it.
+  const initialStreams = useMemo(
+    () => localPlaceholder || (initialStream ? [initialStream] : undefined),
+    [localPlaceholder, initialStream],
+  );
+
   const {
     data: streamData = [],
     isLoading,
@@ -435,6 +455,8 @@ export const useStream = ({
       activeEpisode?.id || activeEpisode?.link || activeEpisode?.title,
       routeParams?.type,
       provider,
+      // A list cached without the initial stream must not replace it.
+      ...(initialStream ? [initialStream.link] : []),
     ],
     queryFn: async () => {
       if (!activeEpisode?.link && !activeEpisode?.id && !activeEpisode?.title) {
@@ -455,9 +477,10 @@ export const useStream = ({
         activeEpisode,
         routeParams,
       );
+      // An unfinished download's stream stands in for its file.
       const localStream: Stream | null = downloadedPath
         ? { server: 'Downloaded', link: downloadedPath, type: 'mp4' }
-        : null;
+        : initialStream || null;
 
       // Start a discovered download before waiting for optional online servers.
       // A fetch from a previous episode must not replace the current selection.
@@ -527,7 +550,10 @@ export const useStream = ({
 
       let finalStreams = remoteStreams;
       if (localStream && !localFailedRef.current) {
-        finalStreams = [localStream, ...remoteStreams];
+        finalStreams = [
+          localStream,
+          ...remoteStreams.filter(s => s.link !== localStream.link),
+        ];
       }
 
       if (!finalStreams || finalStreams.length === 0) {
@@ -546,9 +572,9 @@ export const useStream = ({
       Boolean(
         activeEpisode?.link || activeEpisode?.id || activeEpisode?.title,
       ),
-    initialData: () => localPlaceholder,
-    initialDataUpdatedAt: localPlaceholder ? 0 : undefined,
-    placeholderData: localPlaceholder,
+    initialData: () => initialStreams,
+    initialDataUpdatedAt: initialStreams ? 0 : undefined,
+    placeholderData: initialStreams,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: (failureCount, streamFailure) => {
@@ -668,7 +694,11 @@ export const useStream = ({
         return true;
       }
     }
-    if (isLocalPath(selectedStream?.link) && !localFailedRef.current) {
+    if (
+      (isLocalPath(selectedStream?.link) ||
+        selectedStream?.link === initialStream?.link) &&
+      !localFailedRef.current
+    ) {
       // No server is listed yet while the download plays; fetch them now.
       localFailedRef.current = true;
       setFailedLocalEpisodeKey(activeEpisodeKey);

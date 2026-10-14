@@ -810,6 +810,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     () =>
       isTV ||
       Boolean(route.params.externalVideo) ||
+      Boolean(route.params.initialStream) ||
       !settingsStorage.isAskLocalFileFirst() ||
       Boolean((route.params as any)?.alwaysCast) ||
       settingsStorage.isAlwaysCastMode() ||
