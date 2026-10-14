@@ -9,6 +9,7 @@ import ReactNativeHapticFeedback, {
 } from 'react-native-haptic-feedback';
 import type {HomeStackParamList} from '../App';
 import {useImageAccent} from '../lib/hooks/useImageAccent';
+import {getContinueWatchingRow} from '../lib/player/upNext';
 import {settingsStorage} from '../lib/storage';
 import {showAppDialog} from '../lib/zustand/appDialogStore';
 import useContinueWatchingStore, {
@@ -93,13 +94,10 @@ const ContinueWatching = () => {
 
   const isSelectionMode = selectedIds.size > 0;
 
+  // Watched movies stay in the store (and synced history), only the row
+  // leaves them out.
   const items = useMemo(
-    () =>
-      storedItems
-        .filter((item): item is ContinueWatchingItem =>
-          Boolean(item.providerValue),
-        )
-        .sort((a, b) => b.updatedAt - a.updatedAt),
+    () => getContinueWatchingRow(storedItems),
     [storedItems],
   );
 

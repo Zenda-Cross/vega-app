@@ -73,6 +73,7 @@ import {
 } from '../../lib/hooks/useStream';
 import {useStreamTrackSelections} from '../../lib/hooks/useStreamTrackSelections';
 import {useStreamResumePosition} from '../../lib/hooks/useStreamResumePosition';
+import {getNextEpisode, isWatched} from '../../lib/player/upNext';
 import {
   usePlayerProgress,
   usePlayerSettings,
@@ -224,7 +225,7 @@ const getResumePosition = (position: number, duration: number) => {
 
   // Completed episodes (including the 1/1 and legacy 10000/1 "watched"
 
-  if (Number.isFinite(duration) && duration > 0 && position / duration > 0.85) {
+  if (isWatched(position, duration)) {
     return 0;
   }
 
@@ -665,6 +666,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const updateContinueWatchingProgress = useContinueWatchingStore(
     state => state.updateProgress,
   );
+  const finishContinueWatchingEpisode = useContinueWatchingStore(
+    state => state.finishEpisode,
+  );
   const setLocalVideoAssociation = useLocalVideoStore(
     state => state.setLocalVideo,
   );
@@ -689,6 +693,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   const remoteCastPositionRef = useRef(0);
   const wasCastingRef = useRef(false);
   const appliedPersistedLocalVideoRef = useRef(false);
+  // Episode watched here whose Continue Watching entry moved on to the next.
+  const upNextFromRef = useRef('');
 
   // Custom hooks for player settings
   const {
@@ -909,7 +915,9 @@ const Player = ({route}: Props): React.JSX.Element => {
       !route.params.infoUrl ||
       !route.params.primaryTitle ||
       !route.params.providerValue ||
-      !activeEpisode?.link
+      !activeEpisode?.link ||
+      // Seeding it again would move the entry back to the watched episode.
+      upNextFromRef.current === getEpisodeIdentity(activeEpisode)
     ) {
       return;
     }
@@ -963,9 +971,30 @@ const Player = ({route}: Props): React.JSX.Element => {
           duration,
           activeEpisode,
         );
+        // Up next: once watched, the entry moves on to the next episode.
+        if (activeEpisode && isWatched(position, duration)) {
+          const next = getNextEpisode(route.params.episodeList, activeEpisode);
+          if (
+            finishContinueWatchingEpisode(
+              continueWatchingId,
+              activeEpisode,
+              next,
+              readCachedProgress(next?.link),
+            )
+          ) {
+            upNextFromRef.current = getEpisodeIdentity(activeEpisode);
+          }
+        }
       }
     },
-    [activeEpisode, continueWatchingId, route.params.localContent, updateContinueWatchingProgress],
+    [
+      activeEpisode,
+      continueWatchingId,
+      finishContinueWatchingEpisode,
+      route.params.episodeList,
+      route.params.localContent,
+      updateContinueWatchingProgress,
+    ],
   );
 
   // currentPlaybackTime is render state. The video reports progress every
@@ -1311,6 +1340,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     videoLoadedRef.current = false;
     appliedPersistedLocalVideoRef.current = false;
     remoteCastPositionRef.current = 0;
+    upNextFromRef.current = '';
   }, [activeEpisode?.id, activeEpisode?.link, activeEpisode?.sourceLink]);
 
   // Auto-resume a remembered local video file for this episode (e.g. when
