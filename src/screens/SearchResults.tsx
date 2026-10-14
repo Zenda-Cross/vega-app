@@ -10,9 +10,12 @@ import useContentStore from '../lib/zustand/contentStore';
 import AppText from '../components/ui/Text';
 import LoadingIndicator from '../components/ui/LoadingIndicator';
 import IconButton from '../components/ui/IconButton';
+import Button from '../components/ui/Button';
 import {TVFocusGuide, TVFocusable} from '../components/tv';
 import {isTV} from '../lib/tv';
 import {useM3Colors} from '../theme/M3PaletteContext';
+import {runProviderSearches} from '../lib/search/runProviderSearches';
+import type {ProviderExtension} from '../lib/storage/extensionStorage';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'SearchResults'>;
 
@@ -24,6 +27,15 @@ interface SearchPageData {
   value: string;
   name: string;
 }
+
+// The selected provider is searched first, the rest in installed order.
+const activeFirst = (providers: ProviderExtension[]) => {
+  const active = useContentStore.getState().provider?.value;
+  return [
+    ...providers.filter(p => p.value === active),
+    ...providers.filter(p => p.value !== active),
+  ];
+};
 
 const SearchResults = ({route, navigation}: Props): React.ReactElement => {
   const colors = useM3Colors();
@@ -88,6 +100,61 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
     [loading],
   );
 
+  const failed = useMemo(() => loading.filter(i => i.error), [loading]);
+
+  const searchProviders = useCallback(
+    (providers: ProviderExtension[], signal: AbortSignal) =>
+      runProviderSearches({
+        providers: activeFirst(providers),
+        signal,
+        search: (item, providerSignal) =>
+          providerManager.getSearchPosts({
+            searchQuery: route.params.filter,
+            page: 1,
+            providerValue: item.value,
+            signal: providerSignal,
+          }),
+        onSettled: (item, outcome) => {
+          if ('error' in outcome) {
+            console.error(
+              `Error fetching data for ${item.display_name}:`,
+              outcome.error,
+            );
+            updateLoading(item.value, {isLoading: false, error: outcome.error});
+            return;
+          }
+          const newData = {
+            title: item.display_name,
+            Posts: outcome.posts,
+            filter: route.params.filter,
+            providerValue: item.value,
+            value: item.value,
+            name: item.display_name,
+          };
+          if (newData.Posts.length > 0) {
+            updateSearchData(newData);
+          } else {
+            updateEmptyResults(newData);
+          }
+          updateLoading(item.value, {isLoading: false});
+        },
+      }),
+    [route.params.filter, updateSearchData, updateEmptyResults, updateLoading],
+  );
+
+  const retryFailed = useCallback(() => {
+    const signal = abortController.current?.signal;
+    if (!signal) return;
+    const values = new Set(failed.map(i => i.value));
+    failed.forEach(i =>
+      updateLoading(i.value, {isLoading: true, error: undefined}),
+    );
+    searchProviders(
+      installedProviders.filter(p => values.has(p.value)),
+      signal,
+    );
+  }, [failed, installedProviders, searchProviders, updateLoading]);
+
   useEffect(() => {
     // Clean up previous controller if exists
     if (abortController.current) {
@@ -105,66 +172,7 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
     setEmptyResults([]);
     setLoading(trueLoading);
 
-    const fetchPromises: Promise<void>[] = [];
-
-    const getSearchResults = () => {
-      installedProviders.forEach(item => {
-        // Promise chain instead of try/catch: React Compiler skips any
-        // component with conditionals inside a try block.
-        const fetchPromise = providerManager
-          .getSearchPosts({
-            searchQuery: route.params.filter,
-            page: 1,
-            providerValue: item.value,
-            signal: signal,
-          })
-          .then(data => {
-            // Skip updating state if request was aborted
-            if (signal.aborted) return;
-
-            if (data && data.length > 0) {
-              const newData = {
-                title: item.display_name,
-                Posts: data,
-                filter: route.params.filter,
-                providerValue: item.value,
-                value: item.value,
-                name: item.display_name,
-              };
-              updateSearchData(newData);
-            } else {
-              const newData = {
-                title: item.display_name,
-                Posts: data || [],
-                filter: route.params.filter,
-                providerValue: item.value,
-                value: item.value,
-                name: item.display_name,
-              };
-              updateEmptyResults(newData);
-            }
-
-            updateLoading(item.value, {isLoading: false});
-          })
-          .catch((error: any) => {
-            if (signal.aborted) return;
-
-            console.error(
-              `Error fetching data for ${item.display_name}:`,
-              error,
-            );
-            const errorMessage = error?.message || 'Failed to search';
-            updateLoading(item.value, {isLoading: false, error: errorMessage});
-          });
-
-        fetchPromises.push(fetchPromise);
-      });
-
-      // Use Promise.allSettled to handle all promises regardless of their outcome
-      return Promise.allSettled(fetchPromises);
-    };
-
-    getSearchResults();
+    searchProviders(installedProviders, signal);
 
     return () => {
       // Cleanup function: abort any ongoing API requests
@@ -176,7 +184,11 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
   }, [route.params.filter, installedProviders]);
 
   const renderSlider = useCallback(
-    (item: SearchPageData, index: number, isEmptyResult: boolean = false) => {
+    (
+      item: Pick<SearchPageData, 'name' | 'value'>,
+      index: number,
+      isEmptyResult: boolean = false,
+    ) => {
       const loadingState = loading.find(i => i.value === item.value);
       const posts = isEmptyResult
         ? emptyResults.find(i => i.providerValue === item.value)?.Posts || []
@@ -206,6 +218,12 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
   const emptySliders = useMemo(
     () => emptyResults.map((item, index) => renderSlider(item, index, true)),
     [emptyResults, renderSlider],
+  );
+
+  // Failed rows have no posts, so Slider shows their error instead.
+  const failedSliders = useMemo(
+    () => failed.map((item, index) => renderSlider(item, index, true)),
+    [failed, renderSlider],
   );
 
   return (
@@ -281,9 +299,18 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
           </View>
         )}
 
+        {isAllLoaded && failed.length > 0 && (
+          <View className="px-4 mt-4">
+            <Button variant="tonal" compact onPress={retryFailed}>
+              {`Retry failed (${failed.length})`}
+            </Button>
+          </View>
+        )}
+
         <TVFocusGuide autoFocus={false} style={{paddingHorizontal: 16}}>
           {searchSliders}
           {emptySliders}
+          {failedSliders}
         </TVFocusGuide>
 
         {isAllLoaded && searchData.every(d => !d.Posts || d.Posts.length === 0) && (
@@ -291,8 +318,20 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
             <AppText
               role="titleLargeEmphasized"
               className="text-center text-m3-on-surface-variant">
-              No results found for "{route?.params?.filter}"
+              {failed.length > 0 && failed.length === loading.length
+                ? 'Could not search for'
+                : 'No results found for'}{' '}
+              "{route?.params?.filter}"
             </AppText>
+            {failed.length > 0 && (
+              <AppText
+                role="bodyMedium"
+                className="mt-2 text-center text-m3-on-surface-variant">
+                {failed.length === 1
+                  ? '1 source failed to search.'
+                  : `${failed.length} sources failed to search.`}
+              </AppText>
+            )}
           </View>
         )}
         <View className="h-16" />
