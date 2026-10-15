@@ -42,9 +42,19 @@ export const pickRefreshedStream = (
     stream =>
       stream?.link &&
       stream.server === record.server &&
-      streamSourceType(stream) === record.sourceType,
+      streamSourceType(stream) === record.sourceType &&
+      (record.sourceType === 'hls' ||
+        Boolean(record.videoType && stream.type?.trim().toLowerCase() === record.videoType.trim().toLowerCase())),
   );
-  return matches.find(stream => stream.link === record.url) ?? matches[0];
+  // The unchanged URL identifies the file even when only cookies changed.
+  const exact = matches.find(stream => stream.link === record.url);
+  if (exact) return exact;
+  const quality = (value?: string) => value?.trim().toLowerCase().replace(/p$/, '');
+  const candidates = matches.filter(stream =>
+    quality(stream.quality) === quality(record.quality),
+  );
+  const unique = new Map(candidates.map(stream => [stream.link, stream]));
+  return unique.size === 1 ? unique.values().next().value : undefined;
 };
 
 /**
@@ -53,29 +63,46 @@ export const pickRefreshedStream = (
  */
 export const refreshDownloadSource = async (
   record: DownloadItem,
+  signal?: AbortSignal,
 ): Promise<Pick<DownloadItem, 'url' | 'headers'> | undefined> => {
-  if (!canRefreshDownloadSource(record)) {
-    return undefined;
-  }
-  // Loaded lazily: the provider manager pulls in the sandbox.
+  if (!canRefreshDownloadSource(record) || signal?.aborted) return undefined;
   const {providerManager} =
     require('./services/ProviderManager') as typeof import('./services/ProviderManager');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort, {once: true});
+  let onAbort: () => void = () => {};
+  const aborted = new Promise<never>((_, reject) => {
+    onAbort = () => reject(new Error('Download source refresh aborted'));
+    controller.signal.addEventListener('abort', onAbort, {once: true});
+  });
+  const timer = setTimeout(abort, REFRESH_TIMEOUT_MS);
+  if (signal?.aborted) abort();
   try {
-    const streams = await providerManager.getStream({
-      link: record.sourceLink!,
-      type: record.type,
-      providerValue: record.provider!,
-      signal: controller.signal,
-      isDownload: true,
-    });
+    const streams = await Promise.race([
+      Promise.resolve().then(() => {
+        if (controller.signal.aborted) throw new Error('Aborted');
+        return providerManager.getStream({
+          link: record.sourceLink!,
+          type: record.type,
+          providerValue: record.provider!,
+          signal: controller.signal,
+          isDownload: true,
+        });
+      }),
+      aborted,
+    ]);
+    if (controller.signal.aborted) return undefined;
     const stream = pickRefreshedStream(streams || [], record);
     return stream ? {url: stream.link, headers: stream.headers} : undefined;
   } catch (error) {
-    console.warn(`Unable to refresh the link of download ${record.id}:`, error);
+    if (!controller.signal.aborted) {
+      console.warn(`Unable to refresh the link of download ${record.id}:`, error);
+    }
     return undefined;
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
+    controller.signal.removeEventListener('abort', onAbort);
   }
 };

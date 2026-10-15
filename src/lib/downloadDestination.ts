@@ -144,6 +144,30 @@ const getSafFileSize = async (uri: string): Promise<number> => {
 export const getDownloadOutputSize = async (uri: string): Promise<number> =>
   getSafFileSize(uri);
 
+// Only an empty, verifiable destination may receive a refreshed source URL.
+// Zero reported progress is insufficient: native writes/segments may be newer.
+export const isDownloadDestinationEmpty = async (
+  destination: PreparedDownloadDestination,
+): Promise<boolean> => {
+  try {
+    const target = destination.directFinalDocumentUri || destination.stagingPath;
+    if (!target) return false;
+    if (await downloadOutputExists(target)) {
+      const size = target.startsWith('content://')
+        ? await getSafFileSize(target)
+        : await getLocalFileSize(target.replace(/^file:\/\//, ''));
+      if (size !== 0) return false;
+    }
+    const segments = `${destination.stagingDirectory}/segments`;
+    if (destination.stagingDirectory && await RNFS.exists(segments)) {
+      if ((await RNFS.readDir(segments)).length > 0) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const cleanupDownloadStaging = async (
   downloadId: string,
 ): Promise<void> => {

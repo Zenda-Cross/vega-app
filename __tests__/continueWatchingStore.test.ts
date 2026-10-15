@@ -98,4 +98,77 @@ describe('continue watching store', () => {
       position: 1300,
     });
   });
+
+  describe('finishing an episode', () => {
+    const episode4 = {title: 'Episode 4', link: 'https://example.com/e4'};
+    const episode5 = {title: 'Episode 5', link: 'https://example.com/e5'};
+    const watchedEpisode4 = (): ContinueWatchingItem => ({
+      ...createItem('show', 10),
+      seasonTitle: 'Season 1',
+      episode: episode4,
+      position: 2300,
+      duration: 2400,
+    });
+
+    it('moves the show on to the next episode', () => {
+      const {upsertItem, finishEpisode} = useContinueWatchingStore.getState();
+      upsertItem(watchedEpisode4());
+      upsertItem(createItem('other', 20));
+      const before = Date.now();
+
+      expect(finishEpisode('show', episode4, episode5)).toBe(true);
+
+      const [first, second] = useContinueWatchingStore.getState().items;
+      expect(first).toMatchObject({
+        id: 'show',
+        episode: episode5,
+        episodeTitle: 'Episode 5',
+        seasonTitle: 'Season 1',
+        position: 0,
+        duration: 0,
+      });
+      expect(first.updatedAt).toBeGreaterThanOrEqual(before);
+      expect(second.id).toBe('other');
+    });
+
+    it('changes nothing before the episode counts as watched', () => {
+      const {upsertItem, finishEpisode} = useContinueWatchingStore.getState();
+      upsertItem({...watchedEpisode4(), position: 2000});
+
+      expect(finishEpisode('show', episode4, episode5)).toBe(false);
+      expect(useContinueWatchingStore.getState().items).toEqual([
+        {...watchedEpisode4(), position: 2000},
+      ]);
+    });
+
+    it('keeps a watched movie or last episode where it is', () => {
+      const {upsertItem, finishEpisode} = useContinueWatchingStore.getState();
+      const movie = {...watchedEpisode4(), id: 'movie', type: 'movie'};
+      upsertItem(movie);
+      upsertItem(watchedEpisode4());
+
+      expect(finishEpisode('movie', episode4, episode5)).toBe(false);
+      expect(finishEpisode('show', episode4)).toBe(false);
+      expect(finishEpisode('missing', episode4, episode5)).toBe(false);
+      expect(useContinueWatchingStore.getState().items).toEqual([
+        watchedEpisode4(),
+        movie,
+      ]);
+    });
+
+    it('moves on only once', () => {
+      const {upsertItem, updateProgress, finishEpisode} =
+        useContinueWatchingStore.getState();
+      upsertItem(watchedEpisode4());
+      finishEpisode('show', episode4, episode5);
+      const items = useContinueWatchingStore.getState().items;
+
+      expect(finishEpisode('show', episode4, episode5)).toBe(false);
+      expect(useContinueWatchingStore.getState().items).toBe(items);
+
+      // The credits of the watched episode keep reporting progress.
+      updateProgress('show', 2390, 2400, episode4);
+      expect(useContinueWatchingStore.getState().items).toEqual(items);
+    });
+  });
 });

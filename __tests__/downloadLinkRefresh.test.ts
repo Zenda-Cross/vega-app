@@ -1,5 +1,6 @@
 const mockBackendStart = jest.fn();
 const mockGetStream = jest.fn();
+const mockDestinationEmpty = jest.fn();
 
 jest.mock('../src/lib/downloadBackends/registry', () => ({
   getDownloadBackend: () => ({
@@ -16,6 +17,7 @@ jest.mock('../src/lib/services/ProviderManager', () => ({
 }));
 
 jest.mock('../src/lib/downloadDestination', () => ({
+  isDownloadDestinationEmpty: (...args: unknown[]) => mockDestinationEmpty(...args),
   prepareDownloadDestination: async () => ({
     stagingDirectory: '/cache/downloads/episode',
     stagingPath: '/cache/downloads/episode/Episode.mp4.part',
@@ -80,10 +82,11 @@ jest.mock('react-native-mmkv-storage', () => ({
   },
 }));
 
-import {retryDownload, startDownload} from '../src/lib/downloadManager';
+import {cancelDownload, retryDownload, startDownload} from '../src/lib/downloadManager';
 import {
   isExpiredLinkError,
   pickRefreshedStream,
+  refreshDownloadSource,
 } from '../src/lib/downloadSourceRefresh';
 import useDownloadsStore from '../src/lib/zustand/downloadsStore';
 
@@ -117,7 +120,8 @@ describe('expired download links', () => {
     jest.clearAllMocks();
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    useDownloadsStore.setState({downloads: {}});
+    useDownloadsStore.setState({downloads: {}, storageFullHold: false});
+    mockDestinationEmpty.mockReset().mockResolvedValue(true);
     mockGetStream.mockResolvedValue([
       {server: 'GDFlix', link: 'https://other.example/x.mkv', type: 'mkv'},
       {
@@ -209,12 +213,80 @@ describe('expired download links', () => {
     await expect(startDownload('episode', location)).rejects.toThrow();
 
     mockBackendStart.mockReset();
-    mockBackendStart.mockResolvedValue(undefined);
+    mockBackendStart.mockRejectedValueOnce(new Error('HTTP 410')).mockResolvedValueOnce(undefined);
     await retryDownload('episode');
     await new Promise(resolve => setImmediate(resolve));
     await new Promise(resolve => setImmediate(resolve));
 
-    expect(startedUrls()).toEqual(['https://files.example/new.mkv']);
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv', 'https://files.example/new.mkv']);
+  });
+
+  it('keeps the original URL when actual destination bytes cannot be ruled out', async () => {
+    mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
+    mockDestinationEmpty.mockResolvedValue(false);
+    enqueueEpisode();
+    await expect(startDownload('episode', location)).rejects.toThrow('HTTP 403');
+    expect(mockGetStream).not.toHaveBeenCalled();
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv']);
+  });
+
+  it('checks the destination again after awaiting the provider', async () => {
+    mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
+    mockDestinationEmpty.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    enqueueEpisode();
+    await expect(startDownload('episode', location)).rejects.toThrow('HTTP 403');
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv']);
+    expect(useDownloadsStore.getState().downloads.episode.url).toBe('https://files.example/old.mkv');
+  });
+
+  it('aborts refresh on cancellation and ignores a late provider result', async () => {
+    let resolve!: (value: unknown) => void;
+    mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
+    mockGetStream.mockImplementation(() => new Promise(done => { resolve = done; }));
+    enqueueEpisode();
+    const start = startDownload('episode', location);
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    const signal = mockGetStream.mock.calls[0][0].signal as AbortSignal;
+    await cancelDownload('episode');
+    await start;
+    expect(signal.aborted).toBe(true);
+    expect(useDownloadsStore.getState().downloads.episode).toBeUndefined();
+    enqueueEpisode({url: 'https://files.example/user-replacement.mkv', status: 'paused'});
+    resolve([{server: 'HubCloud', link: 'https://files.example/stale.mkv', type: 'mkv'}]);
+    await new Promise(done => setImmediate(done));
+    expect(useDownloadsStore.getState().downloads.episode.url).toBe('https://files.example/user-replacement.mkv');
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a Retry refresh inside the cancellable download lifecycle', async () => {
+    mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
+    mockGetStream.mockRejectedValueOnce(new Error('Provider offline'));
+    enqueueEpisode();
+    await expect(startDownload('episode', location)).rejects.toThrow();
+    mockGetStream.mockImplementation(() => new Promise(() => {}));
+    await retryDownload('episode');
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    const signal = mockGetStream.mock.calls[1][0].signal as AbortSignal;
+    await cancelDownload('episode');
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    expect(signal.aborted).toBe(true);
+    expect(useDownloadsStore.getState().downloads.episode).toBeUndefined();
+    expect(mockBackendStart).toHaveBeenCalledTimes(2);
+  });
+
+  it('times out even when a provider ignores its abort signal', async () => {
+    jest.useFakeTimers();
+    try {
+      enqueueEpisode();
+      mockGetStream.mockImplementation(() => new Promise(() => {}));
+      const pending = refreshDownloadSource(useDownloadsStore.getState().downloads.episode);
+      await jest.advanceTimersByTimeAsync(45_000);
+      await expect(pending).resolves.toBeUndefined();
+      expect(mockGetStream.mock.calls[0][0].signal.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('never refreshes torrents or subtitles', async () => {
@@ -222,10 +294,53 @@ describe('expired download links', () => {
     enqueueEpisode({sourceType: 'torrent', url: 'magnet:?xt=urn:btih:abc'});
     await expect(startDownload('episode', location)).rejects.toThrow();
     expect(mockGetStream).not.toHaveBeenCalled();
+    enqueueEpisode({isSubtitle: true, sourceType: 'http', url: 'https://files.example/sub.srt'});
+    await expect(startDownload('episode', location)).rejects.toThrow();
+    expect(mockGetStream).not.toHaveBeenCalled();
   });
 });
 
 describe('download link refresh helpers', () => {
+  it('does not guess a known quality for an older record without saved quality', () => {
+    const record: any = {server: 'HubCloud', sourceType: 'http', videoType: 'mkv', url: 'old'};
+    expect(pickRefreshedStream([
+      {server: 'HubCloud', type: 'mkv', link: 'new', quality: '480'},
+    ], record)).toBeUndefined();
+  });
+
+  it('rejects ambiguous same-container replacements without a known quality', () => {
+    const record: any = {server: 'HubCloud', sourceType: 'http', videoType: 'mkv', url: 'old'};
+    expect(pickRefreshedStream([
+      {server: 'HubCloud', type: 'mkv', link: '480', quality: '480'},
+      {server: 'HubCloud', type: 'mkv', link: '1080', quality: '1080'},
+    ], record)).toBeUndefined();
+  });
+
+  it('matches persisted quality and container, rejecting other variants', () => {
+    const record: any = {server: 'HubCloud', sourceType: 'http', videoType: 'mkv', quality: '1080p', url: 'old'};
+    const selected = {server: 'HubCloud', type: 'mkv', link: 'right', quality: '1080'};
+    expect(pickRefreshedStream([
+      {server: 'HubCloud', type: 'mp4', link: 'wrong-format', quality: '1080'},
+      {server: 'HubCloud', type: 'mkv', link: 'wrong-quality', quality: '480'}, selected,
+    ], record)).toEqual(selected);
+  });
+
+  it('rejects multiple releases of the same quality', () => {
+    const record: any = {server: 'HubCloud', sourceType: 'http', videoType: 'mkv', quality: '1080', url: 'old'};
+    expect(pickRefreshedStream([
+      {server: 'HubCloud', type: 'mkv', link: 'release-a', quality: '1080'},
+      {server: 'HubCloud', type: 'mkv', link: 'release-b', quality: '1080'},
+    ], record)).toBeUndefined();
+  });
+
+  it('retains an exact URL for header-only refresh despite other variants', () => {
+    const record: any = {server: 'HubCloud', sourceType: 'http', videoType: 'mkv', url: 'same'};
+    const exact = {server: 'HubCloud', type: 'mkv', link: 'same', headers: {Cookie: 'new'}};
+    expect(pickRefreshedStream([
+      {server: 'HubCloud', type: 'mkv', link: 'different'}, exact,
+    ], record)).toEqual(exact);
+  });
+
   it('recognises expired link errors from each backend', () => {
     expect(isExpiredLinkError('HTTP 403')).toBe(true);
     expect(isExpiredLinkError('HTTP status 410')).toBe(true);

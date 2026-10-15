@@ -58,6 +58,7 @@ export interface DownloadItem {
   headers?: Record<string, string>;
   subtitles?: DownloadSubtitle[];
   server?: string;
+  quality?: string;
   isSubtitle?: boolean;
   videoType?: string | null;
   sourceType: DownloadSourceType;
@@ -101,6 +102,7 @@ export type DownloadMediaInput = Pick<
   | 'synopsis'
   | 'provider'
   | 'server'
+  | 'quality'
   | 'isSubtitle'
   | 'infoUrl'
   | 'sourceLink'
@@ -122,6 +124,8 @@ export interface DownloadErrorDetails {
 }
 
 interface DownloadState {
+  /** Stops automatic starts after ENOSPC until an explicit retry/resume. */
+  storageFullHold: boolean;
   downloads: Record<string, DownloadItem>;
   enqueueDownload: (item: DownloadInput) => void;
   addDownload: (item: DownloadInput) => void;
@@ -286,7 +290,10 @@ const updateStatus = (
   };
 };
 
-type PersistedDownloads = {downloads: Record<string, DownloadItem>};
+type PersistedDownloads = {
+  downloads: Record<string, DownloadItem>;
+  storageFullHold?: boolean;
+};
 
 const PROGRESS_PERSIST_INTERVAL_MS = 1000;
 
@@ -339,7 +346,9 @@ const createDownloadsPersistStorage =
       getItem: name => storage.getItem(name),
       setItem: (name, value) => {
         pending = {name, value};
-        const signature = getStatusSignature(value.state.downloads || {});
+        const signature = `${Boolean(value.state.storageFullHold)}:${getStatusSignature(
+          value.state.downloads || {},
+        )}`;
         if (signature !== lastSignature) {
           lastSignature = signature;
           flush();
@@ -365,6 +374,7 @@ export const useDownloadsStore = create<DownloadState>()(
   persist(
     (set, get) => ({
       downloads: {},
+      storageFullHold: false,
 
       enqueueDownload: item => {
         set(state => ({
@@ -557,24 +567,35 @@ export const useDownloadsStore = create<DownloadState>()(
       name: DOWNLOADS_STORAGE_KEY,
       version: DOWNLOADS_SCHEMA_VERSION,
       storage: createDownloadsPersistStorage(),
-      partialize: state => ({downloads: state.downloads}),
+      partialize: state => ({
+        downloads: state.downloads,
+        storageFullHold: state.storageFullHold,
+      }),
       migrate: persistedState => {
         const persisted = persistedState as
-          | {downloads?: Record<string, DownloadInput>}
+          | {
+              downloads?: Record<string, DownloadInput>;
+              storageFullHold?: boolean;
+            }
           | undefined;
         return {
           downloads: normalizePersistedDownloads(persisted?.downloads),
+          storageFullHold: persisted?.storageFullHold === true,
         };
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as
-          | {downloads?: Record<string, DownloadInput>}
+          | {
+              downloads?: Record<string, DownloadInput>;
+              storageFullHold?: boolean;
+            }
           | undefined;
         const legacyDownloads = migrateLegacyDownloads(
           downloadsStorage.takeLegacyDownloads(),
         );
         return {
           ...currentState,
+          storageFullHold: persisted?.storageFullHold === true,
           downloads: {
             ...legacyDownloads,
             ...normalizePersistedDownloads(persisted?.downloads),

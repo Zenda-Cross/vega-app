@@ -1031,5 +1031,8 @@ class HttpDownloadModule(
 }
 
 private class HttpStatusException(val status: Int, val retryAfterMs: Long = 0L) : IOException("HTTP $status")
-private class DestinationException(message: String, cause: Throwable) : IOException(message, cause)
+// Keeps the cause text (such as ENOSPC for a full disk) so JavaScript can tell
+// why the write failed.
+private class DestinationException(message: String, cause: Throwable) :
+    IOException(cause.message?.let { "$message: $it" } ?: message, cause)
 private class RangeResetException(message: String) : IOException(message)

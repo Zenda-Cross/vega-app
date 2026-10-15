@@ -130,6 +130,7 @@ type PendingDownload = {
   synopsis?: string;
   provider?: string;
   server?: string;
+  quality?: string;
   isSubtitle?: boolean;
   infoUrl?: string;
   sourceLink?: string;
@@ -407,6 +408,7 @@ const DownloadComponent = ({
       synopsis,
       provider: providerValue || provider.value,
       server: server.server,
+      quality: server.quality,
       infoUrl,
       sourceLink: link,
       url: server.link,

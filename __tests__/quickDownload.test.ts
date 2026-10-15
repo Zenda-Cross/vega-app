@@ -18,6 +18,7 @@ it('queues video with headers and the first subtitle as a separate download', as
   await queueQuickDownload(request, {
     server: 'First',
     type: 'm3u8',
+    quality: '1080',
     link: 'https://cdn/video',
     headers: {Referer: 'https://provider'},
     subtitles: [
@@ -37,6 +38,7 @@ it('queues video with headers and the first subtitle as a separate download', as
       downloadId: 'episode1',
       url: 'https://cdn/video',
       fileType: 'm3u8',
+      quality: '1080',
       headers: {Referer: 'https://provider'},
     }),
   );

@@ -3,6 +3,7 @@ import {createJSONStorage, persist} from 'zustand/middleware';
 import type {EpisodeLink} from '../providers/types';
 import {getEpisodeIdentity} from '../utils/episodeIdentity';
 import {createZustandStorage} from '../storage/StorageService';
+import {getUpNextItem} from '../player/upNext';
 
 export interface ContinueWatchingItem {
   id: string;
@@ -30,12 +31,25 @@ interface ContinueWatchingState {
     duration: number,
     episode?: EpisodeLink,
   ) => void;
+  /**
+   * Up next: once [episode] counts as watched, moves the show on to [next].
+   * [nextProgress] is what was saved for [next] before. Returns true when the
+   * entry moved; it does nothing for a movie, the last episode, an already
+   * watched next episode, or an entry that holds another episode, so it can
+   * be called again safely.
+   */
+  finishEpisode: (
+    id: string,
+    episode: EpisodeLink,
+    next?: EpisodeLink,
+    nextProgress?: {position: number; duration: number},
+  ) => boolean;
   removeItem: (id: string) => void;
 }
 
 const useContinueWatchingStore = create<ContinueWatchingState>()(
   persist(
-    set => ({
+    (set, get) => ({
       items: [],
       upsertItem: item =>
         set(state => ({
@@ -64,6 +78,22 @@ const useContinueWatchingStore = create<ContinueWatchingState>()(
             )
             .sort((a, b) => b.updatedAt - a.updatedAt),
         })),
+      finishEpisode: (id, episode, next, nextProgress) => {
+        const item = get().items.find(existing => existing.id === id);
+        if (!item) {
+          return false;
+        }
+        const upNext = getUpNextItem(item, episode, next, nextProgress);
+        if (upNext === item) {
+          return false;
+        }
+        set(state => ({
+          items: state.items
+            .map(existing => (existing.id === id ? upNext : existing))
+            .sort((a, b) => b.updatedAt - a.updatedAt),
+        }));
+        return true;
+      },
       removeItem: id =>
         set(state => ({items: state.items.filter(item => item.id !== id)})),
     }),
