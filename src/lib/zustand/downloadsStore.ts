@@ -58,6 +58,7 @@ export interface DownloadItem {
   headers?: Record<string, string>;
   subtitles?: DownloadSubtitle[];
   server?: string;
+  quality?: string;
   isSubtitle?: boolean;
   videoType?: string | null;
   sourceType: DownloadSourceType;
@@ -101,6 +102,7 @@ export type DownloadMediaInput = Pick<
   | 'synopsis'
   | 'provider'
   | 'server'
+  | 'quality'
   | 'isSubtitle'
   | 'infoUrl'
   | 'sourceLink'

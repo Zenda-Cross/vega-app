@@ -27,6 +27,7 @@ jest.mock('@dr.pogodin/react-native-fs', () => ({
     }
   },
   stat: async (path: string) => ({size: mockFiles.get(path) ?? 0}),
+  readDir: async (path: string) => [...mockFiles.keys()].filter(key => key.startsWith(`${path}/`)),
   moveFile: async (from: string, to: string) => {
     const size = mockFiles.get(from) ?? 0;
     mockFiles.delete(from);
@@ -78,12 +79,43 @@ import {
   finalizeDownloadOutput,
   getDownloadStagingDirectory,
   prepareDownloadDestination,
+  isDownloadDestinationEmpty,
 } from '../src/lib/downloadDestination';
 import * as FileSystem from 'expo-file-system/legacy';
 import {Platform} from 'react-native';
 import {getTVDefaultDownloadLocation} from '../src/lib/downloadLocation';
 
 describe('download destination service', () => {
+  it('allows missing or empty files but refuses unreported bytes', async () => {
+    const destination = {stagingDirectory: '/cache/refresh', stagingPath: '/cache/refresh/file.part'};
+    await expect(isDownloadDestinationEmpty(destination)).resolves.toBe(true);
+    mockFiles.set(destination.stagingPath, 0);
+    await expect(isDownloadDestinationEmpty(destination)).resolves.toBe(true);
+    mockFiles.set(destination.stagingPath, 64);
+    await expect(isDownloadDestinationEmpty(destination)).resolves.toBe(false);
+  });
+
+  it('checks bytes written to a direct SAF destination', async () => {
+    const direct = {stagingDirectory: '', stagingPath: 'content://refresh/file', directFinalDocumentUri: 'content://refresh/file'};
+    mockSafFiles.set(direct.directFinalDocumentUri, 0);
+    await expect(isDownloadDestinationEmpty(direct)).resolves.toBe(true);
+    mockSafFiles.set(direct.directFinalDocumentUri, 128);
+    await expect(isDownloadDestinationEmpty(direct)).resolves.toBe(false);
+  });
+
+  it('refuses HLS segments before the final output has been created', async () => {
+    const destination = {stagingDirectory: '/cache/refresh', stagingPath: '/cache/refresh/file.part'};
+    mockDirectories.add('/cache/refresh/segments');
+    mockFiles.set('/cache/refresh/segments/1.ts', 32);
+    await expect(isDownloadDestinationEmpty(destination)).resolves.toBe(false);
+  });
+
+  it('fails closed when destination metadata cannot be read', async () => {
+    const info = jest.spyOn(FileSystem, 'getInfoAsync').mockRejectedValueOnce(new Error('Permission denied'));
+    await expect(isDownloadDestinationEmpty({stagingDirectory: '', stagingPath: 'content://unreadable'})).resolves.toBe(false);
+    info.mockRestore();
+  });
+
   beforeEach(() => {
     (Platform as any).isTV = false;
     mockFiles.clear();
