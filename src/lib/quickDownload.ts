@@ -16,6 +16,7 @@ export const queueQuickDownload = async (
     url: stream.link,
     fileType: stream.type,
     server: stream.server,
+    quality: stream.quality,
     headers: stream.headers,
     skip: stream.skip?.length
       ? stream.skip

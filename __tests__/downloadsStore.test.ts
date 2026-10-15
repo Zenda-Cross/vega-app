@@ -37,7 +37,7 @@ import useDownloadsStore, {
 describe('downloads store', () => {
   beforeEach(() => {
     mockStorageValues.clear();
-    useDownloadsStore.setState({downloads: {}});
+    useDownloadsStore.setState({downloads: {}, storageFullHold: false});
   });
 
   it('uses the same download IDs as desktop', () => {
@@ -209,4 +209,24 @@ describe('downloads store', () => {
       completedAt: 100,
     });
   });
+  it('persists storage holds immediately and restores them on hydration', async () => {
+    const key = useDownloadsStore.persist.getOptions().name;
+    useDownloadsStore.setState({storageFullHold: true});
+    const saved = mockStorageValues.get(key)!;
+    expect(JSON.parse(saved).state.storageFullHold).toBe(true);
+    useDownloadsStore.setState({storageFullHold: false});
+    expect(JSON.parse(mockStorageValues.get(key)!).state.storageFullHold).toBe(false);
+    mockStorageValues.set(key, saved);
+    await useDownloadsStore.persist.rehydrate();
+    expect(useDownloadsStore.getState().storageFullHold).toBe(true);
+  });
+
+  it('defaults older persisted downloads without a hold flag to unblocked', async () => {
+    const key = useDownloadsStore.persist.getOptions().name;
+    useDownloadsStore.setState({storageFullHold: true});
+    mockStorageValues.set(key, JSON.stringify({state: {downloads: {}}, version: 1}));
+    await useDownloadsStore.persist.rehydrate();
+    expect(useDownloadsStore.getState().storageFullHold).toBe(false);
+  });
+
 });

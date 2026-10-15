@@ -1,5 +1,6 @@
 import {
   finalizeDownloadOutput,
+  isDownloadDestinationEmpty,
   PreparedDownloadDestination,
   prepareDownloadDestination,
 } from './downloadDestination';
@@ -27,8 +28,14 @@ import {
 import {getCachedImageAccent} from './imageAccent';
 import {mixHex} from '../theme/seeds';
 import {formatDownloadProgressLabel} from './downloadFormatting';
+import {
+  canRefreshDownloadSource,
+  isExpiredLinkError,
+  refreshDownloadSource,
+} from './downloadSourceRefresh';
 
 const activeDownloads = new Set<string>();
+const sourceRefreshControllers = new Map<string, AbortController>();
 const occupiedDownloadSlots = new Set<string>();
 const cancelledDownloads = new Set<string>();
 const pauseFailedDownloads = new Set<string>();
@@ -78,6 +85,11 @@ const isTransientHttpStartError = (error: unknown): boolean => {
     normalized.includes('connect timeout')
   );
 };
+
+// Android reports a full disk as ENOSPC. The next queued download would fail
+// the same way, so the queue waits for the user to free space and retry.
+export const isStorageFullError = (message: string): boolean =>
+  /ENOSPC|no space left/i.test(message);
 
 const isDnsResolutionError = (error: unknown): boolean => {
   const message = error instanceof Error ? error.message : String(error);
@@ -227,8 +239,64 @@ const getQueuedDownloads = (): DownloadItem[] =>
         : left.createdAt - right.createdAt,
     );
 
+// A link that expired before any data arrived (a queued download that waited
+// too long) is fetched again once from the same server. Partial data stays
+// with its original link, as a new link cannot resume it safely.
+const startBackendWithFreshLink = async (
+  backend: DownloadBackend,
+  context: DownloadBackendContext,
+): Promise<void> => {
+  try {
+    await startBackendWithRetry(backend, context);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (
+      cancelledDownloads.has(context.record.id) ||
+      pauseFailedDownloads.has(context.record.id) ||
+      !canRefreshDownloadSource(context.record) ||
+      getRecord(context.record.id).downloadedBytes > 0 ||
+      !isExpiredLinkError(message)
+    ) {
+      throw error;
+    }
+    const id = context.record.id;
+    const canContinue = () => {
+      const current = useDownloadsStore.getState().getDownload(id);
+      return current && current.downloadedBytes === 0 &&
+        current.url === context.record.url && current.createdAt === context.record.createdAt &&
+        (current.status === 'starting' || current.status === 'downloading') &&
+        !cancelledDownloads.has(id) && !pauseFailedDownloads.has(id);
+    };
+    // Persisted progress can lag behind native writes. Check the actual
+    // destination (and HLS segment directory), failing closed on metadata errors.
+    if (!canContinue() || !await isDownloadDestinationEmpty(context.destination)) {
+      throw error;
+    }
+    if (!canContinue()) throw error;
+    const controller = new AbortController();
+    sourceRefreshControllers.set(id, controller);
+    let fresh: Awaited<ReturnType<typeof refreshDownloadSource>>;
+    try {
+      fresh = await refreshDownloadSource(context.record, controller.signal);
+    } finally {
+      if (sourceRefreshControllers.get(id) === controller) {
+        sourceRefreshControllers.delete(id);
+      }
+    }
+    if (!fresh || !canContinue() ||
+      !await isDownloadDestinationEmpty(context.destination) || !canContinue()) {
+      throw error;
+    }
+    useDownloadsStore.getState().updateDownload(id, fresh);
+    await startBackendWithRetry(backend, {
+      ...context,
+      record: getRecord(context.record.id),
+    });
+  }
+};
+
 export const scheduleQueuedDownloads = async (): Promise<void> => {
-  if (schedulerRunning) {
+  if (schedulerRunning || useDownloadsStore.getState().storageFullHold) {
     return;
   }
   schedulerRunning = true;
@@ -266,6 +334,7 @@ export const startQueuedDownloadNow = async (
   if (record.status !== 'queued' || !record.downloadLocation) {
     return;
   }
+  useDownloadsStore.setState({storageFullHold: false});
   await startOrResumeQueuedDownload(record);
 };
 
@@ -352,7 +421,7 @@ export const startDownload = async (
       finalDocumentUri: destination.directFinalDocumentUri,
       downloadLocation: location,
     });
-    await startBackendWithRetry(backend, {record, destination});
+    await startBackendWithFreshLink(backend, {record, destination});
     throwIfCancelled();
 
     store.markFinalizing(downloadId);
@@ -379,6 +448,15 @@ export const startDownload = async (
   } catch (error) {
     const cancelled = cancelledDownloads.has(downloadId);
     const pauseFailed = pauseFailedDownloads.has(downloadId);
+    const message = error instanceof Error ? error.message : String(error);
+    const pauseUnsupported = error instanceof DownloadPauseSupportError;
+    const storageFull = !cancelled && !pauseFailed && !pauseUnsupported &&
+      isStorageFullError(message);
+    if (storageFull) {
+      // Gate every scheduler entry point before asynchronous cleanup can let
+      // a concurrent completion/cancellation start more queued work.
+      useDownloadsStore.setState({storageFullHold: true});
+    }
     if (!backend.preservePartialOnFailure || !isSafDownloadLocation(location)) {
       await backend.cleanup(downloadId, record).catch(() => undefined);
     } else if (cancelled && destination) {
@@ -402,11 +480,15 @@ export const startDownload = async (
       return;
     }
 
-    const message = error instanceof Error ? error.message : String(error);
-    const pauseUnsupported = error instanceof DownloadPauseSupportError;
     store.markError(downloadId, {
-      code: pauseUnsupported ? 'PAUSE_UNSUPPORTED' : undefined,
-      message,
+      code: pauseUnsupported
+        ? 'PAUSE_UNSUPPORTED'
+        : storageFull
+          ? 'STORAGE_FULL'
+          : undefined,
+      message: storageFull
+        ? 'Not enough storage space. Free some space and retry.'
+        : message,
       retryable: !pauseUnsupported,
     });
     await notificationService.showDownloadFailed(
@@ -438,6 +520,7 @@ const failPausedDownload = async (
 ): Promise<void> => {
   const record = getRecord(downloadId);
   const backend = getDownloadBackend(record.sourceType);
+  sourceRefreshControllers.get(downloadId)?.abort();
   const detail = error instanceof Error ? error.message : String(error);
   const message = `Unable to ${operation} this download. Partial download data was deleted. ${detail}`;
   if (activeDownloads.has(downloadId)) {
@@ -495,6 +578,7 @@ export const resumeDownload = async (downloadId: string): Promise<void> => {
   if (!backend.resume || !record.canResume || record.status !== 'paused') {
     return;
   }
+  useDownloadsStore.setState({storageFullHold: false});
   // With no live job (for example after an app restart) the backend has
   // nothing to resume, so start the download again from the queue.
   if (!activeDownloads.has(downloadId)) {
@@ -565,6 +649,7 @@ export const cancelDownload = async (downloadId: string): Promise<void> => {
   }
 
   cancelledDownloads.add(downloadId);
+  sourceRefreshControllers.get(downloadId)?.abort();
   useDownloadsStore.getState().markCanceling(downloadId);
   const backend = getDownloadBackend(record.sourceType);
   try {
@@ -592,7 +677,11 @@ export const retryDownload = async (downloadId: string): Promise<void> => {
   if (!location) {
     return;
   }
+  if (useDownloadsStore.getState().getDownload(downloadId) !== record) return;
   settingsStorage.setDownloadLocation(location);
+  // The normal start path handles expired URLs inside the active lifecycle,
+  // so Retry has no untracked provider await that can resurrect cancelled work.
+  useDownloadsStore.setState({storageFullHold: false});
   useDownloadsStore.getState().updateDownload(downloadId, {
     downloadLocation: location,
     errorCode: undefined,

@@ -12,6 +12,7 @@ import useDownloadsStore, {
 } from '../zustand/downloadsStore';
 import { TextTrackType } from 'react-native-video';
 import { downloadOutputExists } from '../downloadDestination';
+import {guardWafPrompts} from '../services/wafSession';
 
 interface UseStreamOptions {
   activeEpisode: any;
@@ -376,6 +377,177 @@ export const getNextStream = (
   return streams[currentIndex + 1];
 };
 
+// A stream handed to the player for its first episode, such as the one an
+// unfinished download reads. It plays before online servers load.
+export const getInitialStream = (
+  activeEpisode: any,
+  routeParams: any,
+): Stream | undefined => {
+  const initialEpisode = routeParams?.episodeList?.[routeParams?.linkIndex];
+  return routeParams?.initialStream?.link &&
+    getEpisodeIdentity(activeEpisode) === getEpisodeIdentity(initialEpisode)
+    ? routeParams.initialStream
+    : undefined;
+};
+
+export const getStreamQueryKey = (
+  episode: any,
+  routeParams: any,
+  provider: string,
+) => [
+  'stream',
+  episode?.id || episode?.link || episode?.title,
+  routeParams?.type,
+  provider,
+  // Keep the initial download stream separate from a normal cached list.
+  ...(getInitialStream(episode, routeParams)
+    ? [getInitialStream(episode, routeParams)!.link]
+    : []),
+];
+
+// Shared by the player's query and the next-episode prefetch, so a prefetched
+// list stays fresh and retries exactly like one the player loaded itself.
+export const streamQueryOptions = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  gcTime: 30 * 60 * 1000, // 30 minutes
+  retry: (failureCount: number, streamFailure: Error) => {
+    if (streamFailure.message?.includes('WAF')) return false;
+    if (failureCount >= 2) {
+      return false;
+    }
+    return true;
+  },
+  retryDelay: (attemptIndex: number) =>
+    Math.min(1000 * 2 ** attemptIndex, 10000),
+};
+
+export interface StreamListRequest {
+  episode: any;
+  routeParams: any;
+  provider: string;
+  /** True once the episode's downloaded file failed to play. */
+  isLocalFailed?: () => boolean;
+  /** Receives a downloaded file as soon as it is found, before the servers. */
+  onLocalStream?: (stream: Stream) => void;
+  /** Cancels the provider request. */
+  signal?: AbortSignal;
+  /** Whether the provider may open a WAF challenge now. Always when omitted. */
+  canPromptWaf?: () => boolean;
+}
+
+// The stream query function. The next-episode prefetch runs it as well, so it
+// reaches player state only through the request callbacks.
+export const fetchStreamList = async ({
+  episode,
+  routeParams,
+  provider,
+  isLocalFailed = () => false,
+  onLocalStream,
+  signal,
+  canPromptWaf,
+}: StreamListRequest): Promise<Stream[]> => {
+  if (!episode?.link && !episode?.id && !episode?.title) {
+    return [];
+  }
+
+  if (routeParams?.externalVideo) return [externalVideoStream(routeParams)!];
+  if (routeParams?.localContent) {
+    return isLocalPath(episode?.link)
+      ? [{server: 'Local file', link: episode.link, type: 'local'}]
+      : [];
+  }
+
+  console.log('Fetching stream for:', episode);
+
+  // 1. Check for downloaded content first
+  const downloadedPath = await findDownloadedFileForMedia(episode, routeParams);
+  const localStream: Stream | null = downloadedPath
+    ? {server: 'Downloaded', link: downloadedPath, type: 'mp4'}
+    : getInitialStream(episode, routeParams) || null;
+
+  // Start a discovered download before waiting for optional online servers.
+  if (localStream && !isLocalFailed()) {
+    onLocalStream?.(localStream);
+  }
+
+  let remoteLink =
+    (!isLocalPath(episode?.link) && episode?.link) || episode?.sourceLink;
+
+  if (!remoteLink && downloadedPath) {
+    const allDownloads = Object.values(useDownloadsStore.getState().downloads);
+    const match = allDownloads.find(d => d.filePath === downloadedPath);
+    if (match?.sourceLink && !isLocalPath(match.sourceLink)) {
+      remoteLink = match.sourceLink;
+    }
+  }
+
+  if (!remoteLink) {
+    if (localStream && !isLocalFailed()) {
+      return [localStream];
+    }
+    if (localStream || isLocalPath(episode?.link)) {
+      throw new Error('Downloaded file not found on device');
+    }
+    return [];
+  }
+
+  // 2. Fetch streams from provider online (in background if localStream exists)
+  let remoteStreams: Stream[] = [];
+  try {
+    const controller = new AbortController();
+    const timeoutMs = 45000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const abort = () => controller.abort();
+    signal?.addEventListener('abort', abort);
+    if (signal?.aborted) abort();
+    if (canPromptWaf) guardWafPrompts(controller.signal, canPromptWaf);
+    try {
+      const data = await providerManager.getStream({
+        link: remoteLink,
+        type: routeParams?.type,
+        signal: controller.signal,
+        providerValue: routeParams?.providerValue || provider,
+      });
+
+      // Filter out excluded qualities
+      const excludedQualities = settingsStorage.getExcludedQualities() || [];
+      const filteredQualities = data?.filter(
+        streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
+      );
+
+      remoteStreams =
+        filteredQualities?.length > 0 ? filteredQualities : data || [];
+    } finally {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', abort);
+    }
+  } catch (err) {
+    if (localStream && !isLocalFailed()) {
+      console.warn(
+        'Remote stream refresh failed; using local downloaded file:',
+        err,
+      );
+      return [localStream];
+    }
+    throw err;
+  }
+
+  // A provider may return the very URL that just failed. Do not offer it
+  // again as an online fallback, or reinsert a failed download on empty data.
+  const onlineStreams = remoteStreams.filter(
+    stream => !localStream || stream.link !== localStream.link,
+  );
+  const finalStreams = localStream && !isLocalFailed()
+    ? [localStream, ...onlineStreams]
+    : onlineStreams;
+
+  if (finalStreams.length === 0) {
+    throw new Error('No streams available');
+  }
+
+  return finalStreams;
+};
+
 export const useStream = ({
   activeEpisode,
   routeParams,
@@ -387,7 +559,7 @@ export const useStream = ({
     const path = getCompletedDownloadPathSync(activeEpisode, routeParams);
     return externalVideoStream(routeParams) || (path
       ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
-      : { server: '', link: '', type: '' });
+      : getInitialStream(activeEpisode, routeParams) || { server: '', link: '', type: '' });
   });
   const [externalSubs, setExternalSubs] = useState<any[]>([]);
 
@@ -411,7 +583,7 @@ export const useStream = ({
     setSelectedStream(
       externalVideoStream(routeParams) || (path
         ? { server: routeParams?.localContent ? 'Local file' : 'Downloaded', link: path, type: routeParams?.localContent ? 'local' : 'mp4' }
-        : { server: '', link: '', type: '' }),
+        : getInitialStream(activeEpisode, routeParams) || { server: '', link: '', type: '' }),
     );
   }, [activeEpisode, activeEpisodeKey, routeParams]);
 
@@ -424,121 +596,34 @@ export const useStream = ({
       : undefined;
   }, [activeEpisode, routeParams]);
 
+  const initialStream = getInitialStream(activeEpisode, routeParams);
+  const initialStreams = useMemo(
+    () => localPlaceholder || (initialStream ? [initialStream] : undefined),
+    [localPlaceholder, initialStream],
+  );
+
   const {
-    data: streamData = [],
+    data: fetchedStreams = [],
     isLoading,
     error,
     refetch,
   } = useQuery<Stream[], Error>({
-    queryKey: [
-      'stream',
-      activeEpisode?.id || activeEpisode?.link || activeEpisode?.title,
-      routeParams?.type,
-      provider,
-    ],
-    queryFn: async () => {
-      if (!activeEpisode?.link && !activeEpisode?.id && !activeEpisode?.title) {
-        return [];
-      }
-
-      if (routeParams?.externalVideo) return [externalVideoStream(routeParams)!];
-      if (routeParams?.localContent) {
-        return isLocalPath(activeEpisode?.link)
-          ? [{server: 'Local file', link: activeEpisode.link, type: 'local'}]
-          : [];
-      }
-
-      console.log('Fetching stream for:', activeEpisode);
-
-      // 1. Check for downloaded content first
-      const downloadedPath = await findDownloadedFileForMedia(
-        activeEpisode,
+    queryKey: getStreamQueryKey(activeEpisode, routeParams, provider),
+    queryFn: () =>
+      fetchStreamList({
+        episode: activeEpisode,
         routeParams,
-      );
-      const localStream: Stream | null = downloadedPath
-        ? { server: 'Downloaded', link: downloadedPath, type: 'mp4' }
-        : null;
-
-      // Start a discovered download before waiting for optional online servers.
-      // A fetch from a previous episode must not replace the current selection.
-      if (localStream && activeEpisodeKeyRef.current === activeEpisodeKey) {
-        setSelectedStream(current => current.link ? current : localStream);
-      }
-
-      let remoteLink =
-        (!isLocalPath(activeEpisode?.link) && activeEpisode?.link) ||
-        activeEpisode?.sourceLink;
-
-      if (!remoteLink && downloadedPath) {
-        const allDownloads = Object.values(
-          useDownloadsStore.getState().downloads,
-        );
-        const match = allDownloads.find(d => d.filePath === downloadedPath);
-        if (match?.sourceLink && !isLocalPath(match.sourceLink)) {
-          remoteLink = match.sourceLink;
-        }
-      }
-
-      if (!remoteLink) {
-        if (localStream && !localFailedRef.current) {
-          return [localStream];
-        }
-        if (localStream || isLocalPath(activeEpisode?.link)) {
-          throw new Error('Downloaded file not found on device');
-        }
-        return [];
-      }
-
-      // 2. Fetch streams from provider online (in background if localStream exists)
-      let remoteStreams: Stream[] = [];
-      try {
-        const controller = new AbortController();
-        const timeoutMs = 45000;
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-          const data = await providerManager.getStream({
-            link: remoteLink,
-            type: routeParams?.type,
-            signal: controller.signal,
-            providerValue: routeParams?.providerValue || provider,
-          });
-
-          // Filter out excluded qualities
-          const excludedQualities = settingsStorage.getExcludedQualities() || [];
-          const filteredQualities = data?.filter(
-            streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
-          );
-
-          remoteStreams =
-            filteredQualities?.length > 0 ? filteredQualities : data || [];
-        } finally {
-          clearTimeout(timeoutId);
-        }
-      } catch (err) {
-        if (localStream && !localFailedRef.current) {
-          console.warn(
-            'Remote stream refresh failed; using local downloaded file:',
-            err,
-          );
-          return [localStream];
-        }
-        throw err;
-      }
-
-      let finalStreams = remoteStreams;
-      if (localStream && !localFailedRef.current) {
-        finalStreams = [localStream, ...remoteStreams];
-      }
-
-      if (!finalStreams || finalStreams.length === 0) {
-        if (localStream) {
-          return [localStream];
-        }
-        throw new Error('No streams available');
-      }
-
-      return finalStreams;
-    },
+        provider,
+        isLocalFailed: () => localFailedRef.current,
+        // A fetch from a previous episode must not replace the current selection.
+        onLocalStream: localStream => {
+          if (activeEpisodeKeyRef.current === activeEpisodeKey) {
+            setSelectedStream(current =>
+              current.link || localFailedRef.current ? current : localStream,
+            );
+          }
+        },
+      }),
     enabled:
       enabled &&
       !routeParams?.localContent &&
@@ -546,50 +631,45 @@ export const useStream = ({
       Boolean(
         activeEpisode?.link || activeEpisode?.id || activeEpisode?.title,
       ),
-    initialData: () => localPlaceholder,
-    initialDataUpdatedAt: localPlaceholder ? 0 : undefined,
-    placeholderData: localPlaceholder,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: (failureCount, streamFailure) => {
-      if (streamFailure.message?.includes('WAF')) return false;
-      if (failureCount >= 2) {
-        return false;
-      }
-      return true;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    initialData: () => initialStreams,
+    initialDataUpdatedAt: initialStreams ? 0 : undefined,
+    placeholderData: initialStreams,
+    ...streamQueryOptions,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
 
-  // Update selected stream when data changes
-  useEffect(() => {
-    if (streamData && streamData.length > 0) {
-      setSelectedStream(current => {
-        // Keep a failed download cleared so the fetch error can show.
-        if (!current?.link) {
-          return localFailedRef.current ? current : streamData[0];
-        }
-        // A locally-picked (or auto-resumed) video file will never match an
-        // online stream link — that's expected, not staleness. Leave it be.
-        if (current?.type === 'local' || isLocalPath(current?.link)) return current;
-        const stillExists = streamData.find(s => s.link === current.link);
-        return stillExists ? current : streamData[0];
-      });
-    }
-  }, [streamData]);
+  // Filter cached/placeholder data as soon as playback fails, even while
+  // the provider refresh is still pending or has failed itself.
+  const initialStreamLink = initialStream?.link;
+  const streamData = useMemo(
+    () => localFailed
+      ? fetchedStreams.filter(stream =>
+          !isLocalPath(stream.link) && stream.link !== initialStreamLink,
+        )
+      : fetchedStreams,
+    [fetchedStreams, initialStreamLink, localFailed],
+  );
 
-  // Replace a download that failed to play with the first online server.
   useEffect(() => {
-    if (!localFailed || !isLocalPath(selectedStream?.link)) return;
-    const online = streamData.find(s => !isLocalPath(s.link));
-    if (online) {
-      setSelectedStream(online);
-    } else if (error) {
-      setSelectedStream({ server: '', link: '', type: '' });
-    }
-  }, [localFailed, selectedStream, streamData, error]);
+    setSelectedStream(current => {
+      const failedDownload = localFailed && (
+        isLocalPath(current?.link) || current?.link === initialStreamLink
+      );
+      if (!current?.link) return streamData[0] || current;
+      if (failedDownload) {
+        return streamData[0] || (error
+          ? {server: '', link: '', type: ''}
+          : current);
+      }
+      // A user-picked local file is independent of the online server list.
+      if (current.type === 'local' || isLocalPath(current.link)) return current;
+      if (!streamData.length) return current;
+      return streamData.some(stream => stream.link === current.link)
+        ? current
+        : streamData[0];
+    });
+  }, [streamData, localFailed, initialStreamLink, error]);
 
   const isPlayingLocal = isLocalPath(selectedStream?.link);
 
@@ -657,24 +737,32 @@ export const useStream = ({
 
   const switchToNextStream = () => {
     if (routeParams?.localContent) return false;
-    if (streamData && streamData.length > 0) {
-      const nextStream = getNextStream(streamData, selectedStream);
-      if (nextStream) {
-        setSelectedStream(nextStream);
-        ToastAndroid.show(
-          'Video could not be played, Trying next server',
-          ToastAndroid.SHORT,
-        );
-        return true;
-      }
-    }
-    if (isLocalPath(selectedStream?.link) && !localFailedRef.current) {
-      // No server is listed yet while the download plays; fetch them now.
+    const failedDownload = isLocalPath(selectedStream?.link) ||
+      selectedStream?.link === initialStreamLink;
+    if (failedDownload && !localFailedRef.current) {
+      // Mark failure before reusing cached data or beginning another request.
       localFailedRef.current = true;
       setFailedLocalEpisodeKey(activeEpisodeKey);
-      refetch();
+      const online = streamData.find(stream =>
+        !isLocalPath(stream.link) && stream.link !== initialStreamLink,
+      );
+      if (online) {
+        setSelectedStream(online);
+      } else {
+        setSelectedStream({server: '', link: '', type: ''});
+        refetch();
+      }
       ToastAndroid.show(
-        'Downloaded file could not be played, Trying online servers',
+        'Download stream could not be played, Trying online servers',
+        ToastAndroid.SHORT,
+      );
+      return true;
+    }
+    const nextStream = getNextStream(streamData, selectedStream);
+    if (nextStream) {
+      setSelectedStream(nextStream);
+      ToastAndroid.show(
+        'Video could not be played, Trying next server',
         ToastAndroid.SHORT,
       );
       return true;
