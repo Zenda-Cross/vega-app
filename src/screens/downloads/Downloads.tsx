@@ -26,12 +26,14 @@ import {
   groupCompletedDownloads,
 } from '../../lib/downloadLibrary';
 import {useDownloadsMaintenance} from '../../lib/hooks/useDownloadsMaintenance';
+import {localLibraryItem} from '../../lib/localContent/library';
 import {settingsStorage} from '../../lib/storage';
 import {showAppDialog} from '../../lib/zustand/appDialogStore';
 import useDownloadsStore, {
   selectCompletedDownloads,
   selectCurrentDownloads,
 } from '../../lib/zustand/downloadsStore';
+import useLocalContentStore from '../../lib/zustand/localContentStore';
 import {useShallow} from 'zustand/react/shallow';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import CurrentDownloadsSection from '../settings/components/CurrentDownloadsSection';
@@ -52,6 +54,17 @@ const Downloads = () => {
   const completed = useDownloadsStore(useShallow(selectCompletedDownloads));
   const currentDownloads = useDownloadsStore(useShallow(selectCurrentDownloads));
   const groups = useMemo(() => groupCompletedDownloads(completed), [completed]);
+  const localTitles = useLocalContentStore(state => state.titles);
+  // Imported local content, as listed in Library. It opens the same Info page.
+  const localItems = useMemo(
+    () =>
+      localTitles
+        .filter(title => title.inLibrary !== false)
+        .map(localLibraryItem),
+    [localTitles],
+  );
+  // Without downloads, the first local card takes the first card's focus role.
+  const hasCards = groups.length > 0 || localItems.length > 0;
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
     new Set(),
   );
@@ -153,13 +166,13 @@ const Downloads = () => {
       if (!isTV) return;
       if (currentDownloads.length > 0 && currentDownloadActionNode) {
         useTVNavigationStore.getState().setActiveScreenFocusHandle(currentDownloadActionNode);
-      } else if (groups.length > 0 && firstCardNode) {
+      } else if (hasCards && firstCardNode) {
         useTVNavigationStore.getState().setActiveScreenFocusHandle(firstCardNode);
       } else if (exploreButtonNode) {
         useTVNavigationStore.getState().setActiveScreenFocusHandle(exploreButtonNode);
       }
       // The card focused before opening details restores itself on return.
-    }, [groups.length, firstCardNode, exploreButtonNode, currentDownloads.length, currentDownloadActionNode]),
+    }, [hasCards, firstCardNode, exploreButtonNode, currentDownloads.length, currentDownloadActionNode]),
   );
 
 
@@ -299,7 +312,7 @@ const Downloads = () => {
       trapFocusRight={true}
       destinations={currentDownloads.length > 0
         ? [currentDownloadActionRef]
-        : groups.length > 0 ? [firstCardRef] : [exploreButtonRef]}
+        : hasCards ? [firstCardRef] : [exploreButtonRef]}
       style={{flex: 1, backgroundColor: colors.background, paddingTop: isTV ? 0 : insets.top}}>
       <StatusBar />
 
@@ -435,15 +448,63 @@ const Downloads = () => {
             />
           );
         }}
+        ListFooterComponent={
+          !isSelectionMode && localItems.length > 0 ? (
+            <FlatList
+              data={localItems}
+              key={`local-cols-${columns}`}
+              numColumns={columns}
+              scrollEnabled={false}
+              keyExtractor={item => item.link}
+              columnWrapperStyle={{
+                gap: itemSpacing,
+                justifyContent: 'flex-start',
+              }}
+              ListHeaderComponent={
+                <AppText
+                  role="titleLargeEmphasized"
+                  className="mb-4 text-m3-on-background"
+                  style={{
+                    marginTop: groups.length > 0 ? 16 : 0,
+                    paddingLeft: isTV ? 12 : 6,
+                  }}>
+                  Local content
+                </AppText>
+              }
+              renderItem={({item, index}) => {
+                const isFirstCard = groups.length === 0 && index === 0;
+                return (
+                  <MediaPosterCard
+                    ref={isFirstCard ? firstCardRef : undefined}
+                    onLayout={isFirstCard ? updateFirstCardNode : undefined}
+                    title={item.title}
+                    poster={item.poster}
+                    width={cardWidth}
+                    hasTVPreferredFocus={isTV && screenFocused && isFirstCard}
+                    onPress={() =>
+                      navigation.navigate('Info', {
+                        link: item.link,
+                        provider: item.provider,
+                        poster: item.poster,
+                      })
+                    }
+                  />
+                );
+              }}
+            />
+          ) : null
+        }
         ListEmptyComponent={
-          <DownloadsEmptyState
-            exploreButtonRef={exploreButtonRef}
-            onExploreLayout={updateExploreButtonNode}
-            preferredFocus={currentDownloads.length === 0}
-            onExplore={() => {
-              navigation.getParent<any>()?.navigate('HomeStack');
-            }}
-          />
+          localItems.length === 0 ? (
+            <DownloadsEmptyState
+              exploreButtonRef={exploreButtonRef}
+              onExploreLayout={updateExploreButtonNode}
+              preferredFocus={currentDownloads.length === 0}
+              onExplore={() => {
+                navigation.getParent<any>()?.navigate('HomeStack');
+              }}
+            />
+          ) : null
         }
         showsVerticalScrollIndicator={false}
       />
