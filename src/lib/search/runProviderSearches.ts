@@ -42,42 +42,61 @@ export const runProviderSearches = async <P, T>({
   const run = async ({provider, controller}: (typeof jobs)[number]) => {
     let timedOut = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let unsubscribe: (() => void) | undefined;
+    let remainingMs = timeoutMs;
+    let runningSince: number | undefined;
     const expire = () => {
-      if (useWafStore.getState().requests.length === 0) {
-        timedOut = true;
-        controller.abort();
-        return;
-      }
-      // Restart the clock once the captcha dialog closes.
-      unsubscribe = useWafStore.subscribe(state => {
-        if (state.requests.length > 0) return;
-        unsubscribe?.();
-        timer = setTimeout(expire, timeoutMs);
-      });
+      timedOut = true;
+      controller.abort();
     };
+    const pauseDeadline = () => {
+      if (runningSince === undefined) return;
+      remainingMs = Math.max(0, remainingMs - (Date.now() - runningSince));
+      runningSince = undefined;
+      clearTimeout(timer);
+      timer = undefined;
+    };
+    const resumeDeadline = () => {
+      if (runningSince !== undefined || controller.signal.aborted) return;
+      runningSince = Date.now();
+      timer = setTimeout(expire, remainingMs);
+    };
+    // Watch from the start: even a captcha that opens and closes before the
+    // first deadline must be excluded, without resetting the elapsed budget.
+    const unsubscribe = useWafStore.subscribe(state => {
+      if (state.requests.length > 0) pauseDeadline();
+      else resumeDeadline();
+    });
+    if (useWafStore.getState().requests.length === 0) resumeDeadline();
+
     const stop = () => controller.abort();
     signal.addEventListener('abort', stop);
-    timer = setTimeout(expire, timeoutMs);
     // Free the slot on abort even if the search ignores its signal.
-    const aborted = new Promise<never>((_, reject) =>
-      controller.signal.addEventListener('abort', () =>
-        reject(new Error('Aborted')),
-      ),
-    );
-    const outcome = await Promise.race([
-      search(provider, controller.signal),
-      aborted,
-    ]).then(
-      (posts): ProviderSearchOutcome<T> => ({posts}),
-      (error: any): ProviderSearchOutcome<T> => ({
-        error: timedOut ? 'Timed out' : error?.message || 'Failed to search',
-      }),
-    );
-    clearTimeout(timer);
-    unsubscribe?.();
-    signal.removeEventListener('abort', stop);
-    if (!signal.aborted) onSettled(provider, outcome);
+    let onAbort: () => void = () => {};
+    const aborted = new Promise<never>((_, reject) => {
+      onAbort = () => reject(new Error('Aborted'));
+      controller.signal.addEventListener('abort', onAbort, {once: true});
+    });
+    if (signal.aborted) stop();
+    try {
+      const outcome = await Promise.race([
+        Promise.resolve().then(() => {
+          if (controller.signal.aborted) throw new Error('Aborted');
+          return search(provider, controller.signal);
+        }),
+        aborted,
+      ]).then(
+        (posts): ProviderSearchOutcome<T> => ({posts}),
+        (error: any): ProviderSearchOutcome<T> => ({
+          error: timedOut ? 'Timed out' : error?.message || 'Failed to search',
+        }),
+      );
+      if (!signal.aborted) onSettled(provider, outcome);
+    } finally {
+      clearTimeout(timer);
+      unsubscribe();
+      signal.removeEventListener('abort', stop);
+      controller.signal.removeEventListener('abort', onAbort);
+    }
   };
 
   const next = async (): Promise<void> => {

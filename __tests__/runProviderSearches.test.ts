@@ -134,3 +134,88 @@ it('applies a dismissed captcha to searches that have not started yet', async ()
   run.calls[2].resolve([]);
   await run.done;
 });
+
+
+it('preserves the remaining budget after a captcha closes before the deadline', async () => {
+  const run = start(['a']);
+  await flush();
+  await jest.advanceTimersByTimeAsync(10_000);
+  useWafStore.setState({requests: [{id: 1} as WafRequest]});
+  await jest.advanceTimersByTimeAsync(10_000);
+  useWafStore.setState({requests: []});
+  await jest.advanceTimersByTimeAsync(14_999);
+  expect(run.calls[0].signal.aborted).toBe(false);
+  await jest.advanceTimersByTimeAsync(1);
+  await run.done;
+  expect(run.outcomes).toEqual({a: {error: 'Timed out'}});
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it('excludes multiple captcha intervals without resetting the budget', async () => {
+  const run = start(['a']);
+  await flush();
+  for (let id = 1; id <= 2; id++) {
+    await jest.advanceTimersByTimeAsync(5_000);
+    useWafStore.setState({requests: [{id} as WafRequest]});
+    await jest.advanceTimersByTimeAsync(30_000);
+    useWafStore.setState({requests: []});
+  }
+  await jest.advanceTimersByTimeAsync(14_999);
+  expect(run.calls[0].signal.aborted).toBe(false);
+  await jest.advanceTimersByTimeAsync(1);
+  await run.done;
+  expect(run.outcomes).toEqual({a: {error: 'Timed out'}});
+});
+
+it('waits for an already open captcha before starting the deadline', async () => {
+  useWafStore.setState({requests: [{id: 1} as WafRequest]});
+  const run = start(['a']);
+  await flush();
+  await jest.advanceTimersByTimeAsync(90_000);
+  expect(run.calls[0].signal.aborted).toBe(false);
+  expect(jest.getTimerCount()).toBe(0);
+  useWafStore.setState({requests: []});
+  await jest.advanceTimersByTimeAsync(24_999);
+  expect(run.calls[0].signal.aborted).toBe(false);
+  await jest.advanceTimersByTimeAsync(1);
+  await run.done;
+  expect(run.outcomes).toEqual({a: {error: 'Timed out'}});
+});
+
+it('cancels while paused without starting queued providers or restarting timers', async () => {
+  const run = start(['a', 'b', 'c']);
+  await flush();
+  useWafStore.setState({requests: [{id: 1} as WafRequest]});
+  run.screen.abort();
+  await run.done;
+  useWafStore.setState({requests: []});
+  expect(started(run.calls)).toEqual(['a', 'b']);
+  expect(run.calls.every(call => call.signal.aborted)).toBe(true);
+  expect(run.outcomes).toEqual({});
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it('unsubscribes when a search finishes while its deadline is paused', async () => {
+  const run = start(['a']);
+  await flush();
+  useWafStore.setState({requests: [{id: 1} as WafRequest]});
+  run.calls[0].resolve(['a1']);
+  await run.done;
+  useWafStore.setState({requests: []});
+  expect(run.outcomes).toEqual({a: {posts: ['a1']}});
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it('reports synchronous search failures and cleans up the deadline', async () => {
+  const outcomes: Record<string, unknown> = {};
+  await runProviderSearches({
+    providers: ['a'],
+    signal: new AbortController().signal,
+    search: () => { throw new Error('Provider unavailable'); },
+    onSettled: (provider, outcome) => { outcomes[provider] = outcome; },
+  });
+  useWafStore.setState({requests: [{id: 1} as WafRequest]});
+  useWafStore.setState({requests: []});
+  expect(outcomes).toEqual({a: {error: 'Provider unavailable'}});
+  expect(jest.getTimerCount()).toBe(0);
+});
