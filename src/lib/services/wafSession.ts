@@ -20,3 +20,20 @@ export const dismissWafOperations = (): void => {
 
 export const isWafOperationDismissed = (scope?: AbortSignal): boolean =>
   Boolean(scope && dismissed.has(scope));
+
+// Background work (the next episode's servers loading during playback) must
+// not cover the video with a challenge. Its requests fail instead, until the
+// guard allows prompting because the user is now waiting for that work.
+const promptGuards = new WeakMap<AbortSignal, () => boolean>();
+
+export const guardWafPrompts = (
+  scope: AbortSignal,
+  canPrompt: () => boolean,
+): void => {
+  promptGuards.set(scope, canPrompt);
+};
+
+export const canPromptWaf = (scope?: AbortSignal): boolean => {
+  const canPrompt = scope && promptGuards.get(scope);
+  return canPrompt ? canPrompt() : true;
+};

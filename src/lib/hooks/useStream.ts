@@ -12,6 +12,7 @@ import useDownloadsStore, {
 } from '../zustand/downloadsStore';
 import { TextTrackType } from 'react-native-video';
 import { downloadOutputExists } from '../downloadDestination';
+import {guardWafPrompts} from '../services/wafSession';
 
 interface UseStreamOptions {
   activeEpisode: any;
@@ -376,6 +377,159 @@ export const getNextStream = (
   return streams[currentIndex + 1];
 };
 
+export const getStreamQueryKey = (
+  episode: any,
+  routeParams: any,
+  provider: string,
+) => [
+  'stream',
+  episode?.id || episode?.link || episode?.title,
+  routeParams?.type,
+  provider,
+];
+
+// Shared by the player's query and the next-episode prefetch, so a prefetched
+// list stays fresh and retries exactly like one the player loaded itself.
+export const streamQueryOptions = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  gcTime: 30 * 60 * 1000, // 30 minutes
+  retry: (failureCount: number, streamFailure: Error) => {
+    if (streamFailure.message?.includes('WAF')) return false;
+    if (failureCount >= 2) {
+      return false;
+    }
+    return true;
+  },
+  retryDelay: (attemptIndex: number) =>
+    Math.min(1000 * 2 ** attemptIndex, 10000),
+};
+
+export interface StreamListRequest {
+  episode: any;
+  routeParams: any;
+  provider: string;
+  /** True once the episode's downloaded file failed to play. */
+  isLocalFailed?: () => boolean;
+  /** Receives a downloaded file as soon as it is found, before the servers. */
+  onLocalStream?: (stream: Stream) => void;
+  /** Cancels the provider request. */
+  signal?: AbortSignal;
+  /** Whether the provider may open a WAF challenge now. Always when omitted. */
+  canPromptWaf?: () => boolean;
+}
+
+// The stream query function. The next-episode prefetch runs it as well, so it
+// reaches player state only through the request callbacks.
+export const fetchStreamList = async ({
+  episode,
+  routeParams,
+  provider,
+  isLocalFailed = () => false,
+  onLocalStream,
+  signal,
+  canPromptWaf,
+}: StreamListRequest): Promise<Stream[]> => {
+  if (!episode?.link && !episode?.id && !episode?.title) {
+    return [];
+  }
+
+  if (routeParams?.externalVideo) return [externalVideoStream(routeParams)!];
+  if (routeParams?.localContent) {
+    return isLocalPath(episode?.link)
+      ? [{server: 'Local file', link: episode.link, type: 'local'}]
+      : [];
+  }
+
+  console.log('Fetching stream for:', episode);
+
+  // 1. Check for downloaded content first
+  const downloadedPath = await findDownloadedFileForMedia(episode, routeParams);
+  const localStream: Stream | null = downloadedPath
+    ? {server: 'Downloaded', link: downloadedPath, type: 'mp4'}
+    : null;
+
+  // Start a discovered download before waiting for optional online servers.
+  if (localStream) {
+    onLocalStream?.(localStream);
+  }
+
+  let remoteLink =
+    (!isLocalPath(episode?.link) && episode?.link) || episode?.sourceLink;
+
+  if (!remoteLink && downloadedPath) {
+    const allDownloads = Object.values(useDownloadsStore.getState().downloads);
+    const match = allDownloads.find(d => d.filePath === downloadedPath);
+    if (match?.sourceLink && !isLocalPath(match.sourceLink)) {
+      remoteLink = match.sourceLink;
+    }
+  }
+
+  if (!remoteLink) {
+    if (localStream && !isLocalFailed()) {
+      return [localStream];
+    }
+    if (localStream || isLocalPath(episode?.link)) {
+      throw new Error('Downloaded file not found on device');
+    }
+    return [];
+  }
+
+  // 2. Fetch streams from provider online (in background if localStream exists)
+  let remoteStreams: Stream[] = [];
+  try {
+    const controller = new AbortController();
+    const timeoutMs = 45000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const abort = () => controller.abort();
+    signal?.addEventListener('abort', abort);
+    if (signal?.aborted) abort();
+    if (canPromptWaf) guardWafPrompts(controller.signal, canPromptWaf);
+    try {
+      const data = await providerManager.getStream({
+        link: remoteLink,
+        type: routeParams?.type,
+        signal: controller.signal,
+        providerValue: routeParams?.providerValue || provider,
+      });
+
+      // Filter out excluded qualities
+      const excludedQualities = settingsStorage.getExcludedQualities() || [];
+      const filteredQualities = data?.filter(
+        streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
+      );
+
+      remoteStreams =
+        filteredQualities?.length > 0 ? filteredQualities : data || [];
+    } finally {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', abort);
+    }
+  } catch (err) {
+    if (localStream && !isLocalFailed()) {
+      console.warn(
+        'Remote stream refresh failed; using local downloaded file:',
+        err,
+      );
+      return [localStream];
+    }
+    throw err;
+  }
+
+  let finalStreams = remoteStreams;
+  if (localStream && !isLocalFailed()) {
+    finalStreams = [localStream, ...remoteStreams];
+  }
+
+  if (!finalStreams || finalStreams.length === 0) {
+    if (localStream) {
+      return [localStream];
+    }
+    throw new Error('No streams available');
+  }
+
+  return finalStreams;
+};
+
 export const useStream = ({
   activeEpisode,
   routeParams,
@@ -430,115 +584,22 @@ export const useStream = ({
     error,
     refetch,
   } = useQuery<Stream[], Error>({
-    queryKey: [
-      'stream',
-      activeEpisode?.id || activeEpisode?.link || activeEpisode?.title,
-      routeParams?.type,
-      provider,
-    ],
-    queryFn: async () => {
-      if (!activeEpisode?.link && !activeEpisode?.id && !activeEpisode?.title) {
-        return [];
-      }
-
-      if (routeParams?.externalVideo) return [externalVideoStream(routeParams)!];
-      if (routeParams?.localContent) {
-        return isLocalPath(activeEpisode?.link)
-          ? [{server: 'Local file', link: activeEpisode.link, type: 'local'}]
-          : [];
-      }
-
-      console.log('Fetching stream for:', activeEpisode);
-
-      // 1. Check for downloaded content first
-      const downloadedPath = await findDownloadedFileForMedia(
-        activeEpisode,
+    queryKey: getStreamQueryKey(activeEpisode, routeParams, provider),
+    queryFn: () =>
+      fetchStreamList({
+        episode: activeEpisode,
         routeParams,
-      );
-      const localStream: Stream | null = downloadedPath
-        ? { server: 'Downloaded', link: downloadedPath, type: 'mp4' }
-        : null;
-
-      // Start a discovered download before waiting for optional online servers.
-      // A fetch from a previous episode must not replace the current selection.
-      if (localStream && activeEpisodeKeyRef.current === activeEpisodeKey) {
-        setSelectedStream(current => current.link ? current : localStream);
-      }
-
-      let remoteLink =
-        (!isLocalPath(activeEpisode?.link) && activeEpisode?.link) ||
-        activeEpisode?.sourceLink;
-
-      if (!remoteLink && downloadedPath) {
-        const allDownloads = Object.values(
-          useDownloadsStore.getState().downloads,
-        );
-        const match = allDownloads.find(d => d.filePath === downloadedPath);
-        if (match?.sourceLink && !isLocalPath(match.sourceLink)) {
-          remoteLink = match.sourceLink;
-        }
-      }
-
-      if (!remoteLink) {
-        if (localStream && !localFailedRef.current) {
-          return [localStream];
-        }
-        if (localStream || isLocalPath(activeEpisode?.link)) {
-          throw new Error('Downloaded file not found on device');
-        }
-        return [];
-      }
-
-      // 2. Fetch streams from provider online (in background if localStream exists)
-      let remoteStreams: Stream[] = [];
-      try {
-        const controller = new AbortController();
-        const timeoutMs = 45000;
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-          const data = await providerManager.getStream({
-            link: remoteLink,
-            type: routeParams?.type,
-            signal: controller.signal,
-            providerValue: routeParams?.providerValue || provider,
-          });
-
-          // Filter out excluded qualities
-          const excludedQualities = settingsStorage.getExcludedQualities() || [];
-          const filteredQualities = data?.filter(
-            streamItem => !excludedQualities.includes(streamItem?.quality + 'p'),
-          );
-
-          remoteStreams =
-            filteredQualities?.length > 0 ? filteredQualities : data || [];
-        } finally {
-          clearTimeout(timeoutId);
-        }
-      } catch (err) {
-        if (localStream && !localFailedRef.current) {
-          console.warn(
-            'Remote stream refresh failed; using local downloaded file:',
-            err,
-          );
-          return [localStream];
-        }
-        throw err;
-      }
-
-      let finalStreams = remoteStreams;
-      if (localStream && !localFailedRef.current) {
-        finalStreams = [localStream, ...remoteStreams];
-      }
-
-      if (!finalStreams || finalStreams.length === 0) {
-        if (localStream) {
-          return [localStream];
-        }
-        throw new Error('No streams available');
-      }
-
-      return finalStreams;
-    },
+        provider,
+        isLocalFailed: () => localFailedRef.current,
+        // A fetch from a previous episode must not replace the current selection.
+        onLocalStream: localStream => {
+          if (activeEpisodeKeyRef.current === activeEpisodeKey) {
+            setSelectedStream(current =>
+              current.link ? current : localStream,
+            );
+          }
+        },
+      }),
     enabled:
       enabled &&
       !routeParams?.localContent &&
@@ -549,16 +610,7 @@ export const useStream = ({
     initialData: () => localPlaceholder,
     initialDataUpdatedAt: localPlaceholder ? 0 : undefined,
     placeholderData: localPlaceholder,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: (failureCount, streamFailure) => {
-      if (streamFailure.message?.includes('WAF')) return false;
-      if (failureCount >= 2) {
-        return false;
-      }
-      return true;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    ...streamQueryOptions,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });

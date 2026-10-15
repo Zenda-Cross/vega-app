@@ -128,6 +128,7 @@ import {
   shouldAutoPlayNext,
 } from '../../lib/player/autoNext';
 import {useSleepTimer} from '../../lib/hooks/useSleepTimer';
+import {useNextEpisodePrefetch} from '../../lib/hooks/useNextEpisodePrefetch';
 import {
   SLEEP_TIMER_OPTIONS,
   formatSleepRemaining,
@@ -1133,10 +1134,41 @@ const Player = ({route}: Props): React.JSX.Element => {
     remoteSuspended: autoNextVisible,
   });
 
+  const currentEpisodeIndex = useMemo(() => {
+    if (!route.params?.episodeList?.length || !activeEpisode) return -1;
+    return route.params.episodeList.findIndex(
+      ep =>
+        (activeEpisode?.id && ep?.id && activeEpisode.id === ep.id) ||
+        (activeEpisode?.link && ep?.link && activeEpisode.link === ep.link) ||
+        (activeEpisode?.sourceLink &&
+          ep?.sourceLink &&
+          activeEpisode.sourceLink === ep.sourceLink) ||
+        activeEpisode === ep,
+    );
+  }, [activeEpisode, route.params?.episodeList]);
+
+  const hasNextEpisode = useMemo(() => {
+    return (
+      currentEpisodeIndex >= 0 &&
+      currentEpisodeIndex < (route.params?.episodeList?.length || 0) - 1
+    );
+  }, [currentEpisodeIndex, route.params?.episodeList]);
+
+  const prefetchNextEpisode = useNextEpisodePrefetch({
+    activeEpisode,
+    nextEpisode: hasNextEpisode
+      ? route.params.episodeList[currentEpisodeIndex + 1]
+      : undefined,
+    routeParams: route.params,
+    provider: provider.value,
+    enabled: localDecision === 'online',
+  });
+
   const handleProgressWithTime = useCallback(
     (e: {currentTime: number; seekableDuration: number}) => {
       handleProgress(e);
       checkSleepTimer();
+      prefetchNextEpisode(e.currentTime, e.seekableDuration);
       playbackTimeRef.current = e.currentTime;
       if (liveTimelineRef.current) {
         setCurrentPlaybackTime(e.currentTime);
@@ -1152,7 +1184,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         setCurrentPlaybackTime(e.currentTime);
       }
     },
-    [handleProgress, videoPositionRef, checkSleepTimer],
+    [handleProgress, videoPositionRef, checkSleepTimer, prefetchNextEpisode],
   );
 
   // The TV timeline shows the running time, so it needs every progress tick.
@@ -1771,26 +1803,6 @@ const Player = ({route}: Props): React.JSX.Element => {
     route.params?.episodeList,
     route.params?.providerValue,
   ]);
-
-  const currentEpisodeIndex = useMemo(() => {
-    if (!route.params?.episodeList?.length || !activeEpisode) return -1;
-    return route.params.episodeList.findIndex(
-      ep =>
-        (activeEpisode?.id && ep?.id && activeEpisode.id === ep.id) ||
-        (activeEpisode?.link && ep?.link && activeEpisode.link === ep.link) ||
-        (activeEpisode?.sourceLink &&
-          ep?.sourceLink &&
-          activeEpisode.sourceLink === ep.sourceLink) ||
-        activeEpisode === ep,
-    );
-  }, [activeEpisode, route.params?.episodeList]);
-
-  const hasNextEpisode = useMemo(() => {
-    return (
-      currentEpisodeIndex >= 0 &&
-      currentEpisodeIndex < (route.params?.episodeList?.length || 0) - 1
-    );
-  }, [currentEpisodeIndex, route.params?.episodeList]);
 
   const handleVideoEnd = useCallback(() => {
     if (consumeEpisodeEnd()) return;
