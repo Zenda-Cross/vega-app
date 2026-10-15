@@ -132,6 +132,12 @@ import {
   formatSleepRemaining,
   getSleepOptionLabel,
 } from '../../lib/player/sleepTimer';
+import {
+  NO_PLAYBACK_RETRY,
+  decidePlaybackError,
+  getReloadStartMs,
+  markPlaybackLoaded,
+} from '../../lib/player/playbackErrorRetry';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -1347,12 +1353,13 @@ const Player = ({route}: Props): React.JSX.Element => {
   }, [videoPositionRef, watchedDuration]);
 
   // A server switch continues from the live position, not the saved one.
-  const {getStartPosition, markStreamLoaded} = useStreamResumePosition({
-    episodeKey: getEpisodeIdentity(activeEpisode),
-    stream: selectedStream,
-    savedPosition: watchedDuration,
-    videoPositionRef,
-  });
+  const {getStartPosition, markStreamLoaded, keepPosition} =
+    useStreamResumePosition({
+      episodeKey: getEpisodeIdentity(activeEpisode),
+      stream: selectedStream,
+      savedPosition: watchedDuration,
+      videoPositionRef,
+    });
 
   // Selected tracks, reset to the defaults whenever the stream changes
   const {
@@ -1784,6 +1791,15 @@ const Player = ({route}: Props): React.JSX.Element => {
   selectedStreamRef.current = selectedStream;
   const streamDataRef = useRef(streamData);
   streamDataRef.current = streamData;
+  // A server that already played is reloaded where it stopped once before an
+  // error moves playback to the next server.
+  const playbackRetryRef = useRef(NO_PLAYBACK_RETRY);
+  const [reloadStart, setReloadStart] = useState<{
+    stream: unknown;
+    ms: number;
+  } | null>(null);
+  const reloadStartMs =
+    reloadStart?.stream === selectedStream ? reloadStart.ms : undefined;
 
   const handleVideoError = useCallback(
     (e: any) => {
@@ -1813,6 +1829,30 @@ const Player = ({route}: Props): React.JSX.Element => {
         return;
       }
 
+      const stream = selectedStreamRef.current;
+      if (!isTorrentStream(stream) && !isLocalPath(stream?.link)) {
+        const {action, state} = decidePlaybackError(
+          playbackRetryRef.current,
+          stream,
+          e,
+          Date.now(),
+        );
+        playbackRetryRef.current = state;
+        if (action === 'retry') {
+          const position = videoPositionRef.current.position;
+          keepPosition(position);
+          setReloadStart(prev => ({
+            stream,
+            ms: getReloadStartMs(
+              position,
+              prev?.stream === stream ? prev.ms : undefined,
+            ),
+          }));
+          ToastAndroid.show('Connection lost, retrying', ToastAndroid.SHORT);
+          return;
+        }
+      }
+
       if (!switchToNextStream()) {
         ToastAndroid.show(
           'Video could not be played, try again later',
@@ -1825,12 +1865,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     [
       activeEpisodeKey,
       clearLocalVideoAssociation,
+      keepPosition,
       markStreamsOnline,
       navigation,
       route.params.localContent,
       setSelectedStream,
       setShowControls,
       switchToNextStream,
+      videoPositionRef,
     ],
   );
 
@@ -2798,6 +2840,11 @@ const Player = ({route}: Props): React.JSX.Element => {
         setTextTracks(e.textTracks);
       }
       videoLoadedRef.current = true;
+      playbackRetryRef.current = markPlaybackLoaded(
+        playbackRetryRef.current,
+        selectedStreamRef.current,
+        Date.now(),
+      );
       const torrentHash = activeTorrentRef.current;
       if (torrentHash && Number(e?.duration) > 0) {
         torrentManager
@@ -2842,7 +2889,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           (isTorrentStream(selectedStream)
             ? processedStreamUrl
             : selectedStream.link) || '',
-        startPosition: torrentStartMs,
+        startPosition: torrentStartMs ?? reloadStartMs,
         bufferConfig: {
           // Sizes decide how much is buffered (patched native load control);
           // the long time limits only stop low-bitrate video buffering forever.
@@ -2960,6 +3007,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       handleVideoSeek,
       processedStreamUrl,
       torrentStartMs,
+      reloadStartMs,
       enableSwipeGesture,
       hideSeekButtons,
       showControls,
