@@ -5,7 +5,12 @@ import PlayerMenuRow from '../src/components/PlayerMenuRow';
 import type {Stream} from '../src/lib/providers/types';
 
 const mockRowRender = jest.fn();
-jest.mock('../src/lib/tv/constants', () => ({isTV: false}));
+let mockIsTV = false;
+jest.mock('../src/lib/tv/constants', () => ({
+  get isTV() {
+    return mockIsTV;
+  },
+}));
 jest.mock('../src/components/PlayerMenuRow', () => {
   const ReactModule = require('react');
   return {
@@ -44,7 +49,10 @@ const props = {
   onTVFocus: jest.fn(),
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  mockIsTV = false;
+  jest.clearAllMocks();
+});
 
 it('mounts a small visible server window instead of all 200 rows on opening', () => {
   let tree!: renderer.ReactTestRenderer;
@@ -97,5 +105,80 @@ it('preserves stream objects and quality indexes when selecting visible rows', (
   expect(props.onSelectQuality).toHaveBeenCalledWith(1000);
   select('Local video');
   expect(props.onSelectLocal).toHaveBeenCalledTimes(1);
+  act(() => tree.unmount());
+});
+
+const tvStreams = streams.slice(0, 2);
+
+const rowByTitle = (tree: renderer.ReactTestRenderer, title: string) =>
+  tree.root.findAllByType(PlayerMenuRow).find(row => row.props.title === title)!;
+
+it('focuses the first online server when a local file is selected', () => {
+  mockIsTV = true;
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {
+    tree = renderer.create(
+      <PlayerSourceMenu
+        {...props}
+        streams={tvStreams}
+        selectedUrl="file:///downloads/movie.mp4"
+        isLocal
+      />,
+    );
+  });
+  const first = rowByTitle(tree, 'Server 0');
+  const second = rowByTitle(tree, 'Server 1');
+  expect(first.props.ref).toBe(props.preferredRef);
+  expect(first.props.hasTVPreferredFocus).toBe(true);
+  expect(first.props.selected).toBe(false);
+  expect(second.props.hasTVPreferredFocus).toBe(false);
+  expect(rowByTitle(tree, 'Local video').props.selected).toBe(true);
+  act(() => first.props.onPress());
+  expect(props.onSelectStream).toHaveBeenCalledWith(tvStreams[0]);
+  act(() => tree.unmount());
+});
+
+it('keeps focus and selection on the matching online server', () => {
+  mockIsTV = true;
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {
+    tree = renderer.create(
+      <PlayerSourceMenu
+        {...props}
+        streams={tvStreams}
+        selectedUrl={tvStreams[1].link}
+        isLocal={false}
+      />,
+    );
+  });
+  const first = rowByTitle(tree, 'Server 0');
+  const second = rowByTitle(tree, 'Server 1');
+  expect(second.props.ref).toBe(props.preferredRef);
+  expect(second.props.hasTVPreferredFocus).toBe(true);
+  expect(second.props.selected).toBe(true);
+  expect(first.props.hasTVPreferredFocus).toBe(false);
+  expect(first.props.selected).toBe(false);
+  act(() => tree.unmount());
+});
+
+it('assigns no preferred server row when the server list is empty', () => {
+  mockIsTV = true;
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {
+    tree = renderer.create(
+      <PlayerSourceMenu
+        {...props}
+        streams={[]}
+        selectedUrl=""
+        isLocal={false}
+        loading
+      />,
+    );
+  });
+  const rows = tree.root.findAllByType(PlayerMenuRow);
+  expect(rows.some(row => row.props.ref === props.preferredRef)).toBe(false);
+  expect(rows.some(row => row.props.hasTVPreferredFocus)).toBe(false);
+  act(() => rowByTitle(tree, '720p').props.onPress());
+  expect(props.onSelectQuality).toHaveBeenCalledWith(1);
   act(() => tree.unmount());
 });
