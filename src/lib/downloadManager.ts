@@ -233,7 +233,7 @@ const getQueuedDownloads = (): DownloadItem[] =>
     );
 
 export const scheduleQueuedDownloads = async (): Promise<void> => {
-  if (schedulerRunning) {
+  if (schedulerRunning || useDownloadsStore.getState().storageFullHold) {
     return;
   }
   schedulerRunning = true;
@@ -271,6 +271,7 @@ export const startQueuedDownloadNow = async (
   if (record.status !== 'queued' || !record.downloadLocation) {
     return;
   }
+  useDownloadsStore.setState({storageFullHold: false});
   await startOrResumeQueuedDownload(record);
 };
 
@@ -298,7 +299,6 @@ export const startDownload = async (
   store.markStarting(downloadId);
   const subscriptions: Array<() => void> = [];
   let destination: PreparedDownloadDestination | undefined;
-  let storageFull = false;
   const throwIfCancelled = (): void => {
     if (cancelledDownloads.has(downloadId)) {
       throw new Error('Download cancelled');
@@ -385,6 +385,15 @@ export const startDownload = async (
   } catch (error) {
     const cancelled = cancelledDownloads.has(downloadId);
     const pauseFailed = pauseFailedDownloads.has(downloadId);
+    const message = error instanceof Error ? error.message : String(error);
+    const pauseUnsupported = error instanceof DownloadPauseSupportError;
+    const storageFull = !cancelled && !pauseFailed && !pauseUnsupported &&
+      isStorageFullError(message);
+    if (storageFull) {
+      // Gate every scheduler entry point before asynchronous cleanup can let
+      // a concurrent completion/cancellation start more queued work.
+      useDownloadsStore.setState({storageFullHold: true});
+    }
     if (!backend.preservePartialOnFailure || !isSafDownloadLocation(location)) {
       await backend.cleanup(downloadId, record).catch(() => undefined);
     } else if (cancelled && destination) {
@@ -408,9 +417,6 @@ export const startDownload = async (
       return;
     }
 
-    const message = error instanceof Error ? error.message : String(error);
-    const pauseUnsupported = error instanceof DownloadPauseSupportError;
-    storageFull = !pauseUnsupported && isStorageFullError(message);
     store.markError(downloadId, {
       code: pauseUnsupported
         ? 'PAUSE_UNSUPPORTED'
@@ -437,9 +443,7 @@ export const startDownload = async (
     pauseFailedDownloads.delete(downloadId);
     lastNotificationAt.delete(downloadId);
     downloadNotificationColors.delete(downloadId);
-    if (!storageFull) {
-      await scheduleQueuedDownloads();
-    }
+    await scheduleQueuedDownloads();
     await notificationService
       .stopForegroundTask(downloadId)
       .catch(() => undefined);
@@ -510,6 +514,7 @@ export const resumeDownload = async (downloadId: string): Promise<void> => {
   if (!backend.resume || !record.canResume || record.status !== 'paused') {
     return;
   }
+  useDownloadsStore.setState({storageFullHold: false});
   // With no live job (for example after an app restart) the backend has
   // nothing to resume, so start the download again from the queue.
   if (!activeDownloads.has(downloadId)) {
@@ -608,6 +613,7 @@ export const retryDownload = async (downloadId: string): Promise<void> => {
     return;
   }
   settingsStorage.setDownloadLocation(location);
+  useDownloadsStore.setState({storageFullHold: false});
   useDownloadsStore.getState().updateDownload(downloadId, {
     downloadLocation: location,
     errorCode: undefined,

@@ -55,6 +55,7 @@ jest.mock('../src/lib/storage', () => ({
   settingsStorage: {
     getDownloadLocationConfig: () => undefined,
     getDownloadConcurrency: () => mockDownloadConcurrency,
+    setDownloadConcurrency: (value: number) => { mockDownloadConcurrency = value; },
     getPrimaryColor: () => '#ffffff',
     setDownloadLocation: jest.fn(),
   },
@@ -88,6 +89,7 @@ import {
   scheduleQueuedDownloads,
   startDownload,
   startQueuedDownloadNow,
+  updateDownloadConcurrency,
 } from '../src/lib/downloadManager';
 import {notificationService} from '../src/lib/services/Notification';
 import useDownloadsStore from '../src/lib/zustand/downloadsStore';
@@ -125,7 +127,7 @@ const enqueueDownload = () =>
 describe('download manager foreground lifecycle', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useDownloadsStore.setState({downloads: {}});
+    useDownloadsStore.setState({downloads: {}, storageFullHold: false});
     mockBackendStart.mockResolvedValue(undefined);
     mockBackendPause.mockResolvedValue(undefined);
     mockBackendResume.mockResolvedValue(undefined);
@@ -735,6 +737,96 @@ describe('download manager foreground lifecycle', () => {
       'completed',
     );
   });
+
+  it.each(['complete', 'cancel'] as const)(
+    'keeps the queue held when a concurrent download ends by %s',
+    async ending => {
+      mockDownloadConcurrency = 2;
+      let finishSecond!: () => void;
+      mockBackendStart.mockImplementation(async ({record}: any) => {
+        if (record.id === 'second') {
+          await new Promise<void>(resolve => { finishSecond = resolve; });
+          return;
+        }
+        throw new Error('ENOSPC: no space left on device');
+      });
+      enqueueThree();
+      await scheduleQueuedDownloads();
+      await settle();
+      expect(useDownloadsStore.getState().storageFullHold).toBe(true);
+      if (ending === 'cancel') await cancelDownload('second');
+      finishSecond();
+      await settle();
+      expect(useDownloadsStore.getState().downloads.third.status).toBe('queued');
+      expect(mockBackendStart).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('sets the hold before asynchronous cleanup can release another slot', async () => {
+    mockDownloadConcurrency = 2;
+    let finishSecond!: () => void;
+    let finishCleanup!: () => void;
+    mockBackendStart.mockImplementation(async ({record}: any) => {
+      if (record.id === 'second') {
+        await new Promise<void>(resolve => { finishSecond = resolve; });
+        return;
+      }
+      throw new Error('ENOSPC: no space left on device');
+    });
+    mockBackendCleanup.mockImplementationOnce(async () => {
+      await new Promise<void>(resolve => { finishCleanup = resolve; });
+    });
+    enqueueThree();
+    await scheduleQueuedDownloads();
+    await settle();
+    expect(useDownloadsStore.getState().storageFullHold).toBe(true);
+    finishSecond();
+    await settle();
+    expect(mockBackendStart).toHaveBeenCalledTimes(2);
+    finishCleanup();
+    await settle();
+    expect(useDownloadsStore.getState().downloads.third.status).toBe('queued');
+  });
+
+  it('does not clear a storage hold when work is added or concurrency changes', async () => {
+    mockDownloadConcurrency = 1;
+    mockBackendStart.mockRejectedValue(new Error('ENOSPC'));
+    enqueueThree();
+    await scheduleQueuedDownloads();
+    await settle();
+    useDownloadsStore.getState().enqueueDownload({
+      id: 'fourth', title: 'Fourth', type: 'movie',
+      url: 'https://example.com/fourth.mp4', downloadLocation: location,
+    });
+    updateDownloadConcurrency(3);
+    await scheduleQueuedDownloads();
+    await settle();
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+    expect(useDownloadsStore.getState().storageFullHold).toBe(true);
+  });
+
+  it.each(['start now', 'resume'] as const)(
+    'releases the storage hold on explicit %s',
+    async action => {
+      mockDownloadConcurrency = 1;
+      mockBackendStart.mockRejectedValue(new Error('ENOSPC'));
+      enqueueThree();
+      await scheduleQueuedDownloads();
+      await settle();
+      mockBackendStart.mockResolvedValue(undefined);
+      if (action === 'resume') {
+        useDownloadsStore.getState().updateDownload('second', {
+          status: 'paused', canResume: true,
+        });
+        await resumeDownload('second');
+      } else {
+        await startQueuedDownloadNow('second');
+      }
+      await settle();
+      expect(useDownloadsStore.getState().storageFullHold).toBe(false);
+      expect(useDownloadsStore.getState().downloads.third.status).toBe('completed');
+    },
+  );
 
   it('moves on to the next queued download after other errors', async () => {
     mockDownloadConcurrency = 1;
