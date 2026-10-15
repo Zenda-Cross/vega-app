@@ -73,6 +73,7 @@ it('uses Cinemeta episode names when no title field is supplied', async () => {
             season: 1,
             episode: 1,
             name: 'eps1.0_hellofriend.mov',
+            thumbnail: 'https://episodes/1.jpg',
             overview: 'Full overview',
           },
         ],
@@ -84,6 +85,7 @@ it('uses Cinemeta episode names when no title field is supplied', async () => {
     season: 1,
     episode: 1,
     title: 'eps1.0_hellofriend.mov',
+    thumbnail: 'https://episodes/1.jpg',
     overview: 'Full overview',
   });
 });

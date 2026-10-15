@@ -1,5 +1,6 @@
 import {
   finalizeDownloadOutput,
+  discardDownloadDestination,
   isDownloadDestinationEmpty,
   PreparedDownloadDestination,
   prepareDownloadDestination,
@@ -30,9 +31,12 @@ import {mixHex} from '../theme/seeds';
 import {formatDownloadProgressLabel} from './downloadFormatting';
 import {
   canRefreshDownloadSource,
+  fetchDownloadSourceStreams,
   isExpiredLinkError,
   refreshDownloadSource,
 } from './downloadSourceRefresh';
+import {canTryNextDownloadServer, downloadServerKey, getNextDownloadServer} from './downloadServerFallback';
+import type {Stream} from './providers/types';
 
 const activeDownloads = new Set<string>();
 const sourceRefreshControllers = new Map<string, AbortController>();
@@ -245,6 +249,7 @@ const getQueuedDownloads = (): DownloadItem[] =>
 const startBackendWithFreshLink = async (
   backend: DownloadBackend,
   context: DownloadBackendContext,
+  onStreams?: (streams: Stream[] | undefined) => void,
 ): Promise<void> => {
   try {
     await startBackendWithRetry(backend, context);
@@ -277,7 +282,7 @@ const startBackendWithFreshLink = async (
     sourceRefreshControllers.set(id, controller);
     let fresh: Awaited<ReturnType<typeof refreshDownloadSource>>;
     try {
-      fresh = await refreshDownloadSource(context.record, controller.signal);
+      fresh = await refreshDownloadSource(context.record, controller.signal, onStreams);
     } finally {
       if (sourceRefreshControllers.get(id) === controller) {
         sourceRefreshControllers.delete(id);
@@ -352,7 +357,7 @@ export const startDownload = async (
     return;
   }
 
-  const record = getRecord(downloadId);
+  let record = getRecord(downloadId);
   const backend = getDownloadBackend(record.sourceType);
   const store = useDownloadsStore.getState();
   activeDownloads.add(downloadId);
@@ -367,6 +372,16 @@ export const startDownload = async (
       throw new Error('Download cancelled');
     }
   };
+  const prepareDestination = (existingFinalDocumentUri?: string) =>
+    prepareDownloadDestination({
+      downloadId,
+      location,
+      fileName: getOutputName(record),
+      fileType: record.videoType || 'mp4',
+      directToSaf: backend.directToSaf && isSafDownloadLocation(location),
+      existingFinalDocumentUri,
+      outputDirectoryNames: getOutputDirectoryNames(record),
+    });
 
   try {
     try {
@@ -406,22 +421,92 @@ export const startDownload = async (
         }
       }),
     );
-    destination = await prepareDownloadDestination({
-      downloadId,
-      location,
-      fileName: getOutputName(record),
-      fileType: record.videoType || 'mp4',
-      directToSaf: backend.directToSaf && isSafDownloadLocation(location),
-      existingFinalDocumentUri: record.finalDocumentUri,
-      outputDirectoryNames: getOutputDirectoryNames(record),
-    });
+    destination = await prepareDestination(record.finalDocumentUri);
     throwIfCancelled();
     store.updateDownload(downloadId, {
       stagingPath: destination.stagingPath,
       finalDocumentUri: destination.directFinalDocumentUri,
       downloadLocation: location,
     });
-    await startBackendWithFreshLink(backend, {record, destination});
+    const attemptedServers = new Set<string>();
+    const attemptedUrls = new Set<string>();
+    let alternativesLoaded = false;
+    let alternatives: Stream[] | undefined;
+    let firstServer = true;
+    const rememberAlternatives = (streams: Stream[] | undefined) => {
+      if (alternativesLoaded) return;
+      alternativesLoaded = true;
+      alternatives = streams;
+    };
+    while (true) {
+      attemptedServers.add(downloadServerKey(record.server));
+      attemptedUrls.add(record.url);
+      try {
+        if (firstServer) {
+          await startBackendWithFreshLink(backend, {record, destination}, rememberAlternatives);
+        } else {
+          // Alternatives already came from this fresh provider response.
+          await startBackendWithRetry(backend, {record, destination});
+        }
+        break;
+      } catch (error) {
+        const failedRecord = store.getDownload(downloadId);
+        if (!settingsStorage.isAutoDownloadServerFallbackEnabled() ||
+          !failedRecord || !canTryNextDownloadServer(failedRecord, error)) throw error;
+        record = failedRecord;
+        attemptedUrls.add(record.url);
+        const canContinue = () => {
+          const current = store.getDownload(downloadId);
+          return current && current.createdAt === failedRecord.createdAt &&
+            current.url === failedRecord.url && canTryNextDownloadServer(current, error) &&
+            settingsStorage.isAutoDownloadServerFallbackEnabled() &&
+            (current.status === 'starting' || current.status === 'downloading') &&
+            !cancelledDownloads.has(downloadId) && !pauseFailedDownloads.has(downloadId) &&
+            !useDownloadsStore.getState().storageFullHold;
+        };
+        if (!canContinue()) throw error;
+        if (!alternativesLoaded) {
+          const controller = new AbortController();
+          sourceRefreshControllers.set(downloadId, controller);
+          try {
+            rememberAlternatives(await fetchDownloadSourceStreams(record, controller.signal));
+          } finally {
+            if (sourceRefreshControllers.get(downloadId) === controller) {
+              sourceRefreshControllers.delete(downloadId);
+            }
+          }
+        }
+        if (!canContinue() || !alternatives) throw error;
+        const next = getNextDownloadServer(alternatives, record, attemptedServers, attemptedUrls);
+        if (!next) throw error;
+
+        // Different hosts may serve different encodes/byte layouts. Remove
+        // every old partial and verify SAF deletion before creating a new output.
+        await backend.cleanup(downloadId, record);
+        if (!canContinue()) throw error;
+        await discardDownloadDestination(downloadId, destination);
+        if (!canContinue()) throw error;
+        destination = await prepareDestination();
+        if (!canContinue()) throw error;
+        store.updateDownload(downloadId, {
+          url: next.link,
+          server: next.server,
+          headers: next.headers,
+          skip: next.skip || record.skip,
+          downloadedBytes: 0,
+          totalBytes: 0,
+          speed: 0,
+          backendJobId: undefined,
+          status: 'starting',
+          canPause: false,
+          canResume: false,
+          stagingPath: destination.stagingPath,
+          finalDocumentUri: destination.directFinalDocumentUri,
+        });
+        record = getRecord(downloadId);
+        firstServer = false;
+      }
+    }
     throwIfCancelled();
 
     store.markFinalizing(downloadId);

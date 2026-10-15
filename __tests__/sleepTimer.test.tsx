@@ -123,6 +123,37 @@ describe('useSleepTimer', () => {
     expect(onExpire).not.toHaveBeenCalled();
   });
 
+  it('adjusts the existing deadline by exactly five minutes, preserving elapsed seconds', () => {
+    act(() => hook.selectSleepOption(15));
+    jest.setSystemTime(NOW + 90_000);
+    act(() => hook.adjustSleepMinutes(5));
+    expect(hook.sleepTimer.deadline).toBe(NOW + 20 * MINUTE);
+    expect(hook.sleepMinutesLeft).toBe(19);
+    act(() => hook.adjustSleepMinutes(-5));
+    expect(hook.sleepTimer.deadline).toBe(NOW + 15 * MINUTE);
+  });
+
+  it('starts from off, handles rapid adjustments, and turns off at zero', () => {
+    act(() => {
+      hook.adjustSleepMinutes(5);
+      hook.adjustSleepMinutes(5);
+    });
+    expect(hook.sleepMinutesLeft).toBe(10);
+    act(() => hook.adjustSleepMinutes(-15));
+    expect(hook.sleepTimer).toEqual(SLEEP_TIMER_OFF);
+    expect(onExpire).not.toHaveBeenCalled();
+  });
+
+  it('caps the timer at two hours and switches from episode mode to a minute timer', () => {
+    act(() => hook.selectSleepOption('episode'));
+    act(() => hook.adjustSleepMinutes(5));
+    expect(hook.sleepMinutesLeft).toBe(5);
+    expect(hook.consumeEpisodeEnd()).toBe(false);
+    act(() => hook.selectSleepOption(120));
+    act(() => hook.adjustSleepMinutes(5));
+    expect(hook.sleepMinutesLeft).toBe(120);
+  });
+
   it('consumes the episode end so auto next is skipped', () => {
     act(() => hook.selectSleepOption('episode'));
     jest.setSystemTime(NOW + 120 * MINUTE);

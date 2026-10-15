@@ -14,6 +14,7 @@ import {
   settingsStorage,
 } from '../../../lib/storage';
 import SettingsSliderRow from '../../../components/ui/SettingsSliderRow';
+import SettingsSwitchRow from '../../../components/ui/SettingsSwitchRow';
 import {useM3Colors, useM3HostTheme} from '../../../theme/M3PaletteContext';
 import {isTV} from '../../../lib/tv';
 import {TVFocusable} from '../../../components/tv/TVFocusable';
@@ -33,6 +34,9 @@ const DownloadConcurrencyPreference = ({
   );
   const [connections, setConnections] = useState(
     settingsStorage.getDownloadConnections(),
+  );
+  const [autoServerFallback, setAutoServerFallback] = useState(() =>
+    settingsStorage.isAutoDownloadServerFallbackEnabled(),
   );
   const prevConcurrencyRef = useRef(concurrency);
   const decreaseRef = useRef<View>(null);
@@ -217,13 +221,22 @@ const DownloadConcurrencyPreference = ({
           min={MIN_DOWNLOAD_CONNECTIONS}
           max={MAX_DOWNLOAD_CONNECTIONS}
           step={1}
-          divider={false}
           onValueChange={next => {
             setConnections(next);
           }}
           onValueChangeFinished={next =>
             settingsStorage.setDownloadConnections(next)
           }
+        />
+        <SettingsSwitchRow
+          title="Automatically try next server"
+          description="Try another compatible server if a download fails before 1%"
+          value={autoServerFallback}
+          divider={false}
+          onValueChange={next => {
+            settingsStorage.setAutoDownloadServerFallbackEnabled(next);
+            setAutoServerFallback(next);
+          }}
         />
       </Surface>
     </View>

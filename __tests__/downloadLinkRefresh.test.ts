@@ -1,6 +1,13 @@
 const mockBackendStart = jest.fn();
+let mockAutoServerFallback = true;
 const mockGetStream = jest.fn();
 const mockDestinationEmpty = jest.fn();
+const mockDiscardDestination = jest.fn();
+const mockBackendCleanup = jest.fn();
+const mockPrepareDestination = jest.fn(async () => ({
+  stagingDirectory: '/cache/downloads/episode',
+  stagingPath: '/cache/downloads/episode/Episode.mp4.part',
+}));
 
 jest.mock('../src/lib/downloadBackends/registry', () => ({
   getDownloadBackend: () => ({
@@ -8,7 +15,7 @@ jest.mock('../src/lib/downloadBackends/registry', () => ({
     pause: jest.fn(async () => undefined),
     resume: jest.fn(async () => undefined),
     cancel: jest.fn(async () => undefined),
-    cleanup: jest.fn(async () => undefined),
+    cleanup: (...args: unknown[]) => mockBackendCleanup(...args),
   }),
 }));
 
@@ -18,10 +25,8 @@ jest.mock('../src/lib/services/ProviderManager', () => ({
 
 jest.mock('../src/lib/downloadDestination', () => ({
   isDownloadDestinationEmpty: (...args: unknown[]) => mockDestinationEmpty(...args),
-  prepareDownloadDestination: async () => ({
-    stagingDirectory: '/cache/downloads/episode',
-    stagingPath: '/cache/downloads/episode/Episode.mp4.part',
-  }),
+  discardDownloadDestination: (...args: unknown[]) => mockDiscardDestination(...args),
+  prepareDownloadDestination: (...args: unknown[]) => mockPrepareDestination(...args),
   finalizeDownloadOutput: async () => ({
     filePath: 'content://downloads/Episode.mp4',
     finalDocumentUri: 'content://downloads/Episode.mp4',
@@ -57,6 +62,7 @@ jest.mock('../src/lib/storage', () => ({
   settingsStorage: {
     getDownloadLocationConfig: () => undefined,
     getDownloadConcurrency: () => 2,
+    isAutoDownloadServerFallbackEnabled: () => mockAutoServerFallback,
     getPrimaryColor: () => '#ffffff',
     setDownloadLocation: jest.fn(),
   },
@@ -118,6 +124,10 @@ const startedUrls = () =>
 describe('expired download links', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAutoServerFallback = true;
+    mockBackendStart.mockReset().mockResolvedValue(undefined);
+    mockBackendCleanup.mockReset().mockResolvedValue(undefined);
+    mockDiscardDestination.mockReset().mockResolvedValue(undefined);
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
     useDownloadsStore.setState({downloads: {}, storageFullHold: false});
@@ -135,7 +145,40 @@ describe('expired download links', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it('fetches a fresh link from the same server and starts again', async () => {
+  it('does not look up another server when automatic fallback is disabled', async () => {
+    mockAutoServerFallback = false;
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+
+    await expect(startDownload('episode', location)).rejects.toThrow('HTTP 500');
+
+    expect(mockGetStream).not.toHaveBeenCalled();
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+  });
+
+  it('respects disabling fallback while an alternate-server lookup is pending', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+    let finishLookup!: (streams: unknown[]) => void;
+    mockGetStream.mockImplementationOnce(() => new Promise(resolve => {
+      finishLookup = resolve;
+    }));
+    const start = startDownload('episode', location);
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+    mockAutoServerFallback = false;
+    finishLookup([{server: 'Other', link: 'https://other.example/video.mkv', type: 'mkv'}]);
+
+    await expect(start).rejects.toThrow('HTTP 500');
+
+    expect(mockPrepareDestination).toHaveBeenCalledTimes(1);
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([true, false])('refreshes the same server with automatic fallback set to %s', async enabled => {
+    mockAutoServerFallback = enabled;
     mockBackendStart
       .mockRejectedValueOnce(new Error('HTTP 403'))
       .mockResolvedValueOnce(undefined);
@@ -165,7 +208,7 @@ describe('expired download links', () => {
   it('fails with the original error when the server is not listed again', async () => {
     mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
     mockGetStream.mockResolvedValue([
-      {server: 'GDFlix', link: 'https://other.example/x.mkv', type: 'mkv'},
+      {server: 'GDFlix', link: 'https://other.example/x.mp4', type: 'mp4'},
     ]);
     enqueueEpisode();
 
@@ -191,7 +234,10 @@ describe('expired download links', () => {
     expect(mockBackendStart).toHaveBeenCalledTimes(1);
   });
 
-  it('does not refresh after other errors or once data has arrived', async () => {
+  it('does not reuse the same server for nonexpired errors or switch after significant progress', async () => {
+    mockGetStream.mockResolvedValue([
+      {server: 'HubCloud', link: 'https://files.example/new.mkv', type: 'mkv'},
+    ]);
     mockBackendStart.mockRejectedValueOnce(new Error('HTTP 500'));
     enqueueEpisode();
     await expect(startDownload('episode', location)).rejects.toThrow();
@@ -203,7 +249,7 @@ describe('expired download links', () => {
     enqueueEpisode();
     await expect(startDownload('episode', location)).rejects.toThrow();
 
-    expect(mockGetStream).not.toHaveBeenCalled();
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
   });
 
   it('fetches a fresh link when an expired download is retried', async () => {
@@ -222,15 +268,22 @@ describe('expired download links', () => {
   });
 
   it('keeps the original URL when actual destination bytes cannot be ruled out', async () => {
+    mockGetStream.mockResolvedValue([
+      {server: 'HubCloud', link: 'https://files.example/new.mkv', type: 'mkv'},
+    ]);
     mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
     mockDestinationEmpty.mockResolvedValue(false);
     enqueueEpisode();
     await expect(startDownload('episode', location)).rejects.toThrow('HTTP 403');
-    expect(mockGetStream).not.toHaveBeenCalled();
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
     expect(startedUrls()).toEqual(['https://files.example/old.mkv']);
   });
 
   it('checks the destination again after awaiting the provider', async () => {
+    mockGetStream.mockResolvedValue([
+      {server: 'HubCloud', link: 'https://files.example/new.mkv', type: 'mkv'},
+    ]);
     mockBackendStart.mockRejectedValue(new Error('HTTP 403'));
     mockDestinationEmpty.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     enqueueEpisode();
@@ -287,6 +340,110 @@ describe('expired download links', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('switches servers below one percent and resets partials before starting again', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockImplementationOnce(async ({record}) => {
+      useDownloadsStore.getState().updateProgress(record.id, 99, 10000, 10);
+      throw new Error('HTTP 500');
+    }).mockResolvedValueOnce(undefined);
+    await startDownload('episode', location);
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv', 'https://other.example/x.mkv']);
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+    expect(mockDiscardDestination).toHaveBeenCalledTimes(1);
+    expect(mockPrepareDestination).toHaveBeenCalledTimes(2);
+    expect(mockBackendStart.mock.calls[1][0].record).toMatchObject({
+      server: 'GDFlix', downloadedBytes: 0, totalBytes: 0,
+    });
+    expect(mockBackendCleanup.mock.invocationCallOrder[0]).toBeLessThan(mockDiscardDestination.mock.invocationCallOrder[0]);
+    expect(mockDiscardDestination.mock.invocationCallOrder[0]).toBeLessThan(mockBackendStart.mock.invocationCallOrder[1]);
+    expect(useDownloadsStore.getState().downloads.episode.status).toBe('completed');
+  });
+
+  it.each([[100, 10000], [101, 10000], [1, 0]])(
+    'does not switch at or above one percent or when nonzero progress is unknown (%s/%s)',
+    async (downloaded, total) => {
+      enqueueEpisode();
+      mockBackendStart.mockImplementationOnce(async ({record}) => {
+        useDownloadsStore.getState().updateProgress(record.id, downloaded, total, 0);
+        throw new Error('HTTP 500');
+      });
+      await expect(startDownload('episode', location)).rejects.toThrow('HTTP 500');
+      expect(mockGetStream).not.toHaveBeenCalled();
+      expect(mockDiscardDestination).not.toHaveBeenCalled();
+    },
+  );
+
+  it('tries each alternate server once without fetching the list repeatedly', async () => {
+    enqueueEpisode();
+    mockGetStream.mockResolvedValue([
+      {server: 'HubCloud', link: 'https://a/new.mkv', type: 'mkv'},
+      {server: 'B', link: 'https://b/video.mkv', type: 'mkv'},
+      {server: 'C', link: 'https://c/video.mkv', type: 'mkv'},
+    ]);
+    mockBackendStart.mockRejectedValueOnce(new Error('HTTP 500'))
+      .mockRejectedValueOnce(new Error('HTTP 500')).mockResolvedValueOnce(undefined);
+    await startDownload('episode', location);
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv', 'https://b/video.mkv', 'https://c/video.mkv']);
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+    expect(mockDiscardDestination).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops after exhausting compatible servers instead of looping', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+    await expect(startDownload('episode', location)).rejects.toThrow('HTTP 500');
+    expect(startedUrls()).toEqual(['https://files.example/old.mkv', 'https://other.example/x.mkv']);
+    expect(mockGetStream).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the queue on hold for storage exhaustion without trying a new server', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('ENOSPC'));
+    await expect(startDownload('episode', location)).rejects.toThrow('ENOSPC');
+    expect(mockGetStream).not.toHaveBeenCalled();
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
+    expect(useDownloadsStore.getState().storageFullHold).toBe(true);
+  });
+
+  it('does not start another server if partial cleanup cannot be verified', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+    mockDiscardDestination.mockRejectedValue(new Error('Unable to clear destination'));
+    await expect(startDownload('episode', location)).rejects.toThrow('Unable to clear destination');
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels an alternate-server lookup without starting another download', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+    mockGetStream.mockImplementation(() => new Promise(() => {}));
+    const start = startDownload('episode', location);
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    const signal = mockGetStream.mock.calls[0][0].signal as AbortSignal;
+    await cancelDownload('episode');
+    await start;
+    expect(signal.aborted).toBe(true);
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+    expect(useDownloadsStore.getState().downloads.episode).toBeUndefined();
+  });
+
+  it('does not create another destination when cancelled during partial cleanup', async () => {
+    enqueueEpisode();
+    mockBackendStart.mockRejectedValue(new Error('HTTP 500'));
+    let finishCleanup!: () => void;
+    mockBackendCleanup.mockImplementationOnce(() => new Promise<void>(resolve => { finishCleanup = resolve; }));
+    const start = startDownload('episode', location);
+    for (let i = 0; i < 5; i++) await new Promise(done => setImmediate(done));
+    await cancelDownload('episode');
+    finishCleanup();
+    await start;
+    expect(mockPrepareDestination).toHaveBeenCalledTimes(1);
+    expect(mockDiscardDestination).not.toHaveBeenCalled();
+    expect(mockBackendStart).toHaveBeenCalledTimes(1);
+    expect(useDownloadsStore.getState().downloads.episode).toBeUndefined();
   });
 
   it('never refreshes torrents or subtitles', async () => {

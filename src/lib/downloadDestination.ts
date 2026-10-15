@@ -177,6 +177,22 @@ export const cleanupDownloadStaging = async (
   }
 };
 
+// A different server must start from scratch. Do not rely on backend cleanup:
+// some backends intentionally ignore SAF deletion errors to preserve partials.
+export const discardDownloadDestination = async (
+  downloadId: string,
+  destination: PreparedDownloadDestination,
+): Promise<void> => {
+  await cleanupDownloadStaging(downloadId);
+  const uri = destination.directFinalDocumentUri;
+  if (uri && await downloadOutputExists(uri)) {
+    await FileSystem.StorageAccessFramework.deleteAsync(uri);
+    if (await downloadOutputExists(uri)) {
+      throw new Error('Unable to clear the previous download destination');
+    }
+  }
+};
+
 export const finalizeDownloadOutput = async ({
   downloadId,
   location,

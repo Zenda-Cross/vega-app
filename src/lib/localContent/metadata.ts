@@ -52,6 +52,8 @@ export async function fetchLocalMetadata(
                   ? v.name
                   : undefined,
             overview: typeof v.overview === 'string' ? v.overview : undefined,
+            thumbnail:
+              typeof v.thumbnail === 'string' ? v.thumbnail : undefined,
           }))
       : [],
   };

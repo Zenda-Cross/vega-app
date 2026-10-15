@@ -110,6 +110,11 @@ describe('settings defaults', () => {
     expect(mockNumberValues.get(SettingsKeys.PLAYBACK_SPEED)).toBe(1.5);
   });
 
+  it.each([0.25, 0.3, 0.75, 1.1, 1.35, 1.95, 2])('persists stepped playback speed %s', speed => {
+    settingsStorage.setPlaybackSpeed(speed);
+    expect(settingsStorage.getPlaybackSpeed()).toBe(speed);
+  });
+
   it('ignores playback speeds that the picker does not offer', () => {
     settingsStorage.setPlaybackSpeed(3);
     settingsStorage.setPlaybackSpeed(Number.NaN);
@@ -119,7 +124,7 @@ describe('settings defaults', () => {
   });
 
   it('falls back to 1x for invalid saved playback speeds', () => {
-    mockNumberValues.set(SettingsKeys.PLAYBACK_SPEED, 1.1);
+    mockNumberValues.set(SettingsKeys.PLAYBACK_SPEED, 1.13);
     expect(settingsStorage.getPlaybackSpeed()).toBe(1);
 
     mockNumberValues.set(SettingsKeys.PLAYBACK_SPEED, Number.NaN);

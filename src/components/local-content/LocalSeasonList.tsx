@@ -141,7 +141,12 @@ export default function LocalSeasonList({
                 backgroundColor: LEGACY_TERTIARY_BACKGROUND,
               }}>
               <EpisodeRowContent
-                thumbnail={<LocalVideoThumbnail uri={item.uri} />}
+                thumbnail={
+                  <LocalVideoThumbnail
+                    uri={item.uri}
+                    image={metadata?.thumbnail}
+                  />
+                }
                 title={getEpisodeLabel(item, title)}
                 description={metadata?.overview}
                 onShowDetails={

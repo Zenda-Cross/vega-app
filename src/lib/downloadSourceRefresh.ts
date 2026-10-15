@@ -58,13 +58,13 @@ export const pickRefreshedStream = (
 };
 
 /**
- * Asks the provider for the download's stream again. Returns the new link and
- * headers, or undefined when there is no matching stream or the request fails.
+ * Loads a bounded, cancellable server list for link refresh or server fallback.
+ * Returns undefined when the request fails or is cancelled.
  */
-export const refreshDownloadSource = async (
+export const fetchDownloadSourceStreams = async (
   record: DownloadItem,
   signal?: AbortSignal,
-): Promise<Pick<DownloadItem, 'url' | 'headers'> | undefined> => {
+): Promise<Stream[] | undefined> => {
   if (!canRefreshDownloadSource(record) || signal?.aborted) return undefined;
   const {providerManager} =
     require('./services/ProviderManager') as typeof import('./services/ProviderManager');
@@ -93,8 +93,7 @@ export const refreshDownloadSource = async (
       aborted,
     ]);
     if (controller.signal.aborted) return undefined;
-    const stream = pickRefreshedStream(streams || [], record);
-    return stream ? {url: stream.link, headers: stream.headers} : undefined;
+    return streams || [];
   } catch (error) {
     if (!controller.signal.aborted) {
       console.warn(`Unable to refresh the link of download ${record.id}:`, error);
@@ -105,4 +104,16 @@ export const refreshDownloadSource = async (
     signal?.removeEventListener('abort', abort);
     controller.signal.removeEventListener('abort', onAbort);
   }
+};
+
+export const refreshDownloadSource = async (
+  record: DownloadItem,
+  signal?: AbortSignal,
+  onStreams?: (streams: Stream[] | undefined) => void,
+): Promise<Pick<DownloadItem, 'url' | 'headers'> | undefined> => {
+  const streams = await fetchDownloadSourceStreams(record, signal);
+  onStreams?.(streams);
+  if (!streams || signal?.aborted) return undefined;
+  const stream = pickRefreshedStream(streams, record);
+  return stream ? {url: stream.link, headers: stream.headers} : undefined;
 };

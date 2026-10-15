@@ -7,6 +7,7 @@ import {
   isSleepDeadlineReached,
   shouldStopAtEpisodeEnd,
   startSleepTimer,
+  adjustSleepTimer,
 } from '../player/sleepTimer';
 
 export type SleepTimerReason = 'deadline' | 'episode';
@@ -48,6 +49,11 @@ export const useSleepTimer = (onExpire: (reason: SleepTimerReason) => void) => {
     setSleepMinutesLeft(getSleepMinutesLeft(state, now));
   }, [applySleepTimer]);
 
+  const adjustSleepMinutes = useCallback(
+    (delta: number) => applySleepTimer(adjustSleepTimer(timerRef.current, delta, Date.now())),
+    [applySleepTimer],
+  );
+
   /** Returns true when the timer stops playback here instead of auto next. */
   const consumeEpisodeEnd = useCallback(() => {
     if (!shouldStopAtEpisodeEnd(timerRef.current)) return false;
@@ -60,6 +66,7 @@ export const useSleepTimer = (onExpire: (reason: SleepTimerReason) => void) => {
     sleepTimer,
     sleepMinutesLeft,
     selectSleepOption,
+    adjustSleepMinutes,
     checkSleepTimer,
     consumeEpisodeEnd,
   };

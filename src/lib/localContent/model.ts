@@ -29,6 +29,7 @@ export interface LocalMetadata {
     episode: number;
     title?: string;
     overview?: string;
+    thumbnail?: string;
   }[];
 }
 

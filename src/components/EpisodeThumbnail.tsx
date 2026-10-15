@@ -5,9 +5,11 @@ import {Image, View} from 'react-native';
 export default function EpisodeThumbnail({
   uri,
   accentColor,
+  onError,
 }: {
   uri?: string;
   accentColor: string;
+  onError?: () => void;
 }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [uri]);
@@ -17,7 +19,10 @@ export default function EpisodeThumbnail({
       source={{uri}}
       resizeMode="cover"
       resizeMethod="resize"
-      onError={() => setFailed(true)}
+      onError={() => {
+        setFailed(true);
+        onError?.();
+      }}
       style={{borderRadius: 4, height: 56, width: 88}}
     />
   ) : (

@@ -80,12 +80,38 @@ import {
   getDownloadStagingDirectory,
   prepareDownloadDestination,
   isDownloadDestinationEmpty,
+  discardDownloadDestination,
 } from '../src/lib/downloadDestination';
 import * as FileSystem from 'expo-file-system/legacy';
 import {Platform} from 'react-native';
 import {getTVDefaultDownloadLocation} from '../src/lib/downloadLocation';
 
 describe('download destination service', () => {
+  it('discards staging files and the SAF output before switching servers', async () => {
+    const id = 'fallback';
+    const root = getDownloadStagingDirectory(id);
+    mockDirectories.add(root);
+    mockFiles.set(`${root}/partial`, 99);
+    mockSafFiles.set('content://old-output', 99);
+    await discardDownloadDestination(id, {
+      stagingDirectory: root, stagingPath: 'content://old-output', directFinalDocumentUri: 'content://old-output',
+    });
+    expect(mockFiles.has(`${root}/partial`)).toBe(false);
+    expect(mockSafFiles.has('content://old-output')).toBe(false);
+  });
+
+  it('rejects a server switch if the SAF provider silently ignores deletion', async () => {
+    mockSafFiles.set('content://old-output', 99);
+    const remove = jest.spyOn(FileSystem.StorageAccessFramework, 'deleteAsync').mockResolvedValueOnce(undefined);
+    try {
+      await expect(discardDownloadDestination('fallback', {
+        stagingDirectory: '', stagingPath: 'content://old-output', directFinalDocumentUri: 'content://old-output',
+      })).rejects.toThrow('Unable to clear');
+    } finally {
+      remove.mockRestore();
+    }
+  });
+
   it('allows missing or empty files but refuses unreported bytes', async () => {
     const destination = {stagingDirectory: '/cache/refresh', stagingPath: '/cache/refresh/file.part'};
     await expect(isDownloadDestinationEmpty(destination)).resolves.toBe(true);

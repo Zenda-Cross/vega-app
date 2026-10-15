@@ -1,5 +1,6 @@
 /** Choices shown in the player's Sleep tab. Numbers are minutes. */
-export type SleepTimerOption = 'off' | 15 | 30 | 45 | 60 | 'episode';
+export type SleepTimerOption = 'off' | number | 'episode';
+export const MAX_SLEEP_MINUTES = 120;
 
 export const SLEEP_TIMER_OPTIONS: SleepTimerOption[] = [
   'off',
@@ -23,9 +24,20 @@ export function startSleepTimer(
   now: number,
 ): SleepTimerState {
   if (typeof option === 'number') {
-    return {option, deadline: now + option * 60_000};
+    if (!Number.isFinite(option) || option <= 0) return SLEEP_TIMER_OFF;
+    const minutes = Math.min(option, MAX_SLEEP_MINUTES);
+    return {option: minutes, deadline: now + minutes * 60_000};
   }
   return {option, deadline: null};
+}
+
+/** Shift the actual deadline without rounding away elapsed seconds. */
+export function adjustSleepTimer(state: SleepTimerState, deltaMinutes: number, now: number): SleepTimerState {
+  if (!Number.isFinite(deltaMinutes)) return state;
+  const remaining = Math.max(0, (state.deadline ?? now) - now);
+  const duration = Math.min(MAX_SLEEP_MINUTES * 60_000, remaining + deltaMinutes * 60_000);
+  if (duration <= 0) return SLEEP_TIMER_OFF;
+  return {option: Math.ceil(duration / 60_000), deadline: now + duration};
 }
 
 /** True once a minute based timer has run out. */

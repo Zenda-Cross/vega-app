@@ -34,7 +34,6 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../App';
 import {
   cacheStorage,
-  PLAYBACK_SPEEDS,
   settingsStorage,
 } from '../../lib/storage';
 import Orientation, {
@@ -112,11 +111,14 @@ import {takePersistableUriPermission} from '../../lib/uriPermission';
 import AnimatedHourglass from '../../components/AnimatedHourglass';
 import PlayerMenuRow from '../../components/PlayerMenuRow';
 import PlayerDelayControl from '../../components/PlayerDelayControl';
+import PlayerSpeedControl from '../../components/PlayerSpeedControl';
+import PlayerSleepControl from '../../components/PlayerSleepControl';
+import PlayerSourceMenu from '../../components/PlayerSourceMenu';
 import {extractImageAccent} from '../../lib/imageAccent';
 import {mixHex} from '../../theme/seeds';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {syncParallelStreaming} from '../../lib/parallelStreaming';
-import {EpisodeLink, SkipInterval} from '../../lib/providers/types';
+import {EpisodeLink, SkipInterval, Stream} from '../../lib/providers/types';
 import {getValidImageUri} from '../../components/EpisodeRowContent';
 import {Feather} from '@expo/vector-icons';
 import {isTV, usePlayerTVControls} from '../../lib/tv';
@@ -129,11 +131,7 @@ import {
 } from '../../lib/player/autoNext';
 import {useSleepTimer} from '../../lib/hooks/useSleepTimer';
 import {useNextEpisodePrefetch} from '../../lib/hooks/useNextEpisodePrefetch';
-import {
-  SLEEP_TIMER_OPTIONS,
-  formatSleepRemaining,
-  getSleepOptionLabel,
-} from '../../lib/player/sleepTimer';
+
 import {
   NO_PLAYBACK_RETRY,
   decidePlaybackError,
@@ -1079,6 +1077,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     sleepTimer,
     sleepMinutesLeft,
     selectSleepOption,
+    adjustSleepMinutes,
     checkSleepTimer,
     consumeEpisodeEnd,
   } = useSleepTimer(reason => {
@@ -1336,7 +1335,6 @@ const Player = ({route}: Props): React.JSX.Element => {
   }, [activeSkip]);
 
   // Memoized values
-  const playbacks = PLAYBACK_SPEEDS;
   const hideSeekButtons = useMemo(
     () => settingsStorage.hideSeekButtons() || false,
     [],
@@ -3060,6 +3058,29 @@ const Player = ({route}: Props): React.JSX.Element => {
     ],
   );
 
+  const handleSettingsMenuFocus = useCallback(() => setSettingsCloseFocused(false), []);
+  const handleSelectMenuStream = useCallback((stream: Stream) => {
+    setSelectedStream(stream);
+    appliedPersistedLocalVideoRef.current = true;
+    if (activeEpisodeKey) clearLocalVideoAssociation(activeEpisodeKey);
+    setShowSettings(false);
+    playerRef.current?.resume();
+  }, [setSelectedStream, activeEpisodeKey, clearLocalVideoAssociation]);
+  const handleSelectMenuQuality = useCallback((index: number) => {
+    if (index === 1000) {
+      setSelectedVideoTrack({type: SelectedVideoTrackType.AUTO, value: ''});
+    } else {
+      const track = videoTracks[index];
+      if (!track) return;
+      if (typeof track.index === 'number' && track.index >= 0) {
+        setSelectedVideoTrack({type: SelectedVideoTrackType.INDEX, value: String(track.index)});
+      } else if (track.height) {
+        setSelectedVideoTrack({type: SelectedVideoTrackType.RESOLUTION, value: String(track.height)});
+      }
+    }
+    setSelectedQualityIndex(index);
+  }, [videoTracks, setSelectedVideoTrack, setSelectedQualityIndex]);
+
   // Ask for a local file before touching the network.
   if (localDecision === 'pending') {
     return (
@@ -3492,8 +3513,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         />
       )}
 
-      {/* Lock/Unlock button */}
-      {!isCasting && !streamLoading && !Platform.isTV && (
+      {/* Top-right controls */}
+      {!isCasting && !streamLoading && (!Platform.isTV || showSleepTimer) && (
         <LockAnimatedView
           style={
             isPlayerLocked
@@ -3501,28 +3522,69 @@ const Player = ({route}: Props): React.JSX.Element => {
               : [controlsTopStyle, controlsOpacityStyle]
           }
           className="absolute top-5 right-5 flex-row items-center gap-2 z-50"
-          pointerEvents="box-none">
-          <TouchableOpacity
-            onPress={togglePlayerLock}
-            className="p-2 rounded-full">
-            <MaterialCommunityIcons
-              name={isPlayerLocked ? 'lock-outline' : 'lock-open-outline'}
-              color={BOTTOM_CONTROL_ICON_COLOR}
-              size={24}
-            />
-          </TouchableOpacity>
-          {SHOW_FULLSCREEN_BUTTON && (
+          pointerEvents={
+            (isPlayerLocked ? showUnlockButton : showControls) &&
+            !showSettings && !showEpisodeSidebar
+              ? 'box-none'
+              : 'none'
+          }>
+          {showSleepTimer && !isPlayerLocked && (
+            <BottomControlButton
+              {...getTVFocusProps('sleep')}
+              accessibilityRole="button"
+              accessibilityLabel="Sleep timer"
+              accessibilityValue={{
+                text: sleepTimer.option === 'off'
+                  ? 'Off'
+                  : sleepTimer.option === 'episode'
+                    ? 'End of episode'
+                    : `${sleepMinutesLeft ?? 0} minutes remaining`,
+              }}
+              className="p-2 rounded-full flex-row items-center gap-1"
+              onPress={() => {
+                setActiveTab('sleep');
+                setShowSettings(true);
+              }}>
+              <MaterialCommunityIcons
+                name="power-sleep"
+                size={24}
+                color={sleepTimer.option === 'off' ? BOTTOM_CONTROL_ICON_COLOR : primary}
+              />
+              {sleepTimer.option !== 'off' && (
+                <Text
+                  className="text-xs"
+                  style={{color: primary}}
+                  numberOfLines={1}>
+                  {sleepTimer.option === 'episode'
+                    ? 'Ep end'
+                    : `${sleepMinutesLeft ?? sleepTimer.option}m`}
+                </Text>
+              )}
+            </BottomControlButton>
+          )}
+          {!Platform.isTV && (
             <TouchableOpacity
-              onPress={toggleFullScreen}
-              className="opacity-70 p-2 rounded-full">
-              <MaterialIcons
-                name={isFullScreen ? 'fullscreen-exit' : 'fullscreen'}
-                color={'hsl(0, 0%, 70%)'}
+              onPress={togglePlayerLock}
+              className="p-2 rounded-full">
+              <MaterialCommunityIcons
+                name={isPlayerLocked ? 'lock-outline' : 'lock-open-outline'}
+                color={BOTTOM_CONTROL_ICON_COLOR}
                 size={24}
               />
             </TouchableOpacity>
           )}
-          {!isPlayerLocked && canCastStream && (
+          {!Platform.isTV && SHOW_FULLSCREEN_BUTTON && (
+            <TouchableOpacity
+              onPress={toggleFullScreen}
+              className="p-2 rounded-full">
+              <MaterialIcons
+                name={isFullScreen ? 'fullscreen-exit' : 'fullscreen'}
+                color={BOTTOM_CONTROL_ICON_COLOR}
+                size={24}
+              />
+            </TouchableOpacity>
+          )}
+          {!Platform.isTV && !isPlayerLocked && canCastStream && (
             <TouchableOpacity
               onPress={() => {
                 flushProgress();
@@ -3530,11 +3592,11 @@ const Player = ({route}: Props): React.JSX.Element => {
               }}
               accessibilityRole="button"
               accessibilityLabel="Cast video"
-              className="opacity-70 p-2 rounded-full">
+              className="p-2 rounded-full">
               <MaterialCommunityIcons
                 name="cast"
                 accessibilityLabel="Cast video"
-                color="hsl(0, 0%, 70%)"
+                color={BOTTOM_CONTROL_ICON_COLOR}
                 size={24}
               />
             </TouchableOpacity>
@@ -3614,37 +3676,6 @@ const Player = ({route}: Props): React.JSX.Element => {
                 {playbackRate === 1 ? '1.0' : playbackRate}x
               </Text>
             </BottomControlButton>
-
-            {/* Sleep timer */}
-            {showSleepTimer && (
-              <BottomControlButton
-                className="min-w-0 flex-1 flex-row items-center justify-center gap-1"
-                {...getTVFocusProps('sleep')}
-                onPress={() => {
-                  setActiveTab('sleep');
-                  setShowSettings(!showSettings);
-                }}>
-                <MaterialCommunityIcons
-                  name="power-sleep"
-                  size={24}
-                  color={
-                    sleepTimer.option === 'off'
-                      ? BOTTOM_CONTROL_ICON_COLOR
-                      : primary
-                  }
-                />
-                <Text
-                  className="text-white text-xs"
-                  style={BOTTOM_CONTROL_LABEL_STYLE}
-                  numberOfLines={1}>
-                  {sleepMinutesLeft !== null
-                    ? `${sleepMinutesLeft}m`
-                    : sleepTimer.option === 'episode'
-                      ? 'Ep end'
-                      : 'Sleep'}
-                </Text>
-              </BottomControlButton>
-            )}
 
             {/* PIP */}
             {!Platform.isTV && (
@@ -4100,238 +4131,46 @@ const Player = ({route}: Props): React.JSX.Element => {
 
                 {/* Server Tab */}
                 {activeTab === 'server' && (
-                  <View className="flex flex-row w-full h-full p-1 px-4">
-                    <ScrollView
-                      className="border-r border-white/10"
-                      contentContainerStyle={{paddingRight: 8}}>
-                      <Text className="mb-2 w-full text-center text-white text-lg font-extrabold">
-                        Server
-                      </Text>
-                      {streamLoading && (
-                        <Text className="mb-2 text-center text-xs text-white/70">
-                          Loading online servers...
-                        </Text>
-                      )}
-                      {streamData?.length > 0 &&
-                        streamData?.map((track, i) => {
-                          const rawTags: string[] = Array.isArray(track.tags)
-                            ? track.tags
-                            : typeof track.tag === 'string'
-                              ? [track.tag]
-                              : [];
-                          const tags = rawTags
-                            .map(t => (typeof t === 'string' ? t.trim() : ''))
-                            .filter(
-                              t =>
-                                Boolean(t) &&
-                                t.toLowerCase() !==
-                                  track.quality?.trim().toLowerCase(),
-                            );
-
-                          return (
-                            <PlayerMenuRow
-                              onTVFocus={() => setSettingsCloseFocused(false)}
-                              key={i}
-                              ref={
-                                track.link === selectedStream.link
-                                  ? preferredMenuRowRef
-                                  : undefined
-                              }
-                              title={track.server || `Server ${i + 1}`}
-                              quality={track.quality}
-                              tags={tags.length > 0 ? tags : undefined}
-                              selected={track.link === selectedStream.link}
-                              hasTVPreferredFocus={
-                                track.link === selectedStream.link
-                              }
-                              accentColor={primary}
-                              icon="dns"
-                              onPress={() => {
-                                setSelectedStream(track);
-                                appliedPersistedLocalVideoRef.current = true;
-                                if (activeEpisodeKey) {
-                                  clearLocalVideoAssociation(activeEpisodeKey);
-                                }
-                                setShowSettings(false);
-                                playerRef?.current?.resume();
-                              }}
-                            />
-                          );
-                        })}
-
-                      {/* Local video option, mirrors the subtitle screen's
-                      "Add external file" entry above */}
-                      <View className="mt-1 border-t border-white/10 pt-1">
-                        <PlayerMenuRow
-                          onTVFocus={() => setSettingsCloseFocused(false)}
-                          title="Local video"
-                          detail="Choose a file from this device"
-                          selected={selectedStream?.type === 'local'}
-                          accentColor={primary}
-                          icon="folder-open"
-                          onPress={handleSelectLocalVideo}
-                        />
-                      </View>
-                    </ScrollView>
-
-                    <ScrollView contentContainerStyle={{paddingLeft: 8}}>
-                      <Text className="mb-2 w-full text-center text-white text-lg font-extrabold">
-                        Quality
-                      </Text>
-
-                      {videoTracks.length === 0 && (
-                        <View className="flex justify-center items-center">
-                          <Text className="text-white text-xs">
-                            {loadedVideoSize
-                              ? 'No quality options reported for this stream'
-                              : 'Loading video tracks...'}
-                          </Text>
-                        </View>
-                      )}
-
-                      {videoTracks.length === 1 && (
-                        <View className="flex justify-center items-center">
-                          <Text className="text-white text-xs">
-                            This stream has a single quality
-                          </Text>
-                        </View>
-                      )}
-
-                      {videoTracks && videoTracks.length > 1 && (
-                        <PlayerMenuRow
-                          onTVFocus={() => setSettingsCloseFocused(false)}
-                          title="Auto"
-                          detail="Adaptive bitrate"
-                          selected={selectedQualityIndex === 1000}
-                          accentColor={primary}
-                          icon="video-settings"
-                          onPress={() => {
-                            setSelectedVideoTrack({
-                              type: SelectedVideoTrackType.AUTO,
-                              value: '',
-                            });
-                            setSelectedQualityIndex(1000);
-                          }}
-                        />
-                      )}
-
-                      {videoTracks &&
-                        videoTracks.map((track: any, i: any) => {
-                          const resolutionTitle = track.height
-                            ? `${track.height}p`
-                            : track.width
-                              ? `${track.width}p`
-                              : 'Standard';
-                          const bitrateText = track.bitrate
-                            ? track.bitrate >= 1000000
-                              ? `${(track.bitrate / 1000000).toFixed(1)} Mbps`
-                              : `${Math.round(track.bitrate / 1000)} kbps`
-                            : undefined;
-                          const detailText = [
-                            bitrateText,
-                            track.width &&
-                              track.height &&
-                              `${track.width}x${track.height}`,
-                            track.codecs && `${track.codecs}`,
-                          ]
-                            .filter(Boolean)
-                            .join(' · ');
-
-                          return (
-                            <PlayerMenuRow
-                              onTVFocus={() => setSettingsCloseFocused(false)}
-                              key={i}
-                              title={resolutionTitle}
-                              detail={detailText}
-                              selected={selectedQualityIndex === i}
-                              accentColor={primary}
-                              icon={getQualityIconName(track.height)}
-                              onPress={() => {
-                                if (
-                                  typeof track.index === 'number' &&
-                                  track.index >= 0
-                                ) {
-                                  setSelectedVideoTrack({
-                                    type: SelectedVideoTrackType.INDEX,
-                                    value: String(track.index),
-                                  });
-                                } else if (track.height) {
-                                  setSelectedVideoTrack({
-                                    type: SelectedVideoTrackType.RESOLUTION,
-                                    value: String(track.height),
-                                  });
-                                }
-                                setSelectedQualityIndex(i);
-                              }}
-                            />
-                          );
-                        })}
-                    </ScrollView>
-                  </View>
+                  <PlayerSourceMenu
+                    streams={streamData}
+                    selectedUrl={selectedStream.link}
+                    isLocal={selectedStream.type === 'local'}
+                    videoTracks={videoTracks}
+                    selectedQualityIndex={selectedQualityIndex}
+                    videoLoaded={Boolean(loadedVideoSize)}
+                    loading={streamLoading}
+                    accentColor={primary}
+                    preferredRef={preferredMenuRowRef}
+                    getQualityIcon={getQualityIconName}
+                    onSelectStream={handleSelectMenuStream}
+                    onSelectQuality={handleSelectMenuQuality}
+                    onSelectLocal={handleSelectLocalVideo}
+                    onTVFocus={handleSettingsMenuFocus}
+                  />
                 )}
 
                 {/* Speed Tab */}
                 {activeTab === 'speed' && (
-                  <ScrollView className="w-full h-full p-1 px-4">
-                    <Text className="mb-2 text-lg font-bold text-center text-white">
-                      Playback Speed
-                    </Text>
-                    {playbacks.map((rate, i) => (
-                      <PlayerMenuRow
-                        onTVFocus={() => setSettingsCloseFocused(false)}
-                        key={i}
-                        ref={
-                          playbackRate === rate
-                            ? preferredMenuRowRef
-                            : undefined
-                        }
-                        title={`${rate}x`}
-                        selected={playbackRate === rate}
-                        hasTVPreferredFocus={playbackRate === rate}
-                        accentColor={primary}
-                        icon="speed"
-                        onPress={() => {
-                          selectPlaybackRate(rate);
-                          setShowSettings(false);
-                        }}
-                      />
-                    ))}
-                  </ScrollView>
+                  <PlayerSpeedControl
+                    ref={preferredMenuRowRef}
+                    value={playbackRate}
+                    accentColor={primary}
+                    onChange={selectPlaybackRate}
+                    onTVFocus={() => setSettingsCloseFocused(false)}
+                  />
                 )}
 
                 {/* Sleep Tab */}
                 {activeTab === 'sleep' && (
-                  <ScrollView className="w-full h-full p-1 px-4">
-                    <Text className="mb-2 text-lg font-bold text-center text-white">
-                      Sleep Timer
-                    </Text>
-                    {SLEEP_TIMER_OPTIONS.map(option => (
-                      <PlayerMenuRow
-                        onTVFocus={() => setSettingsCloseFocused(false)}
-                        key={String(option)}
-                        ref={
-                          sleepTimer.option === option
-                            ? preferredMenuRowRef
-                            : undefined
-                        }
-                        title={getSleepOptionLabel(option)}
-                        detail={
-                          sleepTimer.option === option
-                            ? formatSleepRemaining(sleepMinutesLeft) ||
-                              undefined
-                            : undefined
-                        }
-                        selected={sleepTimer.option === option}
-                        hasTVPreferredFocus={sleepTimer.option === option}
-                        accentColor={primary}
-                        icon="bedtime"
-                        onPress={() => {
-                          selectSleepOption(option);
-                          setShowSettings(false);
-                        }}
-                      />
-                    ))}
-                  </ScrollView>
+                  <PlayerSleepControl
+                    ref={preferredMenuRowRef}
+                    timer={sleepTimer}
+                    minutesLeft={sleepMinutesLeft}
+                    accentColor={primary}
+                    onSelect={selectSleepOption}
+                    onAdjust={adjustSleepMinutes}
+                    onTVFocus={() => setSettingsCloseFocused(false)}
+                  />
                 )}
               </AnimatedPressable>
             </Pressable>

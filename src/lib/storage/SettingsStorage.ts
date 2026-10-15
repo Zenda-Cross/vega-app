@@ -53,6 +53,7 @@ export enum SettingsKeys {
   // Download settings
   DOWNLOAD_LOCATION = 'downloadLocation',
   DOWNLOAD_CONCURRENCY = 'downloadConcurrency',
+  AUTO_DOWNLOAD_SERVER_FALLBACK = 'autoDownloadServerFallback',
   DOWNLOAD_CONNECTIONS = 'downloadConnections',
   PARALLEL_STREAMING = 'parallelStreaming',
 
@@ -129,13 +130,18 @@ const isValidSeekInterval = (value: number | undefined): value is number =>
   (SEEK_INTERVAL_OPTIONS as readonly number[]).includes(value as number);
 /** Speeds offered by the player speed picker. */
 export const PLAYBACK_SPEEDS = [
-  0.25, 0.5, 1.0, 1.25, 1.35, 1.5, 1.75, 2,
+  0.25, 0.5, 0.75, 1.0, 1.25, 1.35, 1.5, 1.75, 2,
 ] as const;
+export const PLAYBACK_SPEED_MIN = 0.25;
+export const PLAYBACK_SPEED_MAX = 2;
+export const PLAYBACK_SPEED_STEP = 0.05;
 const DEFAULT_PLAYBACK_SPEED = 1.0;
 
 const isAllowedPlaybackSpeed = (value: unknown): value is number =>
   typeof value === 'number' &&
-  (PLAYBACK_SPEEDS as readonly number[]).includes(value);
+  Number.isFinite(value) &&
+  value >= PLAYBACK_SPEED_MIN && value <= PLAYBACK_SPEED_MAX &&
+  Math.abs(value / PLAYBACK_SPEED_STEP - Math.round(value / PLAYBACK_SPEED_STEP)) < 1e-6;
 
 const DEFAULT_FORWARD_BUFFER_MB = 64;
 const DEFAULT_BACK_BUFFER_MB = 0;
@@ -488,6 +494,14 @@ export class SettingsStorage {
     return typeof value === 'number' && Number.isFinite(value)
       ? Math.min(Math.max(Math.round(value), 1), 5)
       : 2;
+  }
+
+  isAutoDownloadServerFallbackEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.AUTO_DOWNLOAD_SERVER_FALLBACK, true);
+  }
+
+  setAutoDownloadServerFallbackEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.AUTO_DOWNLOAD_SERVER_FALLBACK, enabled);
   }
 
   setDownloadConcurrency(value: number): void {
