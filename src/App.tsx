@@ -167,6 +167,7 @@ export type SettingsStackParamList = {
 export type DownloadsStackParamList = {
   Downloads: undefined;
   DownloadedDetails: {groupId: string};
+  Info: {link: string; provider?: string; poster?: string};
 };
 
 export type TabStackParamList = {
@@ -404,6 +405,7 @@ function DownloadsStackScreen() {
         name="DownloadedDetails"
         component={DownloadedDetails}
       />
+      <DownloadsStack.Screen name="Info" component={Info} />
     </DownloadsStack.Navigator>
   );
 }

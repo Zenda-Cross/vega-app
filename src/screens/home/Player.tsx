@@ -73,6 +73,7 @@ import {
 } from '../../lib/hooks/useStream';
 import {useStreamTrackSelections} from '../../lib/hooks/useStreamTrackSelections';
 import {useStreamResumePosition} from '../../lib/hooks/useStreamResumePosition';
+import {getNextEpisode, isWatched} from '../../lib/player/upNext';
 import {
   usePlayerProgress,
   usePlayerSettings,
@@ -127,11 +128,18 @@ import {
   shouldAutoPlayNext,
 } from '../../lib/player/autoNext';
 import {useSleepTimer} from '../../lib/hooks/useSleepTimer';
+import {useNextEpisodePrefetch} from '../../lib/hooks/useNextEpisodePrefetch';
 import {
   SLEEP_TIMER_OPTIONS,
   formatSleepRemaining,
   getSleepOptionLabel,
 } from '../../lib/player/sleepTimer';
+import {
+  NO_PLAYBACK_RETRY,
+  decidePlaybackError,
+  getReloadStartMs,
+  markPlaybackLoaded,
+} from '../../lib/player/playbackErrorRetry';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Player'>;
 
@@ -224,7 +232,7 @@ const getResumePosition = (position: number, duration: number) => {
 
   // Completed episodes (including the 1/1 and legacy 10000/1 "watched"
 
-  if (Number.isFinite(duration) && duration > 0 && position / duration > 0.85) {
+  if (isWatched(position, duration)) {
     return 0;
   }
 
@@ -665,6 +673,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const updateContinueWatchingProgress = useContinueWatchingStore(
     state => state.updateProgress,
   );
+  const finishContinueWatchingEpisode = useContinueWatchingStore(
+    state => state.finishEpisode,
+  );
   const setLocalVideoAssociation = useLocalVideoStore(
     state => state.setLocalVideo,
   );
@@ -689,6 +700,8 @@ const Player = ({route}: Props): React.JSX.Element => {
   const remoteCastPositionRef = useRef(0);
   const wasCastingRef = useRef(false);
   const appliedPersistedLocalVideoRef = useRef(false);
+  // Episode watched here whose Continue Watching entry moved on to the next.
+  const upNextFromRef = useRef('');
 
   // Custom hooks for player settings
   const {
@@ -910,7 +923,9 @@ const Player = ({route}: Props): React.JSX.Element => {
       !route.params.infoUrl ||
       !route.params.primaryTitle ||
       !route.params.providerValue ||
-      !activeEpisode?.link
+      !activeEpisode?.link ||
+      // Seeding it again would move the entry back to the watched episode.
+      upNextFromRef.current === getEpisodeIdentity(activeEpisode)
     ) {
       return;
     }
@@ -964,9 +979,30 @@ const Player = ({route}: Props): React.JSX.Element => {
           duration,
           activeEpisode,
         );
+        // Up next: once watched, the entry moves on to the next episode.
+        if (activeEpisode && isWatched(position, duration)) {
+          const next = getNextEpisode(route.params.episodeList, activeEpisode);
+          if (
+            finishContinueWatchingEpisode(
+              continueWatchingId,
+              activeEpisode,
+              next,
+              readCachedProgress(next?.link),
+            )
+          ) {
+            upNextFromRef.current = getEpisodeIdentity(activeEpisode);
+          }
+        }
       }
     },
-    [activeEpisode, continueWatchingId, route.params.localContent, updateContinueWatchingProgress],
+    [
+      activeEpisode,
+      continueWatchingId,
+      finishContinueWatchingEpisode,
+      route.params.episodeList,
+      route.params.localContent,
+      updateContinueWatchingProgress,
+    ],
   );
 
   // currentPlaybackTime is render state. The video reports progress every
@@ -1099,10 +1135,41 @@ const Player = ({route}: Props): React.JSX.Element => {
     remoteSuspended: autoNextVisible,
   });
 
+  const currentEpisodeIndex = useMemo(() => {
+    if (!route.params?.episodeList?.length || !activeEpisode) return -1;
+    return route.params.episodeList.findIndex(
+      ep =>
+        (activeEpisode?.id && ep?.id && activeEpisode.id === ep.id) ||
+        (activeEpisode?.link && ep?.link && activeEpisode.link === ep.link) ||
+        (activeEpisode?.sourceLink &&
+          ep?.sourceLink &&
+          activeEpisode.sourceLink === ep.sourceLink) ||
+        activeEpisode === ep,
+    );
+  }, [activeEpisode, route.params?.episodeList]);
+
+  const hasNextEpisode = useMemo(() => {
+    return (
+      currentEpisodeIndex >= 0 &&
+      currentEpisodeIndex < (route.params?.episodeList?.length || 0) - 1
+    );
+  }, [currentEpisodeIndex, route.params?.episodeList]);
+
+  const prefetchNextEpisode = useNextEpisodePrefetch({
+    activeEpisode,
+    nextEpisode: hasNextEpisode
+      ? route.params.episodeList[currentEpisodeIndex + 1]
+      : undefined,
+    routeParams: route.params,
+    provider: provider.value,
+    enabled: localDecision === 'online',
+  });
+
   const handleProgressWithTime = useCallback(
     (e: {currentTime: number; seekableDuration: number}) => {
       handleProgress(e);
       checkSleepTimer();
+      prefetchNextEpisode(e.currentTime, e.seekableDuration);
       playbackTimeRef.current = e.currentTime;
       if (liveTimelineRef.current) {
         setCurrentPlaybackTime(e.currentTime);
@@ -1118,7 +1185,7 @@ const Player = ({route}: Props): React.JSX.Element => {
         setCurrentPlaybackTime(e.currentTime);
       }
     },
-    [handleProgress, videoPositionRef, checkSleepTimer],
+    [handleProgress, videoPositionRef, checkSleepTimer, prefetchNextEpisode],
   );
 
   // The TV timeline shows the running time, so it needs every progress tick.
@@ -1312,6 +1379,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     videoLoadedRef.current = false;
     appliedPersistedLocalVideoRef.current = false;
     remoteCastPositionRef.current = 0;
+    upNextFromRef.current = '';
   }, [activeEpisode?.id, activeEpisode?.link, activeEpisode?.sourceLink]);
 
   // Auto-resume a remembered local video file for this episode (e.g. when
@@ -1348,12 +1416,13 @@ const Player = ({route}: Props): React.JSX.Element => {
   }, [videoPositionRef, watchedDuration]);
 
   // A server switch continues from the live position, not the saved one.
-  const {getStartPosition, markStreamLoaded} = useStreamResumePosition({
-    episodeKey: getEpisodeIdentity(activeEpisode),
-    stream: selectedStream,
-    savedPosition: watchedDuration,
-    videoPositionRef,
-  });
+  const {getStartPosition, markStreamLoaded, keepPosition} =
+    useStreamResumePosition({
+      episodeKey: getEpisodeIdentity(activeEpisode),
+      stream: selectedStream,
+      savedPosition: watchedDuration,
+      videoPositionRef,
+    });
 
   // Selected tracks, reset to the defaults whenever the stream changes
   const {
@@ -1736,26 +1805,6 @@ const Player = ({route}: Props): React.JSX.Element => {
     route.params?.providerValue,
   ]);
 
-  const currentEpisodeIndex = useMemo(() => {
-    if (!route.params?.episodeList?.length || !activeEpisode) return -1;
-    return route.params.episodeList.findIndex(
-      ep =>
-        (activeEpisode?.id && ep?.id && activeEpisode.id === ep.id) ||
-        (activeEpisode?.link && ep?.link && activeEpisode.link === ep.link) ||
-        (activeEpisode?.sourceLink &&
-          ep?.sourceLink &&
-          activeEpisode.sourceLink === ep.sourceLink) ||
-        activeEpisode === ep,
-    );
-  }, [activeEpisode, route.params?.episodeList]);
-
-  const hasNextEpisode = useMemo(() => {
-    return (
-      currentEpisodeIndex >= 0 &&
-      currentEpisodeIndex < (route.params?.episodeList?.length || 0) - 1
-    );
-  }, [currentEpisodeIndex, route.params?.episodeList]);
-
   const handleVideoEnd = useCallback(() => {
     if (consumeEpisodeEnd()) return;
     const allowed = shouldAutoPlayNext({
@@ -1785,6 +1834,15 @@ const Player = ({route}: Props): React.JSX.Element => {
   selectedStreamRef.current = selectedStream;
   const streamDataRef = useRef(streamData);
   streamDataRef.current = streamData;
+  // A server that already played is reloaded where it stopped once before an
+  // error moves playback to the next server.
+  const playbackRetryRef = useRef(NO_PLAYBACK_RETRY);
+  const [reloadStart, setReloadStart] = useState<{
+    stream: unknown;
+    ms: number;
+  } | null>(null);
+  const reloadStartMs =
+    reloadStart?.stream === selectedStream ? reloadStart.ms : undefined;
 
   const handleVideoError = useCallback(
     (e: any) => {
@@ -1814,6 +1872,30 @@ const Player = ({route}: Props): React.JSX.Element => {
         return;
       }
 
+      const stream = selectedStreamRef.current;
+      if (!isTorrentStream(stream) && !isLocalPath(stream?.link)) {
+        const {action, state} = decidePlaybackError(
+          playbackRetryRef.current,
+          stream,
+          e,
+          Date.now(),
+        );
+        playbackRetryRef.current = state;
+        if (action === 'retry') {
+          const position = videoPositionRef.current.position;
+          keepPosition(position);
+          setReloadStart(prev => ({
+            stream,
+            ms: getReloadStartMs(
+              position,
+              prev?.stream === stream ? prev.ms : undefined,
+            ),
+          }));
+          ToastAndroid.show('Connection lost, retrying', ToastAndroid.SHORT);
+          return;
+        }
+      }
+
       if (!switchToNextStream()) {
         ToastAndroid.show(
           'Video could not be played, try again later',
@@ -1826,12 +1908,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     [
       activeEpisodeKey,
       clearLocalVideoAssociation,
+      keepPosition,
       markStreamsOnline,
       navigation,
       route.params.localContent,
       setSelectedStream,
       setShowControls,
       switchToNextStream,
+      videoPositionRef,
     ],
   );
 
@@ -2799,6 +2883,11 @@ const Player = ({route}: Props): React.JSX.Element => {
         setTextTracks(e.textTracks);
       }
       videoLoadedRef.current = true;
+      playbackRetryRef.current = markPlaybackLoaded(
+        playbackRetryRef.current,
+        selectedStreamRef.current,
+        Date.now(),
+      );
       const torrentHash = activeTorrentRef.current;
       if (torrentHash && Number(e?.duration) > 0) {
         torrentManager
@@ -2843,7 +2932,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           (isTorrentStream(selectedStream)
             ? processedStreamUrl
             : selectedStream.link) || '',
-        startPosition: torrentStartMs,
+        startPosition: torrentStartMs ?? reloadStartMs,
         bufferConfig: {
           // Sizes decide how much is buffered (patched native load control);
           // the long time limits only stop low-bitrate video buffering forever.
@@ -2961,6 +3050,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       handleVideoSeek,
       processedStreamUrl,
       torrentStartMs,
+      reloadStartMs,
       enableSwipeGesture,
       hideSeekButtons,
       showControls,

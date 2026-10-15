@@ -54,9 +54,15 @@ jest.mock('../src/theme/M3PaletteContext', () => ({
 }));
 
 import {getDownloadPlayerParams} from '../src/lib/downloadPlayback';
-import {getInitialStream, useStream} from '../src/lib/hooks/useStream';
+import {getInitialStream, streamQueryOptions, useStream} from '../src/lib/hooks/useStream';
 import type {DownloadItem} from '../src/lib/zustand/downloadsStore';
 import CurrentDownloadsSection from '../src/screens/settings/components/CurrentDownloadsSection';
+
+// Inactive failed/cancelled requests can finish after teardown and schedule
+// cache eviction. Keep cache GC disabled in this isolated test environment.
+const originalGcTime = streamQueryOptions.gcTime;
+beforeAll(() => { streamQueryOptions.gcTime = Infinity; });
+afterAll(() => { streamQueryOptions.gcTime = originalGcTime; });
 
 const download: DownloadItem = {
   schemaVersion: 1,
@@ -255,6 +261,51 @@ describe('useStream with a download stream', () => {
       remote.link,
     ]);
     expect(streams.selectedStream).toBe(initial);
+  });
+
+  it('clears the failed initial stream when fallback lookup fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    act(() => { expect(streams.switchToNextStream()).toBe(true); });
+    await flush();
+    await act(async () => {
+      fetches[1].reject(new Error('WAF_DIALOG_CANCELLED'));
+    });
+    await flush();
+    expect(streams.error).not.toBeNull();
+    expect(streams.selectedStream.link).toBe('');
+    expect(streams.streamData).toEqual([]);
+    expect(streams.switchToNextStream()).toBe(false);
+  });
+
+  it('ignores the failed URL when the provider returns it with a fallback', async () => {
+    act(() => { expect(streams.switchToNextStream()).toBe(true); });
+    await flush();
+    await act(async () => {
+      fetches[1].resolve([{...remote, link: initial.link}, remote]);
+    });
+    await flush();
+    expect(streams.selectedStream).toEqual(remote);
+    expect(streams.streamData).toEqual([remote]);
+  });
+
+  it('does not restore a failed initial stream from an otherwise empty result', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    act(() => { expect(streams.switchToNextStream()).toBe(true); });
+    await flush();
+    await act(async () => { fetches[1].resolve([{...remote, link: initial.link}]); });
+    await flush();
+    expect(streams.streamData).toEqual([]);
+    expect(streams.selectedStream.link).toBe('');
+  });
+
+  it('marks the initial URL failed when an alternative is already cached', async () => {
+    await act(async () => { fetches[0].resolve([remote]); });
+    await flush();
+    act(() => { expect(streams.switchToNextStream()).toBe(true); });
+    await flush();
+    expect(streams.selectedStream).toEqual(remote);
+    expect(streams.streamData).toEqual([remote]);
+    expect(fetches).toHaveLength(1);
   });
 
   it('keeps playing it when the servers fail to load', async () => {
