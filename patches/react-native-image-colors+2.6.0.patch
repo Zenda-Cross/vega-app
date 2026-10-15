@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-image-colors/android/build.gradle b/node_modules/react-native-image-colors/android/build.gradle
-index 25d0f74..3e47f58 100644
+index 25d0f74..5b61474 100644
 --- a/node_modules/react-native-image-colors/android/build.gradle
 +++ b/node_modules/react-native-image-colors/android/build.gradle
 @@ -55,15 +55,13 @@ android {
@@ -24,20 +24,44 @@ index 25d0f74..3e47f58 100644
    }
  
    defaultConfig {
+@@ -88,6 +86,7 @@ repositories {
+ 
+ dependencies {
+   implementation project(':expo-modules-core')
++  implementation 'com.facebook.react:react-android'
+   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${getKotlinVersion()}"
+   implementation "androidx.palette:palette:1.0.0"
+   implementation "com.caverock:androidsvg-aar:1.4"
 diff --git a/node_modules/react-native-image-colors/android/src/main/java/com/reactnativeimagecolors/ImageColorsModule.kt b/node_modules/react-native-image-colors/android/src/main/java/com/reactnativeimagecolors/ImageColorsModule.kt
-index 302ca19..f745f21 100644
+index 302ca19..ddd1279 100644
 --- a/node_modules/react-native-image-colors/android/src/main/java/com/reactnativeimagecolors/ImageColorsModule.kt
 +++ b/node_modules/react-native-image-colors/android/src/main/java/com/reactnativeimagecolors/ImageColorsModule.kt
-@@ -22,6 +22,8 @@ import kotlinx.coroutines.*
+@@ -22,7 +22,15 @@ import kotlinx.coroutines.*
  import kotlin.math.ceil
  
  import java.net.MalformedURLException
+-import java.net.URI
 +import java.io.BufferedInputStream
 +import java.io.InputStream
- import java.net.URI
++import com.facebook.drawee.backends.pipeline.Fresco
++import com.facebook.datasource.DataSources
++import com.facebook.common.memory.PooledByteBufferInputStream
++import com.facebook.imagepipeline.request.ImageRequest
++import com.facebook.imagepipeline.request.ImageRequestBuilder
++import com.facebook.react.bridge.Arguments
++import com.facebook.react.modules.fresco.ReactNetworkImageRequest
  
  class Config : Record {
-@@ -38,6 +40,37 @@ class Config : Record {
+   @Field
+@@ -33,11 +41,45 @@ class Config : Record {
+ 
+   @Field
+   val pixelSpacing: Int = 5
++
++  @Field
++  val cacheOnly: Boolean = false
+ }
+ 
  class ImageColorsModule : Module() {
    private val service = CoroutineScope(Dispatchers.IO)
  
@@ -75,7 +99,7 @@ index 302ca19..f745f21 100644
    /**
     * pixelSpacing tells how many pixels to skip each pixel.
     * If pixelSpacing > 1: the average color is an estimate, but higher values mean better performance.
-@@ -45,7 +78,7 @@ class ImageColorsModule : Module() {
+@@ -45,7 +87,7 @@ class ImageColorsModule : Module() {
     * If pixelSpacing < 1: the method will most likely crash (don't use values below 1).
     */
    private fun calculateAverageColor(bitmap: Bitmap, pixelSpacing: Int): Int {
@@ -84,7 +108,7 @@ index 302ca19..f745f21 100644
  
      val width = bitmap.width
      val height = bitmap.height
-@@ -117,7 +150,7 @@ class ImageColorsModule : Module() {
+@@ -117,7 +159,7 @@ class ImageColorsModule : Module() {
  
            // check if local resource
            if (context != null && resourceId != 0) {
@@ -93,7 +117,7 @@ index 302ca19..f745f21 100644
            }
  
            // check if base64
-@@ -130,12 +163,14 @@ class ImageColorsModule : Module() {
+@@ -130,12 +172,14 @@ class ImageColorsModule : Module() {
                val svg = AndroidSVG.getFromString(svgString)
                val width = if (svg.documentWidth > 0) svg.documentWidth.toInt() else 200
                val height = if (svg.documentHeight > 0) svg.documentHeight.toInt() else 200
@@ -110,7 +134,7 @@ index 302ca19..f745f21 100644
              }
            }
  
-@@ -143,20 +178,23 @@ class ImageColorsModule : Module() {
+@@ -143,30 +187,34 @@ class ImageColorsModule : Module() {
            if (uri.startsWith("content")) {
              val contentUri = Uri.parse(uri)
              val stream = context?.contentResolver?.openInputStream(contentUri)
@@ -128,20 +152,58 @@ index 302ca19..f745f21 100644
  
            // check if valid URL (http/https)
            if (uri.startsWith("http")) {
-             val parsedUri = URI(uri)
-             val connection = parsedUri.toURL().openConnection()
-+            connection.connectTimeout = 4000
-+            connection.readTimeout = 5000
-+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
- 
-             if (config.headers != null) {
-               for (header in config.headers) {
-@@ -165,7 +203,7 @@ class ImageColorsModule : Module() {
-             }
- 
-             val stream = connection.getInputStream()
+-            val parsedUri = URI(uri)
+-            val connection = parsedUri.toURL().openConnection()
+-
+-            if (config.headers != null) {
+-              for (header in config.headers) {
+-                connection.setRequestProperty(header.key, header.value)
+-              }
+-            }
+-
+-            val stream = connection.getInputStream()
 -            image = BitmapFactory.decodeStream(stream)
-+            image = decodeThumbnailStream(stream)
-             stream.close()
+-            stream.close()
++            // Share React Native Image's Fresco pipeline: reuse disk bytes and
++            // coalesce downloads instead of opening a separate HTTP connection.
++            val builder = ImageRequestBuilder.newBuilderWithSource(Uri.parse(uri))
++            if (config.cacheOnly) builder.setLowestPermittedRequestLevel(ImageRequest.RequestLevel.DISK_CACHE)
++            val request = ReactNetworkImageRequest.fromBuilderWithHeaders(
++              builder, config.headers?.let { Arguments.makeNativeMap(it) }
++            )
++            val source = Fresco.getImagePipeline().fetchEncodedImage(request, null)
++            try {
++              val reference = DataSources.waitForFinalResult(source)
++              try {
++                if (reference != null) {
++                  image = PooledByteBufferInputStream(reference.get()).use { decodeThumbnailStream(it) }
++                }
++              } finally { reference?.close() }
++            } finally { source.close() }
            }
  
+           if (image == null) {
+diff --git a/node_modules/react-native-image-colors/build/types.d.ts b/node_modules/react-native-image-colors/build/types.d.ts
+index f0e4f7f..11f6eab 100644
+--- a/node_modules/react-native-image-colors/build/types.d.ts
++++ b/node_modules/react-native-image-colors/build/types.d.ts
+@@ -54,6 +54,7 @@ export interface Config {
+     /**
+      * Enables in-memory caching of the result - skip downloading the same image next time.
+      */
++    cacheOnly?: boolean;
+     cache: boolean;
+     /**
+      * Key used for caching, it is recommended to provide it. If not provided, the image URI will be used.
+diff --git a/node_modules/react-native-image-colors/src/types.ts b/node_modules/react-native-image-colors/src/types.ts
+index 2a4c10e..009750b 100644
+--- a/node_modules/react-native-image-colors/src/types.ts
++++ b/node_modules/react-native-image-colors/src/types.ts
+@@ -57,6 +57,7 @@ export interface Config {
+   /**
+    * Enables in-memory caching of the result - skip downloading the same image next time.
+    */
++  cacheOnly?: boolean
+   cache: boolean
+   /**
+    * Key used for caching, it is recommended to provide it. If not provided, the image URI will be used.

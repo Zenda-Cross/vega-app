@@ -1,5 +1,5 @@
 import React, {useMemo, useState} from 'react';
-import {FlatList, View} from 'react-native';
+import {FlatList, ScrollView, View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
@@ -16,6 +16,7 @@ import {TVFocusable} from '../tv';
 import AppText from '../ui/Text';
 import DropdownField from '../ui/DropdownField';
 import EpisodeRowContent from '../EpisodeRowContent';
+import MaterialDialogSurface from '../ui/MaterialDialogSurface';
 
 export default function LocalSeasonList({
   title,
@@ -28,6 +29,10 @@ export default function LocalSeasonList({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [season, setSeason] = useState('');
+  const [details, setDetails] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
   const seasons = useMemo(
     () => [...new Set(title.episodes.map(e => e.folder))].sort(naturalCompare),
     [title.episodes],
@@ -86,6 +91,15 @@ export default function LocalSeasonList({
             <TVFocusable
               accessibilityRole="button"
               accessibilityLabel={getEpisodeLabel(item, title)}
+              onLongPress={
+                metadata?.overview
+                  ? () =>
+                      setDetails({
+                        title: getEpisodeLabel(item, title),
+                        description: metadata.overview!,
+                      })
+                  : undefined
+              }
               onPress={() =>
                 navigation.navigate('Player', {
                   localContent: true,
@@ -130,6 +144,15 @@ export default function LocalSeasonList({
                 thumbnail={<LocalVideoThumbnail uri={item.uri} />}
                 title={getEpisodeLabel(item, title)}
                 description={metadata?.overview}
+                onShowDetails={
+                  metadata?.overview
+                    ? () =>
+                        setDetails({
+                          title: getEpisodeLabel(item, title),
+                          description: metadata.overview!,
+                        })
+                    : undefined
+                }
                 accentColor={colors.primary}
                 textColor="#F5F0EF"
                 mutedTextColor="#D4CBC9"
@@ -138,6 +161,29 @@ export default function LocalSeasonList({
           );
         }}
       />
+      <MaterialDialogSurface
+        visible={details !== null}
+        onDismiss={() => setDetails(null)}>
+        <AppText
+          role="titleLarge"
+          style={{color: colors.onSurface, marginBottom: 12}}>
+          {details?.title}
+        </AppText>
+        <ScrollView style={{maxHeight: 300}}>
+          <AppText
+            role="bodyMedium"
+            style={{color: colors.onSurfaceVariant, lineHeight: 22}}>
+            {details?.description}
+          </AppText>
+        </ScrollView>
+        <TVFocusable
+          accessibilityRole="button"
+          accessibilityLabel="Close episode details"
+          onPress={() => setDetails(null)}
+          style={{alignSelf: 'flex-end', padding: 12, marginTop: 12}}>
+          <AppText style={{color: colors.primary}}>Close</AppText>
+        </TVFocusable>
+      </MaterialDialogSurface>
     </View>
   );
 }

@@ -4,7 +4,7 @@ import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import {StatusBar} from 'expo-status-bar';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {
   BackHandler,
   FlatList,
@@ -27,7 +27,7 @@ import LocalSeasonList from '../../components/local-content/LocalSeasonList';
 import SkeletonLoader from '../../components/Skeleton';
 import {useContentDetails} from '../../lib/hooks/useContentInfo';
 import {useArtworkShape} from '../../lib/hooks/useHomePageData';
-import {extractImageAccent, getCachedImageAccent} from '../../lib/imageAccent';
+import {useInfoAccent} from '../../lib/hooks/useInfoAccent';
 import type {Link} from '../../lib/providers/types';
 import {settingsStorage} from '../../lib/storage';
 import useContentStore from '../../lib/zustand/contentStore';
@@ -66,6 +66,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     info,
     meta,
     isLoading,
+    isMetaLoading,
     isSynopsisLoading,
     error,
     refetch,
@@ -114,26 +115,14 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [isAtTop, setIsAtTop] = useState(true);
-  const initialPoster = route.params.poster;
-  const initialCacheKey = initialPoster
-    ? `detail-bg-accent-v1:${initialPoster}`
-    : '';
-  const cachedInitialAccent = initialCacheKey
-    ? getCachedImageAccent(initialCacheKey)
-    : undefined;
-
-  const [imageAccent, setImageAccent] = useState<string | undefined>(
-    () => cachedInitialAccent,
-  );
-  const [initialAccentReady, setInitialAccentReady] = useState(
-    () =>
-      !settingsStorage.isDynamicInfoAccentEnabled() ||
-      !route.params.poster ||
-      !!cachedInitialAccent,
-  );
-  const imageAccentRequest = useRef(0);
   const [statusBarScrimVisible, setStatusBarScrimVisible] = useState(false);
   const dynamicInfoAccentEnabled = settingsStorage.isDynamicInfoAccentEnabled();
+  const {accent: imageAccent, ready: initialAccentReady} = useInfoAccent({
+    poster: route.params.poster,
+    background: isMetaLoading ? undefined : meta?.background || info?.image,
+    pageKey: JSON.stringify([providerValue, route.params.link]),
+    enabled: dynamicInfoAccentEnabled,
+  });
   const contentProviderName = useMemo(
     () =>
       providerValue === 'local' ? 'Local content' : installedProviders.find(item => item.value === providerValue)
@@ -151,8 +140,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     route.params.poster ||
     info?.image ||
     'https://placehold.jp/24/363636/ffffff/500x750.png?text=Vega';
-  const accentBackground =
-    meta?.background || info?.image || route.params.poster;
   const backgroundImage =
     meta?.background ||
     info?.image ||
@@ -174,35 +161,6 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
       return () => sub.remove();
     }, [navigation]),
   );
-
-  useEffect(() => {
-    if (!dynamicInfoAccentEnabled) {
-      imageAccentRequest.current += 1;
-      setImageAccent(undefined);
-      setInitialAccentReady(true);
-      return;
-    }
-    const bg = accentBackground;
-    if (!bg) {
-      setInitialAccentReady(true);
-      return;
-    }
-    const request = ++imageAccentRequest.current;
-    extractImageAccent(bg, `detail-bg-accent-v1:${bg}`).then(
-      extractedColor => {
-        if (request !== imageAccentRequest.current) {
-          return;
-        }
-        if (extractedColor) {
-          setImageAccent(extractedColor);
-        }
-        setInitialAccentReady(true);
-      },
-    );
-    return () => {
-      imageAccentRequest.current += 1;
-    };
-  }, [accentBackground, dynamicInfoAccentEnabled]);
 
   const detailColors = useMemo<MaterialColors>(
     () => (imageAccent ? buildDetailPalette(colors, imageAccent) : colors),

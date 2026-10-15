@@ -62,3 +62,28 @@ it('reports unavailable metadata so the import can continue without it', async (
     'No metadata',
   );
 });
+
+it('uses Cinemeta episode names when no title field is supplied', async () => {
+  mockedAxios.get.mockResolvedValueOnce({
+    data: {
+      meta: {
+        name: 'Mr. Robot',
+        videos: [
+          {
+            season: 1,
+            episode: 1,
+            name: 'eps1.0_hellofriend.mov',
+            overview: 'Full overview',
+          },
+        ],
+      },
+    },
+  });
+  const result = await fetchLocalMetadata('tt4158110', 'series');
+  expect(result.videos?.[0]).toEqual({
+    season: 1,
+    episode: 1,
+    title: 'eps1.0_hellofriend.mov',
+    overview: 'Full overview',
+  });
+});

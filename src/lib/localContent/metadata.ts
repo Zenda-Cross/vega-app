@@ -45,7 +45,12 @@ export async function fetchLocalMetadata(
           .map((v: any) => ({
             season: v.season,
             episode: v.episode,
-            title: typeof v.title === 'string' ? v.title : undefined,
+            title:
+              typeof v.title === 'string'
+                ? v.title
+                : typeof v.name === 'string'
+                  ? v.name
+                  : undefined,
             overview: typeof v.overview === 'string' ? v.overview : undefined,
           }))
       : [],

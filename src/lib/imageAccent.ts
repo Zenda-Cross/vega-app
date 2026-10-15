@@ -103,17 +103,19 @@ export const selectImageAccent = (
 export const extractImageAccent = async (
   imageUri: string,
   cacheKey: string,
+  options?: {cacheOnly?: boolean},
 ): Promise<string | undefined> => {
   if (!imageUri) return undefined;
 
   // 1. Instant check from persistent MMKV cache
-  const cachedAccent = getCachedImageAccent(cacheKey);
+  const cachedAccent = getCachedImageAccent(cacheKey) || getCachedImageAccent(`image:${imageUri}`);
   if (cachedAccent) {
     return cachedAccent;
   }
 
   // 2. Deduplicate in-flight extractions for identical cacheKey
-  const inFlight = inFlightExtractions.get(cacheKey);
+  const jobKey = options?.cacheOnly ? `cached-only:${cacheKey}` : cacheKey;
+  const inFlight = inFlightExtractions.get(jobKey);
   if (inFlight) {
     return inFlight;
   }
@@ -131,7 +133,7 @@ export const extractImageAccent = async (
     // The UI can use its fallback after 3.5s, but the serialized native job
     // remains occupied until extraction actually ends. A timeout isn't cancel.
     const timeout = setTimeout(() => finish(undefined), 3500);
-    const cancelJob = scheduleWhenIdle(async signal => {
+    const runExtraction = async (signal: AbortSignal) => {
       try {
         if (generation !== cacheGeneration || signal.aborted) return;
         const imageColors = await getColors(imageUri, {
@@ -139,10 +141,14 @@ export const extractImageAccent = async (
           fallback: IMAGE_COLOR_FALLBACK,
           key: cacheKey,
           pixelSpacing: 8,
+          ...(options?.cacheOnly && {cacheOnly: true}),
         });
         if (generation !== cacheGeneration || signal.aborted) return;
         const accent = selectImageAccent(imageColors);
-        if (accent) cacheStorage.setString('accent:' + cacheKey, accent);
+        if (accent) {
+          cacheStorage.setString('accent:' + cacheKey, accent);
+          cacheStorage.setString(`accent:image:${imageUri}`, accent);
+        }
         else cache.removeItem(cacheKey);
         finish(accent);
       } catch {
@@ -151,10 +157,16 @@ export const extractImageAccent = async (
         clearTimeout(timeout);
         finish(undefined);
         extractionCancels.delete(cancelExtraction);
-        if (inFlightExtractions.get(cacheKey) === extractionPromise)
-          inFlightExtractions.delete(cacheKey);
+        if (inFlightExtractions.get(jobKey) === extractionPromise)
+          inFlightExtractions.delete(jobKey);
       }
-    });
+    };
+    const cacheController = new AbortController();
+    let cancelJob: () => void;
+    if (options?.cacheOnly) {
+      runExtraction(cacheController.signal);
+      cancelJob = () => cacheController.abort();
+    } else cancelJob = scheduleWhenIdle(runExtraction);
     cancelExtraction = () => {
       clearTimeout(timeout);
       cancelJob();
@@ -162,7 +174,7 @@ export const extractImageAccent = async (
     };
     extractionCancels.add(cancelExtraction);
   });
-  inFlightExtractions.set(cacheKey, extractionPromise);
+  inFlightExtractions.set(jobKey, extractionPromise);
   return extractionPromise;
 };
 

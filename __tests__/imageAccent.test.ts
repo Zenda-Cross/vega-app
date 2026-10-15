@@ -96,3 +96,24 @@ describe('extractImageAccent', () => {
     expect(mockGetColors).not.toHaveBeenCalled();
   });
 });
+
+
+it('reuses a stored accent for the same image across different page cache keys', async () => {
+  clearImageAccentCache(); mockStorage.clear(); mockGetColors.mockReset();
+  mockGetColors.mockResolvedValue({platform: 'android', vibrant: '#3366CC'} as any);
+  await extractImageAccent('https://images.test/poster', 'poster:one', {cacheOnly: true});
+  expect(mockGetColors).toHaveBeenCalledWith('https://images.test/poster', expect.objectContaining({cacheOnly: true}));
+  mockGetColors.mockClear();
+  expect(await extractImageAccent('https://images.test/poster', 'detail:two')).toBe('#3366CC');
+  expect(mockGetColors).not.toHaveBeenCalled();
+});
+
+it('permits a normal background request after a cache-only lookup misses', async () => {
+  clearImageAccentCache(); mockStorage.clear(); mockGetColors.mockReset();
+  mockGetColors.mockRejectedValueOnce(new Error('Image cache miss'));
+  expect(await extractImageAccent('https://images.test/missing', 'detail:missing', {cacheOnly: true})).toBeUndefined();
+  mockGetColors.mockResolvedValueOnce({platform: 'android', vibrant: '#3366CC'} as any);
+  expect(await extractImageAccent('https://images.test/missing', 'detail:missing')).toBe('#3366CC');
+  expect(mockGetColors).toHaveBeenCalledTimes(2);
+  expect(mockGetColors.mock.calls[1][1]?.cacheOnly).toBeUndefined();
+});
