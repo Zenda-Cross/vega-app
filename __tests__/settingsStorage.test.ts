@@ -1,17 +1,19 @@
 const mockBooleanValues = new Map<string, boolean>();
 const mockNumberValues = new Map<string, number>();
+const mockStringValues = new Map<string, string>();
+const mockArrayValues = new Map<string, string[]>();
 
 jest.mock('../src/lib/storage/StorageService', () => ({
   mainStorage: {
     getBool: (key: string, defaultValue = false) =>
       mockBooleanValues.has(key) ? mockBooleanValues.get(key) : defaultValue,
     setBool: (key: string, value: boolean) => mockBooleanValues.set(key, value),
-    getString: () => undefined,
-    setString: jest.fn(),
+    getString: (key: string) => mockStringValues.get(key),
+    setString: (key: string, value: string) => mockStringValues.set(key, value),
     getNumber: (key: string) => mockNumberValues.get(key),
     setNumber: (key: string, value: number) => mockNumberValues.set(key, value),
-    getArray: () => undefined,
-    setArray: jest.fn(),
+    getArray: (key: string) => mockArrayValues.get(key),
+    setArray: (key: string, value: string[]) => mockArrayValues.set(key, value),
     delete: jest.fn(),
   },
 }));
@@ -31,6 +33,8 @@ describe('settings defaults', () => {
   beforeEach(() => {
     mockBooleanValues.clear();
     mockNumberValues.clear();
+    mockStringValues.clear();
+    mockArrayValues.clear();
   });
 
   it('enables default-on preferences when no value is stored', () => {
@@ -101,6 +105,30 @@ describe('settings defaults', () => {
 
   it('defaults playback speed to 1x when nothing is saved', () => {
     expect(settingsStorage.getPlaybackSpeed()).toBe(1);
+  });
+
+  it('reuses the existing sleep and episode visibility keys while persisting other hidden controls', () => {
+    expect(settingsStorage.getHiddenPlayerControls()).toEqual([]);
+    settingsStorage.setHiddenPlayerControls(['speed', 'sleep', 'episodes']);
+    expect(settingsStorage.showSleepTimer()).toBe(false);
+    expect(settingsStorage.showPlayerEpisodeSidebar()).toBe(false);
+    expect(mockArrayValues.get(SettingsKeys.HIDDEN_PLAYER_CONTROLS)).toEqual(['speed']);
+    expect(settingsStorage.getHiddenPlayerControls()).toEqual(['speed', 'sleep', 'episodes']);
+    settingsStorage.setShowSleepTimer(true);
+    expect(settingsStorage.getHiddenPlayerControls()).toEqual(['speed', 'episodes']);
+    settingsStorage.setHiddenPlayerControls(['audio']);
+    expect(settingsStorage.showPlayerEpisodeSidebar()).toBe(true);
+    expect(settingsStorage.getHiddenPlayerControls()).toEqual(['audio']);
+  });
+
+  it('persists the player toolbar layout and recovers from invalid stored JSON', () => {
+    const layout = settingsStorage.getPlayerControlLayout();
+    layout.top = layout.top.filter(id => id !== 'lock');
+    layout.bottom.unshift('lock');
+    settingsStorage.setPlayerControlLayout(layout);
+    expect(settingsStorage.getPlayerControlLayout()).toEqual(layout);
+    mockStringValues.set(SettingsKeys.PLAYER_CONTROL_LAYOUT, '{broken');
+    expect(settingsStorage.getPlayerControlLayout().top).toEqual(['sleep', 'lock', 'cast']);
   });
 
   it('remembers a playback speed from the picker list', () => {

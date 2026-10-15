@@ -61,6 +61,8 @@ const AnimatedVideoPlayer = (
     volume = 1,
     title = {primary: '', secondary: ''},
     headerStatus,
+    headerRightInset = 0,
+    playbackSuspended = false,
     rate = 1,
     showDuration = false,
     showTimeRemaining = false,
@@ -989,7 +991,7 @@ const AnimatedVideoPlayer = (
             ref={videoRef || _videoRef}
             resizeMode={resizeMode}
             volume={_volume * (volumeBoostAvailable ? volumeBoost : 1)}
-            paused={_paused}
+            paused={_paused || playbackSuspended}
             muted={_muted}
             rate={_playbackRate}
             style={[_styles.player.video, styles.videoStyle]}
@@ -1012,6 +1014,7 @@ const AnimatedVideoPlayer = (
                 <TopControls
                   title={title}
                   headerStatus={headerStatus}
+                  headerRightInset={headerRightInset}
                   panHandlers={volumePanResponder.panHandlers}
                   animations={animations}
                   disableBack={disableBack}

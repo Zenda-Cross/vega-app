@@ -106,6 +106,10 @@ const Preferences = ({navigation}: any) => {
   const [showSleepTimer, setShowSleepTimer] = useState<boolean>(() =>
     settingsStorage.showSleepTimer(),
   );
+  useFocusEffect(useCallback(() => {
+    setShowSleepTimer(settingsStorage.showSleepTimer());
+    setShowEpisodeSidebar(settingsStorage.showPlayerEpisodeSidebar());
+  }, []));
   const [autoPlayNextEpisode, setAutoPlayNextEpisode] = useState<boolean>(() =>
     settingsStorage.isAutoPlayNextEpisodeEnabled(),
   );

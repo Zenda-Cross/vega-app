@@ -49,14 +49,14 @@ const PlayerSpeedControl = forwardRef<View, Props>(
     return (
       <ScrollView
         style={{width: '100%', height: '100%'}}
-        contentContainerStyle={{paddingHorizontal: 12, paddingBottom: 16}}>
+        contentContainerStyle={{paddingHorizontal: 8, paddingBottom: 8}}>
         <Text
           style={{
             color: 'white',
-            fontSize: 18,
+            fontSize: 15,
             fontWeight: '700',
             textAlign: 'center',
-            marginBottom: 4,
+            marginBottom: 2,
           }}>
           Playback speed
         </Text>
@@ -64,7 +64,7 @@ const PlayerSpeedControl = forwardRef<View, Props>(
           accessibilityLiveRegion="polite"
           style={{
             color: 'white',
-            fontSize: 25,
+            fontSize: 19,
             fontWeight: '700',
             textAlign: 'center',
             fontVariant: ['tabular-nums'],
@@ -75,8 +75,8 @@ const PlayerSpeedControl = forwardRef<View, Props>(
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 12,
-            marginVertical: 10,
+            gap: 8,
+            marginVertical: 4,
           }}>
           <TVFocusable
             ref={ref}
@@ -86,19 +86,19 @@ const PlayerSpeedControl = forwardRef<View, Props>(
             accessibilityRole="button"
             accessibilityLabel="Decrease playback speed"
             onPress={() => select(draftRef.current - STEP)}
-            borderRadius={24}
+            borderRadius={18}
             focusBorderColor={accentColor}
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               backgroundColor: '#262626',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
             <MaterialCommunityIcons
               name="minus"
-              size={28}
+              size={22}
               color={draft <= MIN ? '#777777' : 'white'}
             />
           </TVFocusable>
@@ -149,19 +149,19 @@ const PlayerSpeedControl = forwardRef<View, Props>(
             accessibilityRole="button"
             accessibilityLabel="Increase playback speed"
             onPress={() => select(draftRef.current + STEP)}
-            borderRadius={24}
+            borderRadius={18}
             focusBorderColor={accentColor}
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               backgroundColor: '#262626',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
             <MaterialCommunityIcons
               name="plus"
-              size={28}
+              size={22}
               color={draft >= MAX ? '#777777' : 'white'}
             />
           </TVFocusable>
@@ -175,17 +175,15 @@ const PlayerSpeedControl = forwardRef<View, Props>(
               accessibilityRole="button"
               accessibilityLabel={`${speed}x${speed === 1 ? ', Normal' : ''}`}
               accessibilityState={{selected: draft === speed}}
-              borderRadius={24}
+              borderRadius={18}
               focusBorderColor={accentColor}
               onPress={() => select(speed)}
               style={{
-                minWidth: 76,
-                flexBasis: '21%',
-                flexGrow: 1,
-                minHeight: 44,
+                minWidth: 60,
+                minHeight: 34,
                 paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 24,
+                paddingVertical: 4,
+                borderRadius: 18,
                 backgroundColor: draft === speed ? '#444444' : '#262626',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -193,7 +191,7 @@ const PlayerSpeedControl = forwardRef<View, Props>(
               <Text
                 style={{
                   color: draft === speed ? accentColor : 'white',
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: '700',
                 }}>
                 {Number.isInteger(speed) ? speed.toFixed(1) : speed}x

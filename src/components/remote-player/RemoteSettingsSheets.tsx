@@ -100,10 +100,10 @@ const DelayStepButton: React.FC<{
       disabled={disabled}
       onPress={onPress}
       onLongPress={onLongPress}
-      android_ripple={{color: colors.onSecondaryContainer, borderless: true}}
+      android_ripple={{color: colors.onSurface, borderless: true}}
       style={{
         alignItems: 'center',
-        backgroundColor: colors.secondaryContainer,
+        backgroundColor: colors.surfaceContainerHighest,
         borderRadius: 20,
         height: 40,
         justifyContent: 'center',
@@ -113,7 +113,7 @@ const DelayStepButton: React.FC<{
       <MaterialCommunityIcons
         name={icon}
         size={20}
-        color={colors.onSecondaryContainer}
+        color={colors.onSurface}
       />
     </Pressable>
   );

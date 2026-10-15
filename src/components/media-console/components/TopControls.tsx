@@ -16,6 +16,7 @@ import {Title} from './Title';
 interface TopControlProps {
   title: {primary: string; secondary?: string};
   headerStatus?: string;
+  headerRightInset?: number;
   showControls: boolean;
   panHandlers: GestureResponderHandlers;
   animations: VideoAnimations;
@@ -32,6 +33,7 @@ export const TopControls = memo(
   ({
     title,
     headerStatus,
+    headerRightInset = 0,
     showControls,
     panHandlers,
     animations: {AnimatedView, controlsOpacity, topControl},
@@ -69,7 +71,7 @@ export const TopControls = memo(
         pointerEvents={showControls ? 'box-none' : 'none'}
         style={[_styles.top, controlsOpacity, topControl]}>
         <SafeAreaView style={_styles.topControlGroup}>
-          <View style={_styles.sideControl}>
+          <View style={[_styles.sideControl, {marginRight: Math.max(0, headerRightInset - 48)}]}>
             {backControl}
             <Title {...title} status={headerStatus} />
           </View>
@@ -97,6 +99,7 @@ const _styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     margin: 12,
+    marginTop: 4,
     marginBottom: 18,
   },
   sideControl: {

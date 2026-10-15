@@ -1,4 +1,5 @@
 import {mainStorage} from './StorageService';
+import {normalizePlayerControlLayout, PlayerControlLayout, PlayerControlId, PLAYER_CONTROL_IDS} from '../player/controlLayout';
 import {
   DownloadLocationConfig,
   getDownloadLocationDisplayValue,
@@ -43,6 +44,8 @@ export enum SettingsKeys {
   BACK_BUFFER_MB = 'backBufferMB',
   SEEK_INTERVAL = 'seekInterval',
   PLAYBACK_SPEED = 'playbackSpeed',
+  PLAYER_CONTROL_LAYOUT = 'playerControlLayout',
+  HIDDEN_PLAYER_CONTROLS = 'hiddenPlayerControls',
 
   // Quality settings
   EXCLUDED_QUALITIES = 'excludedQualities',
@@ -481,6 +484,36 @@ export class SettingsStorage {
   getPlaybackSpeed(): number {
     const value = mainStorage.getNumber(SettingsKeys.PLAYBACK_SPEED);
     return isAllowedPlaybackSpeed(value) ? value : DEFAULT_PLAYBACK_SPEED;
+  }
+
+  getPlayerControlLayout(): PlayerControlLayout {
+    try {
+      return normalizePlayerControlLayout(JSON.parse(mainStorage.getString(SettingsKeys.PLAYER_CONTROL_LAYOUT) || 'null'));
+    } catch {
+      return normalizePlayerControlLayout(null);
+    }
+  }
+
+  getHiddenPlayerControls(): PlayerControlId[] {
+    const saved = mainStorage.getArray<string>(SettingsKeys.HIDDEN_PLAYER_CONTROLS) || [];
+    const hidden = new Set<PlayerControlId>((Array.isArray(saved) ? saved : []).filter(id =>
+      PLAYER_CONTROL_IDS.includes(id as PlayerControlId) && id !== 'sleep' && id !== 'episodes',
+    ) as PlayerControlId[]);
+    // These controls already have Preferences switches; keep those keys authoritative.
+    if (!this.showSleepTimer()) hidden.add('sleep');
+    if (!this.showPlayerEpisodeSidebar()) hidden.add('episodes');
+    return [...hidden];
+  }
+
+  setHiddenPlayerControls(hidden: PlayerControlId[]): void {
+    const ids = new Set(hidden.filter(id => PLAYER_CONTROL_IDS.includes(id)));
+    this.setShowSleepTimer(!ids.has('sleep'));
+    this.setShowPlayerEpisodeSidebar(!ids.has('episodes'));
+    mainStorage.setArray(SettingsKeys.HIDDEN_PLAYER_CONTROLS, [...ids].filter(id => id !== 'sleep' && id !== 'episodes'));
+  }
+
+  setPlayerControlLayout(layout: PlayerControlLayout): void {
+    mainStorage.setString(SettingsKeys.PLAYER_CONTROL_LAYOUT, JSON.stringify(normalizePlayerControlLayout(layout)));
   }
 
   setPlaybackSpeed(speed: number): void {

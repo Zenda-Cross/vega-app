@@ -85,6 +85,10 @@ export interface VideoPlayerProps extends ReactVideoProps {
 
   /** Optional stream status displayed below the title and episode. */
   headerStatus?: string;
+  /** Space reserved for the app's configurable top-right toolbar. */
+  headerRightInset?: number;
+  /** Temporarily freeze playback without changing the user's pause state. */
+  playbackSuspended?: boolean;
 
   /**
    * If true, show the time remaing, else show the current time in the Player.
