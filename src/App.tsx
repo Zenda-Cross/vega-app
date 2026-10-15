@@ -37,7 +37,7 @@ import Preferences from './screens/settings/Preference';
 import Appearance from './screens/settings/Appearance';
 import {M3ThemeProvider} from './theme/M3ThemeProvider';
 import {AppState, LogBox, useWindowDimensions} from 'react-native';
-import {EpisodeLink} from './lib/providers/types';
+import {EpisodeLink, Stream} from './lib/providers/types';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -130,6 +130,8 @@ export type RootStackParamList = {
     providerValue?: string;
     infoUrl?: string;
     alwaysCast?: boolean;
+    // Plays first, before online servers load (an unfinished download).
+    initialStream?: Stream;
   };
 };
 
