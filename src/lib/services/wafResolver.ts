@@ -7,7 +7,12 @@ import {useWafStore} from '../zustand/wafStore';
 import {buildCookieString, pickUserAgent} from './cookieManager';
 import {providerAuthor} from '../sandbox/providerScope';
 import {deleteJarCookie, getJarCookieMap} from '../sandbox/providerCookieJar';
-import {isWafOperationDismissed, registerWafOperation, wafCancelledError} from './wafSession';
+import {
+  canPromptWaf,
+  isWafOperationDismissed,
+  registerWafOperation,
+  wafCancelledError,
+} from './wafSession';
 
 /**
  * Opens a dialog WebView so the user can solve a WAF / captcha challenge
@@ -97,6 +102,10 @@ export const openWebView = (
       // because it is either expired or invalid (caused a 403).
       deleteJarCookie(author, url, options.waitForCookie);
     }
+
+    // Background work fails rather than opening a dialog; a solved cookie
+    // above can still be reused.
+    if (!canPromptWaf(scope)) throw wafCancelledError();
 
     return new Promise<OpenWebViewResult>((resolve, reject) => {
       useWafStore.getState().enqueue({

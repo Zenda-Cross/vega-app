@@ -104,3 +104,14 @@ it('follows saved progress that arrives late for the first stream', () => {
   render('ep1', serverA, 900);
   expect(resume.getStartPosition()).toBe(900);
 });
+
+it('keeps the position a playing stream is reloaded at', () => {
+  render('ep1', serverA, 600);
+  loadAndPlayTo(2400);
+  resume.keepPosition(2400);
+  expect(resume.getStartPosition()).toBe(2400);
+  // A server switch after the reload still follows the live position.
+  loadAndPlayTo(2500);
+  render('ep1', serverB, 600);
+  expect(resume.getStartPosition()).toBe(2500);
+});

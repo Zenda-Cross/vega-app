@@ -49,6 +49,7 @@ const CurrentDownloadRow = ({
   onResume,
   onRetry,
   onStartNow,
+  onPlay,
   firstActionRef,
   onFirstActionLayout,
 }: {
@@ -59,6 +60,8 @@ const CurrentDownloadRow = ({
   onResume: () => void;
   onRetry: () => void;
   onStartNow: () => void;
+  // Watch while downloading; absent when the download cannot be played.
+  onPlay?: () => void;
   firstActionRef?: React.RefObject<View | null>;
   onFirstActionLayout?: () => void;
 }) => {
@@ -194,6 +197,35 @@ const CurrentDownloadRow = ({
       )}
 
       <View className="mt-3 flex-row justify-end gap-2">
+        {onPlay && (
+          <TVFocusable
+            testID={`watch-download-${item.id}`}
+            accessibilityRole="button"
+            accessibilityLabel={`Watch ${item.title}`}
+            onPress={onPlay}
+            borderRadius={14}
+            focusScale={1.05}
+            focusBorderColor={focusBorderColor}
+            style={{
+              alignItems: 'center',
+              backgroundColor: colors.secondaryContainer,
+              borderRadius: 14,
+              flexDirection: 'row',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}>
+            <MaterialCommunityIcons
+              name="television-play"
+              size={18}
+              color={colors.onSecondaryContainer}
+            />
+            <Text
+              className="ml-1 text-sm font-bold"
+              style={{color: colors.onSecondaryContainer}}>
+              Watch
+            </Text>
+          </TVFocusable>
+        )}
         {item.status === 'queued' && (
           <TVFocusable
             testID={`start-now-download-${item.id}`}

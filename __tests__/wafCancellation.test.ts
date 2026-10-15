@@ -10,12 +10,16 @@ jest.mock('../src/lib/sandbox/providerScope', () => ({
 }));
 jest.mock('../src/lib/sandbox/providerCookieJar', () => ({
   deleteJarCookie: jest.fn(),
-  getJarCookieMap: () => ({}),
+  getJarCookieMap: (_author: string, url: string) =>
+    url.includes('solved') ? {cf_clearance: 'ok'} : {},
 }));
 
 import {openWebView} from '../src/lib/services/wafResolver';
 import {useWafStore} from '../src/lib/zustand/wafStore';
-import {registerWafOperation} from '../src/lib/services/wafSession';
+import {
+  guardWafPrompts,
+  registerWafOperation,
+} from '../src/lib/services/wafSession';
 
 afterEach(() => useWafStore.getState().cancelAll());
 
@@ -135,4 +139,34 @@ it('also blocks already-running and queued invocations that have not yet request
   ).rejects.toThrow('WAF_DIALOG_CANCELLED');
   retryRelease();
   expect(useWafStore.getState().requests).toHaveLength(0);
+});
+
+it('fails challenges from guarded background work without a dialog until it may prompt', async () => {
+  const scope = new AbortController().signal;
+  let allowed = false;
+  guardWafPrompts(scope, () => allowed);
+  await expect(
+    openWebView('https://background.test/a', undefined, 'alice', scope),
+  ).rejects.toThrow('WAF_DIALOG_CANCELLED');
+  // A cookie solved earlier is still handed out without a dialog.
+  await expect(
+    openWebView(
+      'https://solved.test/a',
+      {waitForCookie: 'cf_clearance'},
+      'alice',
+      scope,
+    ),
+  ).resolves.toMatchObject({url: 'https://solved.test/a'});
+  expect(useWafStore.getState().requests).toHaveLength(0);
+
+  allowed = true;
+  const shown = openWebView(
+    'https://background.test/a',
+    undefined,
+    'alice',
+    scope,
+  ).catch(error => error);
+  expect(useWafStore.getState().requests).toHaveLength(1);
+  useWafStore.getState().cancelAll();
+  expect((await shown).message).toBe('WAF_DIALOG_CANCELLED');
 });

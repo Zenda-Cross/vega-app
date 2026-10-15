@@ -76,6 +76,10 @@ export const useStreamResumePosition = ({
   const markStreamLoaded = useCallback(() => {
     stateRef.current = {...stateRef.current, loaded: true};
   }, []);
+  // Reloading the same stream after an error continues from `position`.
+  const keepPosition = useCallback((position: number) => {
+    stateRef.current = {...stateRef.current, carriedPosition: position};
+  }, []);
 
-  return {getStartPosition, markStreamLoaded};
+  return {getStartPosition, markStreamLoaded, keepPosition};
 };
