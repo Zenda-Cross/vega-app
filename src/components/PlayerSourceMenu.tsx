@@ -45,7 +45,7 @@ const SourceRow = memo(
         tags={item.tags}
         icon={item.icon}
         selected={selected}
-        hasTVPreferredFocus={Boolean(preferredRef) && selected}
+        hasTVPreferredFocus={Boolean(preferredRef)}
         accentColor={accentColor}
         onTVFocus={onTVFocus}
         onPress={onPress}
@@ -61,6 +61,7 @@ const columnContent = {paddingHorizontal: 4, paddingBottom: 8};
 type ColumnProps = {
   items: Item[];
   selectedKey: string;
+  preferredKey?: string;
   title: string;
   message?: string;
   footer?: React.ReactElement;
@@ -74,6 +75,7 @@ const MenuColumn = memo(
   ({
     items,
     selectedKey,
+    preferredKey,
     title,
     message,
     footer,
@@ -82,18 +84,19 @@ const MenuColumn = memo(
     onSelect,
     onTVFocus,
   }: ColumnProps) => {
+    const focusKey = preferredKey ?? selectedKey;
     const renderItem = useCallback(
       ({item}: {item: Item}) => (
         <SourceRow
           item={item}
           selected={item.key === selectedKey}
           accentColor={accentColor}
-          preferredRef={item.key === selectedKey ? preferredRef : undefined}
+          preferredRef={item.key === focusKey ? preferredRef : undefined}
           onSelect={onSelect}
           onTVFocus={onTVFocus}
         />
       ),
-      [selectedKey, accentColor, preferredRef, onSelect, onTVFocus],
+      [selectedKey, focusKey, accentColor, preferredRef, onSelect, onTVFocus],
     );
     const header = (
       <>
@@ -108,7 +111,7 @@ const MenuColumn = memo(
       </>
     );
 
-    // Keep native D-pad traversal and the selected row's ref available on TV.
+    // Keep native D-pad traversal and the preferred row's ref available on TV.
     // Phones only mount a small visible window, even with hundreds of sources.
     return isTV ? (
       <ScrollView style={columnStyle} contentContainerStyle={columnContent}>
@@ -264,12 +267,14 @@ const PlayerSourceMenu = memo(
       () => servers.find(item => item.stream?.link === selectedUrl)?.key || '',
       [servers, selectedUrl],
     );
+    const preferredServerKey = selectedServerKey || servers[0]?.key || '';
 
     return (
       <View className="flex-row w-full h-full p-1 px-4">
         <MenuColumn
           items={servers}
           selectedKey={selectedServerKey}
+          preferredKey={preferredServerKey}
           title="Server"
           message={loading ? 'Loading online servers...' : undefined}
           footer={local}
