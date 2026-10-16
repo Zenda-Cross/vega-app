@@ -21,17 +21,29 @@ export default function HdrBadge({videoView, source, suspended, scale, backgroun
     const subscription = AppState.addEventListener('change', state => setActive(state === 'active'));
     return () => subscription.remove();
   }, []);
+  useEffect(() => {setStatus(null);}, [source]);
   useEffect(() => {
-    setStatus(null);
     if (!active || suspended || Platform.OS !== 'android' || !NativeModules.AmbientVideo?.hdrStatus) return;
     let cancelled = false;
+    let missingChecks = 0;
+    const update = (next: HdrStatus | null) => {
+      if (cancelled) return;
+      if (next) {
+        missingChecks = 0;
+        setStatus(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+      } else if (++missingChecks >= 2) {
+        // A single sample can land during a seek, buffering or a surface transition.
+        // Sustained loss still clears the badge rather than latching HDR indefinitely.
+        setStatus(null);
+      }
+    };
     let timer: ReturnType<typeof setTimeout>;
     const check = async () => {
       try {
         const tag = findNodeHandle(videoView.current);
         const next = tag ? await NativeModules.AmbientVideo.hdrStatus(tag) : null;
-        if (!cancelled) setStatus(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
-      } catch { if (!cancelled) setStatus(null); }
+        update(next);
+      } catch { update(null); }
       if (!cancelled) timer = setTimeout(check, 2500);
     };
     check();

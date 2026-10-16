@@ -241,3 +241,45 @@ it('keeps ambient edits as a draft until Save and discards them on Cancel', () =
   platform.OS = originalOS;
   platform.OS = originalOS;
 });
+
+it('toggles ambient lighting directly with the phone switch and saves its value', () => {
+  const {Platform, Switch} = require('react-native');
+  const originalOS = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    const {tree, press, onSave} = makeEditor();
+    press('Style');
+    const toggle = () => tree.root.findByType(Switch);
+    expect(toggle().props.value).toBe(false);
+    expect(toggle().props.pointerEvents).toBe('auto');
+    act(() => toggle().props.onValueChange(true));
+    expect(toggle().props.value).toBe(true);
+    expect(onSave).not.toHaveBeenCalled();
+    press('Save');
+    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35});
+    act(() => toggle().props.onValueChange(false));
+    expect(toggle().props.value).toBe(false);
+    act(() => tree.unmount());
+  } finally {
+    Platform.OS = originalOS;
+  }
+});
+
+it('toggles ambient lighting using the TV remote row', () => {
+  const {Platform, Switch} = require('react-native');
+  const originalOS = Platform.OS;
+  Platform.OS = 'android';
+  mockIsTV = true;
+  try {
+    const {tree, press, onSave} = makeEditor();
+    press('Style');
+    expect(tree.root.findByType(Switch).props.onValueChange).toBeUndefined();
+    press('Ambient lighting');
+    expect(tree.root.findByType(Switch).props.value).toBe(true);
+    press('Save');
+    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35});
+    act(() => tree.unmount());
+  } finally {
+    Platform.OS = originalOS;
+  }
+});

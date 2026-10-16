@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Platform, Text, View} from 'react-native';
+import {Platform, Switch, Text, View} from 'react-native';
 import {Host, Slider} from '@expo/ui/jetpack-compose';
 import {fillMaxWidth} from '@expo/ui/jetpack-compose/modifiers';
 import {useM3HostTheme} from '../theme/M3PaletteContext';
@@ -196,13 +196,24 @@ export default function PlayerControlStyleEditor({
             accessibilityState={{checked: ambient.enabled}}
             onPress={() => onAmbientChange({...ambient, enabled: !ambient.enabled})}
             borderRadius={18}
-            style={{padding: 12, borderRadius: 18, backgroundColor: '#292929'}}>
-            <Text style={{color: '#bbb', fontSize: 12}}>
-              Ambient lighting · {ambient.enabled ? 'On' : 'Off'}
-            </Text>
-            <Text style={{color: '#999', fontSize: 11, marginTop: 4}}>
-              Soft video colors in the black bars around the picture
-            </Text>
+            style={{padding: 12, borderRadius: 18, backgroundColor: '#292929', flexDirection: 'row', alignItems: 'center', gap: 12}}>
+            <View style={{flex: 1}}>
+              <Text style={{color: '#bbb', fontSize: 12}}>Ambient lighting</Text>
+              <Text style={{color: '#999', fontSize: 11, marginTop: 4}}>
+                Soft video colors in the black bars around the picture
+              </Text>
+            </View>
+            <Switch
+              value={ambient.enabled}
+              focusable={false}
+              pointerEvents={isTV ? 'none' : 'auto'}
+              importantForAccessibility={isTV ? 'no' : 'auto'}
+              accessibilityElementsHidden={isTV}
+              accessibilityLabel="Ambient lighting"
+              onValueChange={isTV ? undefined : enabled => onAmbientChange({...ambient, enabled})}
+              thumbColor={ambient.enabled ? '#fff' : '#bbb'}
+              trackColor={{false: '#555', true: color}}
+            />
           </TVFocusable>
           {ambient.enabled && <StyleSlider
             label="Ambient intensity" value={ambient.intensity}

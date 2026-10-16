@@ -75,3 +75,64 @@ it('ignores stale native replies after playback is suspended', async () => {
   expect(query).toHaveBeenCalledTimes(1);
   act(() => tree.unmount());
 });
+
+const confirmedHdr = {type: 'HDR', codec: 'video/hevc', resolution: '1920 × 1080', transfer: 'PQ', colorSpace: 'BT.2020', headroom: 2, displayTypes: 'HDR10'};
+const badgeCount = (tree: renderer.ReactTestRenderer) => tree.root.findAllByProps({accessibilityLabel: 'HDR playback details'}).length;
+const poll = async () => { await act(async () => {jest.advanceTimersByTime(2500); await Promise.resolve();}); };
+
+it('keeps confirmed HDR across a single missing sample, but clears sustained loss', async () => {
+  query.mockResolvedValue(confirmedHdr);
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  query.mockResolvedValueOnce(null).mockResolvedValue(confirmedHdr);
+  await poll();
+  expect(badgeCount(tree)).toBe(1);
+  await poll();
+  expect(badgeCount(tree)).toBe(1);
+  query.mockResolvedValue(null);
+  await poll();
+  expect(badgeCount(tree)).toBe(1);
+  await poll();
+  expect(badgeCount(tree)).toBe(0);
+  act(() => tree.unmount());
+});
+
+it('preserves confirmed HDR while polling is suspended and resumes without flashing', async () => {
+  query.mockResolvedValue(confirmedHdr);
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  act(() => tree.update(<HdrBadge {...props} suspended />));
+  expect(badgeCount(tree)).toBe(1);
+  const calls = query.mock.calls.length;
+  await poll();
+  expect(query).toHaveBeenCalledTimes(calls);
+  query.mockResolvedValueOnce(null).mockResolvedValue(confirmedHdr);
+  await act(async () => {tree.update(<HdrBadge {...props} />);});
+  expect(badgeCount(tree)).toBe(1);
+  await poll();
+  expect(badgeCount(tree)).toBe(1);
+  act(() => tree.unmount());
+});
+
+it('clears the previous video badge immediately when the source changes', async () => {
+  query.mockResolvedValue(confirmedHdr);
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  expect(badgeCount(tree)).toBe(1);
+  query.mockResolvedValue(null);
+  await act(async () => {tree.update(<HdrBadge {...props} source="sdr-video" />);});
+  expect(badgeCount(tree)).toBe(0);
+  act(() => tree.unmount());
+});
+
+it('tolerates one failed native query without latching through repeated failures', async () => {
+  query.mockResolvedValue(confirmedHdr);
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  query.mockRejectedValue(new Error('Surface unavailable'));
+  await poll();
+  expect(badgeCount(tree)).toBe(1);
+  await poll();
+  expect(badgeCount(tree)).toBe(0);
+  act(() => tree.unmount());
+});

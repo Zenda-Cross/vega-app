@@ -3754,19 +3754,20 @@ const Player = ({route}: Props): React.JSX.Element => {
       )}
 
       {/* Configurable toolbar controls. Drag handlers exist only in the editor. */}
-      {!isCasting && !streamLoading && !editingControls && (
+      {!isCasting && (
         <LockAnimatedView
-          style={isPlayerLocked ? lockButtonStyle : [controlsTopStyle, controlsOpacityStyle]}
+          style={[isPlayerLocked ? lockButtonStyle : [controlsTopStyle, controlsOpacityStyle],
+            (streamLoading || editingControls) && {display: 'none'}]}
           className="absolute top-3 right-5 z-50"
-          pointerEvents={(isPlayerLocked ? showUnlockButton : showControls) && !showSettings && !showEpisodeSidebar ? 'box-none' : 'none'}>
-          {isPlayerLocked ? (
+          pointerEvents={!streamLoading && !editingControls && (isPlayerLocked ? showUnlockButton : showControls) && !showSettings && !showEpisodeSidebar ? 'box-none' : 'none'}>
+          {isPlayerLocked && (
             <TouchableOpacity onPress={togglePlayerLock} accessibilityRole="button" accessibilityLabel="Unlock player" className="p-2 items-center justify-center rounded-full">
               <MaterialCommunityIcons name="lock-outline" color={BOTTOM_CONTROL_ICON_COLOR} size={24 * controlStyle.scale} />
             </TouchableOpacity>
-          ) : (
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          )}
+            <View style={{flexDirection: 'row', alignItems: 'center', display: isPlayerLocked ? 'none' : 'flex'}}>
               <HdrBadge videoView={nativeVideoViewRef} source={String(videoPlayerProps.source?.uri || '')}
-                suspended={streamLoading} scale={controlStyle.scale} backgroundOpacity={controlStyle.backgroundOpacity}
+                suspended={streamLoading || editingControls || isPlayerLocked} scale={controlStyle.scale} backgroundOpacity={controlStyle.backgroundOpacity}
                 onWidthChange={setHdrWidth} onInteract={() => setShowControls(true)} />
             {toolbarControls.some(control => control.visible) ? (
                 <PlayerControlBar ids={fittedControlLayout.top} controls={toolbarControls} top
@@ -3778,7 +3779,6 @@ const Player = ({route}: Props): React.JSX.Element => {
               </TouchableOpacity>
             )}
             </View>
-          )}
         </LockAnimatedView>
       )}
       {!isCasting && !isPlayerLocked && !showSettings && !showEpisodeSidebar && !editingControls && (
