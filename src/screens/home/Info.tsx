@@ -23,6 +23,7 @@ import Button from '../../components/ui/Button';
 import AppText from '../../components/ui/Text';
 import {QueryErrorBoundary} from '../../components/ErrorBoundary';
 import SeasonList from '../../components/SeasonList';
+import ScreenOverlayHost from '../../components/ScreenOverlayHost';
 import LocalSeasonList from '../../components/local-content/LocalSeasonList';
 import SkeletonLoader from '../../components/Skeleton';
 import {useContentDetails} from '../../lib/hooks/useContentInfo';
@@ -347,6 +348,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           <StatusBarScrim visible={statusBarScrimVisible} />
           <StatusBar style="light" />
           <TVFocusGuide autoFocus={true} trapFocusDown={true} trapFocusRight={true} style={{flex: 1}}>
+          <ScreenOverlayHost>
           <FlatList
             style={{backgroundColor: 'transparent'}}
             data={[]}
@@ -444,6 +446,7 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
               />
             }
           />
+          </ScreenOverlayHost>
           </TVFocusGuide>
           <InfoStoryModal
             fallbackBackdrop={backgroundImage}

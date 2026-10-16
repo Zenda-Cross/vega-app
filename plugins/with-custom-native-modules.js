@@ -84,6 +84,8 @@ function withCustomNativeModules(config) {
       'TorrentPackage()',
       'LauncherIconPackage()',
       'VideoThumbnailPackage()',
+      'AmbientVideoPackage()',
+      'VideoDecoderPackage()',
       'ProviderHttpPackage()',
       'RemoteDeliveryPackage()',
       'DlnaPackage()',
@@ -157,6 +159,14 @@ function withCustomNativeModules(config) {
         /dependencies\s*\{/,
         match =>
           `${match}\n    implementation 'androidx.media3:media3-transformer:1.8.0'\n`,
+      );
+    }
+
+    // Read the active player and rendering surface for confirmed HDR status.
+    if (!contents.includes('androidx.media3:media3-ui')) {
+      contents = contents.replace(
+        /dependencies\s*\{/,
+        match => `${match}\n    implementation 'androidx.media3:media3-ui:1.8.0'\n`,
       );
     }
 

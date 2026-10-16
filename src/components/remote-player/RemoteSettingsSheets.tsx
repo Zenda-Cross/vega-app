@@ -1,3 +1,4 @@
+import {languageLabel} from '../../lib/player/languageLabel';
 import {isRemotePlaybackCanceled} from '../../lib/remote/remotePlaybackErrors';
 import * as DocumentPicker from 'expo-document-picker';
 import React, {useEffect, useState} from 'react';
@@ -77,9 +78,6 @@ const TITLES: Record<RemoteSheetType, string> = {
   speed: 'Playback speed',
   episodes: 'Episodes',
 };
-
-const languageLabel = (language?: string) =>
-  language && language !== 'und' ? language.toUpperCase() : '';
 
 const DELAY_STEP_MS = 50;
 const DELAY_LONG_STEP_MS = 500;
@@ -443,7 +441,7 @@ export const RemoteSettingsSheets: React.FC<RemoteSettingsSheetsProps> = ({
                 return (
                   <RemoteSheetOption
                     key={track.id || i}
-                    title={track.title || language || `Track ${i + 1}`}
+                    title={languageLabel(track.title, language || `Track ${i + 1}`)}
                     supportingText={[language, track.codec]
                       .filter(Boolean)
                       .join(' · ')}
@@ -483,7 +481,7 @@ export const RemoteSettingsSheets: React.FC<RemoteSettingsSheetsProps> = ({
               return (
                 <RemoteSheetOption
                   key={sub.id || i}
-                  title={sub.title || language || `Subtitle ${i + 1}`}
+                  title={languageLabel(sub.title, language || `Subtitle ${i + 1}`)}
                   supportingText={[
                     language,
                     sub.isEmbedded ? 'Embedded' : 'External',

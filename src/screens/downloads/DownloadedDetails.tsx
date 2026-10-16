@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import type {DownloadsStackParamList, RootStackParamList} from '../../App';
+import ManagedEpisodeSelectionBar from '../../components/ManagedEpisodeSelectionBar';
 import AppDialog from '../../components/AppDialog';
 import EpisodeListSkeleton from '../../components/EpisodeListSkeleton';
 import {showAppDialog} from '../../lib/zustand/appDialogStore';
@@ -73,7 +74,11 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
   const completed = useDownloadsStore(useShallow(selectCompletedDownloads));
   const markMissing = useDownloadsStore(state => state.markMissing);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<DownloadItem | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<DownloadItem[]>([]);
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelection = (item: DownloadItem) => setSelectedIds(current => {const next = new Set(current); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next;});
+  const exitSelection = () => {setSelecting(false); setSelectedIds(new Set());};
   const [readMore, setReadMore] = useState(false);
   const group = useMemo(
     () =>
@@ -108,11 +113,11 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
   useFocusEffect(
     useCallback(() => {
       const backSub = BackHandler.addEventListener('hardwareBackPress', () => {
-        navigation.goBack();
+        if (selecting) {exitSelection();} else navigation.goBack();
         return true;
       });
       return () => backSub.remove();
-    }, [navigation]),
+    }, [navigation, selecting]),
   );
 
   const items = useMemo(() => {
@@ -224,14 +229,17 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
 
   // Promise chain instead of try/finally: React Compiler skips any component
   // that contains a finally clause.
-  const deleteItem = async (item: DownloadItem) => {
-    if (deletingId) {
-      return;
-    }
-    setDeletingId(item.id);
-    await deleteDownloadedItemAndSubtitles(item).finally(() => {
+  const deleteItems = async (targets: DownloadItem[]) => {
+    if (deletingId || !targets.length) return;
+    setDeletingId(targets[0].id);
+    try {
+      for (const item of targets) await deleteDownloadedItemAndSubtitles(item);
+      exitSelection();
+    } catch (error) {
+      showAppDialog({title: 'Could not delete all files', message: error instanceof Error ? error.message : String(error), actions: [{label: 'OK'}]});
+    } finally {
       setDeletingId(null);
-    });
+    }
   };
 
   const backgroundImage =
@@ -259,7 +267,7 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
           />
         ) : null}
       </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: selecting ? 120 : 0}}>
         <View className="relative h-[340px] w-full">
           <LinearGradient
             colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.18)', '#000000']}
@@ -424,6 +432,7 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
               No downloaded episodes found for "{searchText}"
             </Text>
           ) : null}
+
           {isValidating ? (
             <EpisodeListSkeleton downloaded />
           ) : items.map((item, index) => (
@@ -432,24 +441,32 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
               item={item}
               index={index}
               totalItems={items.length}
-              isDeleting={deletingId === item.id}
+              isDeleting={!!deletingId}
+              selecting={selecting}
+              selected={selectedIds.has(item.id)}
+              onToggleSelection={toggleSelection}
+              onStartSelection={episode => {setSelecting(true); toggleSelection(episode);}}
               onPlay={playItem}
               onBeforePlay={control => {
                 if (!isTV) return;
                 playerReturnFocusRef.current = control;
                 restorePlayerFocusRef.current = true;
               }}
-              onDelete={setPendingDelete}
+              onDelete={episode => setPendingDelete([episode])}
             />
           ))}
         </View>
         <View className="h-16" />
       </ScrollView>
+      {selecting && <ManagedEpisodeSelectionBar count={selectedIds.size} busy={!!deletingId} allSelected={items.length > 0 && items.every(item => selectedIds.has(item.id))} onDone={exitSelection}
+        onSelectAll={() => setSelectedIds(current => {const next = new Set(current); const all = items.every(item => next.has(item.id)); for (const item of items) {if (all) next.delete(item.id); else next.add(item.id);} return next;})}
+        onInvertSelection={() => setSelectedIds(current => {const next = new Set(current); for (const item of items) {if (next.has(item.id)) next.delete(item.id); else next.add(item.id);} return next;})}
+        onDelete={() => setPendingDelete(group.items.filter(item => selectedIds.has(item.id)))} />}
       <AppDialog
-        visible={pendingDelete !== null}
-        title="Delete download?"
+        visible={pendingDelete.length > 0}
+        title={pendingDelete.length > 1 ? `Delete ${pendingDelete.length} downloads?` : "Delete download?"}
         message={`Remove ${
-          pendingDelete?.episodeName || pendingDelete?.title || 'this download'
+          pendingDelete.length > 1 ? `${pendingDelete.length} downloaded episodes` : pendingDelete[0]?.episodeName || pendingDelete[0]?.title || 'this download'
         } from your device?`}
         primary={primary}
         variant="warning"
@@ -459,15 +476,13 @@ const DownloadedDetails = ({navigation, route}: DownloadedDetailsProps) => {
             label: 'Delete',
             variant: 'destructive',
             onPress: () => {
-              const item = pendingDelete;
-              setPendingDelete(null);
-              if (item) {
-                deleteItem(item);
-              }
+              const targets = pendingDelete;
+              setPendingDelete([]);
+              deleteItems(targets);
             },
           },
         ]}
-        onDismiss={() => setPendingDelete(null)}
+        onDismiss={() => setPendingDelete([])}
       />
     </TVFocusGuide>
   );

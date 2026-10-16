@@ -121,6 +121,33 @@ describe('settings defaults', () => {
     expect(settingsStorage.getHiddenPlayerControls()).toEqual(['audio']);
   });
 
+  it('defaults ambient lighting off and persists a bounded intensity', () => {
+    expect(settingsStorage.isAmbientVideoEnabled()).toBe(false);
+    expect(settingsStorage.getAmbientIntensity()).toBe(0.35);
+    settingsStorage.setAmbientVideoEnabled(true);
+    settingsStorage.setAmbientIntensity(0.6);
+    expect(settingsStorage.isAmbientVideoEnabled()).toBe(true);
+    expect(settingsStorage.getAmbientIntensity()).toBe(0.6);
+    settingsStorage.setAmbientIntensity(5);
+    expect(settingsStorage.getAmbientIntensity()).toBe(1);
+    settingsStorage.setAmbientIntensity(NaN);
+    expect(settingsStorage.getAmbientIntensity()).toBe(1);
+    mockNumberValues.set(SettingsKeys.AMBIENT_INTENSITY, NaN);
+    expect(settingsStorage.getAmbientIntensity()).toBe(0.35);
+  });
+
+  it('persists player styling, validates saved values, and defaults corrupt JSON', () => {
+    const defaults = settingsStorage.getPlayerControlStyle();
+    expect(defaults).toEqual({labels: 'full', alignment: 'distributed', scale: 1, backgroundOpacity: 0, seekbarScale: 1});
+    const style = {...defaults, labels: 'hidden' as const, alignment: 'right' as const, scale: 1.2, backgroundOpacity: 0.4, seekbarScale: 1.5};
+    settingsStorage.setPlayerControlStyle(style);
+    expect(settingsStorage.getPlayerControlStyle()).toEqual(style);
+    mockStringValues.set(SettingsKeys.PLAYER_CONTROL_STYLE, JSON.stringify({labels: 'bad', alignment: 'bad', scale: 100, backgroundOpacity: -1, seekbarScale: 999}));
+    expect(settingsStorage.getPlayerControlStyle()).toEqual({...defaults, scale: 1.4, seekbarScale: 2});
+    mockStringValues.set(SettingsKeys.PLAYER_CONTROL_STYLE, '{broken');
+    expect(settingsStorage.getPlayerControlStyle()).toEqual(defaults);
+  });
+
   it('persists the player toolbar layout and recovers from invalid stored JSON', () => {
     const layout = settingsStorage.getPlayerControlLayout();
     layout.top = layout.top.filter(id => id !== 'lock');
@@ -128,7 +155,7 @@ describe('settings defaults', () => {
     settingsStorage.setPlayerControlLayout(layout);
     expect(settingsStorage.getPlayerControlLayout()).toEqual(layout);
     mockStringValues.set(SettingsKeys.PLAYER_CONTROL_LAYOUT, '{broken');
-    expect(settingsStorage.getPlayerControlLayout().top).toEqual(['sleep', 'lock', 'cast']);
+    expect(settingsStorage.getPlayerControlLayout().top).toEqual(['sleep', 'lock', 'cast', 'decoder']);
   });
 
   it('remembers a playback speed from the picker list', () => {

@@ -1,5 +1,5 @@
 import type {RefObject} from 'react';
-import type {ViewStyle, StyleProp, Animated} from 'react-native';
+import type {View, ViewStyle, StyleProp, Animated} from 'react-native';
 import type Reanimated from 'react-native-reanimated';
 import type {StyleProps} from 'react-native-reanimated';
 import type {VideoRef, ReactVideoProps} from 'react-native-video';
@@ -87,6 +87,11 @@ export interface VideoPlayerProps extends ReactVideoProps {
   headerStatus?: string;
   /** Space reserved for the app's configurable top-right toolbar. */
   headerRightInset?: number;
+  controlScale?: number;
+  ambientVideoSize?: {width: number; height: number} | null;
+  ambientDisabled?: boolean;
+  nativeVideoViewRef?: RefObject<View | null>;
+  seekbarScale?: number;
   /** Temporarily freeze playback without changing the user's pause state. */
   playbackSuspended?: boolean;
 

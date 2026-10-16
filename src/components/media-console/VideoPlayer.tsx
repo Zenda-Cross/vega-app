@@ -1,3 +1,5 @@
+import AmbientBackground from './components/AmbientBackground';
+import {getAmbientBars} from '../../lib/player/ambient';
 import {useControlVisibility} from './hooks/useControlVisibility';
 import React, {
   Dispatch,
@@ -61,7 +63,11 @@ const AnimatedVideoPlayer = (
     volume = 1,
     title = {primary: '', secondary: ''},
     headerStatus,
+    ambientVideoSize,
+    ambientDisabled = false,
     headerRightInset = 0,
+    controlScale = 1,
+    seekbarScale = 1,
     playbackSuspended = false,
     rate = 1,
     showDuration = false,
@@ -104,6 +110,27 @@ const AnimatedVideoPlayer = (
     skips,
   } = props;
 
+  const localVideoView = useRef<View>(null);
+  const ambientView = props.nativeVideoViewRef || localVideoView;
+  const [ambientConfig, setAmbientConfig] = useState(() => ({enabled: settingsStorage.isAmbientVideoEnabled(), intensity: settingsStorage.getAmbientIntensity()}));
+  const [ambientViewport, setAmbientViewport] = useState({width: 0, height: 0});
+  const [ambientPip, setAmbientPip] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setAmbientConfig(previous => {
+      const enabled = settingsStorage.isAmbientVideoEnabled();
+      const intensity = settingsStorage.getAmbientIntensity();
+      return enabled === previous.enabled && intensity === previous.intensity ? previous : {enabled, intensity};
+    });
+  }, [playbackSuspended]));
+  const ambientBars = useMemo(() => getAmbientBars(ambientViewport.width, ambientViewport.height, ambientVideoSize?.width || 0, ambientVideoSize?.height || 0, resizeMode), [ambientViewport, ambientVideoSize, resizeMode]);
+  const handleAmbientLayout = useCallback((event: import('react-native').LayoutChangeEvent) => {
+    const {width, height} = event.nativeEvent.layout;
+    setAmbientViewport(previous => previous.width === width && previous.height === height ? previous : {width, height});
+  }, []);
+  const handlePipStatus = useCallback((event: {isActive: boolean}) => {
+    setAmbientPip(event.isActive);
+    props.onPictureInPictureStatusChanged?.(event);
+  }, [props.onPictureInPictureStatusChanged]);
   const mounted = useRef(false);
   const originalBrightness = useRef<number | null>(null);
   const _videoRef = useRef<VideoRef>(null);
@@ -980,8 +1007,9 @@ const AnimatedVideoPlayer = (
       containerStyles={styles.containerStyle}
       onScreenTouch={events.onScreenTouch}
       testID={testID}>
-      <View style={[_styles.player.container, styles.containerStyle]}>
+      <View style={[_styles.player.container, styles.containerStyle]} onLayout={handleAmbientLayout}>
         <Animated.View
+          ref={ambientView} collapsable={false}
           pointerEvents="none"
           style={[_styles.player.video, zoomAnimatedStyle]}>
           <Video
@@ -997,6 +1025,7 @@ const AnimatedVideoPlayer = (
             style={[_styles.player.video, styles.videoStyle]}
             source={source}
             onBuffer={onBuffer}
+            onPictureInPictureStatusChanged={handlePipStatus}
             // SurfaceView is rendered in a separate Android surface and does
             // not follow React Native transforms. Pinch zoom therefore needs
             // TextureView, which remains part of the normal view hierarchy.
@@ -1004,6 +1033,10 @@ const AnimatedVideoPlayer = (
               Platform.OS === 'android' ? true : props.useTextureView
             }
           />
+          {Platform.OS === 'android' && ambientConfig.enabled && !ambientDisabled && !ambientPip && sourceUri && (
+            <AmbientBackground key={String(sourceUri)} videoView={ambientView} bars={ambientBars}
+              paused={_paused || playbackSuspended || loading || buffering} intensity={ambientConfig.intensity} />
+          )}
         </Animated.View>
         {
           <>
@@ -1015,6 +1048,7 @@ const AnimatedVideoPlayer = (
                   title={title}
                   headerStatus={headerStatus}
                   headerRightInset={headerRightInset}
+                  controlScale={controlScale}
                   panHandlers={volumePanResponder.panHandlers}
                   animations={animations}
                   disableBack={disableBack}
@@ -1030,6 +1064,7 @@ const AnimatedVideoPlayer = (
                   <Loader color={seekColor} />
                 ) : (
                   <PlayPause
+                    controlScale={controlScale}
                     animations={animations}
                     disablePlayPause={disablePlayPause}
                     paused={_paused}
@@ -1066,6 +1101,8 @@ const AnimatedVideoPlayer = (
                   onSkipFeedback={handleSkipFeedback}
                 />
                 <BottomControls
+                  controlScale={controlScale}
+                  seekbarScale={seekbarScale}
                   animations={animations}
                   panHandlers={seekPanResponder.panHandlers}
                   disableTimer={disableTimer}
@@ -1100,6 +1137,7 @@ const AnimatedVideoPlayer = (
         }
         {!hideAllControlls && !disablePlayPause && !disableSeekButtons ? (
           <SeekControls
+            size={54 * controlScale}
             seekSeconds={rewindTime}
             onPressRewind={rewind}
             onPressForward={forward}

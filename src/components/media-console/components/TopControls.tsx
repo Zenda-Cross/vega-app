@@ -17,6 +17,7 @@ interface TopControlProps {
   title: {primary: string; secondary?: string};
   headerStatus?: string;
   headerRightInset?: number;
+  controlScale?: number;
   showControls: boolean;
   panHandlers: GestureResponderHandlers;
   animations: VideoAnimations;
@@ -34,6 +35,7 @@ export const TopControls = memo(
     title,
     headerStatus,
     headerRightInset = 0,
+    controlScale = 1,
     showControls,
     panHandlers,
     animations: {AnimatedView, controlsOpacity, topControl},
@@ -49,6 +51,7 @@ export const TopControls = memo(
       <NullControl />
     ) : (
       <Back
+        scale={controlScale}
         showControls={showControls}
         onBack={onBack}
         resetControlTimeout={resetControlTimeout}
@@ -73,7 +76,7 @@ export const TopControls = memo(
         <SafeAreaView style={_styles.topControlGroup}>
           <View style={[_styles.sideControl, {marginRight: Math.max(0, headerRightInset - 48)}]}>
             {backControl}
-            <Title {...title} status={headerStatus} />
+            <Title {...title} status={headerStatus} scale={controlScale} />
           </View>
           <View style={_styles.pullRight}>{volumeControl}</View>
         </SafeAreaView>

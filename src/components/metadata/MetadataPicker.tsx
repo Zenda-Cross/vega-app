@@ -88,10 +88,12 @@ export function MetadataPicker({
   title,
   onChoose,
   onBack,
+  options,
 }: {
   title: LocalTitle;
   onChoose: (metadata: LocalMetadata) => void;
   onBack: () => void;
+  options?: React.ReactNode;
 }) {
   const colors = useM3Colors();
   const [mode, setMode] = useState<'search' | 'id'>('search');
@@ -177,6 +179,7 @@ export function MetadataPicker({
           Choose movie or series
         </AppText>
       </View>
+      {options}
       <View style={{flexDirection: 'row', gap: 8}}>
         <ImportAction
           label="Search titles"

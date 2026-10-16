@@ -13,6 +13,8 @@ import {formatTime} from '../../utils';
 import type {SkipInterval} from '../../../../lib/providers/types';
 
 interface SeekbarProps {
+  controlScale?: number;
+  seekbarScale?: number;
   seekerFillWidth: number;
   seekerPosition: number;
   seekColor: string;
@@ -38,6 +40,8 @@ const PREVIEW_WIDTH = 160;
 
 export const Seekbar = ({
   seekColor,
+  controlScale = 1,
+  seekbarScale = 1,
   seekerFillWidth,
   seekerPosition,
   cachedPosition,
@@ -57,6 +61,7 @@ export const Seekbar = ({
   snapPosition,
   skips,
 }: SeekbarProps) => {
+  const size = controlScale * seekbarScale;
   const [trackWidth, setTrackWidth] = useState(0);
   const previewLeft = useMemo(
     () =>
@@ -71,7 +76,9 @@ export const Seekbar = ({
   );
   const timestampStyle = {
     color: 'hsl(0, 0%, 70%)',
-    fontSize: 12,
+    fontSize: 12 * controlScale,
+    lineHeight: 16 * controlScale,
+    includeFontPadding: false,
     fontWeight: '300' as const,
     letterSpacing: 0.2,
   };
@@ -79,10 +86,11 @@ export const Seekbar = ({
   return (
     <View
       style={{
-        marginBottom: 55,
+        marginBottom: 55 * controlScale,
+        paddingHorizontal: 12,
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'flex-end',
+        alignItems: 'center',
       }}>
       <Pressable
         hitSlop={12}
@@ -109,11 +117,11 @@ export const Seekbar = ({
         </Text>
       </Pressable>
       <View
-        style={{...styles.container, width: '80%'}}
+        style={{...styles.container, width: '80%', height: 20 * size, alignSelf: 'center', flexShrink: 1, minWidth: 0}}
         collapsable={false}
         {...seekerPanHandlers}>
         {seeking && trackWidth > 0 ? (
-          <View style={[styles.preview, {left: previewLeft}]} pointerEvents="none">
+          <View style={[styles.preview, {left: previewLeft, bottom: 30 * size}]} pointerEvents="none">
             {thumbnailUri ? (
               <Image
                 key={thumbnailUri}
@@ -143,7 +151,7 @@ export const Seekbar = ({
           </View>
         ) : null}
         <View
-          style={styles.track}
+          style={[styles.track, {height: 2 * size, top: 9 * size, borderRadius: size}]}
           onLayout={event => {
             const width = event.nativeEvent.layout.width;
             if (width > 0 && Math.abs(width - trackWidth) > 1) {
@@ -156,10 +164,10 @@ export const Seekbar = ({
             style={{
               width: cachedPosition,
               backgroundColor: '#dedede',
-              height: 2,
+              height: 2 * size,
               position: 'absolute',
               top: 0,
-              borderRadius: 1,
+              borderRadius: size,
             }}
             pointerEvents="none"
           />
@@ -168,6 +176,8 @@ export const Seekbar = ({
               styles.fill,
               {
                 width: seekerFillWidth,
+                height: 2 * size,
+                borderRadius: size,
                 backgroundColor: seekColor || '#FFF',
               },
             ]}
@@ -183,10 +193,10 @@ export const Seekbar = ({
                       key={`skip-from-${idx}-${skip.from}`}
                       style={{
                         position: 'absolute',
-                        left: Math.max(0, leftPos - 1.5),
+                        left: Math.max(0, leftPos - 1.5 * size),
                         top: 0,
-                        width: 3,
-                        height: 2,
+                        width: 3 * size,
+                        height: 2 * size,
                         backgroundColor: '#000000',
                         zIndex: 3,
                       }}
@@ -201,10 +211,10 @@ export const Seekbar = ({
                       key={`skip-to-${idx}-${skip.to}`}
                       style={{
                         position: 'absolute',
-                        left: Math.max(0, leftPos - 1.5),
+                        left: Math.max(0, leftPos - 1.5 * size),
                         top: 0,
-                        width: 3,
-                        height: 2,
+                        width: 3 * size,
+                        height: 2 * size,
                         backgroundColor: '#000000',
                         zIndex: 3,
                       }}
@@ -218,15 +228,15 @@ export const Seekbar = ({
         </View>
         {seeking && snapPosition !== null ? (
           <View
-            style={[styles.snapMarker, {left: snapPosition - 1}]}
+            style={[styles.snapMarker, {left: snapPosition - size, top: 4 * size, width: 2 * size, height: 12 * size, borderRadius: size}]}
             pointerEvents="none"
           />
         ) : null}
         <View
-          style={[styles.handle, {left: seekerPosition}]}
+          style={[styles.handle, {left: seekerPosition, top: 0, marginLeft: -12 * size, width: 24 * size, height: 24 * size}]}
           pointerEvents="none">
           <View
-            style={[styles.circle, {backgroundColor: seekColor || '#FFF'}]}
+            style={[styles.circle, {backgroundColor: seekColor || '#FFF', top: 6 * size, left: 8 * size, width: 8 * size, height: 8 * size, borderRadius: 4 * size}]}
             pointerEvents="none"
           />
         </View>

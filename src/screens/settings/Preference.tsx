@@ -3,6 +3,7 @@ import {
   View,
   ToastAndroid,
   BackHandler,
+  Platform,
 } from 'react-native';
 import React, {useState, useCallback} from 'react';
 import {settingsStorage, SEEK_INTERVAL_OPTIONS} from '../../lib/storage';
@@ -19,6 +20,7 @@ import DropdownField from '../../components/ui/DropdownField';
 import SettingsSection from '../../components/ui/SettingsSection';
 import SettingsPage from '../../components/ui/SettingsPage';
 import SettingsSwitchRow from '../../components/ui/SettingsSwitchRow';
+import SettingsSliderRow from '../../components/ui/SettingsSliderRow';
 import Surface from '../../components/ui/Surface';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import {TVFocusable, TVFocusGuide} from '../../components/tv';
@@ -102,6 +104,9 @@ const Preferences = ({navigation}: any) => {
   const [showEpisodeSidebar, setShowEpisodeSidebar] = useState<boolean>(() =>
     settingsStorage.showPlayerEpisodeSidebar(),
   );
+
+  const [ambientVideo, setAmbientVideo] = useState(() => settingsStorage.isAmbientVideoEnabled());
+  const [ambientIntensity, setAmbientIntensity] = useState(() => Math.round(settingsStorage.getAmbientIntensity() * 100));
 
   const [showSleepTimer, setShowSleepTimer] = useState<boolean>(() =>
     settingsStorage.showSleepTimer(),
@@ -353,6 +358,14 @@ const Preferences = ({navigation}: any) => {
           <TmdbApiKeyPreference draft={{inputKey: tmdbInputKey, setInputKey: setTmdbInputKey}} />
 
           <SettingsSection title="Playback">
+            {Platform.OS === 'android' && <>
+            <SettingsSwitchRow title="Ambient lighting" description="Soft video colors in the black bars around the picture"
+              value={ambientVideo} onValueChange={next => {settingsStorage.setAmbientVideoEnabled(next); setAmbientVideo(next);}} />
+            {ambientVideo && <SettingsSliderRow title="Ambient intensity" value={ambientIntensity} min={0} max={100} step={5}
+              valueDisplay={`${ambientIntensity}%`} widestValue="100%" onValueChange={setAmbientIntensity}
+              onValueChangeFinished={value => settingsStorage.setAmbientIntensity(value / 100)} />}
+            </>}
+
             <SettingsSwitchRow
               title="External player"
               description="Open streams in your preferred video app"

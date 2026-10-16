@@ -99,3 +99,18 @@ it('preserves stream objects and quality indexes when selecting visible rows', (
   expect(props.onSelectLocal).toHaveBeenCalledTimes(1);
   act(() => tree.unmount());
 });
+
+it('shows live resolution under Auto without changing the adaptive selection or repainting server rows', () => {
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {tree = renderer.create(<PlayerSourceMenu {...props} activeResolution="720p" />);});
+  const auto = () => tree.root.findAllByType(PlayerMenuRow).find(row => row.props.title === 'Auto')!;
+  expect(auto().props.detail).toBe('Adaptive bitrate · 720p');
+  expect(auto().props.selected).toBe(true);
+  const renders = mockRowRender.mock.calls.filter(([title]) => title.startsWith('Server ')).length;
+  act(() => tree.update(<PlayerSourceMenu {...props} activeResolution="1080p" />));
+  expect(auto().props.detail).toBe('Adaptive bitrate · 1080p');
+  expect(mockRowRender.mock.calls.filter(([title]) => title.startsWith('Server ')).length).toBe(renders);
+  act(() => tree.update(<PlayerSourceMenu {...props} />));
+  expect(auto().props.detail).toBe('Adaptive bitrate');
+  act(() => tree.unmount());
+});

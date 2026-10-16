@@ -1,3 +1,4 @@
+import {deduplicateVideoTracks} from '../player/playbackQuality';
 import {externalVideoStream} from '../services/videoIntent';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -866,15 +867,7 @@ export const useVideoSettings = () => {
     if (!tracks || tracks.length === 0) {
       return;
     }
-    const uniqueMap = new Map();
-    const uniqueTracks = tracks.filter(track => {
-      const key = `bitrate-${track.bitrate}-quality-${track.height || track.width}`;
-      if (!uniqueMap.has(key)) {
-        uniqueMap.set(key, true);
-        return true;
-      }
-      return false;
-    });
+    const uniqueTracks = deduplicateVideoTracks(tracks);
     uniqueTracks.sort(
       (a, b) =>
         (b.height || 0) - (a.height || 0) ||

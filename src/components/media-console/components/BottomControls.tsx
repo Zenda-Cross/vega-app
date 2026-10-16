@@ -5,17 +5,16 @@ import {
   StyleSheet,
   GestureResponderHandlers,
 } from 'react-native';
-import {Timer} from './Timer';
 import {NullControl} from './NullControl';
-import {Fullscreen} from './Fullscreen';
 import {Seekbar} from './Seekbar';
-import {calculateTime} from '../utils';
 import type {VideoAnimations} from '../types';
 import type {SkipInterval} from '../../../lib/providers/types';
 import {styles} from './styles';
 
 interface BottomControlsProps {
   showControls: boolean;
+  controlScale?: number;
+  seekbarScale?: number;
   animations: VideoAnimations;
   panHandlers: GestureResponderHandlers;
   disableTimer: boolean;
@@ -46,10 +45,11 @@ interface BottomControlsProps {
 
 export const BottomControls = ({
   showControls,
+  controlScale = 1,
+  seekbarScale = 1,
   animations: {AnimatedView, ...animations},
   panHandlers,
   disableSeekbar,
-  disableTimer,
   duration,
   seekColor,
   showDuration,
@@ -61,9 +61,6 @@ export const BottomControls = ({
   seekerFillWidth,
   seekerPosition,
   setSeekerWidth,
-  isFullscreen,
-  disableFullscreen,
-  toggleFullscreen,
   cachedPosition,
   seeking,
   seekPreviewTime,
@@ -72,28 +69,12 @@ export const BottomControls = ({
   seekSnapPosition,
   skips,
 }: BottomControlsProps) => {
-  //@ts-ignore
-  const timerControl = disableTimer ? (
-    <NullControl />
-  ) : (
-    <Timer
-      resetControlTimeout={resetControlTimeout}
-      toggleTimer={toggleTimer}
-      showControls={showControls}>
-      {calculateTime({
-        showDuration,
-        showHours,
-        showTimeRemaining,
-        time: currentTime,
-        duration,
-      })}
-    </Timer>
-  );
-
   const seekbarControl = disableSeekbar ? (
     <NullControl />
   ) : (
     <Seekbar
+      controlScale={controlScale}
+      seekbarScale={seekbarScale}
       seekerFillWidth={seekerFillWidth}
       seekerPosition={seekerPosition}
       seekColor={seekColor}
@@ -113,18 +94,6 @@ export const BottomControls = ({
       thumbnailLoading={seekThumbnailLoading}
       snapPosition={seekSnapPosition}
       skips={skips}
-    />
-  );
-
-  //@ts-ignore
-  const fullscreenControl = disableFullscreen ? (
-    <NullControl />
-  ) : (
-    <Fullscreen
-      isFullscreen={isFullscreen}
-      toggleFullscreen={toggleFullscreen}
-      resetControlTimeout={resetControlTimeout}
-      showControls={showControls}
     />
   );
 

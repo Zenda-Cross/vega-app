@@ -4,6 +4,10 @@ import {createZustandStorage} from '../storage/StorageService';
 import type {LocalMetadata} from '../localContent/model';
 import type {Info} from '../providers/types';
 
+export interface ProviderMetadata extends LocalMetadata {
+  useEpisodeMetadata?: boolean;
+}
+
 export const metadataOverrideKey = (provider: string, link: string) =>
   JSON.stringify([provider, link]);
 
@@ -27,11 +31,11 @@ export const applyMetadataOverride = (
     : info;
 
 interface MetadataOverrideState {
-  overrides: Record<string, LocalMetadata>;
+  overrides: Record<string, ProviderMetadata>;
   setMetadata: (
     provider: string,
     link: string,
-    metadata?: LocalMetadata,
+    metadata?: ProviderMetadata,
   ) => void;
 }
 

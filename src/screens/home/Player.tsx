@@ -1,9 +1,14 @@
+import {getPlaybackQuality} from '../../lib/player/playbackQuality';
+import PlayerMoreMenu from '../../components/PlayerMoreMenu';
+import {PlayerControlStyle} from '../../lib/player/controlStyle';
+import {languageLabel, shortLanguageLabel} from '../../lib/player/languageLabel';
 import {usePlayerControlAnimations} from '../../components/media-console/hooks/usePlayerControlAnimations';
 import {isRemotePlaybackCanceled} from '../../lib/remote/remotePlaybackErrors';
 import React, {useEffect, useState, useRef, useCallback, useMemo} from 'react';
 import {
   Animated as NativeAnimated,
   AppState,
+  NativeModules,
   AppStateStatus,
   BackHandler,
   FlatList,
@@ -116,6 +121,7 @@ import PlayerSpeedControl from '../../components/PlayerSpeedControl';
 import PlayerSleepControl from '../../components/PlayerSleepControl';
 import PlayerSourceMenu from '../../components/PlayerSourceMenu';
 import PlayerControlBar, {PlayerControl} from '../../components/PlayerControlBar';
+import HdrBadge from '../../components/media-console/components/HdrBadge';
 import PlayerControlEditor from '../../components/PlayerControlEditor';
 import {
   getTopControlLimit,
@@ -1024,6 +1030,19 @@ const Player = ({route}: Props): React.JSX.Element => {
   const videoSurfaceTVRef = useRef<View>(null);
   const preferredMenuRowRef = useRef<View>(null);
   const [editingControls, setEditingControls] = useState(false);
+  const [showMoreControls, setShowMoreControls] = useState(false);
+  const nativeVideoViewRef = useRef<View>(null);
+  const [hdrWidth, setHdrWidth] = useState(0);
+  const [decoderMode, setDecoderMode] = useState<'hardware' | 'software'>('hardware');
+  const decoderRestartRef = useRef(false);
+  const decoderSwitchBusyRef = useRef(false);
+  const refreshDecoderStatus = useCallback(() => {
+    const tag = findNodeHandle(nativeVideoViewRef.current);
+    if (tag && NativeModules.VideoDecoder) NativeModules.VideoDecoder.getStatus(tag).then((status: {mode?: string} | null) => {
+      if (status?.mode === 'software' || status?.mode === 'hardware') setDecoderMode(status.mode);
+    }).catch(() => {});
+  }, []);
+  const [controlStyle, setControlStyle] = useState(() => settingsStorage.getPlayerControlStyle());
   const [editorControls, setEditorControls] = useState<PlayerControl[]>([]);
   const toolbarControlsRef = useRef<PlayerControl[]>([]);
   const [controlLayout, setControlLayout] = useState(() =>
@@ -1037,9 +1056,9 @@ const Player = ({route}: Props): React.JSX.Element => {
   const fittedControlLayout = useMemo(
     () => normalizePlayerControlLayout(
       controlLayout,
-      getTopControlLimit(playerWidth),
+      getTopControlLimit(playerWidth / controlStyle.scale),
     ),
-    [controlLayout, playerWidth],
+    [controlLayout, playerWidth, controlStyle.scale],
   );
 
 
@@ -1153,7 +1172,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     primaryColor: primary,
     onTogglePlayPause: handleTogglePlayPause,
     onSeekNotification: handleSeekNotification,
-    remoteSuspended: autoNextVisible || editingControls,
+    remoteSuspended: autoNextVisible || editingControls || showMoreControls,
   });
 
   const currentEpisodeIndex = useMemo(() => {
@@ -1396,6 +1415,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     hasSetInitialAudioRef.current = false;
     hasSetInitialTextRef.current = false;
     resumeAppliedRef.current = false;
+    decoderRestartRef.current = false;
     videoLoadedRef.current = false;
     appliedPersistedLocalVideoRef.current = false;
     remoteCastPositionRef.current = 0;
@@ -1720,64 +1740,14 @@ const Player = ({route}: Props): React.JSX.Element => {
     };
   }, [selectedStream]);
 
-  // Memoized format quality function
-  const formatQuality = useCallback((quality: string) => {
-    if (quality === 'auto') {
-      return quality;
-    }
-    const num = Number(quality);
-    if (num > 1080) {
-      return '4K';
-    }
-    if (num > 720) {
-      return '1080p';
-    }
-    if (num > 480) {
-      return '720p';
-    }
-    if (num > 360) {
-      return '480p';
-    }
-    if (num > 240) {
-      return '360p';
-    }
-    if (num > 144) {
-      return '240p';
-    }
-    return quality;
-  }, []);
-
   const selectedPlayerQuality = useMemo(() => {
-    // On adaptive bitrate there is no explicit choice, so fall back to the track
-    // the player reports as active, then to the decoded size from onLoad.
-    const activeTrack = videoTracks?.find((track: any) => track.selected);
-    const selectedTrack =
-      videoTracks?.length === 1
-        ? videoTracks[0]
-        : (videoTracks?.[selectedQualityIndex] ?? activeTrack);
-    const selectedTrackHeight =
-      Number(selectedTrack?.height) || Number(loadedVideoSize?.height) || 0;
-    const quality =
-      (selectedTrackHeight > 0 ? selectedTrackHeight.toString() : undefined) ||
-      selectedStream?.quality ||
-      'auto';
-
-    if (selectedStream?.type === 'local') {
-      return {icon: 'video-settings' as const, label: 'Local'};
-    }
-
+    const quality = getPlaybackQuality(videoTracks, loadedVideoSize, selectedStream?.quality);
     return {
-      icon: getQualityIconName(selectedTrackHeight, selectedStream?.quality),
-      label: formatQuality(quality),
+      icon: getQualityIconName(quality.height),
+      label: quality.label,
+      height: quality.height,
     };
-  }, [
-    formatQuality,
-    loadedVideoSize?.height,
-    selectedQualityIndex,
-    selectedStream?.quality,
-    selectedStream?.type,
-    videoTracks,
-  ]);
+  }, [loadedVideoSize, selectedStream?.quality, videoTracks]);
 
   // Memoized next episode handler
   const handleNextEpisode = useCallback(() => {
@@ -2875,6 +2845,9 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const handleVideoLoadCallback = useCallback(
     (e: any) => {
+      const decoderRestart = decoderRestartRef.current;
+      decoderRestartRef.current = false;
+      refreshDecoderStatus();
       if (isLocalOrDownloadedStream) {
         setLoadedLocalEpisodeKey(activeEpisodeKey);
       }
@@ -2918,13 +2891,14 @@ const Player = ({route}: Props): React.JSX.Element => {
       markStreamLoaded();
       // A source opened at its start position is already there.
       const loadedAt = Number(e?.currentTime) || 0;
-      if (wd > 5 && Math.abs(loadedAt - wd) > 2) {
+      if (!decoderRestart && wd > 5 && Math.abs(loadedAt - wd) > 2) {
         playerRef.current?.seek(wd);
         resumeAppliedRef.current = true;
       }
-      playerRef?.current?.resume();
+      if (!decoderRestart) playerRef?.current?.resume();
     },
     [
+      refreshDecoderStatus,
       handleVideoLoad,
       activeEpisodeKey,
       isLocalOrDownloadedStream,
@@ -3130,6 +3104,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     handleControlHaptic();
     setShowSettings(false);
     setEditorControls(toolbarControlsRef.current);
+    setShowMoreControls(false);
     setEditingControls(true);
   }, [handleControlHaptic]);
   const closeControlEditor = useCallback(() => {
@@ -3137,11 +3112,17 @@ const Player = ({route}: Props): React.JSX.Element => {
     setShowControls(true);
   }, []);
   const saveControlLayout = useCallback(
-    (layout: PlayerControlLayout, hidden: PlayerControlId[]) => {
+    (layout: PlayerControlLayout, hidden: PlayerControlId[], appearance: PlayerControlStyle, ambient?: {enabled: boolean; intensity: number}) => {
+      if (ambient) {
+        settingsStorage.setAmbientVideoEnabled(ambient.enabled);
+        settingsStorage.setAmbientIntensity(ambient.intensity);
+      }
       settingsStorage.setPlayerControlLayout(layout);
       settingsStorage.setHiddenPlayerControls(hidden);
       setHiddenControls(hidden);
       setControlLayout(layout);
+      settingsStorage.setPlayerControlStyle(appearance);
+      setControlStyle(appearance);
       closeControlEditor();
     },
     [closeControlEditor],
@@ -3152,7 +3133,31 @@ const Player = ({route}: Props): React.JSX.Element => {
     setActiveTab(tab);
     setShowSettings(true);
   };
+  const changeVideoDecoder = async () => {
+    if (decoderSwitchBusyRef.current) return;
+    const tag = findNodeHandle(nativeVideoViewRef.current);
+    if (!tag || !NativeModules.VideoDecoder) return;
+    decoderSwitchBusyRef.current = true;
+    decoderRestartRef.current = true;
+    handleControlHaptic();
+    setShowControls(true);
+    try {
+      const next = decoderMode === 'hardware' ? 'software' : 'hardware';
+      const status = await NativeModules.VideoDecoder.setMode(tag, next);
+      setDecoderMode(status?.mode === 'software' ? 'software' : 'hardware');
+    } catch (error) {
+      decoderRestartRef.current = false;
+      setToast(error instanceof Error ? error.message : 'Could not change the video decoder', 2500);
+    } finally { decoderSwitchBusyRef.current = false; }
+  };
   const toolbarControls: PlayerControl[] = [
+    {
+      id: 'decoder', title: 'Video decoder', icon: 'memory',
+      iconText: decoderMode === 'hardware' ? 'HW' : 'SW',
+      label: 'Decoder',
+      shortLabel: 'Decoder',
+      visible: Platform.OS === 'android', onPress: changeVideoDecoder,
+    },
     {
       id: 'sleep',
       title: 'Sleep timer',
@@ -3188,7 +3193,8 @@ const Player = ({route}: Props): React.JSX.Element => {
     {
       id: 'audio',
       title: 'Audio',
-      label: audioTracks[selectedAudioTrackIndex]?.language || 'auto',
+      label: languageLabel(audioTracks[selectedAudioTrackIndex]?.language, 'Auto'),
+      shortLabel: shortLanguageLabel(audioTracks[selectedAudioTrackIndex]?.language, 'Auto'),
       icon: 'waveform',
       visible: true,
       onPress: () => openToolbarTab('audio'),
@@ -3198,8 +3204,9 @@ const Player = ({route}: Props): React.JSX.Element => {
       title: 'Subtitles',
       label:
         selectedTextTrackIndex === 1000
-          ? 'none'
-          : textTracks[selectedTextTrackIndex]?.language || 'none',
+          ? 'None'
+          : languageLabel(textTracks[selectedTextTrackIndex]?.language, 'None'),
+      shortLabel: selectedTextTrackIndex === 1000 ? 'None' : shortLanguageLabel(textTracks[selectedTextTrackIndex]?.language, 'None'),
       icon: 'subtitles-outline',
       visible: true,
       onPress: () => openToolbarTab('subtitle'),
@@ -3264,17 +3271,24 @@ const Player = ({route}: Props): React.JSX.Element => {
             currentPlaybackTime / videoPositionRef.current.duration > 0.8)),
       onPress: handleNextEpisode,
     },
+    {
+      id: 'settings', title: 'Settings', label: 'Settings', icon: 'cog-outline',
+      visible: true, onPress: () => setShowMoreControls(true),
+    },
   ];
   for (const control of toolbarControls) {
-    control.visible = control.visible && !hiddenControls.includes(control.id);
+    control.visible = control.visible && (control.id === 'settings' || !hiddenControls.includes(control.id));
   }
+  const moreControls = fittedControlLayout.more.map(id => toolbarControls.find(control => control.id === id)).filter((control): control is PlayerControl => Boolean(control?.visible));
+  const settingsControl = toolbarControls.find(control => control.id === 'settings')!;
+  settingsControl.visible = moreControls.length > 0;
   toolbarControlsRef.current = toolbarControls;
   const toolbarHeaderInset =
     fittedControlLayout.top.filter((id) =>
       toolbarControls.some((control) => control.id === id && control.visible),
     ).length *
-      48 +
-    20;
+      (24 * controlStyle.scale + 24) +
+    20 + hdrWidth;
 
   // Ask for a local file before touching the network.
   if (localDecision === 'pending') {
@@ -3541,7 +3555,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           onSkipPress={handleSkip}
         />
       ) : processedStreamUrl ? (
-        <VideoPlayer {...videoPlayerProps} headerStatus={torrentHeaderStatus} headerRightInset={toolbarHeaderInset} playbackSuspended={editingControls} />
+        <VideoPlayer {...videoPlayerProps} nativeVideoViewRef={nativeVideoViewRef} headerStatus={torrentHeaderStatus} headerRightInset={toolbarHeaderInset} playbackSuspended={editingControls} controlScale={controlStyle.scale} seekbarScale={controlStyle.seekbarScale} ambientVideoSize={loadedVideoSize} ambientDisabled={isCasting} />
       ) : (
         <View className="flex-1 justify-center items-center">
           <Animated.View style={[loadingContainerStyle]}>
@@ -3616,11 +3630,11 @@ const Player = ({route}: Props): React.JSX.Element => {
                 position: 'absolute',
                 alignSelf: 'center',
                 top: '40%',
-                width: 72,
-                height: 72,
+                width: 72 * controlStyle.scale,
+                height: 72 * controlStyle.scale,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: 40,
+                borderRadius: 40 * controlStyle.scale,
                 borderWidth: 3,
                 borderColor:
                   tvFocusedControl === 'play_pause' ? primary : 'transparent',
@@ -3629,7 +3643,7 @@ const Player = ({route}: Props): React.JSX.Element => {
               }}>
               <MaterialIcons
                 name={isPaused ? 'play-arrow' : 'pause'}
-                size={44}
+                size={44 * controlStyle.scale}
                 color="white"
               />
             </Pressable>
@@ -3651,7 +3665,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                 position: 'absolute',
                 left: '10%',
                 right: '10%',
-                bottom: 62,
+                bottom: 62 * controlStyle.scale,
                 padding: 12,
                 borderRadius: 12,
                 borderWidth: 2,
@@ -3662,8 +3676,8 @@ const Player = ({route}: Props): React.JSX.Element => {
               }}>
               <View
                 style={{
-                  height: 5,
-                  borderRadius: 3,
+                  height: 5 * controlStyle.scale * controlStyle.seekbarScale,
+                  borderRadius: 3 * controlStyle.scale * controlStyle.seekbarScale,
                   backgroundColor: 'rgba(255,255,255,0.35)',
                 }}>
                 <View
@@ -3680,13 +3694,13 @@ const Player = ({route}: Props): React.JSX.Element => {
                           )
                         : 0
                     }%`,
-                    height: 5,
-                    borderRadius: 3,
+                    height: 5 * controlStyle.scale * controlStyle.seekbarScale,
+                    borderRadius: 3 * controlStyle.scale * controlStyle.seekbarScale,
                     backgroundColor: primary,
                   }}
                 />
               </View>
-              <Text style={{color: 'white', marginTop: 6, textAlign: 'center'}}>
+              <Text style={{color: 'white', fontSize: 14 * controlStyle.scale, marginTop: 6, textAlign: 'center'}}>
                 {formatTVTimelineTime(scrubPosition ?? currentPlaybackTime)} /{' '}
                 {videoPositionRef.current.duration > 0
                   ? formatTVTimelineTime(videoPositionRef.current.duration)
@@ -3716,18 +3730,23 @@ const Player = ({route}: Props): React.JSX.Element => {
           pointerEvents={(isPlayerLocked ? showUnlockButton : showControls) && !showSettings && !showEpisodeSidebar ? 'box-none' : 'none'}>
           {isPlayerLocked ? (
             <TouchableOpacity onPress={togglePlayerLock} accessibilityRole="button" accessibilityLabel="Unlock player" className="p-2 items-center justify-center rounded-full">
-              <MaterialCommunityIcons name="lock-outline" color={BOTTOM_CONTROL_ICON_COLOR} size={24} />
+              <MaterialCommunityIcons name="lock-outline" color={BOTTOM_CONTROL_ICON_COLOR} size={24 * controlStyle.scale} />
             </TouchableOpacity>
           ) : (
-            toolbarControls.some(control => control.visible) ? (
-              <PlayerControlBar ids={fittedControlLayout.top} controls={toolbarControls} top
-                onEdit={openControlEditor} getTVFocusProps={getTVFocusProps} />
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <HdrBadge videoView={nativeVideoViewRef} source={String(videoPlayerProps.source?.uri || '')}
+                suspended={streamLoading} scale={controlStyle.scale} backgroundOpacity={controlStyle.backgroundOpacity}
+                onWidthChange={setHdrWidth} onInteract={() => setShowControls(true)} />
+            {toolbarControls.some(control => control.visible) ? (
+                <PlayerControlBar ids={fittedControlLayout.top} controls={toolbarControls} top
+                  onEdit={openControlEditor} appearance={controlStyle} getTVFocusProps={getTVFocusProps} />
             ) : (
               <TouchableOpacity {...getTVFocusProps('edit_controls')} accessibilityRole="button" accessibilityLabel="Edit player controls" onPress={openControlEditor}
                 className="p-2 items-center justify-center rounded-full">
-                <MaterialCommunityIcons name="tune" size={24} color={BOTTOM_CONTROL_ICON_COLOR} />
+                <MaterialCommunityIcons name="tune" size={24 * controlStyle.scale} color={BOTTOM_CONTROL_ICON_COLOR} />
               </TouchableOpacity>
-            )
+            )}
+            </View>
           )}
         </LockAnimatedView>
       )}
@@ -3735,11 +3754,14 @@ const Player = ({route}: Props): React.JSX.Element => {
         <NativeAnimated.View pointerEvents={showControls ? 'auto' : 'none'}
           style={[controlsStyle, {left: '10%', right: '10%', bottom: 10}]} className="absolute">
           <PlayerControlBar ids={fittedControlLayout.bottom} controls={toolbarControls}
-            onEdit={openControlEditor} getTVFocusProps={getTVFocusProps} />
+            onEdit={openControlEditor} appearance={controlStyle} getTVFocusProps={getTVFocusProps} />
         </NativeAnimated.View>
       )}
+      {showMoreControls && !editingControls && (
+        <PlayerMoreMenu controls={moreControls} appearance={controlStyle} color={primary} onClose={() => {setShowMoreControls(false); setShowControls(true);}} />
+      )}
       {editingControls && (
-        <PlayerControlEditor layout={controlLayout} controls={editorControls} color={primary} hiddenControls={hiddenControls}
+        <PlayerControlEditor layout={controlLayout} controls={editorControls} color={primary} hiddenControls={hiddenControls} appearance={controlStyle}
           onHaptic={handleControlHaptic}
           onClose={closeControlEditor} onSave={saveControlLayout} />
       )}
@@ -3903,7 +3925,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                             ? preferredMenuRowRef
                             : undefined
                         }
-                        title={track.language || `Audio track ${i + 1}`}
+                        title={languageLabel(track.language, `Audio track ${i + 1}`)}
                         detail={[track.type, track.title]
                           .filter(Boolean)
                           .join(' · ')}
@@ -4056,7 +4078,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                             ? preferredMenuRowRef
                             : undefined
                         }
-                        title={track.language || 'Unknown'}
+                        title={languageLabel(track.language, 'Unknown')}
                         detail={[track.type, track.title]
                           .filter(Boolean)
                           .join(' · ')}
@@ -4091,6 +4113,7 @@ const Player = ({route}: Props): React.JSX.Element => {
                     isLocal={selectedStream.type === 'local'}
                     videoTracks={videoTracks}
                     selectedQualityIndex={selectedQualityIndex}
+                    activeResolution={selectedPlayerQuality.height ? selectedPlayerQuality.label : undefined}
                     videoLoaded={Boolean(loadedVideoSize)}
                     loading={streamLoading}
                     accentColor={primary}

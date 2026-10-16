@@ -12,12 +12,18 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {isTV} from '../lib/tv/constants';
 import {PlayerControlId} from '../lib/player/controlLayout';
+import {
+  defaultPlayerControlStyle,
+  PlayerControlStyle,
+} from '../lib/player/controlStyle';
 
 export type PlayerControl = {
   id: PlayerControlId;
   title: string;
   label: string;
+  shortLabel?: string;
   icon: string;
+  iconText?: string;
   materialIcon?: boolean;
   visible: boolean;
   onPress: () => void;
@@ -33,6 +39,18 @@ export function PlayerControlIcon({
   control: PlayerControl;
   size?: number;
 }) {
+  if (control.iconText)
+    return (
+      <View style={{width: size, height: size, alignItems: 'center', justifyContent: 'center'}}>
+        <View style={{width: size * 0.75, height: size * 0.75, borderRadius: size / 12,
+          backgroundColor: PLAYER_CONTROL_COLOR, alignItems: 'center', justifyContent: 'center'}}>
+          <Text allowFontScaling={false} style={{color: '#000', fontSize: size * 0.32,
+            fontWeight: '800', includeFontPadding: false, textAlign: 'center'}}>
+            {control.iconText}
+          </Text>
+        </View>
+      </View>
+    );
   return control.materialIcon ? (
     <MaterialIcons
       name={control.icon as any}
@@ -52,6 +70,7 @@ type Props = {
   ids: PlayerControlId[];
   controls: PlayerControl[];
   top?: boolean;
+  appearance?: PlayerControlStyle;
   onEdit: () => void;
   getTVFocusProps: (id: string) => {style?: StyleProp<ViewStyle>};
 };
@@ -60,6 +79,7 @@ export default function PlayerControlBar({
   ids,
   controls,
   top,
+  appearance = defaultPlayerControlStyle(),
   onEdit,
   getTVFocusProps,
 }: Props) {
@@ -81,7 +101,7 @@ export default function PlayerControlBar({
         style={[
           focusProps.style,
           !top && {
-            minHeight: 44,
+            minHeight: Math.max(44, 44 * appearance.scale),
             flexShrink: 0,
           },
         ]}
@@ -90,24 +110,34 @@ export default function PlayerControlBar({
             ? 'p-2 items-center justify-center rounded-full'
             : 'flex-row items-center justify-center gap-1 px-1 py-1'
         }>
-        <PlayerControlIcon control={control} />
-        {!top && (
+        <PlayerControlIcon control={control} size={24 * appearance.scale} />
+        {!top && appearance.labels !== 'hidden' && (
           <Text
             numberOfLines={1}
             style={{
               color: PLAYER_CONTROL_COLOR,
-              fontSize: 12,
+              fontSize: 12 * appearance.scale,
               fontWeight: '300',
               flexShrink: 0,
             }}>
-            {control.label}
+            {appearance.labels === 'short'
+              ? control.shortLabel || control.label
+              : control.label}
           </Text>
         )}
       </Button>
     );
   });
+  const backgroundStyle = {
+    backgroundColor: `rgba(0,0,0,${appearance.backgroundOpacity})`,
+    borderRadius: 28 * appearance.scale,
+  };
   if (top)
-    return <View style={{flexDirection: 'row', gap: 8}}>{children}</View>;
+    return (
+      <View style={[{flexDirection: 'row', gap: 8}, backgroundStyle]}>
+        {children}
+      </View>
+    );
   return (
     <ScrollView
       horizontal
@@ -117,13 +147,33 @@ export default function PlayerControlBar({
       style={{width: '100%'}}
       contentContainerStyle={{
         alignItems: 'center',
-        justifyContent: visible.length === 1 ? 'center' : 'space-between',
-        columnGap: 20,
+        justifyContent:
+          appearance.alignment === 'left'
+            ? 'flex-start'
+            : appearance.alignment === 'right'
+              ? 'flex-end'
+              : appearance.alignment === 'center' || visible.length === 1
+                ? 'center'
+                : 'space-between',
         flexGrow: 1,
         minWidth: '100%',
-        paddingHorizontal: BOTTOM_EDGE_PADDING,
       }}>
-      {children}
+      <View
+        testID="player-control-row"
+        style={[
+          backgroundStyle,
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            flexShrink: 0,
+            flexGrow: appearance.alignment === 'distributed' ? 1 : 0,
+            justifyContent: visible.length === 1 ? 'center' : 'space-between',
+            columnGap: 20 * appearance.scale,
+            paddingHorizontal: BOTTOM_EDGE_PADDING,
+          },
+        ]}>
+        {children}
+      </View>
     </ScrollView>
   );
 }

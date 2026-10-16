@@ -26,6 +26,7 @@ import {
   groupCompletedDownloads,
 } from '../../lib/downloadLibrary';
 import {useDownloadsMaintenance} from '../../lib/hooks/useDownloadsMaintenance';
+import {deleteLocalEpisodes} from '../../lib/localContent/delete';
 import {localLibraryItem} from '../../lib/localContent/library';
 import {settingsStorage} from '../../lib/storage';
 import {showAppDialog} from '../../lib/zustand/appDialogStore';
@@ -63,6 +64,7 @@ const Downloads = () => {
         .map(localLibraryItem),
     [localTitles],
   );
+  const allCardIds = [...groups.map(group => group.id), ...localItems.map(item => item.link)];
   // Without downloads, the first local card takes the first card's focus role.
   const hasCards = groups.length > 0 || localItems.length > 0;
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(
@@ -237,10 +239,10 @@ const Downloads = () => {
 
   const handleToggleSelectAll = () => {
     triggerHaptic(HapticFeedbackTypes.effectClick);
-    if (selectedGroupIds.size === groups.length) {
+    if (selectedGroupIds.size === allCardIds.length) {
       setSelectedGroupIds(new Set());
     } else {
-      setSelectedGroupIds(new Set(groups.map(g => g.id)));
+      setSelectedGroupIds(new Set(allCardIds));
     }
   };
 
@@ -248,9 +250,9 @@ const Downloads = () => {
     triggerHaptic(HapticFeedbackTypes.effectClick);
     setSelectedGroupIds(prev => {
       const next = new Set<string>();
-      groups.forEach(g => {
-        if (!prev.has(g.id)) {
-          next.add(g.id);
+      allCardIds.forEach(id => {
+        if (!prev.has(id)) {
+          next.add(id);
         }
       });
       return next;
@@ -262,12 +264,16 @@ const Downloads = () => {
   const deleteSelectedGroups = (targetGroups: DownloadedMediaGroup[]) => {
     setIsDeleting(true);
     return deleteDownloadedMediaGroups(targetGroups)
+      .then(() => deleteLocalEpisodes(localTitles.filter(title => selectedGroupIds.has(localLibraryItem(title).link)).flatMap(title => title.episodes.map(episode => episode.uri))))
       .then(() => {
         setSelectedGroupIds(new Set());
         setIsSelectionModeActive(false);
       })
       .catch(err => {
         console.error('Error deleting selected download groups:', err);
+        setSelectedGroupIds(new Set());
+        setIsSelectionModeActive(false);
+        showAppDialog({title: 'Could not delete all files', message: err instanceof Error ? err.message : String(err), actions: [{label: 'OK'}]});
       })
       .finally(() => {
         setIsDeleting(false);
@@ -276,17 +282,19 @@ const Downloads = () => {
 
   const handleDeletePress = () => {
     const selectedGroups = groups.filter(g => selectedGroupIds.has(g.id));
-    if (selectedGroups.length === 0) return;
+    const selectedLocal = localTitles.filter(title => selectedGroupIds.has(localLibraryItem(title).link));
+    const selectedCount = selectedGroups.length + selectedLocal.length;
+    if (selectedCount === 0) return;
 
     triggerHaptic(HapticFeedbackTypes.effectHeavyClick);
-    const totalFiles = selectedGroups.reduce((acc, g) => acc + g.items.length, 0);
+    const totalFiles = selectedGroups.reduce((acc, g) => acc + g.items.length, 0) + selectedLocal.reduce((sum, title) => sum + title.episodes.length, 0);
     const titleText =
-      selectedGroups.length === 1
-        ? `"${selectedGroups[0].title}"`
-        : `${selectedGroups.length} titles`;
+      selectedCount === 1
+        ? `"${selectedGroups[0]?.title || selectedLocal[0]?.metadata?.title || selectedLocal[0]?.name}"`
+        : `${selectedCount} titles`;
 
     showAppDialog({
-      title: `Delete ${selectedGroups.length === 1 ? 'Title' : `${selectedGroups.length} Titles`}?`,
+      title: `Delete ${selectedCount === 1 ? 'Title' : `${selectedCount} Titles`}?`,
       message: `Are you sure you want to permanently delete all downloaded files (${totalFiles} ${totalFiles === 1 ? 'file' : 'files'}) for ${titleText} from your device storage?`,
       variant: 'warning',
       actions: [
@@ -303,7 +311,7 @@ const Downloads = () => {
   };
 
   const isAllSelected =
-    groups.length > 0 && selectedGroupIds.size === groups.length;
+    hasCards && selectedGroupIds.size === allCardIds.length;
 
   return (
     <TVFocusGuide
@@ -355,7 +363,7 @@ const Downloads = () => {
                   className="text-m3-on-background">
                   Downloads
                 </AppText>
-                {groups.length > 0 ? (
+                {hasCards ? (
                   <TVFocusable
                     ref={selectButtonRef}
                     onLayout={updateSelectButtonNode}
@@ -449,7 +457,7 @@ const Downloads = () => {
           );
         }}
         ListFooterComponent={
-          !isSelectionMode && localItems.length > 0 ? (
+          localItems.length > 0 ? (
             <FlatList
               data={localItems}
               key={`local-cols-${columns}`}
@@ -480,8 +488,11 @@ const Downloads = () => {
                     title={item.title}
                     poster={item.poster}
                     width={cardWidth}
-                    hasTVPreferredFocus={isTV && screenFocused && isFirstCard}
-                    onPress={() =>
+                    hasTVPreferredFocus={isTV && screenFocused && !isSelectionMode && isFirstCard}
+                    selected={selectedGroupIds.has(item.link)}
+                    selectionMode={isSelectionMode}
+                    onLongPress={() => handleCardLongPress(item.link)}
+                    onPress={() => isSelectionMode ? handleCardPress(item.link) :
                       navigation.navigate('Info', {
                         link: item.link,
                         provider: item.provider,

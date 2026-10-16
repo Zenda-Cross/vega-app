@@ -232,3 +232,21 @@ it('opens the picker from More options, saves a match, and offers restoration', 
   expect(useMetadataOverrideStore.getState().overrides).toEqual({});
   act(() => dialog.unmount());
 });
+
+it('opts into provider episode metadata and can disable it without choosing the title again', async () => {
+  let dialog!: renderer.ReactTestRenderer;
+  await act(async () => {dialog = renderer.create(<ProviderMetadataDialog visible onClose={jest.fn()} info={providerInfo} provider="provider" link={link} />);});
+  await act(async () => dialog.root.findAllByProps({accessibilityLabel: 'Edit metadata'})[0].props.onPress());
+  expect(dialog.root.findByType('MetadataPicker' as any).props.options.props.value).toBe(false);
+  await act(async () => dialog.root.findByType('MetadataPicker' as any).props.options.props.onChange(true));
+  await act(async () => dialog.root.findByType('MetadataPicker' as any).props.onChoose(metadata));
+  expect(useMetadataOverrideStore.getState().overrides[metadataOverrideKey('provider', link)]).toEqual({...metadata, useEpisodeMetadata: true});
+  const saved = JSON.parse(mockStorage.get('provider-metadata-overrides-v1')!);
+  expect(saved.state.overrides[metadataOverrideKey('provider', link)].useEpisodeMetadata).toBe(true);
+  await act(async () => dialog.root.findAllByProps({accessibilityLabel: 'Edit metadata'})[0].props.onPress());
+  expect(dialog.root.findByType('MetadataPicker' as any).props.options.props.value).toBe(true);
+  await act(async () => dialog.root.findByType('MetadataPicker' as any).props.options.props.onChange(false));
+  expect(useMetadataOverrideStore.getState().overrides[metadataOverrideKey('provider', link)].useEpisodeMetadata).toBe(false);
+  expect(useMetadataOverrideStore.getState().overrides[metadataOverrideKey('other', link)]).toBeUndefined();
+  act(() => dialog.unmount());
+});

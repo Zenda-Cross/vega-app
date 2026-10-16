@@ -1,3 +1,5 @@
+import {applyProviderEpisodeMetadata} from '../lib/providerEpisodeMetadata';
+import useMetadataOverrideStore, {metadataOverrideKey} from '../lib/zustand/metadataOverrideStore';
 import React, {
   useState,
   useMemo,
@@ -462,6 +464,7 @@ const SeasonListContent: React.FC<SeasonListProps> = ({
   refreshVersion,
   quickDownload,
 }) => {
+  const manualMetadata = useMetadataOverrideStore(state => state.overrides[metadataOverrideKey(providerValue, routeParams.link)]);
   const colors = useM3Colors();
   const primary = colors.primary;
   const focusBorderColor = useTVFocusBorderColor();
@@ -630,16 +633,16 @@ const SeasonListContent: React.FC<SeasonListProps> = ({
   const validEpisodes = useMemo(
     () =>
       Array.isArray(episodeList)
-        ? episodeList.filter(episode => episode && episode.title && episode.link)
+        ? episodeList.filter(episode => episode && episode.title && episode.link).map(episode => applyProviderEpisodeMetadata(episode, activeSeason.title, manualMetadata))
         : [],
-    [episodeList],
+    [episodeList, activeSeason.title, manualMetadata],
   );
   const validDirectLinks = useMemo(
     () =>
       Array.isArray(activeSeason?.directLinks)
-        ? activeSeason.directLinks.filter(link => link && link.title && link.link)
+        ? activeSeason.directLinks.filter(link => link && link.title && link.link).map(episode => applyProviderEpisodeMetadata(episode, activeSeason.title, manualMetadata))
         : [],
-    [activeSeason.directLinks],
+    [activeSeason.directLinks, activeSeason.title, manualMetadata],
   );
 
   // Long seasons are shown in blocks of 50; the chosen block is remembered per season.

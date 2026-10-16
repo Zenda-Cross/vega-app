@@ -143,6 +143,7 @@ type Props = {
   isLocal: boolean;
   videoTracks: any[];
   selectedQualityIndex: number;
+  activeResolution?: string;
   videoLoaded: boolean;
   loading: boolean;
   accentColor: string;
@@ -161,6 +162,7 @@ const PlayerSourceMenu = memo(
     isLocal,
     videoTracks,
     selectedQualityIndex,
+    activeResolution,
     videoLoaded,
     loading,
     accentColor,
@@ -226,12 +228,12 @@ const PlayerSourceMenu = memo(
         items.unshift({
           key: '1000',
           title: 'Auto',
-          detail: 'Adaptive bitrate',
+          detail: selectedQualityIndex === 1000 && activeResolution ? `Adaptive bitrate · ${activeResolution}` : 'Adaptive bitrate',
           icon: 'video-settings',
           qualityIndex: 1000,
         });
       return items;
-    }, [videoTracks, getQualityIcon]);
+    }, [videoTracks, getQualityIcon, selectedQualityIndex, activeResolution]);
     const selectServer = useCallback(
       (item: Item) => {
         if (item.stream) onSelectStream(item.stream);

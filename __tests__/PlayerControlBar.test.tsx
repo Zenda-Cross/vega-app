@@ -5,6 +5,7 @@ import type {PlayerControlId} from '../src/lib/player/controlLayout';
 import PlayerControlBar, {
   PlayerControl,
 } from '../src/components/PlayerControlBar';
+import {defaultPlayerControlStyle} from '../src/lib/player/controlStyle';
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('@expo/vector-icons/MaterialIcons', () => 'Icon');
@@ -36,6 +37,17 @@ const controls: PlayerControl[] = [
     onPress: jest.fn(),
   },
 ];
+
+it('shows decoder mode in the icon slot and switches on press', () => {
+  const change = jest.fn();
+  let tree!: renderer.ReactTestRenderer;
+  const decoder: PlayerControl = {id: 'decoder', title: 'Video decoder', label: 'Decoder', shortLabel: 'Decoder', icon: 'memory', iconText: 'SW', visible: true, onPress: change};
+  act(() => {tree = renderer.create(<PlayerControlBar top ids={['decoder']} controls={[decoder]} onEdit={jest.fn()} getTVFocusProps={() => ({})} />);});
+  expect(tree.root.findByType(Text).props.children).toBe('SW');
+  act(() => tree.root.findByType(TouchableOpacity).props.onPress());
+  expect(change).toHaveBeenCalledTimes(1);
+  act(() => tree.unmount());
+});
 
 it('shows only icons on top and preserves status labels on the bottom', () => {
   let tree!: renderer.ReactTestRenderer;
@@ -105,9 +117,34 @@ it('uses content-sized controls with even gaps and matching end padding', () => 
     expect(style.flexShrink).toBe(0);
   }
   const scroll = tree.root.findByType(ScrollView);
-  expect(scroll.props.contentContainerStyle).toEqual(expect.objectContaining({justifyContent: 'space-between', columnGap: 20, paddingHorizontal: 12}));
+  expect(StyleSheet.flatten(tree.root.findByProps({testID: 'player-control-row'}).props.style)).toEqual(expect.objectContaining({justifyContent: 'space-between', columnGap: 20, paddingHorizontal: 12, flexGrow: 1}));
   expect(scroll.props.onScroll).toBeUndefined();
   act(() => tree.update(<PlayerControlBar ids={['sleep']} controls={items} onEdit={() => {}} getTVFocusProps={() => ({})} />));
+  expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('center');
+  act(() => tree.unmount());
+});
+
+it('supports short and hidden labels, all alignments, scaling and a transparent background by default', () => {
+  const items: PlayerControl[] = [{...controls[0], id: 'audio', label: 'Japanese', shortLabel: 'Ja'}];
+  let tree!: renderer.ReactTestRenderer;
+  const render = (labels: 'full' | 'short' | 'hidden', alignment: 'distributed' | 'center' | 'left' | 'right') =>
+    <PlayerControlBar ids={['audio']} controls={items} onEdit={() => {}} getTVFocusProps={() => ({})}
+      appearance={{...defaultPlayerControlStyle(), labels, alignment, scale: 1.2, backgroundOpacity: 0.5}} />;
+  act(() => {tree = renderer.create(render('short', 'left'));});
+  expect(tree.root.findByType(Text).props.children).toBe('Ja');
+  expect(tree.root.findByType(Text).props.style.fontSize).toBeCloseTo(14.4);
+  expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.style).backgroundColor).toBeUndefined();
+  const rowStyle = () => StyleSheet.flatten(tree.root.findByProps({testID: 'player-control-row'}).props.style);
+  expect(rowStyle().backgroundColor).toBe('rgba(0,0,0,0.5)');
+  expect(rowStyle().flexGrow).toBe(0);
+  expect(rowStyle().width).toBeUndefined();
+  expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('flex-start');
+  act(() => tree.update(render('full', 'right')));
+  expect(tree.root.findByType(Text).props.children).toBe('Japanese');
+  expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('flex-end');
+  expect(rowStyle().flexGrow).toBe(0);
+  act(() => tree.update(render('hidden', 'center')));
+  expect(tree.root.findAllByType(Text)).toHaveLength(0);
   expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('center');
   act(() => tree.unmount());
 });

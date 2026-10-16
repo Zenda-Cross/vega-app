@@ -16,6 +16,7 @@ import useMetadataOverrideStore, {
 } from '../../lib/zustand/metadataOverrideStore';
 import AppText from '../ui/Text';
 import {TVFocusable, TVFocusGuide} from '../tv';
+import MetadataEpisodeSwitch from './MetadataEpisodeSwitch';
 import {MetadataPicker} from './MetadataPicker';
 
 export default function ProviderMetadataDialog({
@@ -37,6 +38,10 @@ export default function ProviderMetadataDialog({
   const metadata = useMetadataOverrideStore(
     state => state.overrides[metadataOverrideKey(provider, link)],
   );
+  const [episodeMetadata, setEpisodeMetadata] = useState(false);
+  useEffect(() => {
+    if (visible) setEpisodeMetadata(metadata?.useEpisodeMetadata === true);
+  }, [visible, metadata?.useEpisodeMetadata]);
   useEffect(() => {
     if (!visible) setPicker(false);
   }, [visible]);
@@ -61,6 +66,21 @@ export default function ProviderMetadataDialog({
             paddingHorizontal: 20,
           }}>
           <MetadataPicker
+            options={
+              <MetadataEpisodeSwitch
+                value={episodeMetadata}
+                onChange={enabled => {
+                  setEpisodeMetadata(enabled);
+                  if (metadata)
+                    useMetadataOverrideStore
+                      .getState()
+                      .setMetadata(provider, link, {
+                        ...metadata,
+                        useEpisodeMetadata: enabled,
+                      });
+                }}
+              />
+            }
             title={{
               id: link,
               rootUri: '',
@@ -89,7 +109,10 @@ export default function ProviderMetadataDialog({
             onChoose={value => {
               useMetadataOverrideStore
                 .getState()
-                .setMetadata(provider, link, value);
+                .setMetadata(provider, link, {
+                  ...value,
+                  ...(episodeMetadata ? {useEpisodeMetadata: true} : {}),
+                });
               close();
             }}
           />

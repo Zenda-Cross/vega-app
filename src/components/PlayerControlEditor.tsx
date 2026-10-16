@@ -1,3 +1,9 @@
+import {settingsStorage} from '../lib/storage';
+import PlayerControlStyleEditor from './PlayerControlStyleEditor';
+import {
+  defaultPlayerControlStyle,
+  PlayerControlStyle,
+} from '../lib/player/controlStyle';
 import React, {
   memo,
   useCallback,
@@ -6,7 +12,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {Modal, Text, View, useWindowDimensions} from 'react-native';
+import {Modal, ScrollView, Text, View, useWindowDimensions} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {
   Gesture,
@@ -47,6 +53,8 @@ const EDITOR_LABELS: Record<PlayerControlId, string> = {
   resize: 'Fit',
   episodes: 'Episodes',
   next: 'Next',
+  settings: 'Settings',
+  decoder: 'Decoder',
 };
 
 type TokenProps = {
@@ -194,7 +202,13 @@ type Props = {
   controls: PlayerControl[];
   color: string;
   hiddenControls?: PlayerControlId[];
-  onSave: (layout: PlayerControlLayout, hidden: PlayerControlId[]) => void;
+  onSave: (
+    layout: PlayerControlLayout,
+    hidden: PlayerControlId[],
+    style: PlayerControlStyle,
+    ambient?: {enabled: boolean; intensity: number},
+  ) => void;
+  appearance?: PlayerControlStyle;
   onClose: () => void;
   onHaptic?: () => void;
 };
@@ -207,9 +221,18 @@ function PlayerControlEditor({
   onSave,
   onClose,
   onHaptic = noop,
+  appearance,
 }: Props) {
-  const {width} = useWindowDimensions();
-  const limit = getTopControlLimit(width);
+  const {width, height} = useWindowDimensions();
+  const [tab, setTab] = useState<'arrange' | 'style'>('arrange');
+  const [styleDraft, setStyleDraft] = useState(
+    () => appearance || defaultPlayerControlStyle(),
+  );
+  const [ambientDraft, setAmbientDraft] = useState(() => ({
+    enabled: settingsStorage.isAmbientVideoEnabled(),
+    intensity: settingsStorage.getAmbientIntensity(),
+  }));
+  const limit = getTopControlLimit(width / styleDraft.scale);
   const [draft, setDraft] = useState(() =>
     normalizePlayerControlLayout(layout, limit),
   );
@@ -230,6 +253,12 @@ function PlayerControlEditor({
   );
   const columns = Math.max(2, Math.floor(canvasWidth / 96));
   const cellWidth = canvasWidth / columns;
+  const moreY =
+    BOTTOM_Y +
+    Math.max(1, Math.ceil(draft.bottom.length / columns)) * CELL_HEIGHT +
+    34;
+  const canvasHeight =
+    moreY + Math.max(1, Math.ceil(draft.more.length / columns)) * CELL_HEIGHT;
   const startDrag = useCallback(
     (id: PlayerControlId) => {
       setSelected(id);
@@ -246,7 +275,8 @@ function PlayerControlEditor({
       const next = movePlayerControl(current, id, bar, index, limit);
       if (
         current.top.indexOf(id) !== next.top.indexOf(id) ||
-        current.bottom.indexOf(id) !== next.bottom.indexOf(id)
+        current.bottom.indexOf(id) !== next.bottom.indexOf(id) ||
+        current.more.indexOf(id) !== next.more.indexOf(id)
       ) {
         onHaptic();
       }
@@ -254,7 +284,9 @@ function PlayerControlEditor({
       setDraft(next);
       setMessage(
         next === current
-          ? `Top bar is full (${limit} controls maximum)`
+          ? id === 'settings' && bar === 'more'
+            ? 'Settings stays last in the top or bottom row'
+            : `Top bar is full (${limit} controls maximum)`
           : 'Hold and drag to rearrange. Tap a control for more options.',
       );
       setEpoch(value => value + 1);
@@ -263,28 +295,30 @@ function PlayerControlEditor({
   );
   const drop = useCallback(
     (id: PlayerControlId, x: number, y: number) => {
-      if (
-        x < 0 ||
-        x > canvasWidth ||
-        y < TOP_Y - 8 ||
-        y >
-          BOTTOM_Y +
-            Math.ceil(draftRef.current.bottom.length / columns) * CELL_HEIGHT
-      ) {
+      if (x < 0 || x > canvasWidth || y < TOP_Y - 8 || y > canvasHeight) {
         setEpoch(value => value + 1);
         return;
       }
-      const top = y < BOTTOM_Y - 18;
-      const index = top
-        ? Math.floor(x / 48)
-        : Math.floor((y - BOTTOM_Y) / CELL_HEIGHT) * columns +
-          Math.floor(x / cellWidth);
-      move(id, top ? 'top' : 'bottom', Math.max(0, index));
+      const lane =
+        y < BOTTOM_Y - 18 ? 'top' : y < moreY - 18 ? 'bottom' : 'more';
+      const index =
+        lane === 'top'
+          ? Math.floor(x / 48)
+          : Math.floor(
+              (y - (lane === 'more' ? moreY : BOTTOM_Y)) / CELL_HEIGHT,
+            ) *
+              columns +
+            Math.floor(x / cellWidth);
+      move(id, lane, Math.max(0, index));
     },
-    [canvasWidth, columns, cellWidth, move],
+    [canvasWidth, canvasHeight, columns, cellWidth, moreY, move],
   );
   const activeId = selected ?? 'sleep';
-  const bar: PlayerControlBar = draft.top.includes(activeId) ? 'top' : 'bottom';
+  const bar: PlayerControlBar = draft.top.includes(activeId)
+    ? 'top'
+    : draft.more.includes(activeId)
+      ? 'more'
+      : 'bottom';
   const index = draft[bar].indexOf(activeId);
   const selectedTitle =
     controls.find(control => control.id === activeId)?.title || activeId;
@@ -349,7 +383,7 @@ function PlayerControlEditor({
           style={{
             width: '92%',
             maxWidth: 600,
-            maxHeight: '100%',
+            maxHeight: height - 24,
             padding: 14,
             borderRadius: 22,
             backgroundColor: '#151515',
@@ -370,7 +404,7 @@ function PlayerControlEditor({
                 fontSize: 16,
                 fontWeight: '600',
               }}>
-              Arrange controls
+              Player controls
             </Text>
             {action(
               'Reset',
@@ -378,118 +412,176 @@ function PlayerControlEditor({
                 setDraft(
                   normalizePlayerControlLayout(
                     defaultPlayerControlLayout(),
-                    limit,
+                    getTopControlLimit(width),
                   ),
                 );
                 setEpoch(value => value + 1);
                 setHidden([]);
+                setStyleDraft(defaultPlayerControlStyle());
+                setAmbientDraft({enabled: false, intensity: 0.35});
               },
               'restore',
             )}
             {action('Cancel', onClose, 'close')}
-            {action('Save', () => onSave(draft, hidden), undefined, true)}
-          </View>
-          <Text
-            numberOfLines={1}
-            style={{color: '#999999', fontSize: 11, marginBottom: 10}}>
-            {message}
-          </Text>
-          <View
-            onLayout={event => setCanvasWidth(event.nativeEvent.layout.width)}
-            style={{
-              height:
-                BOTTOM_Y +
-                Math.max(1, Math.ceil(draft.bottom.length / columns)) *
-                  CELL_HEIGHT,
-            }}>
-            <Text style={{color: '#aaaaaa', fontSize: 11}}>Top row</Text>
-            <Text
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 0,
-                color: '#777777',
-                fontSize: 11,
-              }}>
-              {draft.top.length} / {limit}
-            </Text>
-            <View
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                top: TOP_Y - 2,
-                left: 0,
-                right: 0,
-                height: 50,
-                borderRadius: 12,
-                backgroundColor: '#1c1c1c',
-              }}
-            />
-            {Array.from({length: limit}, (_, slot) => (
-              <View
-                key={slot}
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  top: TOP_Y,
-                  left: slot * 48 + 4,
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  borderWidth: 1,
-                  borderStyle: 'dashed',
-                  borderColor: '#3b3b3b',
-                }}
-              />
-            ))}
-            <Text
-              style={{
-                position: 'absolute',
-                top: BOTTOM_Y - 18,
-                color: '#aaaaaa',
-                fontSize: 11,
-              }}>
-              Bottom row
-            </Text>
-            <Text
-              style={{
-                position: 'absolute',
-                top: BOTTOM_Y - 18,
-                right: 0,
-                color: '#777777',
-                fontSize: 11,
-              }}>
-              Swipe for more
-            </Text>
-            {(['top', 'bottom'] as const).flatMap(lane =>
-              draft[lane].map((id, slot) => {
-                const control = controls.find(item => item.id === id);
-                if (!control) return null;
-                const top = lane === 'top';
-                return (
-                  <ControlToken
-                    key={id}
-                    control={control}
-                    x={top ? slot * 48 + 4 : (slot % columns) * cellWidth}
-                    y={
-                      top
-                        ? TOP_Y
-                        : BOTTOM_Y + Math.floor(slot / columns) * CELL_HEIGHT
-                    }
-                    width={top ? 42 : cellWidth - 6}
-                    top={top}
-                    selected={selected === id}
-                    hidden={hidden.includes(id)}
-                    epoch={epoch}
-                    color={color}
-                    onSelect={setSelected}
-                    onDragStart={startDrag}
-                    onDrop={drop}
-                  />
-                );
-              }),
+            {action(
+              'Save',
+              () => onSave(draft, hidden, styleDraft, ambientDraft),
+              undefined,
+              true,
             )}
           </View>
+          <View style={{flexDirection: 'row', gap: 8, marginBottom: 10}}>
+            {(['arrange', 'style'] as const).map(item => (
+              <TVFocusable
+                key={item}
+                registerScreenFocus={false}
+                accessibilityRole="tab"
+                accessibilityLabel={item === 'arrange' ? 'Arrange' : 'Style'}
+                accessibilityState={{selected: tab === item}}
+                onPress={() => setTab(item)}
+                borderRadius={16}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 16,
+                  backgroundColor: tab === item ? '#353535' : '#202020',
+                }}>
+                <Text
+                  style={{
+                    color: tab === item ? 'white' : '#999',
+                    fontSize: 12,
+                  }}>
+                  {item === 'arrange' ? 'Arrange' : 'Style'}
+                </Text>
+              </TVFocusable>
+            ))}
+          </View>
+          <ScrollView
+            style={{flexShrink: 1}}
+            contentContainerStyle={{paddingBottom: 8}}
+            showsVerticalScrollIndicator={false}>
+            {tab === 'style' ? (
+              <PlayerControlStyleEditor
+                value={styleDraft}
+                ambient={ambientDraft}
+                onAmbientChange={setAmbientDraft}
+                color={color}
+                onChange={setStyleDraft}
+              />
+            ) : (
+              <>
+                <Text
+                  numberOfLines={2}
+                  style={{color: '#999', fontSize: 11, marginBottom: 10}}>
+                  {message}
+                </Text>
+                <View
+                  onLayout={event =>
+                    setCanvasWidth(event.nativeEvent.layout.width)
+                  }
+                  style={{height: canvasHeight}}>
+                  <Text style={{color: '#aaa', fontSize: 11}}>
+                    Top row � {draft.top.length}/{limit}
+                  </Text>
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      top: TOP_Y - 2,
+                      left: 0,
+                      right: 0,
+                      height: 50,
+                      borderRadius: 12,
+                      backgroundColor: '#1c1c1c',
+                    }}
+                  />
+                  {Array.from({length: limit}, (_, slot) => (
+                    <View
+                      key={slot}
+                      pointerEvents="none"
+                      style={{
+                        position: 'absolute',
+                        top: TOP_Y,
+                        left: slot * 48 + 4,
+                        width: 42,
+                        height: 42,
+                        borderRadius: 21,
+                        borderWidth: 1,
+                        borderStyle: 'dashed',
+                        borderColor: '#3b3b3b',
+                      }}
+                    />
+                  ))}
+                  <Text
+                    style={{
+                      position: 'absolute',
+                      top: BOTTOM_Y - 18,
+                      color: '#aaa',
+                      fontSize: 11,
+                    }}>
+                    Bottom row
+                  </Text>
+                  <Text
+                    style={{
+                      position: 'absolute',
+                      top: moreY - 20,
+                      color: '#aaa',
+                      fontSize: 11,
+                    }}>
+                    Settings menu �{' '}
+                    {draft.more.length === 0
+                      ? 'Move controls here to enable'
+                      : `${draft.more.length} controls`}
+                  </Text>
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      top: moreY - 2,
+                      left: 0,
+                      right: 0,
+                      height:
+                        Math.max(1, Math.ceil(draft.more.length / columns)) *
+                        CELL_HEIGHT,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderStyle: 'dashed',
+                      borderColor: '#3b3b3b',
+                    }}
+                  />
+                  {(['top', 'bottom', 'more'] as const).flatMap(lane =>
+                    draft[lane].map((id, slot) => {
+                      const control = controls.find(item => item.id === id);
+                      if (!control) return null;
+                      const top = lane === 'top';
+                      return (
+                        <ControlToken
+                          key={id}
+                          control={control}
+                          x={top ? slot * 48 + 4 : (slot % columns) * cellWidth}
+                          y={
+                            top
+                              ? TOP_Y
+                              : (lane === 'more' ? moreY : BOTTOM_Y) +
+                                Math.floor(slot / columns) * CELL_HEIGHT
+                          }
+                          width={top ? 42 : cellWidth - 6}
+                          top={top}
+                          selected={selected === id}
+                          hidden={hidden.includes(id)}
+                          epoch={epoch}
+                          color={color}
+                          onSelect={setSelected}
+                          onDragStart={startDrag}
+                          onDrop={drop}
+                        />
+                      );
+                    }),
+                  )}
+                </View>
+              </>
+            )}
+          </ScrollView>
           <View
             style={{
               height: 36,
@@ -498,23 +590,26 @@ function PlayerControlEditor({
               alignItems: 'center',
               gap: 4,
             }}>
-            {selected ? (
+            {tab === 'arrange' && selected ? (
               <>
                 <Text
                   numberOfLines={1}
                   style={{flex: 1, color: '#bbbbbb', fontSize: 12}}>
                   {selectedTitle}
                 </Text>
-                {action(
-                  hidden.includes(activeId) ? 'Show control' : 'Hide control',
-                  () =>
-                    setHidden(current =>
-                      current.includes(activeId)
-                        ? current.filter(id => id !== activeId)
-                        : [...current, activeId],
-                    ),
-                  hidden.includes(activeId) ? 'eye-outline' : 'eye-off-outline',
-                )}
+                {activeId !== 'settings' &&
+                  action(
+                    hidden.includes(activeId) ? 'Show control' : 'Hide control',
+                    () =>
+                      setHidden(current =>
+                        current.includes(activeId)
+                          ? current.filter(id => id !== activeId)
+                          : [...current, activeId],
+                      ),
+                    hidden.includes(activeId)
+                      ? 'eye-outline'
+                      : 'eye-off-outline',
+                  )}
                 {action(
                   'Move left',
                   () => move(activeId, bar, Math.max(0, index - 1)),
@@ -543,6 +638,12 @@ function PlayerControlEditor({
                   () => move(activeId, 'bottom', draft.bottom.length),
                   'arrow-down',
                 )}
+                {activeId !== 'settings' &&
+                  action(
+                    'To menu',
+                    () => move(activeId, 'more', draft.more.length),
+                    'cog-outline',
+                  )}
               </>
             ) : (
               <Text style={{color: '#777777', fontSize: 11}}>

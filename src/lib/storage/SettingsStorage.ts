@@ -1,3 +1,4 @@
+import {normalizePlayerControlStyle, PlayerControlStyle} from '../player/controlStyle';
 import {mainStorage} from './StorageService';
 import {normalizePlayerControlLayout, PlayerControlLayout, PlayerControlId, PLAYER_CONTROL_IDS} from '../player/controlLayout';
 import {
@@ -37,6 +38,8 @@ export enum SettingsKeys {
   SHOW_PLAYER_EPISODE_SIDEBAR = 'showPlayerEpisodeSidebar',
   AUTO_PLAY_NEXT_EPISODE = 'autoPlayNextEpisode',
   SHOW_SLEEP_TIMER = 'showSleepTimer',
+  AMBIENT_VIDEO = 'ambientVideo',
+  AMBIENT_INTENSITY = 'ambientIntensity',
   ENABLE_2X_GESTURE = 'enable2xGesture',
   ENABLE_SWIPE_GESTURE = 'enableSwipeGesture',
   ENABLE_VOLUME_BOOST = 'enableVolumeBoost',
@@ -45,6 +48,7 @@ export enum SettingsKeys {
   SEEK_INTERVAL = 'seekInterval',
   PLAYBACK_SPEED = 'playbackSpeed',
   PLAYER_CONTROL_LAYOUT = 'playerControlLayout',
+  PLAYER_CONTROL_STYLE = 'playerControlStyle',
   HIDDEN_PLAYER_CONTROLS = 'hiddenPlayerControls',
 
   // Quality settings
@@ -362,6 +366,23 @@ export class SettingsStorage {
     mainStorage.setBool(SettingsKeys.AUTO_PLAY_NEXT_EPISODE, enabled);
   }
 
+  isAmbientVideoEnabled(): boolean {
+    return mainStorage.getBool(SettingsKeys.AMBIENT_VIDEO, false);
+  }
+
+  setAmbientVideoEnabled(enabled: boolean): void {
+    mainStorage.setBool(SettingsKeys.AMBIENT_VIDEO, enabled);
+  }
+
+  getAmbientIntensity(): number {
+    const value = mainStorage.getNumber(SettingsKeys.AMBIENT_INTENSITY);
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.35;
+  }
+
+  setAmbientIntensity(value: number): void {
+    if (Number.isFinite(value)) mainStorage.setNumber(SettingsKeys.AMBIENT_INTENSITY, Math.max(0, Math.min(1, value)));
+  }
+
   showSleepTimer(): boolean {
     return mainStorage.getBool(SettingsKeys.SHOW_SLEEP_TIMER, true);
   }
@@ -484,6 +505,18 @@ export class SettingsStorage {
   getPlaybackSpeed(): number {
     const value = mainStorage.getNumber(SettingsKeys.PLAYBACK_SPEED);
     return isAllowedPlaybackSpeed(value) ? value : DEFAULT_PLAYBACK_SPEED;
+  }
+
+  getPlayerControlStyle(): PlayerControlStyle {
+    try {
+      return normalizePlayerControlStyle(JSON.parse(mainStorage.getString(SettingsKeys.PLAYER_CONTROL_STYLE) || 'null'));
+    } catch {
+      return normalizePlayerControlStyle(null);
+    }
+  }
+
+  setPlayerControlStyle(style: PlayerControlStyle): void {
+    mainStorage.setString(SettingsKeys.PLAYER_CONTROL_STYLE, JSON.stringify(normalizePlayerControlStyle(style)));
   }
 
   getPlayerControlLayout(): PlayerControlLayout {

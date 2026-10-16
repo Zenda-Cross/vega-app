@@ -15,6 +15,7 @@ interface DownloadsSelectionBottomBarProps {
   onToggleSelectAll: () => void;
   onInvertSelection: () => void;
   onDeletePress: () => void;
+  onExitSelection?: () => void;
 }
 
 export const DownloadsSelectionBottomBar: React.FC<DownloadsSelectionBottomBarProps> = ({
@@ -24,6 +25,7 @@ export const DownloadsSelectionBottomBar: React.FC<DownloadsSelectionBottomBarPr
   onToggleSelectAll,
   onInvertSelection,
   onDeletePress,
+  onExitSelection,
 }) => {
   const colors = useM3Colors();
   const focusBorderColor = useTVFocusBorderColor();
@@ -54,10 +56,12 @@ export const DownloadsSelectionBottomBar: React.FC<DownloadsSelectionBottomBarPr
           shadowOpacity: 0.35,
           shadowRadius: 10,
         }}>
-        <View style={{alignItems: 'center', flexDirection: 'row', gap: 16}}>
+        <View style={{alignItems: 'center', flexDirection: 'row', gap: onExitSelection ? 8 : 16}}>
+          {onExitSelection && <TVFocusable accessibilityRole="button" accessibilityLabel="Exit selection" disabled={isDeleting} onPress={onExitSelection} borderRadius={18} focusScale={1.1} focusBorderColor={focusBorderColor} style={{minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center'}}><MaterialCommunityIcons name="close" size={24} color={colors.onSurfaceVariant} /></TVFocusable>}
           <TVFocusable
             accessibilityRole="button"
             accessibilityLabel="Select all"
+            disabled={isDeleting}
             onPress={onToggleSelectAll}
             borderRadius={18}
             focusScale={1.1}
@@ -79,6 +83,7 @@ export const DownloadsSelectionBottomBar: React.FC<DownloadsSelectionBottomBarPr
           <TVFocusable
             accessibilityRole="button"
             accessibilityLabel="Invert selection"
+            disabled={isDeleting}
             onPress={onInvertSelection}
             borderRadius={18}
             focusScale={1.1}
@@ -100,7 +105,7 @@ export const DownloadsSelectionBottomBar: React.FC<DownloadsSelectionBottomBarPr
           <AppText
             role="labelMediumEmphasized"
             style={{color: colors.onSurfaceVariant}}>
-            {selectedCount} selected
+            {selectedCount}{onExitSelection ? '' : ' selected'}
           </AppText>
         </View>
 

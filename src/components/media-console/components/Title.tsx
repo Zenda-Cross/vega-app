@@ -6,24 +6,25 @@ interface TitleProps {
   primary: string;
   secondary?: string;
   status?: string;
+  scale?: number;
 }
 
 export const Title = (title: TitleProps) => {
   if (title) {
     return (
       <View style={[styles.control, _styles.title]}>
-        <Text style={[styles.text, _styles.titleText]} numberOfLines={1}>
+        <Text style={[styles.text, _styles.titleText, {fontSize: 18 * (title.scale ?? 1)}]} numberOfLines={1}>
           {title.primary}
         </Text>
         {title.secondary && (
           <Text
-            style={[_styles.secondaryText, {color: 'hsl(0, 0%, 70%)'}]}
+            style={[_styles.secondaryText, {color: 'hsl(0, 0%, 70%)', fontSize: 12 * (title.scale ?? 1)}]}
             numberOfLines={1}>
             {title.secondary}
           </Text>
         )}
         {title.status ? (
-          <Text style={_styles.statusText} numberOfLines={1}>
+          <Text style={[_styles.statusText, {fontSize: 10 * (title.scale ?? 1)}]} numberOfLines={1}>
             {title.status}
           </Text>
         ) : null}
