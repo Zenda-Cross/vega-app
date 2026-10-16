@@ -96,47 +96,37 @@ type Phone = {
   setWatchList: (links: string[]) => void;
 };
 
-// A fresh module registry stands for one installed app.
-const installApp = (): Phone => {
+let mockHardwareId = '';
+jest.mock('react-native', () => ({
+  NativeModules: {
+    VegaSyncStorage: {
+      deviceId: mockHardwareId,
+      writeManifest: async (uri: string, content: string) => {
+        mockFiles.set(uri, content);
+      },
+    },
+  },
+}));
+
+const installApp = (hardwareId: string): Phone => {
+  mockHardwareId = hardwareId;
   let phone: Phone | undefined;
   jest.isolateModules(() => {
     const storage = require('../src/lib/storage/StorageService').mainStorage;
     phone = {
       storage,
       publish: require('../src/lib/sync/syncService').publishSyncManifest,
-      setWatchList: links =>
-        storage.setArray(
-          'watchlist',
-          links.map(link => ({
-            title: link,
-            link,
-            provider: 'p',
-            poster: '',
-            updatedAt: 1,
-          })),
-        ),
+      setWatchList: links => storage.setArray('watchlist', links.map(link => ({
+        title: link, link, provider: 'p', poster: '', updatedAt: 1,
+      }))),
     };
   });
   return phone!;
 };
 
-// Android Auto Backup copies the MMKV files of one phone onto another.
-const restoreBackup = (from: Map<string, unknown>) => {
-  const phone = installApp();
-  from.forEach((value, key) => phone.storage.values.set(key, value));
-  return phone;
-};
+const manifests = () => [...mockFiles.values()].map(content => JSON.parse(content));
 
-const manifests = () =>
-  [...mockFiles.entries()].map(([uri, content]) => ({
-    name: uri.split('/').pop(),
-    ...(JSON.parse(content) as {
-      deviceId: string;
-      watchlist: Record<string, unknown>;
-    }),
-  }));
-
-describe('sync device id restored onto a second phone', () => {
+describe('stable sync device identity', () => {
   beforeEach(() => {
     mockFiles.clear();
     mockDirectories.clear();
@@ -144,64 +134,59 @@ describe('sync device id restored onto a second phone', () => {
     mockUuid = 0;
   });
 
-  it('does not let the restored phone overwrite the manifest of the first', async () => {
-    const phoneA = installApp();
-    phoneA.setWatchList(['a-old']);
-    await phoneA.publish();
-    const backup = new Map(phoneA.storage.values);
-
-    phoneA.setWatchList(['a-new']);
-    await phoneA.publish();
-
-    const phoneB = restoreBackup(backup);
-    phoneB.setWatchList(['b']);
-    await phoneB.publish();
-
-    const files = manifests();
-    expect(files).toHaveLength(2);
-    const fileA = files.find(file => file.deviceId === 'device-1')!;
-    expect(fileA.name).toBe('vega-device-1.json');
-    expect(Object.keys(fileA.watchlist)).toEqual(['a-new']);
-    const fileB = files.find(file => file.deviceId !== 'device-1')!;
-    expect(fileB.name).toBe(`vega-${fileB.deviceId}.json`);
-    expect(Object.keys(fileB.watchlist)).toEqual(['b']);
-    expect(phoneB.storage.values.get('vega-sync-device-id')).toBe(
-      fileB.deviceId,
-    );
-    expect(phoneA.storage.values.get('vega-sync-device-id')).toBe('device-1');
+  it('keeps two phones separate even when Auto Backup copied the old device id', async () => {
+    const a = installApp('hardware-a');
+    a.setWatchList(['a']);
+    await a.publish();
+    const backup = new Map(a.storage.values);
+    const b = installApp('hardware-b');
+    backup.forEach((value, key) => b.storage.values.set(key, value));
+    b.setWatchList(['b']);
+    await b.publish();
+    a.setWatchList(['a-new']);
+    await a.publish();
+    expect(manifests().map(file => file.deviceId).sort()).toEqual(['hardware-a', 'hardware-b']);
+    expect(Object.keys(manifests().find(file => file.deviceId === 'hardware-a').watchlist)).toEqual(['a-new']);
+    expect(Object.keys(manifests().find(file => file.deviceId === 'hardware-b').watchlist)).toEqual(['b']);
   });
 
-  it('lets the first phone take a new id when the restored one wrote first', async () => {
-    const phoneA = installApp();
-    phoneA.setWatchList(['a']);
-    await phoneA.publish();
-
-    const phoneB = restoreBackup(new Map(phoneA.storage.values));
-    phoneB.setWatchList(['b']);
-    await phoneB.publish();
-    phoneA.setWatchList(['a', 'a-2']);
-    await phoneA.publish();
-
-    const files = manifests();
-    expect(files).toHaveLength(2);
-    expect(
-      Object.keys(files.find(file => file.deviceId === 'device-1')!.watchlist),
-    ).toEqual(['b']);
-    expect(
-      Object.keys(files.find(file => file.deviceId !== 'device-1')!.watchlist),
-    ).toEqual(['a', 'a-2']);
+  it('does not create a device when Syncthing restores an older revision', async () => {
+    const phone = installApp('hardware-a');
+    await phone.publish();
+    const [uri, first] = [...mockFiles.entries()][0];
+    await phone.publish();
+    mockFiles.set(uri, first);
+    await phone.publish();
+    expect(manifests()).toHaveLength(1);
+    expect(manifests()[0].deviceId).toBe('hardware-a');
+    expect(manifests()[0].revision).toBe(3);
   });
 
-  it('keeps writing the same file on a single phone', async () => {
-    const phone = installApp();
-    phone.setWatchList(['a']);
-    await phone.publish();
-    await phone.publish();
-    // An install from before the check has no published revision yet.
-    phone.storage.values.delete('vega-sync-published-revision');
-    await phone.publish();
-    await Promise.all([phone.publish(), phone.publish(), phone.publish()]);
-
-    expect(manifests().map(file => file.name)).toEqual(['vega-device-1.json']);
+  it('reuses its hardware identity across updates with restored local state', async () => {
+    const old = installApp('hardware-a');
+    await old.publish();
+    const state = new Map(old.storage.values);
+    const updated = installApp('hardware-a');
+    state.forEach((value, key) => updated.storage.values.set(key, value));
+    await updated.publish();
+    expect(manifests()).toHaveLength(1);
+    expect(manifests()[0].revision).toBe(2);
   });
+
+  it('serializes overlapping publishes without rotating identity or reordering revisions', async () => {
+    const phone = installApp('hardware-a');
+    await Promise.all(Array.from({length: 10}, () => phone.publish()));
+    expect(manifests()).toHaveLength(1);
+    expect(manifests()[0].revision).toBe(10);
+  });
+  it('preserves an existing installation id when upgrading from before device binding', async () => {
+    const phone = installApp('hardware-a');
+    phone.storage.values.set('vega-sync-device-id', 'legacy-device-id');
+    phone.storage.values.set('vega-sync-published-revision', 500);
+    await phone.publish();
+    await phone.publish();
+    expect(manifests()).toHaveLength(1);
+    expect(manifests()[0].deviceId).toBe('legacy-device-id');
+  });
+
 });

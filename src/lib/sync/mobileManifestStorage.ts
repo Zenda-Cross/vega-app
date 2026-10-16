@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import {NativeModules} from 'react-native';
 import type {SafDownloadLocation} from '../downloadLocation';
 import {getSafEntryName} from '../downloadLocation';
 import {
@@ -46,7 +47,7 @@ const findChild = async (directoryUri: string, name: string) => {
         : entryName;
       return normalizeName(entryStem) === stemNorm;
     });
-  } catch (error) {
+  } catch {
     return undefined;
   }
 };
@@ -134,10 +135,14 @@ const writeMobileSyncManifestNow = async (
       MANIFEST_MIME_TYPE,
     ));
   const content = JSON.stringify(manifest);
-  await FileSystem.StorageAccessFramework.writeAsStringAsync(fileUri, content);
+  const writer = NativeModules.VegaSyncStorage as
+    | {writeManifest: (uri: string, text: string) => Promise<void>}
+    | undefined;
+  if (!writer) throw new Error('Update Vega to enable safe sync document writes');
+  await writer.writeManifest(fileUri, content);
   const written =
     await FileSystem.StorageAccessFramework.readAsStringAsync(fileUri);
-  if (!parseSyncManifest(written)) {
+  if (written !== content || !parseSyncManifest(written)) {
     throw new Error('Vega sync manifest verification failed');
   }
   return true;

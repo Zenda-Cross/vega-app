@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import {NativeModules} from 'react-native';
 import {settingsStorage} from '../storage';
 import {
   WatchListKeys,
@@ -39,7 +40,6 @@ import {
 
 const DEVICE_ID_KEY = 'vega-sync-device-id';
 const REVISION_KEY = 'vega-sync-revision';
-const PUBLISHED_REVISION_KEY = 'vega-sync-published-revision';
 const TOMBSTONES_KEY = 'vega-sync-tombstones';
 const HISTORY_KEY = 'vega-sync-history';
 const PUBLISH_DELAY_MS = 1000;
@@ -53,13 +53,20 @@ let previousHistory: ContinueWatchingItem[] = [];
 let previousWatchList: WatchListItem[] = [];
 let previousCollections: LibraryCollection[] = [];
 
+const DEVICE_OWNER_KEY = 'vega-sync-device-owner';
 const getDeviceId = () => {
+  const owner = NativeModules.VegaSyncStorage?.deviceId as string | undefined;
   const existing = mainStorage.getString(DEVICE_ID_KEY);
-  if (existing) {
+  const previousOwner = mainStorage.getString(DEVICE_OWNER_KEY);
+  // Bind existing installations without renaming their file on this update.
+  // Restoring a bound backup to another phone gets a separate identity.
+  if (existing && (!owner || !previousOwner || owner === previousOwner)) {
+    if (owner) mainStorage.setString(DEVICE_OWNER_KEY, owner);
     return existing;
   }
-  const created = Crypto.randomUUID();
+  const created = owner || Crypto.randomUUID();
   mainStorage.setString(DEVICE_ID_KEY, created);
+  if (owner) mainStorage.setString(DEVICE_OWNER_KEY, owner);
   return created;
 };
 
@@ -330,47 +337,17 @@ const applyRemoteHistory = (history: Record<string, SyncedHistory>) => {
   }
 };
 
-// Our manifest file must still hold the revision this install wrote last.
-// Android Auto Backup restores MMKV, device id included, onto a new phone.
-// Both phones then write vega-<id>.json and erase each other's changes. A
-// different revision in the file shows that another install wrote it.
-// Installs from before this check have no published revision; they pass.
-const isOwnPublishedManifest = (current: VegaSyncManifest): boolean => {
-  const published = mainStorage.getNumber(PUBLISHED_REVISION_KEY);
-  return published === undefined || current.revision === published;
-};
-
-const writeOwnManifest = async (
-  location: Parameters<typeof writeMobileSyncManifest>[0],
-  manifest: VegaSyncManifest,
-): Promise<boolean> => {
-  const written = await writeMobileSyncManifest(
-    location,
-    manifest,
-    isOwnPublishedManifest,
-  );
-  if (written !== false) {
-    mainStorage.setNumber(PUBLISHED_REVISION_KEY, manifest.revision);
-  }
-  return written !== false;
-};
-
-export const publishSyncManifest = async (): Promise<void> => {
-  const location = settingsStorage.getDownloadLocationConfig();
-  if (!location || !isSafDownloadLocation(location)) {
-    return;
-  }
-  const manifest = buildManifest();
-  if (await writeOwnManifest(location, manifest)) {
-    return;
-  }
-  // The file belongs to the other install now. Leave it in place, so the
-  // next sync merges its changes, and publish under a new device id. A
-  // queued write built before the id changed only needs the new id.
-  if (mainStorage.getString(DEVICE_ID_KEY) === manifest.deviceId) {
-    mainStorage.setString(DEVICE_ID_KEY, Crypto.randomUUID());
-  }
-  await writeOwnManifest(location, buildManifest());
+// Keep one device file across updates and folder-sync rollbacks. Revision changes
+// are normal when Syncthing restores an older snapshot, not proof of a new device.
+let publishQueue: Promise<void> = Promise.resolve();
+export const publishSyncManifest = (): Promise<void> => {
+  const publish = publishQueue.then(async () => {
+    const location = settingsStorage.getDownloadLocationConfig();
+    if (!location || !isSafDownloadLocation(location)) return;
+    await writeMobileSyncManifest(location, buildManifest());
+  });
+  publishQueue = publish.catch(() => undefined);
+  return publish;
 };
 
 const schedulePublish = () => {

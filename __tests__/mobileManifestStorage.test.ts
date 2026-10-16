@@ -15,6 +15,15 @@ jest.mock('expo-file-system/legacy', () => ({
   },
 }));
 
+jest.mock('react-native', () => ({
+  NativeModules: {
+    VegaSyncStorage: {
+      writeManifest: (uri: string, content: string) =>
+        require('expo-file-system/legacy').StorageAccessFramework.writeAsStringAsync(uri, content),
+    },
+  },
+}));
+
 jest.mock('../src/lib/downloadLocation', () => ({
   getSafEntryName: (uri: string) => {
     const decoded = decodeURIComponent(uri);
@@ -69,6 +78,9 @@ describe('mobile sync manifest storage', () => {
     mockReadAsString.mockImplementation(async () =>
       JSON.stringify(manifest(1)),
     );
+    mockWriteAsString.mockImplementation(async (_uri, content) => {
+      mockReadAsString.mockResolvedValue(content);
+    });
   });
 
   it('overwrites the existing SAF document without deleting and recreating it', async () => {
@@ -143,4 +155,11 @@ describe('mobile sync manifest storage', () => {
     expect(canOverwrite).toHaveBeenCalledWith(manifest(7));
     expect(mockWriteAsString).not.toHaveBeenCalled();
   });
+  it('rejects a document when the provider did not replace the exact contents', async () => {
+    mockWriteAsString.mockImplementation(async (_uri, content) => {
+      mockReadAsString.mockResolvedValue(content + 'old trailing JSON');
+    });
+    await expect(writeMobileSyncManifest(location, manifest(2))).rejects.toThrow('verification failed');
+  });
+
 });
