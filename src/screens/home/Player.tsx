@@ -9,6 +9,7 @@ import {
   Animated as NativeAnimated,
   AppState,
   NativeModules,
+  DeviceEventEmitter,
   AppStateStatus,
   BackHandler,
   FlatList,
@@ -1036,12 +1037,34 @@ const Player = ({route}: Props): React.JSX.Element => {
   const [decoderMode, setDecoderMode] = useState<'hardware' | 'software'>('hardware');
   const decoderRestartRef = useRef(false);
   const decoderSwitchBusyRef = useRef(false);
+  const manualDecoderModeRef = useRef<'hardware' | 'software' | null>(null);
+  useEffect(() => { manualDecoderModeRef.current = null; }, [selectedStream?.link]);
+  useEffect(() => {
+    const listener = DeviceEventEmitter.addListener('VegaVideoDecoderFallback', (event: {viewTags?: number[]}) => {
+      const tag = findNodeHandle(nativeVideoViewRef.current);
+      if (tag && event.viewTags?.includes(tag)) {
+        decoderRestartRef.current = true;
+        if (manualDecoderModeRef.current) {
+          setToast('Decoder failed. Using the fallback decoder.', 2500);
+          manualDecoderModeRef.current = null;
+        }
+      }
+    });
+    return () => listener.remove();
+  }, [setToast]);
+
   const refreshDecoderStatus = useCallback(() => {
     const tag = findNodeHandle(nativeVideoViewRef.current);
     if (tag && NativeModules.VideoDecoder) NativeModules.VideoDecoder.getStatus(tag).then((status: {mode?: string} | null) => {
-      if (status?.mode === 'software' || status?.mode === 'hardware') setDecoderMode(status.mode);
+      if (status?.mode === 'software' || status?.mode === 'hardware') {
+        setDecoderMode(status.mode);
+        if (manualDecoderModeRef.current && status.mode !== manualDecoderModeRef.current) {
+          setToast('Selected decoder unavailable. Using the fallback decoder.', 2500);
+          manualDecoderModeRef.current = null;
+        }
+      }
     }).catch(() => {});
-  }, []);
+  }, [setToast]);
   const [controlStyle, setControlStyle] = useState(() => settingsStorage.getPlayerControlStyle());
   const [editorControls, setEditorControls] = useState<PlayerControl[]>([]);
   const toolbarControlsRef = useRef<PlayerControl[]>([]);
@@ -3143,9 +3166,17 @@ const Player = ({route}: Props): React.JSX.Element => {
     setShowControls(true);
     try {
       const next = decoderMode === 'hardware' ? 'software' : 'hardware';
+      manualDecoderModeRef.current = next;
+      setToast(`Switching to ${next === 'software' ? 'SW' : 'HW'} decoder`, 1500);
       const status = await NativeModules.VideoDecoder.setMode(tag, next);
+      if (!status?.restarting) {
+        decoderRestartRef.current = false;
+        if (status?.mode !== next) setToast('Selected decoder unavailable. Keeping the current decoder.', 2500);
+        manualDecoderModeRef.current = null;
+      }
       setDecoderMode(status?.mode === 'software' ? 'software' : 'hardware');
     } catch (error) {
+      manualDecoderModeRef.current = null;
       decoderRestartRef.current = false;
       setToast(error instanceof Error ? error.message : 'Could not change the video decoder', 2500);
     } finally { decoderSwitchBusyRef.current = false; }

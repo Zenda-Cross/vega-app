@@ -26,8 +26,10 @@ class VideoDecoderModule(context: ReactApplicationContext) : ReactContextBaseJav
         UiThreadUtil.runOnUiThread {
             try {
                 val view = video(tag) ?: throw IllegalStateException("Video player is unavailable")
-                view.setVideoDecoderMode(mode)
-                promise.resolve(view.videoDecoderStatus)
+                val restarting = view.setVideoDecoderMode(mode)
+                val status = view.videoDecoderStatus
+                status.putBoolean("restarting", restarting)
+                promise.resolve(status)
             } catch (error: Exception) { promise.reject("DECODER_UNAVAILABLE", error.message, error) }
         }
     }
