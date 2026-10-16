@@ -30,6 +30,10 @@ jest.mock('axios', () => ({
 jest.mock('@dr.pogodin/react-native-fs', () => ({
   CachesDirectoryPath: '/cache',
   exists: jest.fn(async () => true),
+  stat: jest.fn(async (path: string) => ({size: path.endsWith('.part') || path.endsWith('finalized.mp4') ? 100 : 0})),
+  readDir: jest.fn(async () => []),
+  readFile: jest.fn(async () => {throw new Error('No checkpoint');}),
+  stopDownload: jest.fn(),
   mkdir: jest.fn(async () => undefined),
   unlink: (...args: unknown[]) => mockUnlink(...args),
   writeFile: (...args: unknown[]) => mockWriteFile(...args),
@@ -213,7 +217,7 @@ describe('hlsDownloader2 MP4 finalization', () => {
       ].join('\n'),
     });
     await download();
-    const text = mockWriteFile.mock.calls[0][1] as string;
+    const text = mockWriteFile.mock.calls.find(call => String(call[0]).endsWith('/video.m3u8'))![1] as string;
     expect(text).toContain(
       '#EXT-X-MAP:URI="video_init_0.mp4"\n#EXTINF:3,\nvideo_0.ts',
     );
@@ -280,13 +284,13 @@ describe('hlsDownloader2 MP4 finalization', () => {
         deleted.indexOf('/cache/hls_segments/video_1.ts')
       ];
     expect(segmentsDeleted).toBeLessThan(
-      mockMoveFile.mock.invocationCallOrder[0],
+      mockMoveFile.mock.invocationCallOrder[mockMoveFile.mock.calls.findIndex(call => String(call[0]).endsWith('/finalized.mp4'))],
     );
   });
 
   it('copies the finalized MP4 when moving it fails', async () => {
     mockAxiosGet.mockResolvedValue({data: playlist()});
-    mockMoveFile.mockRejectedValue(new Error('EXDEV'));
+    mockMoveFile.mockImplementation(async (...args) => {if (String(args[0]).endsWith('/finalized.mp4')) throw new Error('EXDEV');});
     const completed = jest.fn();
     await hlsDownloader2({
       videoUrl: 'https://example.com/video.m3u8',
@@ -307,7 +311,7 @@ describe('hlsDownloader2 MP4 finalization', () => {
     mockFinalizeHls.mockRejectedValue(new Error('remux failed'));
     await expect(download()).rejects.toThrow('remux failed');
     expect(mockCopyFile).not.toHaveBeenCalled();
-    expect(mockMoveFile).not.toHaveBeenCalled();
+    expect(mockMoveFile.mock.calls.some(call => call[0] === '/cache/hls_segments/finalized.mp4')).toBe(false);
   });
 
   it.each([0, -1, NaN])(
@@ -317,7 +321,7 @@ describe('hlsDownloader2 MP4 finalization', () => {
       mockFinalizeHls.mockResolvedValue({duration});
       await expect(download()).rejects.toThrow('no valid duration');
       expect(mockCopyFile).not.toHaveBeenCalled();
-      expect(mockMoveFile).not.toHaveBeenCalled();
+      expect(mockMoveFile.mock.calls.some(call => call[0] === '/cache/hls_segments/finalized.mp4')).toBe(false);
     },
   );
 
@@ -380,7 +384,7 @@ describe('hlsDownloader2 MP4 finalization', () => {
       cancelHlsDownload('movie');
       throw new Error('audio mux failed');
     });
-    await expect(download()).rejects.toThrow('audio mux failed');
+    await expect(download()).rejects.toThrow('Download cancelled');
     expect(mockFinalizeHls).toHaveBeenCalledTimes(1);
     expect(mockCopyFile).not.toHaveBeenCalled();
   });

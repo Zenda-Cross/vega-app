@@ -1,4 +1,4 @@
-import {DownloadPauseSupportError} from './downloadBackends/types';
+import {DownloadPauseSupportError, DownloadPausedError} from './downloadBackends/types';
 import {canRefreshDownloadSource, pickRefreshedStream} from './downloadSourceRefresh';
 import type {Stream} from './providers/types';
 import type {DownloadItem} from './zustand/downloadsStore';
@@ -13,7 +13,7 @@ export const isBelowOnePercent = (record: DownloadItem): boolean => {
 export const canTryNextDownloadServer = (record: DownloadItem, error: unknown): boolean => {
   const message = error instanceof Error ? error.message : String(error);
   return canRefreshDownloadSource(record) && isBelowOnePercent(record) &&
-    !(error instanceof DownloadPauseSupportError) &&
+    !(error instanceof DownloadPausedError) && !(error instanceof DownloadPauseSupportError) &&
     !/ENOSPC|no space left|EACCES|EPERM|permission|destination|download location|cancelled|canceled/i.test(message);
 };
 

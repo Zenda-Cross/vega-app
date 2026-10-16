@@ -166,6 +166,15 @@ describe('downloads store', () => {
     ).toEqual(['first', 'second']);
   });
 
+  it.each(['paused', 'pausing'] as const)('preserves %s HLS work as resumable after a restart', status => {
+    useDownloadsStore.getState().enqueueDownload({id: 'hls-resume', title: 'Movie', type: 'movie',
+      sourceType: 'hls', url: 'https://example.com/movie.m3u8', status, downloadedBytes: 4, totalBytes: 10});
+    useDownloadsStore.getState().reconcileDownloads();
+    expect(useDownloadsStore.getState().downloads['hls-resume']).toMatchObject({
+      status: 'paused', canResume: true, canPause: false, downloadedBytes: 4, totalBytes: 10,
+    });
+  });
+
   it('marks active persisted work as interrupted during reconciliation', () => {
     const id = createDirectDownloadId('Vega Movie', 0);
     useDownloadsStore.getState().enqueueDownload({

@@ -1,5 +1,6 @@
 const mockBackendStart = jest.fn();
 let mockAutoServerFallback = true;
+let mockHlsResume = false;
 const mockGetStream = jest.fn();
 const mockDestinationEmpty = jest.fn();
 const mockDiscardDestination = jest.fn();
@@ -10,7 +11,8 @@ const mockPrepareDestination = jest.fn(async () => ({
 }));
 
 jest.mock('../src/lib/downloadBackends/registry', () => ({
-  getDownloadBackend: () => ({
+  getDownloadBackend: (source: string) => ({
+    preserveStagingOnFailure: mockHlsResume && source === 'hls',
     start: mockBackendStart,
     pause: jest.fn(async () => undefined),
     resume: jest.fn(async () => undefined),
@@ -125,6 +127,7 @@ describe('expired download links', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAutoServerFallback = true;
+    mockHlsResume = false;
     mockBackendStart.mockReset().mockResolvedValue(undefined);
     mockBackendCleanup.mockReset().mockResolvedValue(undefined);
     mockDiscardDestination.mockReset().mockResolvedValue(undefined);
@@ -203,6 +206,18 @@ describe('expired download links', () => {
     expect(useDownloadsStore.getState().downloads.episode.status).toBe(
       'completed',
     );
+  });
+
+  it('refreshes an expired HLS link with saved segments and delegates revalidation to the downloader', async () => {
+    mockHlsResume = true;
+    mockDestinationEmpty.mockResolvedValue(false);
+    enqueueEpisode({sourceType: 'hls', videoType: 'mp4', downloadedBytes: 3, totalBytes: 10});
+    mockBackendStart.mockRejectedValueOnce(new Error('HTTP 403')).mockResolvedValueOnce(undefined);
+    mockGetStream.mockResolvedValue([{server: 'HubCloud', link: 'https://files.example/new.m3u8', type: 'm3u8'}]);
+    await startDownload('episode', location);
+    expect(mockBackendStart).toHaveBeenCalledTimes(2);
+    expect(mockBackendStart.mock.calls[1][0].record.url).toBe('https://files.example/new.m3u8');
+    expect(mockBackendCleanup).not.toHaveBeenCalled();
   });
 
   it('fails with the original error when the server is not listed again', async () => {

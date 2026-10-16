@@ -337,6 +337,40 @@ class HttpDownloadModule(
         }.apply { isDaemon = true }.start()
     }
 
+    /** Remuxes complete local HLS tracks into one seekable MP4, without re-encoding. */
+    @ReactMethod
+    fun finalizeHls(videoPlaylistPath: String, audioPlaylistPath: String?, outputPath: String, promise: Promise) {
+        Thread {
+            val output = File(outputPath)
+            try {
+                output.delete()
+                val args = mutableListOf("-hide_banner", "-loglevel", "error", "-y")
+                fun input(path: String) {
+                    require(File(path).isFile) { "Downloaded HLS playlist is missing" }
+                    args.addAll(listOf("-protocol_whitelist", "file,crypto,data", "-allowed_extensions", "ALL", "-i", path))
+                }
+                input(videoPlaylistPath)
+                if (audioPlaylistPath != null) input(audioPlaylistPath)
+                args.addAll(listOf("-map", "0:v:0", "-map", if (audioPlaylistPath != null) "1:a:0" else "0:a:0?",
+                    "-c", "copy", "-movflags", "+faststart", "-f", "mp4", outputPath))
+                val session = FFmpegKit.executeWithArguments(args.toTypedArray())
+                if (!ReturnCode.isSuccess(session.returnCode) || !output.isFile || output.length() == 0L) {
+                    throw IOException("Could not finalize HLS: ${session.allLogsAsString?.takeLast(400)?.trim().orEmpty()}")
+                }
+                val metadata = android.media.MediaMetadataRetriever()
+                val durationMs = try {
+                    metadata.setDataSource(outputPath)
+                    metadata.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                } finally { metadata.release() }
+                require(durationMs > 0) { "Finalized HLS file has no valid duration" }
+                promise.resolve(Arguments.createMap().apply { putDouble("duration", durationMs / 1000.0) })
+            } catch (error: Exception) {
+                output.delete()
+                promise.reject("HLS_FINALIZE_FAILED", error.message ?: error.toString(), error)
+            }
+        }.apply { isDaemon = true }.start()
+    }
+
     @ReactMethod
     fun getUriSize(uriString: String, promise: Promise) {
         try {

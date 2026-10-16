@@ -150,6 +150,19 @@ describe('download destination service', () => {
     mockSafDirectories.clear();
   });
 
+  it('preserves HLS staging segments when preparing a resumed download', async () => {
+    const options = {downloadId: 'hls-resume', location: {type: 'saf' as const, uri: 'content://downloads/tree', label: 'Downloads'},
+      fileName: 'episode', fileType: 'mp4'};
+    const first = await prepareDownloadDestination(options);
+    const segment = `${first.stagingDirectory}/segments/video_0.ts`;
+    mockFiles.set(segment, 1024);
+    const resumed = await prepareDownloadDestination({...options, preserveStaging: true});
+    expect(resumed.stagingDirectory).toBe(first.stagingDirectory);
+    expect(mockFiles.get(segment)).toBe(1024);
+    await prepareDownloadDestination(options);
+    expect(mockFiles.has(segment)).toBe(false);
+  });
+
   it('creates an isolated staging directory for each download ID', async () => {
     const first = await prepareDownloadDestination({
       downloadId: 'Show_SSeason 1_E1',

@@ -1,7 +1,7 @@
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, {useEffect, useMemo, useState} from 'react';
-import {Image, Linking, Pressable, View, findNodeHandle} from 'react-native';
+import {Image, Linking, View, findNodeHandle} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useM3Colors} from '../../../theme/M3PaletteContext';
 import SkeletonLoader from '../../../components/Skeleton';
@@ -375,26 +375,29 @@ const ContentOverview = ({
           </AppText>
         )}
         {!synopsisLoading && synopsis.length > 240 ? (
-          <Pressable
+          <TVFocusable
             accessibilityRole="button"
-            focusable={true}
-            isTVSelectable={true}
+            accessibilityLabel={
+              readMore ? 'Show less synopsis' : 'Read more synopsis'
+            }
+            accessibilityState={{expanded: readMore}}
             onPress={onToggleSynopsis}
-            style={({pressed, focused}) => ({
-              paddingVertical: 6,
-              paddingHorizontal: 8,
-              borderRadius: 8,
-              borderWidth: focused ? 2 : 0,
-              borderColor: focused ? focusBorderColor : 'transparent',
+            borderRadius={8}
+            focusBorderColor={focusBorderColor}
+            style={{
+              minHeight: 44,
+              paddingVertical: 8,
+              paddingHorizontal: 4,
+              justifyContent: 'center',
               alignSelf: 'flex-start',
-              transform: [{scale: focused ? 1.05 : pressed ? 0.95 : 1}],
-            })}>
+              flexShrink: 0,
+            }}>
             <AppText
               role="labelLargeEmphasized"
               style={{color: colors.primary}}>
               {readMore ? 'Show less' : 'Read more'}
             </AppText>
-          </Pressable>
+          </TVFocusable>
         ) : null}
 
         <View

@@ -317,7 +317,7 @@ class ByeDpiSocket : Socket() {
 private class FallbackDns(private val primary: DnsOverHttps) : Dns {
     override fun lookup(hostname: String): List<InetAddress> {
         return try {
-            primary.lookup(hostname)
+            Nat64Dns.networkAddresses(primary.lookup(hostname))
         } catch (e: UnknownHostException) {
             VegaLog.w(TAG, "DoH lookup failed for $hostname, falling back to system DNS")
             Dns.SYSTEM.lookup(hostname)

@@ -63,6 +63,7 @@ export const prepareDownloadDestination = async ({
   fileName,
   fileType,
   directToSaf = false,
+  preserveStaging = false,
   existingFinalDocumentUri,
   outputDirectoryNames,
 }: {
@@ -71,6 +72,7 @@ export const prepareDownloadDestination = async ({
   fileName: string;
   fileType: string;
   directToSaf?: boolean;
+  preserveStaging?: boolean;
   existingFinalDocumentUri?: string;
   outputDirectoryNames?: string[];
 }): Promise<PreparedDownloadDestination> => {
@@ -112,7 +114,7 @@ export const prepareDownloadDestination = async ({
   }
 
   const stagingDirectory = getDownloadStagingDirectory(downloadId);
-  if (await RNFS.exists(stagingDirectory)) {
+  if (!preserveStaging && await RNFS.exists(stagingDirectory)) {
     await RNFS.unlink(stagingDirectory);
   }
   await RNFS.mkdir(stagingDirectory);

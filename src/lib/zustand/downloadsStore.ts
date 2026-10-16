@@ -544,6 +544,9 @@ export const useDownloadsStore = create<DownloadState>()(
               if (!INTERRUPTIBLE_STATUSES.has(item.status)) {
                 return [id, item];
               }
+              if (item.sourceType === 'hls' && (item.status === 'paused' || item.status === 'pausing')) {
+                return [id, {...item, status: 'paused' as const, speed: 0, canPause: false, canResume: true, updatedAt: now}];
+              }
               return [
                 id,
                 {

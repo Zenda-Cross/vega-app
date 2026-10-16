@@ -4,9 +4,12 @@ const mockBackendCleanup = jest.fn(async () => undefined);
 const mockBackendPause = jest.fn(async () => undefined);
 const mockBackendResume = jest.fn(async () => undefined);
 let mockDownloadConcurrency = 2;
+let mockResumableHls = false;
 
 jest.mock('../src/lib/downloadBackends/registry', () => ({
-  getDownloadBackend: () => ({
+  getDownloadBackend: (source: string) => ({
+    preserveStagingOnFailure: mockResumableHls && source === 'hls',
+    restartOnResume: mockResumableHls && source === 'hls',
     start: mockBackendStart,
     pause: mockBackendPause,
     resume: mockBackendResume,
@@ -92,6 +95,7 @@ import {
   startQueuedDownloadNow,
   updateDownloadConcurrency,
 } from '../src/lib/downloadManager';
+import {DownloadPausedError} from '../src/lib/downloadBackends/types';
 import {notificationService} from '../src/lib/services/Notification';
 import useDownloadsStore from '../src/lib/zustand/downloadsStore';
 
@@ -134,6 +138,31 @@ describe('download manager foreground lifecycle', () => {
     mockBackendResume.mockResolvedValue(undefined);
     mockShowStarting.mockResolvedValue(undefined);
     mockDownloadConcurrency = 2;
+    mockResumableHls = false;
+  });
+
+  it('pauses an HLS job without deleting progress and safely queues an immediate resume', async () => {
+    mockResumableHls = true;
+    enqueueDownload();
+    useDownloadsStore.getState().updateDownload('movie_direct_0', {sourceType: 'hls'});
+    let stop!: (error: Error) => void;
+    mockBackendStart.mockImplementationOnce(() => new Promise<void>((_resolve, reject) => {stop = reject;}));
+    const running = startDownload('movie_direct_0', location);
+    await flushAsyncWork();
+    useDownloadsStore.getState().updateDownload('movie_direct_0', {status: 'downloading', canPause: true});
+    mockBackendPause.mockImplementationOnce(async () => {
+      setTimeout(() => stop(new DownloadPausedError()), 0);
+    });
+    await pauseDownload('movie_direct_0');
+    expect(useDownloadsStore.getState().downloads.movie_direct_0.status).toBe('paused');
+    await resumeDownload('movie_direct_0');
+    await running;
+    await flushAsyncWork();
+    expect(mockBackendStart).toHaveBeenCalledTimes(2);
+    expect(mockBackendResume).not.toHaveBeenCalled();
+    expect(mockBackendCleanup).not.toHaveBeenCalled();
+    expect(mockShowFailed).not.toHaveBeenCalled();
+    expect(useDownloadsStore.getState().downloads.movie_direct_0.status).toBe('completed');
   });
 
   it('releases tracking after successful completion', async () => {

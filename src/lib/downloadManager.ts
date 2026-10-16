@@ -35,6 +35,7 @@ import {
   isExpiredLinkError,
   refreshDownloadSource,
 } from './downloadSourceRefresh';
+import {DownloadPausedError} from './downloadBackends/types';
 import {canTryNextDownloadServer, downloadServerKey, getNextDownloadServer} from './downloadServerFallback';
 import type {Stream} from './providers/types';
 
@@ -236,7 +237,8 @@ const getOutputDirectoryNames = (record: DownloadItem): string[] => [
 
 const getQueuedDownloads = (): DownloadItem[] =>
   Object.values(useDownloadsStore.getState().downloads)
-    .filter(item => item.status === 'queued' && item.downloadLocation)
+    .filter(item => item.status === 'queued' && item.downloadLocation &&
+      !(activeDownloads.has(item.id) && getDownloadBackend(item.sourceType).restartOnResume))
     .sort((left, right) =>
       left.createdAt === right.createdAt
         ? left.id.localeCompare(right.id)
@@ -255,11 +257,12 @@ const startBackendWithFreshLink = async (
     await startBackendWithRetry(backend, context);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const resumableHls = context.record.sourceType === 'hls' && backend.preserveStagingOnFailure;
     if (
       cancelledDownloads.has(context.record.id) ||
       pauseFailedDownloads.has(context.record.id) ||
       !canRefreshDownloadSource(context.record) ||
-      getRecord(context.record.id).downloadedBytes > 0 ||
+      (!resumableHls && getRecord(context.record.id).downloadedBytes > 0) ||
       !isExpiredLinkError(message)
     ) {
       throw error;
@@ -267,14 +270,14 @@ const startBackendWithFreshLink = async (
     const id = context.record.id;
     const canContinue = () => {
       const current = useDownloadsStore.getState().getDownload(id);
-      return current && current.downloadedBytes === 0 &&
+      return current && (resumableHls || current.downloadedBytes === 0) &&
         current.url === context.record.url && current.createdAt === context.record.createdAt &&
         (current.status === 'starting' || current.status === 'downloading') &&
         !cancelledDownloads.has(id) && !pauseFailedDownloads.has(id);
     };
     // Persisted progress can lag behind native writes. Check the actual
     // destination (and HLS segment directory), failing closed on metadata errors.
-    if (!canContinue() || !await isDownloadDestinationEmpty(context.destination)) {
+    if (!canContinue() || (!resumableHls && !await isDownloadDestinationEmpty(context.destination))) {
       throw error;
     }
     if (!canContinue()) throw error;
@@ -289,7 +292,7 @@ const startBackendWithFreshLink = async (
       }
     }
     if (!fresh || !canContinue() ||
-      !await isDownloadDestinationEmpty(context.destination) || !canContinue()) {
+      (!resumableHls && !await isDownloadDestinationEmpty(context.destination)) || !canContinue()) {
       throw error;
     }
     useDownloadsStore.getState().updateDownload(id, fresh);
@@ -346,7 +349,7 @@ export const startQueuedDownloadNow = async (
 // A paused download that still has a live job waits in the queue to resume.
 const startOrResumeQueuedDownload = (record: DownloadItem): Promise<void> =>
   activeDownloads.has(record.id)
-    ? resumeLiveDownload(record.id)
+    ? getDownloadBackend(record.sourceType).restartOnResume ? Promise.resolve() : resumeLiveDownload(record.id)
     : startDownload(record.id, record.downloadLocation!);
 
 export const startDownload = async (
@@ -379,6 +382,7 @@ export const startDownload = async (
       fileName: getOutputName(record),
       fileType: record.videoType || 'mp4',
       directToSaf: backend.directToSaf && isSafDownloadLocation(location),
+      preserveStaging: backend.preserveStagingOnFailure,
       existingFinalDocumentUri,
       outputDirectoryNames: getOutputDirectoryNames(record),
     });
@@ -531,6 +535,7 @@ export const startDownload = async (
       await getDownloadNotificationColor(record),
     );
   } catch (error) {
+    if (error instanceof DownloadPausedError && !cancelledDownloads.has(downloadId)) return;
     const cancelled = cancelledDownloads.has(downloadId);
     const pauseFailed = pauseFailedDownloads.has(downloadId);
     const message = error instanceof Error ? error.message : String(error);
@@ -542,7 +547,7 @@ export const startDownload = async (
       // a concurrent completion/cancellation start more queued work.
       useDownloadsStore.setState({storageFullHold: true});
     }
-    if (!backend.preservePartialOnFailure || !isSafDownloadLocation(location)) {
+    if (!backend.preserveStagingOnFailure && (!backend.preservePartialOnFailure || !isSafDownloadLocation(location))) {
       await backend.cleanup(downloadId, record).catch(() => undefined);
     } else if (cancelled && destination) {
       await backend
@@ -591,10 +596,11 @@ export const startDownload = async (
     pauseFailedDownloads.delete(downloadId);
     lastNotificationAt.delete(downloadId);
     downloadNotificationColors.delete(downloadId);
+    // A stopped HLS job may immediately restart with the same ID. Release its
+    // foreground reference first so old teardown cannot stop the resumed job.
+    if (backend.restartOnResume) await notificationService.stopForegroundTask(downloadId).catch(() => undefined);
     await scheduleQueuedDownloads();
-    await notificationService
-      .stopForegroundTask(downloadId)
-      .catch(() => undefined);
+    if (!backend.restartOnResume) await notificationService.stopForegroundTask(downloadId).catch(() => undefined);
   }
 };
 
@@ -666,7 +672,7 @@ export const resumeDownload = async (downloadId: string): Promise<void> => {
   useDownloadsStore.setState({storageFullHold: false});
   // With no live job (for example after an app restart) the backend has
   // nothing to resume, so start the download again from the queue.
-  if (!activeDownloads.has(downloadId)) {
+  if (!activeDownloads.has(downloadId) || backend.restartOnResume) {
     useDownloadsStore.getState().updateDownload(downloadId, {
       status: 'queued',
       canPause: false,
