@@ -2572,7 +2572,31 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          }
  
          boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
-@@ -1100,12 +1406,16 @@
+@@ -969,10 +1275,19 @@
+         Intent intent = new Intent(themedReactContext, VideoPlaybackService.class);
+         intent.setAction(MediaSessionService.SERVICE_INTERFACE);
+ 
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+-            themedReactContext.startForegroundService(intent);
+-        } else {
+-            themedReactContext.startService(intent);
++        try {
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
++                themedReactContext.startForegroundService(intent);
++            } else {
++                themedReactContext.startService(intent);
++            }
++        } catch (RuntimeException error) {
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
++                    && error instanceof android.app.ForegroundServiceStartNotAllowedException) {
++                DebugLog.w(TAG, "Android rejected a background playback service start");
++            } else {
++                throw error;
++            }
+         }
+ 
+         int flags;
+@@ -1100,12 +1415,16 @@
                      }
                  } else if ("file".equals(uri.getScheme()) ||
                          !useCache) {
@@ -2591,7 +2615,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      );
  
                  }
-@@ -1144,12 +1454,63 @@
+@@ -1144,12 +1463,63 @@
                  ? overridenMediaItemBuilder.build()
                  : mediaItemBuilder.build();
  
@@ -2656,7 +2680,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
  
          if (cropStartMs >= 0 && cropEndMs >= 0) {
              return new ClippingMediaSource(mediaSource, cropStartMs * 1000, cropEndMs * 1000);
-@@ -1160,6 +1521,109 @@
+@@ -1160,6 +1530,109 @@
          }
  
          return mediaSource;
@@ -2766,7 +2790,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      @Nullable
-@@ -1183,9 +1647,23 @@
+@@ -1183,9 +1656,23 @@
                      }
                  }
                  
@@ -2791,7 +2815,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          .setLabel(label)
                          .setRoleFlags(C.ROLE_FLAG_SUBTITLE);
                  
-@@ -1219,6 +1697,7 @@
+@@ -1219,6 +1706,7 @@
      }
  
      private void releasePlayer() {
@@ -2799,7 +2823,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (player != null) {
              if(playbackServiceBinder != null) {
                  playbackServiceBinder.getService().unregisterPlayer(player);
-@@ -1298,14 +1777,14 @@
+@@ -1298,14 +1786,14 @@
                      // Lower the volume
                      if (!view.muted) {
                          activity.runOnUiThread(() ->
@@ -2816,7 +2840,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          );
                      }
                  }
-@@ -1586,7 +2065,17 @@
+@@ -1586,7 +2074,17 @@
      }
  
      private ArrayList<VideoTrack> getVideoTrackInfo() {
@@ -2835,7 +2859,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (trackSelector == null) {
              // Likely player is unmounting so no video tracks are available anymore
              return videoTracks;
-@@ -1610,6 +2099,72 @@
+@@ -1610,6 +2108,72 @@
              }
          }
          return videoTracks;
@@ -2908,7 +2932,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      private ArrayList<VideoTrack> getVideoTrackInfoFromManifest() {
-@@ -1703,7 +2258,7 @@
+@@ -1703,7 +2267,7 @@
          }
          
          TrackSelectionArray selectionArray = player.getCurrentTrackSelections();
@@ -2917,7 +2941,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          TrackGroupArray groups = info.getTrackGroups(index);
  
          for (int groupIndex = 0; groupIndex < groups.length; ++groupIndex) {
-@@ -1861,6 +2416,9 @@
+@@ -1861,6 +2425,9 @@
  
      @Override
      public void onTracksChanged(@NonNull Tracks tracks) {
@@ -2927,7 +2951,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          DebugLog.d(TAG, "onTracksChanged called - updating track information, controls=" + controls);
          
          if (controls) {
-@@ -1889,6 +2447,13 @@
+@@ -1889,6 +2456,13 @@
          
          updateSubtitleButtonVisibility();
      }
@@ -2941,7 +2965,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      
      
      private boolean hasBuiltInTextTracks() {
-@@ -1950,10 +2515,62 @@
+@@ -1950,10 +2524,62 @@
          }
      }
  
@@ -3004,7 +3028,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          switch(e.errorCode) {
              case PlaybackException.ERROR_CODE_DRM_DEVICE_REVOKED:
              case PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED:
-@@ -2031,6 +2648,9 @@
+@@ -2031,6 +2657,9 @@
      }
  
      public void onCues(CueGroup cueGroup) {
@@ -3014,7 +3038,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (!cueGroup.cues.isEmpty() && cueGroup.cues.get(0).text != null) {
              String subtitleText = cueGroup.cues.get(0).text.toString();
              eventEmitter.onTextTrackDataChanged.invoke(subtitleText);
-@@ -2061,6 +2681,8 @@
+@@ -2061,6 +2690,8 @@
              }
  
              if (!isSourceEqual) {
@@ -3023,7 +3047,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                  hasVideoEnded = false;
                  playerNeedsSource = true;
                  initializePlayer();
-@@ -2147,6 +2769,12 @@
+@@ -2147,6 +2778,12 @@
                      TrackGroupArray groups = info.getTrackGroups(textRendererIndex);
                      boolean trackFound = false;
                      
@@ -3036,7 +3060,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      for (int groupIndex = 0; groupIndex < groups.length; groupIndex++) {
                          TrackGroup group = groups.get(groupIndex);
                          for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
-@@ -2159,18 +2787,21 @@
+@@ -2159,18 +2796,21 @@
                                  isMatch = true;
                              } else if ("index".equals(type)) {
                                  int targetIndex = ReactBridgeUtils.safeParseInt(value, -1);
@@ -3059,7 +3083,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          }
                          if (trackFound) break;
                      }
-@@ -2178,13 +2809,17 @@
+@@ -2178,13 +2818,17 @@
                      if (!trackFound) {
                          DebugLog.w(TAG, "Text track not found for type=" + type + ", value=" + value + 
                              ". Keeping current selection.");
@@ -3078,7 +3102,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
              
              // Give PlayerView time to update its controls
              mainHandler.postDelayed(() -> {
-@@ -2197,18 +2832,121 @@
+@@ -2197,18 +2841,121 @@
          }
      }
  
@@ -3203,7 +3227,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          MappingTrackSelector.MappedTrackInfo info = trackSelector.getCurrentMappedTrackInfo();
          if (info == null) {
              return;
-@@ -2317,6 +3055,15 @@
+@@ -2317,6 +3064,15 @@
              groupIndex = getGroupIndexForDefaultLocale(groups);
          }
  
@@ -3219,7 +3243,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (groupIndex == C.INDEX_UNSET && trackType == C.TRACK_TYPE_VIDEO && groups.length != 0) { // Video auto
              // Add all tracks as valid options for ABR to choose from
              TrackGroup group = groups.get(0);
-@@ -2359,7 +3106,7 @@
+@@ -2359,7 +3115,7 @@
              DefaultTrackSelector.Parameters.Builder selectionParameters = trackSelector.getParameters()
                      .buildUpon()
                      .setExceedAudioConstraintsIfNecessary(true)
@@ -3228,7 +3252,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      .setExceedVideoConstraintsIfNecessary(true)
                      .setRendererDisabled(rendererIndex, false);
  
-@@ -2429,10 +3176,225 @@
+@@ -2429,10 +3185,225 @@
          return groupIndex;
      }
  
@@ -3455,7 +3479,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      public void setSelectedAudioTrack(String type, String value) {
-@@ -2546,9 +3508,7 @@
+@@ -2546,9 +3517,7 @@
  
      public void setMutedModifier(boolean muted) {
          this.muted = muted;
@@ -3466,7 +3490,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      private void changeAudioOutput(AudioOutput output) {
-@@ -2577,9 +3537,14 @@
+@@ -2577,9 +3546,14 @@
      }
  
      public void setVolumeModifier(float volume) {
@@ -3483,7 +3507,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          }
      }
  
-@@ -2587,6 +3552,51 @@
+@@ -2587,6 +3561,51 @@
          if (player != null) {
              player.seekTo(positionMs);
          }
@@ -3697,3 +3721,99 @@ index 0482944..c99a9e1 100644
    renderLoader?: ReactNode | ((arg0: ReactVideoRenderLoaderProps) => ReactNode);
    repeat?: boolean;
    reportBandwidth?: boolean; //Android
+diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/VideoPlaybackService.kt b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/VideoPlaybackService.kt
+--- a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/VideoPlaybackService.kt
++++ b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/VideoPlaybackService.kt
+@@ -66,7 +66,7 @@
+         addSession(mediaSession)
+ 
+         val notificationId = player.hashCode()
+-        startForeground(notificationId, buildNotification(mediaSession))
++        if (!promoteToForeground(notificationId, buildNotification(mediaSession))) stopSelf()
+     }
+ 
+     fun unregisterPlayer(player: ExoPlayer) {
+@@ -246,9 +246,41 @@
+             .build()
+     }
+ 
++    private fun promoteToForeground(id: Int, notification: Notification): Boolean {
++        try {
++            startForeground(id, notification)
++            return true
++        } catch (error: RuntimeException) {
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
++                error is android.app.ForegroundServiceStartNotAllowedException) {
++                DebugLog.w(TAG, "Android rejected a background playback service start")
++                return false
++            }
++            throw error
++        }
++    }
++
+     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
++        // A playback service must never promote a boot broadcast (including
++        // vendor quick-boot actions) into a mediaPlayback foreground service.
++        // A null sticky restart has no user playback request to restore either.
++        if (intent == null || intent.action in BOOT_ACTIONS) {
++            stopSelf(startId)
++            return START_NOT_STICKY
++        }
++        val playerId = intent.getIntExtra("PLAYER_ID", -1)
++        val hasPlayerCommand = mediaSessionsList.keys.any { it.hashCode() == playerId } &&
++            commandFromString(intent.getStringExtra("ACTION") ?: "") != COMMAND.NONE
++        val mediaButton = intent.action == Intent.ACTION_MEDIA_BUTTON && mediaSessionsList.isNotEmpty()
++        if (intent.action != SERVICE_INTERFACE && !hasPlayerCommand && !mediaButton) {
++            stopSelf(startId)
++            return START_NOT_STICKY
++        }
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+-            startForeground(PLACEHOLDER_NOTIFICATION_ID, createPlaceholderNotification())
++            if (!promoteToForeground(PLACEHOLDER_NOTIFICATION_ID, createPlaceholderNotification())) {
++                stopSelf(startId)
++                return START_NOT_STICKY
++            }
+         }
+ 
+         intent?.let {
+@@ -257,25 +289,34 @@
+ 
+             if (playerId < 0) {
+                 DebugLog.w(TAG, "Received Command without playerId")
+-                return super.onStartCommand(intent, flags, startId)
++                super.onStartCommand(intent, flags, startId)
++                return START_NOT_STICKY
+             }
+ 
+             if (actionCommand == null) {
+                 DebugLog.w(TAG, "Received Command without action command")
+-                return super.onStartCommand(intent, flags, startId)
+-            }
+-
+-            val session = mediaSessionsList.values.find { s -> s.player.hashCode() == playerId } ?: return super.onStartCommand(intent, flags, startId)
++                super.onStartCommand(intent, flags, startId)
++                return START_NOT_STICKY
++            }
++
++            val session = mediaSessionsList.values.find { s -> s.player.hashCode() == playerId } ?: return START_NOT_STICKY
+ 
+             handleCommand(commandFromString(actionCommand), session)
+         }
+-        return super.onStartCommand(intent, flags, startId)
++        super.onStartCommand(intent, flags, startId)
++        return START_NOT_STICKY
+     }
+ 
+     companion object {
+         private const val SEEK_INTERVAL_MS = 10000L
+         private const val TAG = "VideoPlaybackService"
+         private const val PLACEHOLDER_NOTIFICATION_ID = 9999
++        private val BOOT_ACTIONS = setOf(
++            Intent.ACTION_BOOT_COMPLETED,
++            Intent.ACTION_LOCKED_BOOT_COMPLETED,
++            "android.intent.action.QUICKBOOT_POWERON",
++            "com.htc.intent.action.QUICKBOOT_POWERON",
++        )
+ 
+         const val NOTIFICATION_CHANEL_ID = "RNVIDEO_SESSION_NOTIFICATION"
+ 
