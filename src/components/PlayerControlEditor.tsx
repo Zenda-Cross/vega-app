@@ -40,6 +40,7 @@ import {
 const TOP_Y = 24;
 const BOTTOM_Y = 96;
 const CELL_HEIGHT = 50;
+const MENU_PADDING = 8;
 const noop = () => {};
 const EDITOR_LABELS: Record<PlayerControlId, string> = {
   sleep: 'Sleep',
@@ -253,12 +254,13 @@ function PlayerControlEditor({
   );
   const columns = Math.max(2, Math.floor(canvasWidth / 96));
   const cellWidth = canvasWidth / columns;
+  const menuCellWidth = (canvasWidth - MENU_PADDING * 2) / columns;
   const moreY =
     BOTTOM_Y +
     Math.max(1, Math.ceil(draft.bottom.length / columns)) * CELL_HEIGHT +
     34;
   const canvasHeight =
-    moreY + Math.max(1, Math.ceil(draft.more.length / columns)) * CELL_HEIGHT;
+    moreY + Math.max(1, Math.ceil(draft.more.length / columns)) * CELL_HEIGHT + MENU_PADDING * 2;
   const startDrag = useCallback(
     (id: PlayerControlId) => {
       setSelected(id);
@@ -305,13 +307,13 @@ function PlayerControlEditor({
         lane === 'top'
           ? Math.floor(x / 48)
           : Math.floor(
-              (y - (lane === 'more' ? moreY : BOTTOM_Y)) / CELL_HEIGHT,
+              (y - (lane === 'more' ? moreY + MENU_PADDING : BOTTOM_Y)) / CELL_HEIGHT,
             ) *
               columns +
-            Math.floor(x / cellWidth);
+            Math.max(0, Math.min(columns - 1, Math.floor((x - (lane === 'more' ? MENU_PADDING : 0)) / (lane === 'more' ? menuCellWidth : cellWidth))));
       move(id, lane, Math.max(0, index));
     },
-    [canvasWidth, canvasHeight, columns, cellWidth, moreY, move],
+    [canvasWidth, canvasHeight, columns, cellWidth, menuCellWidth, moreY, move],
   );
   const activeId = selected ?? 'sleep';
   const bar: PlayerControlBar = draft.top.includes(activeId)
@@ -528,7 +530,7 @@ function PlayerControlEditor({
                       color: '#aaa',
                       fontSize: 11,
                     }}>
-                    Settings menu �{' '}
+                    Settings menu ·{' '}
                     {draft.more.length === 0
                       ? 'Move controls here to enable'
                       : `${draft.more.length} controls`}
@@ -537,12 +539,12 @@ function PlayerControlEditor({
                     pointerEvents="none"
                     style={{
                       position: 'absolute',
-                      top: moreY - 2,
+                      top: moreY,
                       left: 0,
                       right: 0,
                       height:
                         Math.max(1, Math.ceil(draft.more.length / columns)) *
-                        CELL_HEIGHT,
+                        CELL_HEIGHT + MENU_PADDING * 2,
                       borderRadius: 12,
                       borderWidth: 1,
                       borderStyle: 'dashed',
@@ -558,14 +560,16 @@ function PlayerControlEditor({
                         <ControlToken
                           key={id}
                           control={control}
-                          x={top ? slot * 48 + 4 : (slot % columns) * cellWidth}
+                          x={top ? slot * 48 + 4 : lane === 'more'
+                            ? MENU_PADDING + (slot % columns) * menuCellWidth
+                            : (slot % columns) * cellWidth}
                           y={
                             top
                               ? TOP_Y
-                              : (lane === 'more' ? moreY : BOTTOM_Y) +
+                              : (lane === 'more' ? moreY + MENU_PADDING : BOTTOM_Y) +
                                 Math.floor(slot / columns) * CELL_HEIGHT
                           }
-                          width={top ? 42 : cellWidth - 6}
+                          width={top ? 42 : (lane === 'more' ? menuCellWidth : cellWidth) - 6}
                           top={top}
                           selected={selected === id}
                           hidden={hidden.includes(id)}
