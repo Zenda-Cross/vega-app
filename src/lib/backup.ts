@@ -1,4 +1,5 @@
 import * as DocumentPicker from 'expo-document-picker';
+import {NativeModules, Platform} from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import {mainStorage} from './storage/StorageService';
 import {SettingsKeys, settingsStorage} from './storage/SettingsStorage';
@@ -280,10 +281,19 @@ const getBackupFileName = () =>
   `vega-backup-${new Date().toISOString().slice(0, 10)}`;
 
 /**
- * Asks for a folder and writes the backup there.
- * Returns false when the user cancels the folder picker.
+ * Saves a single backup document without requesting access to its whole folder.
+ * Returns false when the user cancels the picker.
  */
 export const exportBackup = async (): Promise<boolean> => {
+  if (Platform.OS === 'android') {
+    if (!NativeModules.BackupExport?.save) {
+      throw new Error('Please update the app to use the backup save dialog.');
+    }
+    return NativeModules.BackupExport.save(
+      `${getBackupFileName()}.json`,
+      JSON.stringify(createBackup(), null, 2),
+    );
+  }
   const permission =
     await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
   if (!permission.granted) {
