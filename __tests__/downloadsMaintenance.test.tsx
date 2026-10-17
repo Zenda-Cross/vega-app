@@ -1,4 +1,5 @@
 import React from 'react';
+import {AppState, type AppStateStatus} from 'react-native';
 import renderer, {act} from 'react-test-renderer';
 import {useDownloadsMaintenance} from '../src/lib/hooks/useDownloadsMaintenance';
 import {syncFromSharedFolder} from '../src/lib/sync/syncService';
@@ -34,16 +35,23 @@ const flush = async () => {
 };
 let tree: renderer.ReactTestRenderer;
 let testClock = Date.now();
+let changeState: (state: AppStateStatus) => void;
 beforeEach(() => {
   jest.useFakeTimers();
   testClock += 600000;
   jest.setSystemTime(testClock);
   sync.mockReset().mockResolvedValue(undefined);
   reconcile.mockReset().mockResolvedValue(undefined);
+  AppState.currentState = 'active';
+  jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, callback) => {
+    changeState = callback;
+    return {remove: jest.fn()};
+  });
 });
 afterEach(async () => {
   await act(async () => {tree?.unmount(); endUIInteraction('test-downloads-scroll'); await flush();});
   jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 it('cancels brief tab visits before starting native maintenance', async () => {
@@ -54,23 +62,24 @@ it('cancels brief tab visits before starting native maintenance', async () => {
   expect(reconcile).not.toHaveBeenCalled();
 });
 
-it('waits for gestures and throttles shared discovery without full-library checks', async () => {
+it('waits for gestures and rechecks files on focus while throttling shared discovery', async () => {
   beginUIInteraction('test-downloads-scroll');
   act(() => {tree = renderer.create(screen(true));});
   await act(async () => {jest.advanceTimersByTime(1550); await flush();});
   expect(sync).not.toHaveBeenCalled();
   await act(async () => {endUIInteraction('test-downloads-scroll'); jest.runOnlyPendingTimers(); await flush();});
   expect(sync).toHaveBeenCalledTimes(1);
-  expect(reconcile).not.toHaveBeenCalled();
+  expect(reconcile).toHaveBeenCalledTimes(1);
   await act(async () => {tree.update(screen(true, 10)); jest.advanceTimersByTime(1000); await flush();});
   expect(sync).toHaveBeenCalledTimes(1);
   act(() => {tree.update(screen(false));});
   act(() => {tree.update(screen(true));});
   await act(async () => {jest.advanceTimersByTime(1550); await flush();});
   expect(sync).toHaveBeenCalledTimes(1);
+  expect(reconcile).toHaveBeenCalledTimes(2);
 });
 
-it('does not start reconciliation when a running sync finishes after blur', async () => {
+it('cancels validation when a running sync finishes after blur', async () => {
   let finishSync!: () => void;
   sync.mockImplementation(() => new Promise<void>(resolve => {finishSync = resolve;}));
   act(() => {tree = renderer.create(screen(true));});
@@ -78,6 +87,16 @@ it('does not start reconciliation when a running sync finishes after blur', asyn
   expect(sync).toHaveBeenCalledTimes(1);
   act(() => {tree.update(screen(false));});
   await act(async () => {finishSync(); await flush();});
-  expect(reconcile).not.toHaveBeenCalled();
+  expect(reconcile).toHaveBeenCalledTimes(1);
+  expect(reconcile.mock.calls[0][0].aborted).toBe(true);
+});
+
+it('rechecks after returning from the file manager without waiting for discovery cooldown', async () => {
+  act(() => {tree = renderer.create(screen(true));});
+  await act(async () => {jest.advanceTimersByTime(1550); await flush();});
+  act(() => {changeState('background'); changeState('active');});
+  await act(async () => {jest.advanceTimersByTime(1550); await flush();});
+  expect(reconcile).toHaveBeenCalledTimes(2);
+  expect(sync).toHaveBeenCalledTimes(1);
 });
 

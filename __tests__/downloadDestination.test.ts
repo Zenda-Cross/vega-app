@@ -87,6 +87,26 @@ import {Platform} from 'react-native';
 import {getTVDefaultDownloadLocation} from '../src/lib/downloadLocation';
 
 describe('download destination service', () => {
+  it('uses definitive native absence even if stale metadata still says the file exists', async () => {
+    const native = require('react-native').NativeModules.SafCopyModule;
+    native.uriExists = jest.fn(async () => false);
+    try {
+      mockSafFiles.set('content://stale-file', 123);
+      await expect(downloadOutputExists('content://stale-file')).resolves.toBe(false);
+    } finally {
+      delete native.uriExists;
+    }
+  });
+
+  it('preserves native permission errors instead of treating them as deletion', async () => {
+    const native = require('react-native').NativeModules.SafCopyModule;
+    native.uriExists = jest.fn(async () => {throw new Error('Permission denied');});
+    try {
+      await expect(downloadOutputExists('content://protected-file')).rejects.toThrow('Permission denied');
+    } finally {
+      delete native.uriExists;
+    }
+  });
   it('discards staging files and the SAF output before switching servers', async () => {
     const id = 'fallback';
     const root = getDownloadStagingDirectory(id);

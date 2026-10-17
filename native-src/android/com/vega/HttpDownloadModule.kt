@@ -372,6 +372,33 @@ class HttpDownloadModule(
     }
 
     @ReactMethod
+    fun uriExists(uriString: String, promise: Promise) {
+        try {
+            val descriptor = reactContext.contentResolver.openFileDescriptor(Uri.parse(uriString), "r")
+            if (descriptor == null) {
+                promise.resolve(false)
+            } else {
+                descriptor.close()
+                promise.resolve(true)
+            }
+        } catch (error: java.io.FileNotFoundException) {
+            promise.resolve(false)
+        } catch (error: IllegalArgumentException) {
+            // ExternalStorageProvider performs a tree-child check before opening.
+            // Deleted descendants throw IllegalArgumentException wrapping ENOENT,
+            // rather than the FileNotFoundException declared by openFileDescriptor.
+            val missing = generateSequence<Throwable>(error) { it.cause }
+                .any { it is java.io.FileNotFoundException ||
+                    (it.message.orEmpty().contains("java.io.FileNotFoundException: Missing file for ")) }
+            if (missing) promise.resolve(false)
+            else promise.reject("SAF_EXISTS_FAILED", error.message, error)
+        } catch (error: Exception) {
+            // Permission/provider failures are not evidence of deletion.
+            promise.reject("SAF_EXISTS_FAILED", error.message, error)
+        }
+    }
+
+    @ReactMethod
     fun getUriSize(uriString: String, promise: Promise) {
         try {
             reactContext.contentResolver.openFileDescriptor(Uri.parse(uriString), "r")?.use { pfd ->

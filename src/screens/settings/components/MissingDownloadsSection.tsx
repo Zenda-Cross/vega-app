@@ -23,11 +23,37 @@ const MissingDownloadsSection = ({primary: _primary}: {primary: string}) => {
 
   return (
     <View className="mb-5">
-      <Text
-        className="mb-3 text-xl font-bold"
-        style={{color: colors.onBackground}}>
-        Missing Downloads
-      </Text>
+      <View className="mb-3 flex-row items-center justify-between" style={{gap: 12}}>
+        <Text
+          className="flex-1 text-xl font-bold"
+          style={{color: colors.onBackground}}>
+          Missing Downloads
+        </Text>
+        <TVFocusable
+          accessibilityRole="button"
+          accessibilityLabel="Remove all missing downloads"
+          disabled={checkingId !== null}
+          onPress={() => {
+            // One store update/persistence write, even for a large missing list.
+            useDownloadsStore.setState(state => ({
+              downloads: Object.fromEntries(
+                Object.entries(state.downloads).filter(([, item]) => item.status !== 'missing'),
+              ),
+            }));
+          }}
+          borderRadius={14}
+          focusScale={1.05}
+          focusBorderColor={focusBorderColor}
+          style={{
+            backgroundColor: colors.surfaceContainerHighest,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+          }}>
+          <Text className="text-sm font-bold" style={{color: colors.onSurface}}>
+            Remove all
+          </Text>
+        </TVFocusable>
+      </View>
       {missing.map(item => (
         <View
           key={item.id}

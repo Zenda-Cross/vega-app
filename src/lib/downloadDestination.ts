@@ -20,6 +20,7 @@ import {
 const DOWNLOAD_STAGING_ROOT = `${RNFS.CachesDirectoryPath}/downloads`;
 
 type SafCopyModule = {
+  uriExists?: (uri: string) => Promise<boolean>;
   getUriSize?: (uri: string) => Promise<number>;
 };
 
@@ -333,6 +334,8 @@ export const downloadOutputExists = async (
     return false;
   }
   if (filePath.startsWith('content://')) {
+    const native = getSafCopyModule();
+    if (native?.uriExists) return native.uriExists(filePath);
     try {
       const nativeSize = await getSafCopyModule()?.getUriSize?.(filePath);
       if (typeof nativeSize === 'number' && nativeSize >= 0) return true;
