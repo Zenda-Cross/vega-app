@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * On-demand remuxer using minimal FFmpegKit.
@@ -42,7 +43,9 @@ class FFmpegMp4Packager(
     // Separate HLS audio rendition, added as a second input when set.
     private val audioInputUrl: String? = null,
     // Shifts the sound against the picture; positive plays it later.
-    private val audioDelayMs: Int = 0
+    private val audioDelayMs: Int = 0,
+    private val onError: (String) -> Unit = {},
+    private val onMediaReady: () -> Unit = {}
 ) {
     companion object {
         private const val TAG = "FFmpegMp4Packager"
@@ -69,6 +72,16 @@ class FFmpegMp4Packager(
     }
 
     private val outputs = CopyOnWriteArrayList<LiveOutput>()
+    @Volatile private var retired = false
+    @Volatile var hasMedia = false
+        private set
+
+    /** Keep buffered bytes/URLs for the receiver handover, but stop fetching the source. */
+    fun retire() {
+        retired = true
+        outputs.forEach { it.retire() }
+        cancelAllActiveStreams()
+    }
 
     /**
      * Returns a reader positioned at byte [offset] of the stream that starts at
@@ -80,11 +93,16 @@ class FFmpegMp4Packager(
         outputs.filter { it.isClosed() }.forEach { outputs.remove(it) }
         val existing = outputs.firstOrNull { Math.abs(it.startSeconds - startSeconds) < 0.01 }
         if (existing != null) {
-            existing.reader(offset)?.let { return it }
+            if (existing.isFailed()) {
+                existing.recentFailure()?.let { throw it }
+                existing.close()
+                outputs.remove(existing)
+            } else existing.reader(offset)?.let { return it }
             if (offset > 0) return null
         } else if (offset > 0) {
             return null
         }
+        if (retired) return null
         // A new position is a seek: the old outputs will not be read again.
         outputs.forEach { it.close() }
         outputs.clear()
@@ -110,6 +128,10 @@ class FFmpegMp4Packager(
         private var written = 0L
         private var floor = 0L
         private var finished = false
+        private var failure: java.io.IOException? = null
+        private var failedAt = 0L
+        private var mediaReady = false
+        @Volatile private var retiredOutput = false
         private var closed = false
         private var idleSince = System.currentTimeMillis()
 
@@ -118,18 +140,29 @@ class FFmpegMp4Packager(
         }
 
         fun isClosed() = synchronized(lock) { closed }
+        fun isFailed() = synchronized(lock) { finished && failure != null }
+        fun recentFailure() = synchronized(lock) {
+            failure?.takeIf { System.currentTimeMillis() - failedAt < 5_000L }
+        }
+
+        fun retire() {
+            retiredOutput = true
+            synchronized(lock) { finished = true; lock.notifyAll() }
+            try { source?.close() } catch (_: Exception) {}
+        }
 
         private fun pump() {
             val buffer = ByteArray(CHUNK)
+            val media = Mp4MediaProbe()
             try {
                 val opened = openSource()
                 synchronized(lock) {
-                    if (closed) { try { opened.close() } catch (_: Exception) {}; return }
+                    if (closed || retiredOutput) { try { opened.close() } catch (_: Exception) {}; return }
                     source = opened
                 }
                 while (true) {
                     synchronized(lock) {
-                        while (!closed && written + CHUNK - floor > RING_BYTES) {
+                        while (!closed && !retiredOutput && written + CHUNK - floor > RING_BYTES) {
                             if (readerPositions.isEmpty() &&
                                 System.currentTimeMillis() - idleSince > IDLE_CLOSE_MS
                             ) {
@@ -141,17 +174,34 @@ class FFmpegMp4Packager(
                         }
                         if (closed) return
                     }
+                    if (retiredOutput) break
                     val count = opened.read(buffer)
                     if (count < 0) break
+                    media.accept(buffer, count)
+                    val notifyReady = media.hasMedia && !hasMedia
                     synchronized(lock) {
                         if (closed) return
                         writeRing(written, buffer, count)
                         written += count
+                        mediaReady = media.hasMedia
                         lock.notifyAll()
                     }
+                    if (notifyReady) { hasMedia = true; onMediaReady() }
+                }
+                if (!media.hasMedia && !retiredOutput && !isClosed()) {
+                    throw java.io.IOException("Video server returned no playable media data. Refresh the link or try another server.")
                 }
             } catch (e: Exception) {
-                if (!isClosed()) VegaLog.w(TAG, "Remux output ended: ${e.message}")
+                if (!isClosed() && !retiredOutput) {
+                    synchronized(lock) {
+                        failure = java.io.IOException(e.message ?: "Media delivery failed", e)
+                        failedAt = System.currentTimeMillis()
+                    }
+                    onError(e.message ?: "Media delivery failed")
+                    VegaLog.w(TAG, "Remux output ended: ${e.message}")
+                }
+            } finally {
+                try { source?.close() } catch (_: Exception) {}
             }
             synchronized(lock) {
                 finished = true
@@ -193,9 +243,16 @@ class FFmpegMp4Packager(
                 override fun read(b: ByteArray, off: Int, len: Int): Int {
                     if (len == 0) return 0
                     synchronized(lock) {
-                        while (!closed && !done && position >= written && !finished) lock.wait(1_000)
+                        while (!closed && !done && (position >= written || !mediaReady) && !finished) lock.wait(1_000)
                         if (closed || done) throw java.io.IOException("Stream Closed")
-                        if (position >= written) return -1
+                        if (finished && !mediaReady) {
+                            failure?.let { throw it }
+                            return -1
+                        }
+                        if (position >= written) {
+                            failure?.let { throw it }
+                            return -1
+                        }
                         if (position < written - RING_BYTES) {
                             throw java.io.IOException("Reader fell behind the remux buffer")
                         }
@@ -238,7 +295,9 @@ class FFmpegMp4Packager(
         val pipePath: String,
         val session: FFmpegSession,
         val fileStream: FileInputStream,
-        val startSeconds: Double
+        val startSeconds: Double,
+        val failure: AtomicReference<String?>,
+        val completion: CompletableFuture<Unit>
     )
 
     private val activeStreams = CopyOnWriteArrayList<ActiveStream>()
@@ -251,7 +310,9 @@ class FFmpegMp4Packager(
      * @param startSeconds Keyframe seek position in seconds (0.0 for start).
      */
     private fun openStream(startSeconds: Double = 0.0): InputStream {
-        if (closed.get()) throw IllegalStateException("FFmpegMp4Packager is closed")
+        if (closed.get() || retired) throw IllegalStateException("FFmpegMp4Packager is closed")
+        RemoteSourceFailures.check(sourceUrl)
+        RemoteSourceFailures.noteRemuxStart()
 
         // Cancel existing streams that belong to a significantly DIFFERENT playback timestamp (seek)
         for (active in activeStreams) {
@@ -397,22 +458,37 @@ class FFmpegMp4Packager(
 
         VegaLog.i(TAG, "Starting FFmpeg remux at ${startSeconds}s [audio: transcode aac 192k]")
 
+        val failure = AtomicReference<String?>(null)
+        val completion = CompletableFuture<Unit>()
         val session = FFmpegKit.executeWithArgumentsAsync(
             args.toTypedArray(),
             { completedSession ->
                 val returnCode = completedSession.returnCode
-                if (ReturnCode.isSuccess(returnCode)) {
+                if (ReturnCode.isSuccess(returnCode) && failure.get() == null) {
                     VegaLog.i(TAG, "FFmpeg remux session completed successfully")
+                } else if (ReturnCode.isSuccess(returnCode)) {
+                    VegaLog.w(TAG, "FFmpeg ended after an upstream HTTP failure")
                 } else if (ReturnCode.isCancel(returnCode)) {
                     VegaLog.i(TAG, "FFmpeg remux session cancelled")
                 } else {
+                    failure.compareAndSet(null, "Video processing failed. Refresh the link or try another server.")
                     VegaLog.w(TAG, "FFmpeg remux session failed with code $returnCode: ${completedSession.failStackTrace}")
                     VegaLog.w(TAG, "FFmpeg session output: ${completedSession.allLogsAsString}")
                     // Unblock any waiting reader in background daemon so this thread never blocks
                     unblockPipeAsync(pipePath)
                 }
+                completion.complete(Unit)
             },
             { log ->
+                val status = Regex("HTTP error (403|429)").find(log.message)?.groupValues?.get(1)?.toIntOrNull()
+                if (status != null) {
+                    RemoteSourceFailures.record(sourceUrl, status)
+                    val message = if (status == 429) "Video server rate limited requests (HTTP 429). Wait before retrying."
+                        else "Video server denied access (HTTP 403). Refresh the link or try another server."
+                    failure.set(message)
+                } else if (log.message.contains("File ended prematurely", ignoreCase = true)) {
+                    failure.compareAndSet(null, "Video stream ended unexpectedly. Refresh the link or try another server.")
+                }
                 VegaLog.w(TAG, "[FFmpeg] ${log.message}")
             },
             null
@@ -434,8 +510,12 @@ class FFmpegMp4Packager(
             } catch (_: Exception) {}
             throw java.io.IOException("Failed or timed out connecting to FFmpeg pipe: ${e.message}", e)
         }
-        val activeStream = ActiveStream(session.sessionId, pipePath, session, fileStream, startSeconds)
+        val activeStream = ActiveStream(session.sessionId, pipePath, session, fileStream, startSeconds, failure, completion)
         activeStreams.add(activeStream)
+        if (closed.get() || retired) {
+            cleanupStream(activeStream)
+            throw java.io.IOException("Stream Closed")
+        }
 
         return createPatchedInputStream(activeStream, startSeconds)
     }
@@ -452,6 +532,15 @@ class FFmpegMp4Packager(
 
         val fileStream = activeStream.fileStream
         val streamClosed = AtomicBoolean(false)
+
+        fun checkedRead(count: Int): Int {
+            if (count < 0) {
+                // EOF can precede FFmpeg's completion callback by a few milliseconds.
+                try { activeStream.completion.get(2, TimeUnit.SECONDS) } catch (_: Exception) {}
+            }
+            activeStream.failure.get()?.let { throw java.io.IOException(it) }
+            return count
+        }
 
         return object : InputStream() {
             private var headerBuf: ByteArray? = null
@@ -517,7 +606,7 @@ class FFmpegMp4Packager(
                     }
                     return b
                 }
-                return fileStream.read()
+                return checkedRead(fileStream.read())
             }
 
             override fun read(b: ByteArray): Int {
@@ -539,7 +628,7 @@ class FFmpegMp4Packager(
                     }
                     return toCopy
                 }
-                return fileStream.read(b, off, len)
+                return checkedRead(fileStream.read(b, off, len))
             }
 
             @Synchronized

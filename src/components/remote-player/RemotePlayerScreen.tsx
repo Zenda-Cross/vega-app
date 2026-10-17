@@ -36,8 +36,8 @@ interface RemotePlayerScreenProps {
   episodes?: EpisodeLink[];
   activeEpisodeIndex?: number;
   onSelectEpisode?: (index: number) => void;
-  skipInterval?: {from: number; to: number; title?: string} | null;
-  onSkipPress?: () => void;
+  skipIntervals?: {from: number; to: number; title?: string}[];
+  onSkipPress?: (seconds: number) => void;
   /** Shown with a spinner while servers load or the stream resolves. */
   preparingText?: string | null;
   /** Small line under the status, such as torrent download progress. */
@@ -59,7 +59,7 @@ export const RemotePlayerScreen: React.FC<RemotePlayerScreenProps> = ({
   episodes,
   activeEpisodeIndex,
   onSelectEpisode,
-  skipInterval,
+  skipIntervals,
   onSkipPress,
   preparingText,
   detailText,
@@ -109,7 +109,7 @@ export const RemotePlayerScreen: React.FC<RemotePlayerScreenProps> = ({
           />
           <RemoteMediaCard title={title} subtitle={subtitle} poster={poster || backdrop} />
           <RemoteStatusLine
-            skipInterval={skipInterval}
+            skipIntervals={skipIntervals}
             onSkipPress={onSkipPress}
             preparingText={preparingText}
             detailText={detailText}

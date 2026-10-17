@@ -26,7 +26,10 @@ internal object MkvCueIndex {
     private const val BLOCK_WINDOW = 2 * 1024
     private const val MERGE_GAP = 32 * 1024
     // Subtitle blocks usually sit one per cluster, so each is its own small request.
-    private const val SUBTITLE_FETCH_THREADS = 32
+    private const val SUBTITLE_FETCH_THREADS = 2
+    private val subtitleFetchPermits = java.util.concurrent.Semaphore(2)
+    private val metadata = RemoteMetadataCache<Parsed?>(maxEntries = 2, ttlMs = 5 * 60_000L)
+    fun clearCache() = metadata.clear()
 
     private data class Element(val id: Int, val start: Int, val body: Int, val end: Int, val size: Long)
     private data class RangeData(val bytes: ByteArray, val total: Long)
@@ -71,6 +74,9 @@ internal object MkvCueIndex {
         local: Boolean,
         private val headers: Map<String, String>
     ) : AutoCloseable {
+        val cacheKey = if (!local && (source.startsWith("http://") || source.startsWith("https://")))
+            source + "\n" + headers.entries.sortedBy { it.key.lowercase() }.joinToString("\n") { "${it.key.lowercase()}:${it.value}" }
+            else null
         private val file = if (!source.startsWith("content://") && (local || source.startsWith("/") || source.startsWith("file://")))
             File(source.removePrefix("file://")) else null
         private val descriptor = if (source.startsWith("content://"))
@@ -106,11 +112,15 @@ internal object MkvCueIndex {
                 }
                 return RangeData(bytes, localSize)
             }
+            RemoteSourceFailures.check(source)
             val request = Request.Builder().url(source).apply {
                 headers.forEach { (k, v) -> header(k, v) }
                 header("Range", "bytes=$start-${start + count - 1}")
             }.build()
+            RemoteSourceFailures.noteMetadataRead()
             client.newCall(request).execute().use { response ->
+                RemoteSourceFailures.record(source, response.code, response.header("Retry-After"))
+                RemoteSourceFailures.check(source)
                 // Only a real partial response is accepted: a 200 would be the whole film.
                 if (response.code != 206) return null
                 val contentRange = response.header("Content-Range") ?: return null
@@ -242,8 +252,11 @@ internal object MkvCueIndex {
                 Callable {
                     val start = earliest(group.first())
                     val length = (earliest(group.last()) - start + BLOCK_WINDOW).toInt()
-                    val window = src.range(start, length)
-                        ?: throw IllegalStateException("Subtitle block could not be read")
+                    subtitleFetchPermits.acquire()
+                    val window = try {
+                        src.range(start, length)
+                            ?: throw IllegalStateException("Subtitle block could not be read")
+                    } finally { subtitleFetchPermits.release() }
                     group.mapNotNull { entry ->
                         val text = blockText(window.bytes, (earliest(entry) - start).toInt(), track)
                             ?: return@mapNotNull null
@@ -307,6 +320,11 @@ internal object MkvCueIndex {
     }
 
     private fun parse(src: Source): Parsed? {
+        val key = src.cacheKey ?: return parseUncached(src)
+        return metadata.get(key) { parseUncached(src) }
+    }
+
+    private fun parseUncached(src: Source): Parsed? {
         val head = src.range(0, HEADER_BYTES) ?: return null
         var segmentBody = -1L
         var seekOffset: Long? = null

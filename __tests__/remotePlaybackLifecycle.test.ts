@@ -29,21 +29,24 @@ jest.mock('../src/lib/remote/remoteDeliveryService', () => ({
     inspectTracks: jest.fn(),
     prepareStream: jest.fn(),
     cleanupSession: jest.fn(async () => {}),
+    retireSessionWhenReady: jest.fn(async () => {}),
     startForegroundService: jest.fn(async () => {}),
     stopForegroundService: jest.fn(async () => {}),
     stopServer: jest.fn(async () => {}),
     updateMediaPlayback: jest.fn(async () => {}),
   },
 }));
-jest.mock('../src/lib/remote/dlnaService', () => ({
-  dlnaService: {
-    setOnUriObserved: jest.fn(),
+jest.mock('../src/lib/remote/dlnaService', () => {
+  let listener: ((uri: string) => void) | undefined;
+  return {dlnaService: {
+    setOnUriObserved: jest.fn(callback => {listener = callback;}),
+    notifyObservedUri: (uri: string) => listener?.(uri),
     loadMedia: jest.fn(async () => {}),
     seek: jest.fn(async () => {}),
     stop: jest.fn(async () => {}),
     stopPolling: jest.fn(),
-  },
-}));
+  }};
+});
 const device = {
   id: 'tv',
   name: 'TV',
@@ -115,11 +118,66 @@ it.each(['cast', 'dlna'] as const)('seeks video-only remuxed media on %s without
   }
 });
 
+it('merges rapid remux seeks and retires the old read only after the new load succeeds', async () => {
+  (delivery.inspectTracks as jest.Mock).mockResolvedValue({...inspected, container: 'matroska'});
+  (delivery.prepareStream as jest.Mock).mockImplementation(async o => ({
+    streamUrl: 'http://phone/' + o.sessionId, mimeType: 'video/mp4', durationSeconds: 900,
+    timelineOffsetSeconds: o.startPositionSeconds || 0,
+  }));
+  await manager.startRemotePlayback(device, {sourceUrl: 'http://source/movie.mkv', title: 'Movie'});
+  const oldId = (delivery.prepareStream as jest.Mock).mock.calls[0][0].sessionId;
+  const wait = deferred<void>();
+  (dlna.loadMedia as jest.Mock).mockImplementationOnce(() => wait.promise);
+  jest.useFakeTimers();
+  try {
+    const first = manager.seek(100);
+    const second = manager.seek(110);
+    const final = manager.seek(174);
+    jest.advanceTimersByTime(700);
+    await tick();
+    expect(delivery.prepareStream).toHaveBeenCalledTimes(2);
+    expect(delivery.prepareStream).toHaveBeenLastCalledWith(expect.objectContaining({startPositionSeconds: 174}));
+    expect(delivery.retireSessionWhenReady).not.toHaveBeenCalled();
+    wait.resolve();
+    await Promise.all([first, second, final]);
+    const newId = (delivery.prepareStream as jest.Mock).mock.calls[1][0].sessionId;
+    expect(delivery.retireSessionWhenReady).not.toHaveBeenCalled();
+    (dlna as any).notifyObservedUri('http://phone/' + oldId);
+    expect(delivery.retireSessionWhenReady).not.toHaveBeenCalled();
+    (dlna as any).notifyObservedUri('http://phone/' + newId);
+    expect(delivery.retireSessionWhenReady).toHaveBeenCalledWith(oldId, newId);
+    expect(delivery.cleanupSession).not.toHaveBeenCalledWith(oldId);
+  } finally {
+    jest.clearAllTimers(); jest.useRealTimers();
+  }
+});
+
 it('distinguishes intentional cancellation from genuine receiver failures', () => {
   expect(isRemotePlaybackCanceled(new RemotePlaybackCanceledError())).toBe(true);
   expect(isRemotePlaybackCanceled({code: 'REMOTE_PLAYBACK_CANCELED'})).toBe(true);
   expect(isRemotePlaybackCanceled(new Error('No session'))).toBe(false);
   expect(isRemotePlaybackCanceled(new Error('Receiver canceled playback unexpectedly'))).toBe(false);
+});
+
+it('keeps the old source alive when a remux seek fails and restores its URL', async () => {
+  (delivery.inspectTracks as jest.Mock).mockResolvedValue({...inspected, container: 'matroska'});
+  (delivery.prepareStream as jest.Mock).mockImplementation(async o => ({
+    streamUrl: 'http://phone/' + o.sessionId, mimeType: 'video/mp4', durationSeconds: 900,
+    timelineOffsetSeconds: o.startPositionSeconds || 0,
+  }));
+  await manager.startRemotePlayback(device, {sourceUrl: 'http://source/movie.mkv', title: 'Movie'});
+  const oldUrl = (dlna.loadMedia as jest.Mock).mock.calls[0][1];
+  (dlna.loadMedia as jest.Mock).mockRejectedValueOnce(new Error('TV rejected replacement'));
+  jest.useFakeTimers();
+  try {
+    const seek = manager.seek(174);
+    jest.advanceTimersByTime(700);
+    await seek;
+    expect((dlna.loadMedia as jest.Mock).mock.calls.at(-1)[1]).toBe(oldUrl);
+    expect(delivery.retireSessionWhenReady).not.toHaveBeenCalled();
+  } finally {
+    jest.clearAllTimers(); jest.useRealTimers();
+  }
 });
 
 it('proxies every external Cast subtitle while keeping a direct video URL', async () => {

@@ -7,8 +7,8 @@ import {useRemoteStore} from '../../lib/remote/remoteStore';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 
 interface RemoteStatusLineProps {
-  skipInterval?: {from: number; to: number; title?: string} | null;
-  onSkipPress?: () => void;
+  skipIntervals?: {from: number; to: number; title?: string}[];
+  onSkipPress?: (seconds: number) => void;
   preparingText?: string | null;
   /** Small second line, such as torrent download progress. */
   detailText?: string | null;
@@ -19,7 +19,7 @@ interface RemoteStatusLineProps {
  * never pushes the poster or controls around.
  */
 export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
-  skipInterval,
+  skipIntervals,
   onSkipPress,
   preparingText,
   detailText,
@@ -31,11 +31,15 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
   const connectedDevice = useRemoteStore(state => state.connectedDevice);
   const currentTime = useRemoteStore(state => state.currentTime);
 
+  const skipInterval = skipIntervals?.find(interval =>
+    Number.isFinite(interval.from) && Number.isFinite(interval.to) &&
+    interval.to > interval.from && currentTime >= interval.from && currentTime < interval.to,
+  );
   const showSkip =
     !!skipInterval &&
     status !== 'error' &&
     currentTime >= skipInterval.from &&
-    currentTime <= skipInterval.to;
+    currentTime < skipInterval.to && !!onSkipPress;
 
   let content: React.ReactNode;
   if (errorMessage || status === 'error') {
@@ -61,8 +65,10 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
     );
   } else if (showSkip) {
     content = (
-      <Button variant="tonal" compact onPress={onSkipPress}>
-        {skipInterval?.title || 'Skip intro'}
+      <Button variant="tonal" compact onPress={() => onSkipPress?.(skipInterval!.to)}>
+        {skipInterval?.title
+          ? (/^skip\b/i.test(skipInterval.title) ? skipInterval.title : `Skip ${skipInterval.title}`)
+          : 'Skip intro'}
       </Button>
     );
   } else {

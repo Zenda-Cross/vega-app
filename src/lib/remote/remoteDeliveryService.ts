@@ -50,6 +50,8 @@ interface HlsMasterInfo {
 class RemoteDeliveryService {
   private activeSessionId: string | null = null;
   private serverInfo: DeliveryServerInfo | null = null;
+  private inspectionGeneration = 0;
+  private inspections = new Map<string, {until: number; result: Promise<InspectedMediaResult>}>();
 
   async ensureServerStarted(): Promise<DeliveryServerInfo> {
     if (Platform.OS !== 'android' || !VegaRemoteDelivery) {
@@ -66,6 +68,9 @@ class RemoteDeliveryService {
   }
 
   async stopServer(): Promise<void> {
+    this.inspectionGeneration++;
+    this.inspections.clear();
+    this.hlsMasters.clear();
     if (!VegaRemoteDelivery) return;
     try {
       await VegaRemoteDelivery.stopServer();
@@ -88,6 +93,7 @@ class RemoteDeliveryService {
     sourceUrl: string,
     headers?: Record<string, string>,
   ): Promise<HlsMasterInfo | null> {
+    const generation = this.inspectionGeneration;
     const cached = this.hlsMasters.get(sourceUrl);
     if (cached) return cached;
     try {
@@ -171,6 +177,7 @@ class RemoteDeliveryService {
           }),
         );
       }
+      if (generation !== this.inspectionGeneration) return info;
       this.hlsMasters.set(sourceUrl, info);
       for (const q of info.qualities) this.hlsMasters.set(q.id, info);
       return info;
@@ -182,6 +189,31 @@ class RemoteDeliveryService {
   async inspectTracks(
     sourceUrl: string,
     isLocal = false,
+    headers?: Record<string, string>,
+    sourceType?: string,
+  ): Promise<InspectedMediaResult> {
+    const key = JSON.stringify([sourceUrl, isLocal, sourceType,
+      Object.entries(headers || {}).sort(([a], [b]) => a.localeCompare(b))]);
+    const cached = this.inspections.get(key);
+    if (!isLocal && cached && cached.until > Date.now()) return cached.result;
+    const generation = this.inspectionGeneration;
+    const result = this.inspectTracksUncached(sourceUrl, isLocal, headers, sourceType);
+    if (isLocal) return result;
+    const entry = {until: Date.now() + 10 * 60_000, result};
+    this.inspections.set(key, entry);
+    while (this.inspections.size > 8) this.inspections.delete(this.inspections.keys().next().value!);
+    const discard = () => {
+      if (this.inspections.get(key) === entry) this.inspections.delete(key);
+    };
+    result.then(info => {
+      if (!info.hasVideo || generation !== this.inspectionGeneration) discard();
+    }, discard);
+    return result;
+  }
+
+  private async inspectTracksUncached(
+    sourceUrl: string,
+    isLocal: boolean,
     headers?: Record<string, string>,
     sourceType?: string,
   ): Promise<InspectedMediaResult> {
@@ -360,6 +392,10 @@ class RemoteDeliveryService {
     } catch (e) {
       console.warn('Failed to cleanup session:', e);
     }
+  }
+
+  async retireSessionWhenReady(previousId: string, nextId: string): Promise<void> {
+    await VegaRemoteDelivery?.retireSessionWhenReady?.(previousId, nextId);
   }
 
   /** Active Cast scan while a custom device list is on screen (Android). */

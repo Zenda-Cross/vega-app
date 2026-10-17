@@ -1398,6 +1398,16 @@ const Player = ({route}: Props): React.JSX.Element => {
     setCurrentPlaybackTime(activeSkip.to);
   }, [activeSkip]);
 
+  const handleRemoteSkip = useCallback((seconds: number) => {
+    if (settingsStorage.isHapticFeedbackEnabled()) {
+      ReactNativeHapticFeedback.trigger('effectTick', {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
+    remotePlaybackManager.seek(seconds).catch(() => {});
+  }, []);
+
   // Memoized values
   const hideSeekButtons = useMemo(
     () => settingsStorage.hideSeekButtons() || false,
@@ -3582,8 +3592,8 @@ const Player = ({route}: Props): React.JSX.Element => {
                 );
               });
           }}
-          skipInterval={activeSkip}
-          onSkipPress={handleSkip}
+          skipIntervals={combinedSkips}
+          onSkipPress={handleRemoteSkip}
         />
       ) : processedStreamUrl ? (
         <VideoPlayer {...videoPlayerProps} nativeVideoViewRef={nativeVideoViewRef} headerStatus={torrentHeaderStatus} headerRightInset={toolbarHeaderInset} playbackSuspended={editingControls} controlScale={controlStyle.scale} seekbarScale={controlStyle.seekbarScale} ambientVideoSize={loadedVideoSize} ambientDisabled={isCasting} />

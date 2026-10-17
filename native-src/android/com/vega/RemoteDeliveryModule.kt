@@ -93,13 +93,39 @@ class RemoteDeliveryModule(
         val timelineOffsetUs: Long = 0L,
         @Volatile var activeStreamOffsetUs: Long? = null,
         val ffmpegPackager: FFmpegMp4Packager? = null,
-        val hlsPackager: HlsSegmentPackager? = null
+        val hlsPackager: HlsSegmentPackager? = null,
+        val hlsSegmentPrefixes: ConcurrentHashMap<String, Int> = ConcurrentHashMap()
     )
 
     private val sessions = ConcurrentHashMap<String, MediaSession>()
     private val sessionErrors = ConcurrentHashMap<String, String>()
-    // Subtitle lines per "sourceUrl#ordinal", kept until the server stops.
-    private val subtitleCache = ConcurrentHashMap<String, List<MkvCueIndex.SubtitleLine>>()
+    private val retireAfterReady = ConcurrentHashMap<String, MutableSet<String>>()
+
+    private fun retireReadySessions(nextId: String) {
+        if (sessions[nextId]?.ffmpegPackager?.hasMedia != true) return
+        val previous = retireAfterReady.remove(nextId) ?: return
+        Thread {
+            previous.forEach { id -> sessions[id]?.ffmpegPackager?.retire() }
+        }.apply { isDaemon = true; name = "cast-handover"; start() }
+    }
+
+    @ReactMethod
+    fun retireSessionWhenReady(previousId: String, nextId: String, promise: Promise) {
+        if (previousId != nextId && sessions[nextId]?.ffmpegPackager != null) {
+            retireAfterReady.computeIfAbsent(nextId) { ConcurrentHashMap.newKeySet<String>() }.add(previousId)
+            retireReadySessions(nextId)
+        }
+        promise.resolve(true)
+    }
+    // Only requested tracks are extracted. A failed track is shared/cached briefly,
+    // including Kodi's VTT/SRT alternatives, instead of being retried on every seek.
+    private val subtitleCache = RemoteMetadataCache<List<MkvCueIndex.SubtitleLine>>(
+        maxEntries = 4, ttlMs = 24 * 60 * 60_000L, failureTtlMs = 30_000L
+    )
+    private val hlsDurations = RemoteMetadataCache<Double>()
+    private val vodHlsSources = ConcurrentHashMap.newKeySet<String>()
+    private fun metadataKey(source: String, headers: Map<String, String>) =
+        source + "\n" + headers.entries.sortedBy { it.key.lowercase() }.joinToString("\n") { "${it.key.lowercase()}:${it.value}" }
     // Video keyframe times per source (empty when the source has no usable Cues).
     private val keyframeCache = ConcurrentHashMap<String, LongArray>()
 
@@ -115,15 +141,16 @@ class RemoteDeliveryModule(
         seconds: Double
     ): Double {
         if (seconds <= 0.05) return 0.0
-        // Failures are not cached, so a slow first read does not break later seeks.
+        // Successful arrays are reused; failed MKV metadata reads expire quickly.
         val isRemoteHls = !isLocal && sourceUrl.contains(".m3u8", ignoreCase = true)
-        val keyframes = keyframeCache[sourceUrl] ?: try {
+        val cacheKey = metadataKey(sourceUrl, headers)
+        val keyframes = keyframeCache[cacheKey]?.takeIf { !isRemoteHls || vodHlsSources.contains(sourceUrl) } ?: try {
             // HLS segments start on keyframes, so segment starts serve as the index.
             // Without a snap, the copied video starts at an earlier keyframe than the
             // trimmed audio: silence at the start and subtitles offset by the gap.
             (if (isRemoteHls) hlsSegmentStartsUs(sourceUrl, headers)
             else MkvCueIndex.videoKeyframesUs(reactContext, sourceUrl, isLocal, headers))
-                ?.also { keyframeCache[sourceUrl] = it }
+                ?.also { if (!isRemoteHls || vodHlsSources.contains(sourceUrl)) keyframeCache[cacheKey] = it }
         } catch (e: Exception) {
             VegaLog.w(TAG, "Keyframe index unavailable: ${e.message}")
             null
@@ -138,39 +165,6 @@ class RemoteDeliveryModule(
         return snapped / 1_000_000.0
     }
 
-    /**
-     * Loads every text subtitle track into the cache in the background, so turning
-     * one on later does not wait for hundreds of small range requests.
-     */
-    private fun prefetchSubtitles(sourceUrl: String, isLocal: Boolean, headers: Map<String, String>) {
-        Thread {
-            try {
-                val count = MkvCueIndex.subtitleTrackCount(reactContext, sourceUrl, isLocal, headers)
-                for (ordinal in 0 until count) {
-                    val key = "$sourceUrl#$ordinal"
-                    if (subtitleCache.containsKey(key)) continue
-                    try {
-                        synchronized(subtitleLocks.computeIfAbsent(key) { Any() }) {
-                            if (!subtitleCache.containsKey(key)) {
-                                subtitleCache[key] = EmbeddedSubtitleVtt.loadLines(
-                                    reactContext, sourceUrl, isLocal, headers, ordinal
-                                )
-                            }
-                        }
-                    } catch (e: Exception) {
-                        VegaLog.d(TAG, "Subtitle $ordinal not prefetched: ${e.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                VegaLog.d(TAG, "Subtitle prefetch skipped: ${e.message}")
-            }
-        }.apply {
-            isDaemon = true
-            name = "subtitle-prefetch"
-            start()
-        }
-    }
-    private val subtitleLocks = ConcurrentHashMap<String, Any>()
 
     @ReactMethod
     fun startServer(promise: Promise) {
@@ -251,10 +245,15 @@ class RemoteDeliveryModule(
                 it.hlsPackager?.close()
             }
             sessions.clear()
+            retireAfterReady.clear()
             RemoteDeliveryService.releaseDelivery(this)
             sessionErrors.clear()
             subtitleCache.clear()
-            subtitleLocks.clear()
+            keyframeCache.clear()
+            hlsDurations.clear()
+            vodHlsSources.clear()
+            MkvCueIndex.clearCache()
+            VegaLog.i(TAG, "Cast traffic: ${RemoteSourceFailures.trafficSummary()}")
 
             try {
                 wakeLock?.release()
@@ -343,8 +342,12 @@ class RemoteDeliveryModule(
     /** EXTINF durations of the media playlist; a master playlist resolves to its first variant. */
     private fun hlsSegmentDurations(url: String, headers: Map<String, String>, depth: Int = 0): List<Double>? {
         return try {
+            RemoteSourceFailures.check(url)
             val req = Request.Builder().url(url).apply { headers.forEach { (k, v) -> header(k, v) } }.build()
+            RemoteSourceFailures.noteMetadataRead()
             val text = hlsClient.newCall(req).execute().use { res ->
+                RemoteSourceFailures.record(url, res.code, res.header("Retry-After"))
+                RemoteSourceFailures.check(url)
                 if (!res.isSuccessful) return null
                 res.body?.string().orEmpty()
             }
@@ -354,8 +357,11 @@ class RemoteDeliveryModule(
                 val variant = lines.drop(variantIndex + 1).firstOrNull { it.isNotEmpty() && !it.startsWith("#") }
                     ?: return null
                 val resolved = java.net.URI(url).resolve(variant).toString()
-                return hlsSegmentDurations(resolved, headers, depth + 1)
+                val durations = hlsSegmentDurations(resolved, headers, depth + 1)
+                if (vodHlsSources.contains(resolved)) vodHlsSources.add(url) else vodHlsSources.remove(url)
+                return durations
             }
+            if (lines.any { it == "#EXT-X-ENDLIST" }) vodHlsSources.add(url) else vodHlsSources.remove(url)
             lines.filter { it.startsWith("#EXTINF:") }
                 .map { it.removePrefix("#EXTINF:").substringBefore(',').trim().toDoubleOrNull() ?: 0.0 }
         } catch (e: Exception) {
@@ -426,20 +432,32 @@ class RemoteDeliveryModule(
             } catch (_: Exception) { null }
         } ?: return addCors(NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.BAD_REQUEST, NanoHTTPD.MIME_PLAINTEXT, "Bad URL"), corsHeaders)
 
+        RemoteSourceFailures.check(target)
         val builder = Request.Builder().url(target)
         session.headers.forEach { (k, v) -> builder.header(k, v) }
-        if (rangeHeader != null) builder.header("Range", rangeHeader)
+        if (rangeHeader != null) builder.header("Range", HlsSegmentPrefix.upstreamRange(
+            rangeHeader, session.hlsSegmentPrefixes[target] ?: 0
+        ))
+        RemoteSourceFailures.noteHlsRead()
         val upstream = hlsClient.newCall(builder.build()).execute()
         if (!upstream.isSuccessful) {
+            RemoteSourceFailures.record(target, upstream.code, upstream.header("Retry-After"))
+            val retryAfter = upstream.header("Retry-After")
             VegaLog.w(TAG, "HLS proxy upstream ${upstream.code} for $target")
             upstream.close()
-            return addCors(NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.lookup(upstream.code) ?: NanoHTTPD.Response.Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Upstream ${upstream.code}"), corsHeaders)
+            return addCors(NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.lookup(upstream.code) ?: NanoHTTPD.Response.Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Upstream ${upstream.code}"), corsHeaders).apply {
+                if (retryAfter != null) addHeader("Retry-After", retryAfter)
+            }
         }
         val body = upstream.body!!
         val contentType = body.contentType()?.toString().orEmpty()
         val looksPlaylist = target.substringBefore('?').endsWith(".m3u8", ignoreCase = true) ||
             contentType.contains("mpegurl", ignoreCase = true)
-        if (looksPlaylist || encoded.isNotEmpty() && body.contentLength() in 1..2_000_000 && contentType.startsWith("text")) {
+        // Some hosts label binary TS as text/vnd.trolltech.linguist. Decoding and
+        // re-encoding that body as UTF-8 corrupts it; only decode actual playlists.
+        val disguisedPlaylist = !looksPlaylist && contentType.startsWith("text") &&
+            upstream.peekBody(256).string().trimStart().startsWith("#EXTM3U")
+        if (looksPlaylist || disguisedPlaylist) {
             val text = body.string()
             if (text.trimStart().startsWith("#EXTM3U")) {
                 val rewritten = rewritePlaylist(session.sessionId, text, upstream.request.url)
@@ -448,16 +466,31 @@ class RemoteDeliveryModule(
             return addCors(NanoHTTPD.newFixedLengthResponse(NanoHTTPD.Response.Status.OK, contentType.ifEmpty { "application/octet-stream" }, text), corsHeaders)
         }
         val status = if (upstream.code == 206) NanoHTTPD.Response.Status.PARTIAL_CONTENT else NanoHTTPD.Response.Status.OK
-        val length = body.contentLength()
+        val startsAtZero = upstream.code == 200 ||
+            upstream.header("Content-Range")?.startsWith("bytes 0-") == true
+        val normalized = try {
+            if (method != NanoHTTPD.Method.HEAD && startsAtZero) {
+                HlsSegmentPrefix.open(body.byteStream())
+            } else HlsSegmentPrefix.Result(body.byteStream(), 0)
+        } catch (error: Exception) {
+            upstream.close()
+            throw error
+        }
+        if (normalized.skipped > 0) session.hlsSegmentPrefixes[target] = normalized.skipped
+        val length = body.contentLength().let { if (it >= 0) it - normalized.skipped else it }
         val resp = if (method == NanoHTTPD.Method.HEAD) {
             body.close()
             NanoHTTPD.newFixedLengthResponse(status, "video/mp2t", ByteArrayInputStream(ByteArray(0)), 0L)
         } else if (length >= 0) {
-            NanoHTTPD.newFixedLengthResponse(status, "video/mp2t", body.byteStream(), length)
+            NanoHTTPD.newFixedLengthResponse(status, "video/mp2t", normalized.stream, length)
         } else {
-            NanoHTTPD.newChunkedResponse(status, "video/mp2t", body.byteStream())
+            NanoHTTPD.newChunkedResponse(status, "video/mp2t", normalized.stream)
         }
-        upstream.header("Content-Range")?.let { resp.addHeader("Content-Range", it) }
+        upstream.header("Content-Range")?.let {
+            resp.addHeader("Content-Range", HlsSegmentPrefix.downstreamContentRange(
+                it, session.hlsSegmentPrefixes[target] ?: 0
+            ))
+        }
         return addCors(resp, corsHeaders)
     }
 
@@ -496,6 +529,7 @@ class RemoteDeliveryModule(
                 }
             }
             VegaLog.i(TAG, "Registered session $sessionId with headers: ${headers.keys}")
+            RemoteSourceFailures.check(sourceUrl)
 
             val ffmpegStart = if (mode == "ffmpeg") {
                 snapToKeyframe(sourceUrl, isLocal, headers, startPositionSeconds)
@@ -505,7 +539,14 @@ class RemoteDeliveryModule(
             // HLS has no container duration; sum the media playlist's #EXTINF values.
             // Probe even when JS passed a duration: it may be a stale store value.
             val resolvedDuration = if (isRemoteHls) {
-                val probed = hlsPlaylistDuration(sourceUrl, headers)
+                val durationKey = metadataKey(sourceUrl, headers)
+                val probed = if (vodHlsSources.contains(sourceUrl)) {
+                    hlsDurations.get(durationKey) { hlsPlaylistDuration(sourceUrl, headers) }
+                } else {
+                    val fresh = hlsPlaylistDuration(sourceUrl, headers)
+                    if (vodHlsSources.contains(sourceUrl)) hlsDurations.get(durationKey) { fresh }
+                    fresh
+                }
                 VegaLog.i(TAG, "HLS duration: probed=$probed passed=$durationSeconds")
                 if (probed > 0.0) probed else durationSeconds
             } else durationSeconds
@@ -526,7 +567,9 @@ class RemoteDeliveryModule(
                     audioInputUrl = audioUrl?.takeIf { it.isNotBlank() }?.let {
                         if (isRemoteHls && server != null) hlsProxyUrl(sessionId, it, playlist = true) else it
                     },
-                    audioDelayMs = audioDelayMs
+                    audioDelayMs = audioDelayMs,
+                    onError = { message -> sessionErrors[sessionId] = message },
+                    onMediaReady = { sessionErrors.remove(sessionId); retireReadySessions(sessionId) }
                 )
             } else null
 
@@ -535,9 +578,10 @@ class RemoteDeliveryModule(
             // them registration fails and JS falls back to the MP4 route.
             val hlsPackager: HlsSegmentPackager? = if (mode == "hls") {
                 if (isRemoteHls) throw IllegalStateException("HLS output is not used for HLS sources")
-                val keyframes = keyframeCache[sourceUrl] ?: try {
+                val cacheKey = metadataKey(sourceUrl, headers)
+                val keyframes = keyframeCache[cacheKey] ?: try {
                     MkvCueIndex.videoKeyframesUs(reactContext, sourceUrl, isLocal, headers)
-                        ?.also { keyframeCache[sourceUrl] = it }
+                        ?.also { keyframeCache[cacheKey] = it }
                 } catch (e: Exception) {
                     VegaLog.w(TAG, "Keyframe index unavailable for HLS output: ${e.message}")
                     null
@@ -572,13 +616,7 @@ class RemoteDeliveryModule(
                 throw IllegalStateException("Cast delivery server stopped while preparing media")
             }
             sessions[sessionId] = session
-            // A torrent fetches pieces on demand, so reading every subtitle block across
-            // the file would starve the sequential read the receiver is waiting on.
-            val isLoopbackSource = Regex("^https?://(127\\.0\\.0\\.1|localhost)[:/]", RegexOption.IGNORE_CASE)
-                .containsMatchIn(sourceUrl)
-            if ((mode == "ffmpeg" || mode == "hls") && !isLoopbackSource) {
-                prefetchSubtitles(sourceUrl, isLocal, headers)
-            }
+            // Embedded subtitles are loaded only when the receiver requests a track.
             sessionErrors.remove(sessionId)
 
             val streamUrl = when (mode) {
@@ -658,6 +696,8 @@ class RemoteDeliveryModule(
                 Thread.sleep(8_000)
             } catch (_: Exception) {}
             val s = sessions.remove(sessionId)
+            retireAfterReady.remove(sessionId)
+            retireAfterReady.values.forEach { it.remove(sessionId) }
             s?.ffmpegPackager?.close()
             s?.hlsPackager?.close()
             sessionErrors.remove(sessionId)
@@ -1409,7 +1449,18 @@ class RemoteDeliveryModule(
                     else -> addCors(newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Unknown endpoint"), corsHeaders)
                 }
             } catch (e: Exception) {
-                if (e is java.net.SocketException ||
+                if (e is RemoteSourceFailures.Denied) {
+                    if (endpoint != "subtitle" && endpoint != "extsub") sessionErrors[sessionId] = e.message.orEmpty()
+                    addCors(newFixedLengthResponse(Response.Status.lookup(e.status) ?: Response.Status.INTERNAL_ERROR,
+                        MIME_PLAINTEXT, e.message.orEmpty()), corsHeaders).apply {
+                        addHeader("Retry-After", e.retrySeconds.toString())
+                    }
+                } else if (endpoint == "subtitle" || endpoint == "extsub") {
+                    // A missing/unextractable subtitle must not become a video playback error.
+                    VegaLog.w(TAG, "Subtitle unavailable: ${e.message}")
+                    addCors(newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_PLAINTEXT,
+                        "Subtitle unavailable for this stream"), corsHeaders)
+                } else if (e is java.net.SocketException ||
                     e is java.io.InterruptedIOException ||
                     e.message?.contains("Broken pipe") == true ||
                     e.message?.contains("Connection reset") == true ||
@@ -1586,17 +1637,17 @@ class RemoteDeliveryModule(
                 }
             }
             // Keyed by source, not session: an audio switch makes a new session for the same file.
-            val key = externalUrl?.let { "ext#$it" } ?: "${session.sourceUrl}#$ordinal"
+            val key = metadataKey(externalUrl?.let { "ext#$it" } ?: "${session.sourceUrl}#$ordinal", session.headers)
             VegaLog.i(TAG, "Serving subtitle: ordinal=$ordinal externalUrl=$externalUrl key=$key")
-            val lines = subtitleCache[key] ?: synchronized(subtitleLocks.computeIfAbsent(key) { Any() }) {
-                subtitleCache[key] ?: (if (externalUrl != null) {
+            val lines = subtitleCache.get(key) {
+                if (externalUrl != null) {
                     val body = loadExternalSubtitle(externalUrl, session.headers)
                     EmbeddedSubtitleVtt.parseText(body)
                 } else {
                     EmbeddedSubtitleVtt.loadLines(
                         reactContext, session.sourceUrl, session.isLocal, session.headers, ordinal
                     )
-                }).also { subtitleCache[key] = it }
+                }
             }
             val baseOffset = session.timelineOffsetUs / 1_000_000.0
             val dlnaTimeSeek = reqHeaders["timeseekrange.dlna.org"] ?: reqHeaders["timeseekrange"]

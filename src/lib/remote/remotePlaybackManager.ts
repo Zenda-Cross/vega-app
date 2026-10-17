@@ -207,12 +207,27 @@ class RemotePlaybackManager {
   private resolutionQueue: Promise<void> = Promise.resolve();
   private ambiguousSessions: AmbiguousSessionPair[] = [];
   private ambiguousTimer: ReturnType<typeof setInterval> | null = null;
+  private lastReceiverUri = '';
+  private pendingRetirements = new Map<string, Set<string>>();
+
+  private confirmSessionHandover(uri: string): void {
+    if (!uri || this.ending) return;
+    this.lastReceiverUri = uri;
+    for (const [nextId, previousIds] of this.pendingRetirements) {
+      if (!this.uriMatchesSessionOrUrl(uri, nextId, '')) continue;
+      this.pendingRetirements.delete(nextId);
+      for (const previousId of previousIds) {
+        remoteDeliveryService.retireSessionWhenReady(previousId, nextId).catch(() => {});
+      }
+    }
+  }
 
   constructor() {
     remoteDeliveryService.onMediaAction(event => {
       this.handleMediaAction(event);
     });
     dlnaService.setOnUriObserved(uri => {
+      this.confirmSessionHandover(uri);
       this.resolveAmbiguousSessions(uri).catch(() => {});
     });
   }
@@ -400,6 +415,7 @@ class RemotePlaybackManager {
     }
     switch (status.playerState) {
       case MediaPlayerState.PLAYING:
+        if (status.mediaInfo?.contentUrl) this.confirmSessionHandover(status.mediaInfo.contentUrl);
         store.setStatus('playing');
         store.setErrorMessage(undefined);
         remoteDeliveryService
@@ -1891,12 +1907,6 @@ class RemotePlaybackManager {
           );
         }
 
-        const isMkv =
-          this.activeContainer?.toLowerCase() === 'matroska' ||
-          this.activeContainer?.toLowerCase() === 'mkv' ||
-          this.activePayload.sourceType?.toLowerCase() === 'mkv' ||
-          sourceUrl.toLowerCase().includes('.mkv') ||
-          sourceUrl.toLowerCase().includes('matroska');
         const targetMode: 'hls' | 'ffmpeg' =
           device.type === 'cast' &&
           this.isCastHlsEnabled() &&
@@ -2073,7 +2083,7 @@ class RemotePlaybackManager {
         if (currentState.status === 'paused')
           useRemoteStore.getState().setStatus('paused');
         if (previousSessionId && previousSessionId !== nextSessionId) {
-          this.releaseSessionLater(previousSessionId);
+          this.releaseSessionLater(previousSessionId, nextSessionId);
         }
       } catch (e: any) {
         this.assertPlaybackOperation(operationToken);
@@ -2303,8 +2313,16 @@ class RemotePlaybackManager {
    * A switched-away session stays served for a while: a receiver may still be
    * opening its URL, and a 404 there makes Kodi stop the new one as well.
    */
-  private releaseSessionLater(sessionId: string): void {
+  private releaseSessionLater(sessionId: string, nextSessionId = this.currentSessionId): void {
+    // Leave the old URL/ring available, but stop its upstream read once the new
+    // session has emitted media. Native deliberately does nothing before then.
+    const previous = this.pendingRetirements.get(nextSessionId) || new Set<string>();
+    previous.add(sessionId);
+    this.pendingRetirements.set(nextSessionId, previous);
+    this.confirmSessionHandover(this.lastReceiverUri);
     setTimeout(() => {
+      this.pendingRetirements.get(nextSessionId)?.delete(sessionId);
+      if (this.pendingRetirements.get(nextSessionId)?.size === 0) this.pendingRetirements.delete(nextSessionId);
       if (sessionId !== this.currentSessionId) {
         remoteDeliveryService.cleanupSession(sessionId).catch(() => {});
       }
@@ -2331,7 +2349,7 @@ class RemotePlaybackManager {
       this.pendingSeekTimer = setTimeout(() => {
         this.pendingSeekTimer = null;
         this.pendingSeekResolve = null;
-        this.seekNow(seconds).finally(resolve);
+        this.seekNow(seconds).then(resolve, resolve);
       }, 700);
     });
   }
@@ -2588,7 +2606,7 @@ class RemotePlaybackManager {
           nextSessionId,
         );
         if (previousSessionId && previousSessionId !== nextSessionId) {
-          this.releaseSessionLater(previousSessionId);
+          this.releaseSessionLater(previousSessionId, nextSessionId);
         }
         if (initialGeneration !== this.playbackGeneration || this.ending) {
           return;
@@ -2721,7 +2739,7 @@ class RemotePlaybackManager {
           pair.previousSessionId &&
           pair.previousSessionId !== pair.nextSessionId
         ) {
-          this.releaseSessionLater(pair.previousSessionId);
+          this.releaseSessionLater(pair.previousSessionId, pair.nextSessionId);
         }
         if (
           queuedGeneration !== this.playbackGeneration ||
@@ -2804,6 +2822,8 @@ class RemotePlaybackManager {
   }
 
   stop(): Promise<void> {
+    this.pendingRetirements.clear();
+    this.lastReceiverUri = '';
     this.cancelQueuedSeek();
     this.ending = true;
     this.loadGeneration++;
