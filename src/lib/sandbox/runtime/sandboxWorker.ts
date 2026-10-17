@@ -214,7 +214,11 @@ const sandboxAxiosAdapter: AxiosAdapter = async config => {
     statusText: response.statusText,
     headers: responseHeaders,
     config,
-    request: {url, responseURL: response.url},
+    request: {
+      url,
+      responseURL: response.url,
+      res: {responseUrl: response.url},
+    },
   } as any;
 
   if (config.validateStatus && !config.validateStatus(response.status)) {

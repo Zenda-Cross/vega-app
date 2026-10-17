@@ -1,5 +1,5 @@
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {View, Text, BackHandler} from 'react-native';
+import {View, Text, BackHandler, findNodeHandle} from 'react-native';
 // The gesture handler ScrollView lets a held row take over from scrolling.
 import {ScrollView} from 'react-native-gesture-handler';
 import React, {useEffect} from 'react';
@@ -36,6 +36,10 @@ const ProviderDrawer = ({
   const insets = useSafeAreaInsets();
   const focusBorderColor = useTVFocusBorderColor(primary);
   const mountTimeRef = React.useRef<number>(Date.now());
+  const closeRef = React.useRef<View>(null);
+  const firstProviderRef = React.useRef<View>(null);
+  const [closeNode, setCloseNode] = React.useState<number | null>(null);
+  const [firstProviderNode, setFirstProviderNode] = React.useState<number | null>(null);
 
   const handleClose = React.useCallback(() => {
     if (Date.now() - mountTimeRef.current < 350) return;
@@ -65,9 +69,12 @@ const ProviderDrawer = ({
   }, [handleClose, isOpen]);
 
   return (
-    <View
-      className="flex-1"
-      style={{backgroundColor: isTV ? '#121214' : 'rgba(0,0,0,0.85)'}}>
+    <TVFocusGuide
+      trapFocusLeft={true}
+      trapFocusRight={true}
+      trapFocusUp={true}
+      trapFocusDown={true}
+      style={{flex: 1, backgroundColor: isTV ? '#121214' : 'rgba(0,0,0,0.85)'}}>
       <View
         style={{
           borderBottomColor: 'rgba(255,255,255,0.1)',
@@ -85,6 +92,9 @@ const ProviderDrawer = ({
         </View>
         {isTV ? (
           <TVFocusable
+            ref={closeRef}
+            onLayout={() => setCloseNode(findNodeHandle(closeRef.current))}
+            nextFocusDown={firstProviderNode}
             accessibilityRole="button"
             accessibilityLabel="Close drawer"
             hasTVPreferredFocus={false}
@@ -109,7 +119,7 @@ const ProviderDrawer = ({
         autoFocus={true}
         trapFocusLeft={true}
         trapFocusRight={true}
-        trapFocusUp={true}
+        trapFocusUp={false}
         trapFocusDown={true}
         style={{flex: 1}}>
         <ScrollView
@@ -127,6 +137,9 @@ const ProviderDrawer = ({
               return (
                 <TVFocusable
                   key={item.value}
+                  ref={index === 0 ? firstProviderRef : undefined}
+                  onLayout={index === 0 ? () => setFirstProviderNode(findNodeHandle(firstProviderRef.current)) : undefined}
+                  nextFocusUp={index === 0 ? closeNode : undefined}
                   hasTVPreferredFocus={isPreferred}
                   onPress={() => handleSelectProvider(item)}
                   borderRadius={12}
@@ -185,7 +198,7 @@ const ProviderDrawer = ({
           <View className="h-16" />
         </ScrollView>
       </TVFocusGuide>
-    </View>
+    </TVFocusGuide>
   );
 };
 

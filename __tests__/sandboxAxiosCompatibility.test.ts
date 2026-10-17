@@ -64,6 +64,7 @@ const invokeWithHeaders = (headers: Array<[string, string]>, preamble = '') =>
           alias: response.headers['x-set-cookie'],
           contentType: response.headers['content-type'],
           responseURL: response.request.responseURL,
+          nodeResponseURL: response.request.res.responseUrl,
           data: response.data,
         };
       };`,
@@ -86,6 +87,7 @@ describe('provider axios cookie compatibility', () => {
     expect(result.cookieHeader).toBe('lp_ck_test=1; token=abc');
     expect(result.contentType).toBe('text/html');
     expect(result.responseURL).toBe('https://example.com/final');
+    expect(result.nodeResponseURL).toBe('https://example.com/final');
     expect(result.data).toBe('<form>continue</form>');
   });
 
