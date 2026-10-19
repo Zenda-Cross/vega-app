@@ -1,49 +1,74 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import type {VegaSyncManifest} from '../src/lib/sync/manifest';
 
-const syncDirectoryUri =
-  'content://storage/tree/primary%3Avega/document/primary%3Avega%2F.vega-sync';
-const manifestUri = `${syncDirectoryUri}%2Fvega-mobile.json`;
-
-jest.mock('expo-file-system/legacy', () => ({
-  StorageAccessFramework: {
-    createFileAsync: jest.fn(),
-    deleteAsync: jest.fn(),
-    makeDirectoryAsync: jest.fn(),
-    readAsStringAsync: jest.fn(),
-    readDirectoryAsync: jest.fn(),
-    writeAsStringAsync: jest.fn(),
+type Entry = {uri: string; name: string; isDirectory: boolean};
+const mockEntries = new Map<string, Entry[]>();
+const mockFiles = new Map<string, string>();
+const mockFailure = new Set<string>();
+let mockNextId = 0;
+const mockList = jest.fn(async (uri: string) => {
+  if (mockFailure.has(uri)) throw new Error('Directory unavailable');
+  if (!mockEntries.has(uri)) throw new Error('Directory missing');
+  return mockEntries.get(uri)!;
+});
+const mockCreate = jest.fn(
+  async (parent: string, name: string, directory: boolean) => {
+    const uri = `content://provider/tree/root/document/opaque-${++mockNextId}`;
+    mockEntries.get(parent)!.push({uri, name, isDirectory: directory});
+    if (directory) mockEntries.set(uri, []);
+    else mockFiles.set(uri, '');
+    return uri;
   },
-}));
+);
+const mockNative = {
+  listDirectory: mockList,
+  createDocument: mockCreate,
+  writeManifest: jest.fn(async (uri: string, text: string) => {
+    mockFiles.set(uri, text);
+  }),
+};
 
 jest.mock('react-native', () => ({
   NativeModules: {
-    VegaSyncStorage: {
-      writeManifest: (uri: string, content: string) =>
-        require('expo-file-system/legacy').StorageAccessFramework.writeAsStringAsync(uri, content),
+    get VegaSyncStorage() {
+      return mockNative;
+    },
+  },
+}));
+jest.mock('expo-file-system/legacy', () => ({
+  StorageAccessFramework: {
+    // Legacy APIs return the grant root for nested directory URIs. Sync must
+    // use native document ids instead, including for creation.
+    readDirectoryAsync: jest.fn(() => {
+      throw new Error('Unsafe legacy listing');
+    }),
+    makeDirectoryAsync: jest.fn(() => {
+      throw new Error('Unsafe legacy creation');
+    }),
+    createFileAsync: jest.fn(() => {
+      throw new Error('Unsafe legacy creation');
+    }),
+    readAsStringAsync: async (uri: string) => {
+      if (!mockFiles.has(uri)) throw new Error('File missing');
+      return mockFiles.get(uri)!;
     },
   },
 }));
 
-jest.mock('../src/lib/downloadLocation', () => ({
-  getSafEntryName: (uri: string) => {
-    const decoded = decodeURIComponent(uri);
-    return decoded.slice(decoded.lastIndexOf('/') + 1);
-  },
-}));
-
-import * as FileSystem from 'expo-file-system/legacy';
-import {writeMobileSyncManifest} from '../src/lib/sync/mobileManifestStorage';
-import type {VegaSyncManifest} from '../src/lib/sync/manifest';
+import {
+  readMobileSyncManifests,
+  resolveMobileSyncFile,
+  writeMobileSyncManifest,
+} from '../src/lib/sync/mobileManifestStorage';
 
 const location = {
   type: 'saf' as const,
-  uri: 'content://storage/tree/primary%3Avega',
-  label: 'Internal storage/vega',
+  uri: 'content://provider/tree/root/document/selected',
+  label: 'Sync',
 };
-
-const manifest = (revision: number): VegaSyncManifest => ({
+const manifest = (revision = 1): VegaSyncManifest => ({
   schemaVersion: 1,
-  deviceId: 'mobile',
+  deviceId: 'phone',
   revision,
   generatedAt: revision,
   downloads: {},
@@ -52,114 +77,158 @@ const manifest = (revision: number): VegaSyncManifest => ({
   tombstones: {},
 });
 
-const storage = FileSystem.StorageAccessFramework;
-const mockCreateFile = storage.createFileAsync as jest.MockedFunction<
-  typeof storage.createFileAsync
->;
-const mockDelete = storage.deleteAsync as jest.MockedFunction<
-  typeof storage.deleteAsync
->;
-const mockReadAsString = storage.readAsStringAsync as jest.MockedFunction<
-  typeof storage.readAsStringAsync
->;
-const mockReadDirectory = storage.readDirectoryAsync as jest.MockedFunction<
-  typeof storage.readDirectoryAsync
->;
-const mockWriteAsString = storage.writeAsStringAsync as jest.MockedFunction<
-  typeof storage.writeAsStringAsync
->;
+beforeEach(() => {
+  mockEntries.clear();
+  mockFiles.clear();
+  mockFailure.clear();
+  mockNextId = 0;
+  mockEntries.set(location.uri, []);
+  mockList.mockClear();
+  mockCreate.mockClear();
+  mockNative.writeManifest.mockReset();
+  mockNative.writeManifest.mockImplementation(async (uri, text) => {
+    mockFiles.set(uri, text);
+  });
+});
 
-describe('mobile sync manifest storage', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockReadDirectory.mockImplementation(async uri =>
-      uri === location.uri ? [syncDirectoryUri] : [manifestUri],
-    );
-    mockReadAsString.mockImplementation(async () =>
-      JSON.stringify(manifest(1)),
-    );
-    mockWriteAsString.mockImplementation(async (_uri, content) => {
-      mockReadAsString.mockResolvedValue(content);
-    });
+describe('sync document storage', () => {
+  it('reuses one folder and manifest across 40 writes with opaque document ids', async () => {
+    for (let revision = 1; revision <= 40; revision++) {
+      await writeMobileSyncManifest(location, manifest(revision));
+    }
+    expect(mockCreate.mock.calls.map(call => call.slice(1))).toEqual([
+      ['.vega-sync', true],
+      ['vega-phone.json', false],
+    ]);
+    const directory = mockEntries.get(location.uri)![0].uri;
+    expect(mockCreate.mock.calls[1][0]).toBe(directory);
+    expect(await readMobileSyncManifests(location)).toEqual([manifest(40)]);
   });
 
-  it('overwrites the existing SAF document without deleting and recreating it', async () => {
-    await writeMobileSyncManifest(location, manifest(2));
+  it('serializes simultaneous writes so only one folder and file are created', async () => {
+    await Promise.all(
+      Array.from({length: 32}, (_, i) =>
+        writeMobileSyncManifest(location, manifest(i + 1)),
+      ),
+    );
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(await readMobileSyncManifests(location)).toEqual([manifest(32)]);
+  });
 
-    expect(mockCreateFile).not.toHaveBeenCalled();
-    expect(mockDelete).not.toHaveBeenCalled();
-    expect(mockWriteAsString).toHaveBeenCalledWith(
-      manifestUri,
+  it('does not create another folder when listing fails and recovers on retry', async () => {
+    mockFailure.add(location.uri);
+    await expect(writeMobileSyncManifest(location, manifest())).rejects.toThrow(
+      'Directory unavailable',
+    );
+    expect(mockCreate).not.toHaveBeenCalled();
+    mockFailure.clear();
+    await writeMobileSyncManifest(location, manifest(2));
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not create a duplicate manifest if the existing folder cannot be read', async () => {
+    await writeMobileSyncManifest(location, manifest());
+    mockFailure.add(mockEntries.get(location.uri)![0].uri);
+    await expect(
+      writeMobileSyncManifest(location, manifest(2)),
+    ).rejects.toThrow('Directory unavailable');
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses the exact folder and leaves numbered duplicates untouched', async () => {
+    await mockCreate(location.uri, '.vega-sync (1)', true);
+    await mockCreate(location.uri, '.vega-sync', true);
+    const canonical = mockEntries.get(location.uri)![1].uri;
+    mockCreate.mockClear();
+    await writeMobileSyncManifest(location, manifest());
+    expect(mockCreate).toHaveBeenCalledWith(
+      canonical,
+      'vega-phone.json',
+      false,
+    );
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not mistake a similarly named file for the sync directory', async () => {
+    await mockCreate(location.uri, '.vega-sync', false);
+    mockCreate.mockClear();
+    await writeMobileSyncManifest(location, manifest());
+    expect(mockCreate.mock.calls[0]).toEqual([
+      location.uri,
+      '.vega-sync',
+      true,
+    ]);
+  });
+
+  it('never adopts another file extension as the device manifest', async () => {
+    const directory = await mockCreate(location.uri, '.vega-sync', true);
+    await mockCreate(directory, 'vega-phone.txt', false);
+    mockCreate.mockClear();
+    await writeMobileSyncManifest(location, manifest());
+    expect(mockCreate).toHaveBeenCalledWith(
+      directory,
+      'vega-phone.json',
+      false,
+    );
+  });
+
+  it('retains the ownership check with display-name lookup', async () => {
+    await writeMobileSyncManifest(location, manifest());
+    expect(
+      await writeMobileSyncManifest(location, manifest(2), () => false),
+    ).toBe(false);
+    expect(await readMobileSyncManifests(location)).toEqual([manifest()]);
+  });
+
+  it('overwrites the same document without deleting or creating a replacement', async () => {
+    await writeMobileSyncManifest(location, manifest());
+    const file = [...mockFiles.keys()][0];
+    mockCreate.mockClear();
+    await writeMobileSyncManifest(location, manifest(2));
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockNative.writeManifest).toHaveBeenLastCalledWith(
+      file,
       JSON.stringify(manifest(2)),
     );
+    expect(mockFiles.size).toBe(1);
   });
 
-  it('creates the manifest only when no existing document is present', async () => {
-    mockReadDirectory.mockImplementation(async uri =>
-      uri === location.uri ? [syncDirectoryUri] : [],
-    );
-    mockCreateFile.mockResolvedValue(manifestUri);
-
-    await writeMobileSyncManifest(location, manifest(2));
-
-    expect(mockCreateFile).toHaveBeenCalledTimes(1);
-    expect(mockCreateFile).toHaveBeenCalledWith(
-      syncDirectoryUri,
-      'vega-mobile.json',
-      'application/json',
-    );
-  });
-
-  it('serializes concurrent writes so they cannot create duplicate documents', async () => {
-    let fileExists = false;
-    mockReadDirectory.mockImplementation(async uri =>
-      uri === location.uri
-        ? [syncDirectoryUri]
-        : fileExists
-          ? [manifestUri]
-          : [],
-    );
-    mockCreateFile.mockImplementation(async () => {
-      fileExists = true;
-      return manifestUri;
+  it('rejects a write when a provider leaves trailing old content', async () => {
+    mockNative.writeManifest.mockImplementation(async (uri, text) => {
+      mockFiles.set(uri, text + 'old trailing JSON');
     });
+    await expect(writeMobileSyncManifest(location, manifest())).rejects.toThrow(
+      'verification failed',
+    );
+  });
 
-    await Promise.all([
+  it('does not recreate documents when writing fails', async () => {
+    await writeMobileSyncManifest(location, manifest());
+    mockNative.writeManifest.mockRejectedValueOnce(new Error('Write denied'));
+    await expect(
       writeMobileSyncManifest(location, manifest(2)),
-      writeMobileSyncManifest(location, manifest(3)),
-    ]);
-
-    expect(mockCreateFile).toHaveBeenCalledTimes(1);
-    expect(mockWriteAsString).toHaveBeenNthCalledWith(
-      2,
-      manifestUri,
-      JSON.stringify(manifest(3)),
-    );
+    ).rejects.toThrow('Write denied');
+    await writeMobileSyncManifest(location, manifest(3));
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(await readMobileSyncManifests(location)).toEqual([manifest(3)]);
   });
 
-  it('leaves a manifest of the same device id alone when canOverwrite rejects it', async () => {
-    mockReadAsString.mockImplementation(async () =>
-      JSON.stringify(manifest(7)),
-    );
-    const canOverwrite = jest.fn(
-      (current: VegaSyncManifest) => current.revision === 1,
-    );
-
-    const written = await writeMobileSyncManifest(
-      location,
-      manifest(2),
-      canOverwrite,
-    );
-
-    expect(written).toBe(false);
-    expect(canOverwrite).toHaveBeenCalledWith(manifest(7));
-    expect(mockWriteAsString).not.toHaveBeenCalled();
-  });
-  it('rejects a document when the provider did not replace the exact contents', async () => {
-    mockWriteAsString.mockImplementation(async (_uri, content) => {
-      mockReadAsString.mockResolvedValue(content + 'old trailing JSON');
-    });
-    await expect(writeMobileSyncManifest(location, manifest(2))).rejects.toThrow('verification failed');
+  it('ignores directories named with a JSON extension', async () => {
+    const directory = await mockCreate(location.uri, '.vega-sync', true);
+    await mockCreate(directory, 'unrelated.json', true);
+    await writeMobileSyncManifest(location, manifest());
+    expect(await readMobileSyncManifests(location)).toEqual([manifest()]);
   });
 
+  it('resolves nested media using real display names and document ids', async () => {
+    const show = await mockCreate(location.uri, 'Show', true);
+    const season = await mockCreate(show, 'Season 1', true);
+    const video = await mockCreate(season, 'Episode 1.mkv', false);
+    expect(
+      await resolveMobileSyncFile(location, 'Show/Season 1/Episode 1.mkv'),
+    ).toBe(video);
+    expect(
+      await resolveMobileSyncFile(location, 'Show/Season 2/Episode 1.mkv'),
+    ).toBeNull();
+  });
 });
