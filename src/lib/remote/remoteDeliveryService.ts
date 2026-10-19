@@ -398,6 +398,21 @@ class RemoteDeliveryService {
     await VegaRemoteDelivery?.retireSessionWhenReady?.(previousId, nextId);
   }
 
+  async prepareSubtitle(url: string): Promise<void> {
+    const target = new URL(url);
+    if (this.serverInfo && target.origin === new URL(this.serverInfo.baseUrl).origin &&
+        /^\/(subtitle|extsub)\//.test(target.pathname)) {
+      if (!VegaRemoteDelivery?.prepareSubtitle) {
+        throw new Error('Update Vega to enable native subtitle preparation');
+      }
+      await VegaRemoteDelivery.prepareSubtitle(url);
+      return;
+    }
+    // Direct external files need only a normal availability check; no extraction.
+    const response = await fetch(url, {method: 'HEAD'});
+    if (!response.ok) throw new Error(`Unable to prepare selected subtitles (HTTP ${response.status})`);
+  }
+
   /** Active Cast scan while a custom device list is on screen (Android). */
   async startCastDiscovery(): Promise<void> {
     if (!VegaRemoteDelivery?.startCastDiscovery) return;

@@ -5,6 +5,8 @@ jest.mock('react-native', () => ({
   Platform: {OS: 'android'}, DeviceEventEmitter: {},
   NativeModules: {VegaRemoteDelivery: {
     inspectMediaTracks: jest.fn(), stopServer: jest.fn(async () => {}),
+    startServer: jest.fn(async () => ({baseUrl: 'http://phone:1234', port: 1234, lanIp: 'phone'})),
+    prepareSubtitle: jest.fn(async () => true),
   }},
 }));
 jest.mock('../src/lib/remote/mkvParser', () => ({fetchAndParseMkvHeader: jest.fn()}));
@@ -50,4 +52,43 @@ it('does not repopulate HLS metadata after a stopped in-flight inspection finish
     await service.inspectTracks('https://video/master.m3u8');
     expect(fetchMock).toHaveBeenCalledTimes(2);
   } finally {global.fetch = originalFetch;}
+});
+
+it('prepares a phone-hosted subtitle through the native bridge without an HTTP request', async () => {
+  await service.ensureServerStarted();
+  const original = global.fetch;
+  global.fetch = jest.fn().mockRejectedValue(new Error('java.net.SocketTimeoutException'));
+  const native = NativeModules.VegaRemoteDelivery.prepareSubtitle as jest.Mock;
+  native.mockClear();
+  try {
+    const url = 'http://phone:1234/subtitle/session-id/0.vtt';
+    await service.prepareSubtitle(url);
+    expect(native).toHaveBeenCalledWith(url);
+    expect(global.fetch).not.toHaveBeenCalled();
+  } finally {global.fetch = original;}
+});
+
+it('allows native subtitle extraction to outlast the global HTTP read timeout', async () => {
+  await service.ensureServerStarted();
+  jest.useFakeTimers();
+  const native = NativeModules.VegaRemoteDelivery.prepareSubtitle as jest.Mock;
+  native.mockImplementationOnce(() => new Promise(resolve => setTimeout(resolve, 45_000)));
+  try {
+    const preparation = service.prepareSubtitle('http://phone:1234/subtitle/session-id/0.vtt');
+    await jest.advanceTimersByTimeAsync(45_000);
+    await expect(preparation).resolves.toBeUndefined();
+  } finally {jest.useRealTimers();}
+});
+
+it('reports native extraction failures without silently retrying over HTTP', async () => {
+  await service.ensureServerStarted();
+  const original = global.fetch;
+  global.fetch = jest.fn();
+  (NativeModules.VegaRemoteDelivery.prepareSubtitle as jest.Mock)
+    .mockRejectedValueOnce(new Error('Source read failed'));
+  try {
+    await expect(service.prepareSubtitle('http://phone:1234/subtitle/session-id/0.vtt'))
+      .rejects.toThrow('Source read failed');
+    expect(global.fetch).not.toHaveBeenCalled();
+  } finally {global.fetch = original;}
 });

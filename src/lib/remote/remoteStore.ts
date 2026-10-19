@@ -32,6 +32,7 @@ interface RemoteStoreState {
   qualities: RemoteQuality[];
   servers: RemoteServer[];
   errorMessage?: string;
+  preparingSubtitle: boolean;
   capabilities: RemoteCapabilities;
 
   // Device discovery
@@ -107,6 +108,7 @@ export const useRemoteStore = create<RemoteStoreState>(set => ({
   qualities: [],
   servers: [],
   errorMessage: undefined,
+  preparingSubtitle: false,
   capabilities: defaultCapabilities,
 
   availableDlnaDevices: [],
@@ -227,6 +229,7 @@ export const useRemoteStore = create<RemoteStoreState>(set => ({
       subtitleTracks: [],
       qualities: [],
       errorMessage: undefined,
+      preparingSubtitle: false,
       capabilities: defaultCapabilities,
     }),
 }));

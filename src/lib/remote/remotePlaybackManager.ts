@@ -588,7 +588,7 @@ class RemotePlaybackManager {
     const operationSessionId = `session_${Crypto.randomUUID()}`;
     useRemoteStore.getState().setConnectedDevice(device);
     useRemoteStore.getState().setStatus('loading');
-    useRemoteStore.getState().setErrorMessage(undefined);
+    useRemoteStore.setState({errorMessage: undefined, preparingSubtitle: false});
 
     try {
       const isLocalFile = Boolean(
@@ -922,7 +922,7 @@ class RemotePlaybackManager {
           byteRangeSeek = Boolean(prep.byteRangeSeek);
           const dlnaSubUrl = this.resolveActiveSubtitleUrl(playUrl);
           await this.awaitPlaybackOperation(
-            dlnaService.loadMedia(
+            this.loadOnDlna(
               device,
               playUrl,
               payload.title,
@@ -968,7 +968,7 @@ class RemotePlaybackManager {
           byteRangeSeek = Boolean(prep.byteRangeSeek);
           const dlnaSubUrl = this.resolveActiveSubtitleUrl(playUrl);
           await this.awaitPlaybackOperation(
-            dlnaService.loadMedia(
+            this.loadOnDlna(
               device,
               playUrl,
               payload.title,
@@ -1243,6 +1243,34 @@ class RemotePlaybackManager {
   private registeredCastTrackIds = new Map<string, number>();
   private registeredSubtitleUrls = new Map<string, string>();
 
+  /** The receiver's subtitle request has a short timeout. Extract the selected
+   * track first, while the previous video can keep playing. */
+  private async prepareSubtitleForPlayback(
+    url: string | undefined,
+    operationToken: number,
+  ): Promise<void> {
+    if (!url) return;
+    useRemoteStore.setState({preparingSubtitle: true, errorMessage: undefined});
+    try {
+      await this.awaitCancelableOperation(
+        remoteDeliveryService.prepareSubtitle(url), operationToken,
+      );
+    } finally {
+      if (operationToken === this.loadGeneration && !this.ending) {
+        useRemoteStore.setState({preparingSubtitle: false});
+      }
+    }
+  }
+
+  private async loadOnDlna(
+    ...args: Parameters<typeof dlnaService.loadMedia>
+  ): Promise<void> {
+    const token = this.loadGeneration;
+    await this.prepareSubtitleForPlayback(args[3], token);
+    this.assertPlaybackOperation(token);
+    return dlnaService.loadMedia(...args);
+  }
+
   private async loadOnCast(
     mediaUrl: string,
     payload: RemoteMediaPayload,
@@ -1393,6 +1421,11 @@ class RemotePlaybackManager {
     });
 
     try {
+      const selectedId = useRemoteStore.getState().activeSubtitleTrackId;
+      await this.prepareSubtitleForPlayback(
+        selectedId ? this.registeredSubtitleUrls.get(selectedId) : undefined,
+        operationToken,
+      );
       await this.awaitPlaybackOperation(
         client.loadMedia(loadRequest),
         operationToken,
@@ -1437,6 +1470,19 @@ class RemotePlaybackManager {
 
       try {
         if (device.type === 'dlna') {
+          // Finish extraction before capturing the resume position or changing
+          // selection. A slow/failed track must not restart the playing video.
+          try {
+            await this.prepareSubtitleForPlayback(
+              this.resolveActiveSubtitleUrl(this.activePlayUrl, trackId ?? null),
+              operationToken,
+            );
+          } catch (error: any) {
+            if (!isRemotePlaybackCanceled(error)) {
+              useRemoteStore.getState().setErrorMessage(error?.message || 'Unable to prepare subtitles');
+            }
+            throw error;
+          }
           const previousSessionId = this.currentSessionId;
           const previousPlayUrl = this.activePlayUrl;
           const previousMimeType = this.activeMimeType;
@@ -1487,7 +1533,7 @@ class RemotePlaybackManager {
                 );
                 nextSessionLoadedOnDevice = true;
                 await this.awaitPlaybackOperation(
-                  dlnaService.loadMedia(
+                  this.loadOnDlna(
                     device,
                     prep.streamUrl,
                     this.activePayload.title || 'Vega Playback',
@@ -1524,7 +1570,7 @@ class RemotePlaybackManager {
                   trackId ?? null,
                 );
                 await this.awaitPlaybackOperation(
-                  dlnaService.loadMedia(
+                  this.loadOnDlna(
                     device,
                     this.activePlayUrl,
                     this.activePayload?.title || 'Vega Playback',
@@ -1567,7 +1613,7 @@ class RemotePlaybackManager {
                   previousTrackId ?? null,
                 );
                 await this.awaitPlaybackOperation(
-                  dlnaService.loadMedia(
+                  this.loadOnDlna(
                     device,
                     previousPlayUrl,
                     this.activePayload?.title || 'Vega Playback',
@@ -1699,20 +1745,7 @@ class RemotePlaybackManager {
               const subtitleUrl = this.registeredSubtitleUrls.get(trackId);
               if (!subtitleUrl)
                 throw new Error('Subtitle URL is unavailable');
-              const ready = await this.awaitPlaybackOperation(
-                fetch(subtitleUrl, {method: 'HEAD'}),
-                operationToken,
-              );
-              if (!ready.ok) {
-                const message = await this.awaitPlaybackOperation(
-                  remoteDeliveryService.getSessionError(this.currentSessionId),
-                  operationToken,
-                );
-                throw new Error(
-                  message ||
-                    `Subtitle preparation failed (HTTP ${ready.status})`,
-                );
-              }
+              await this.prepareSubtitleForPlayback(subtitleUrl, operationToken);
             }
             await this.awaitPlaybackOperation(
               client.setActiveTrackIds([castTrackId]),
@@ -2038,7 +2071,7 @@ class RemotePlaybackManager {
         } else {
           const dlnaSubUrl = this.resolveActiveSubtitleUrl(prep.streamUrl);
           await this.awaitPlaybackOperation(
-            dlnaService.loadMedia(
+            this.loadOnDlna(
               device,
               prep.streamUrl,
               this.activePayload.title,
@@ -2109,7 +2142,7 @@ class RemotePlaybackManager {
               const restoredSubUrl =
                 this.resolveActiveSubtitleUrl(previousPlayUrl);
               await this.awaitPlaybackOperation(
-                dlnaService.loadMedia(
+                this.loadOnDlna(
                   device,
                   previousPlayUrl,
                   this.activePayload.title,

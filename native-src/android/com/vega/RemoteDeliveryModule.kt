@@ -74,7 +74,7 @@ class RemoteDeliveryModule(
 
     override fun getName(): String = NAME
 
-    private var server: RemoteHttpServer? = null
+    @Volatile private var server: RemoteHttpServer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private val httpClient = OkHttpClient.Builder()
@@ -703,6 +703,26 @@ class RemoteDeliveryModule(
             sessionErrors.remove(sessionId)
         }.start()
         promise.resolve(true)
+    }
+
+    @ReactMethod
+    fun prepareSubtitle(url: String, promise: Promise) {
+        val currentServer = server
+        if (currentServer == null) {
+            promise.reject("SUBTITLE_PREPARATION_FAILED", "Cast delivery server is not running")
+            return
+        }
+        Thread {
+            try {
+                currentServer.prepareSubtitle(url)
+                if (server !== currentServer) throw java.io.IOException("Subtitle preparation canceled")
+                promise.resolve(true)
+            } catch (error: Exception) {
+                val cause = generateSequence<Throwable>(error) { it.cause }.last()
+                VegaLog.w(TAG, "Selected subtitle failed: ${cause.javaClass.simpleName}: ${cause.message}")
+                promise.reject("SUBTITLE_PREPARATION_FAILED", cause.message ?: "Unable to prepare subtitles", error)
+            }
+        }.apply { name = "cast-subtitle-prepare"; start() }
     }
 
     @ReactMethod
@@ -1636,19 +1656,7 @@ class RemoteDeliveryModule(
                     addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
                 }
             }
-            // Keyed by source, not session: an audio switch makes a new session for the same file.
-            val key = metadataKey(externalUrl?.let { "ext#$it" } ?: "${session.sourceUrl}#$ordinal", session.headers)
-            VegaLog.i(TAG, "Serving subtitle: ordinal=$ordinal externalUrl=$externalUrl key=$key")
-            val lines = subtitleCache.get(key) {
-                if (externalUrl != null) {
-                    val body = loadExternalSubtitle(externalUrl, session.headers)
-                    EmbeddedSubtitleVtt.parseText(body)
-                } else {
-                    EmbeddedSubtitleVtt.loadLines(
-                        reactContext, session.sourceUrl, session.isLocal, session.headers, ordinal
-                    )
-                }
-            }
+            val lines = loadSubtitleLines(session, ordinal, externalUrl)
             val baseOffset = session.timelineOffsetUs / 1_000_000.0
             val dlnaTimeSeek = reqHeaders["timeseekrange.dlna.org"] ?: reqHeaders["timeseekrange"]
             val dlnaNpt = if (dlnaTimeSeek != null) parseDlnaNpt(dlnaTimeSeek) else null
@@ -1669,6 +1677,47 @@ class RemoteDeliveryModule(
             val body = if (isSrt) EmbeddedSubtitleVtt.toSrt(lines, offsetUs) else EmbeddedSubtitleVtt.toVtt(lines, offsetUs)
             return addCors(newFixedLengthResponse(Response.Status.OK, mimeType, body), corsHeaders).apply {
                 addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+            }
+        }
+
+        /** Called through the bridge: no HTTP client/renderer timeout while
+         * hundreds of indexed subtitle blocks are being read. */
+        fun prepareSubtitle(url: String) {
+            val uri = Uri.parse(url)
+            val parts = uri.pathSegments
+            require(parts.size == 3 && parts[0] in listOf("subtitle", "extsub")) { "Invalid subtitle URL" }
+            val session = sessions[parts[1]] ?: throw java.io.IOException("Cast session expired")
+            val ordinal = parts[2].substringBeforeLast('.').toIntOrNull()
+                ?.takeIf { it >= 0 } ?: throw IllegalArgumentException("Invalid subtitle track")
+            val externalUrl = if (parts[0] == "extsub") {
+                uri.getQueryParameter("u")?.takeIf {
+                    it.startsWith("http://") || it.startsWith("https://") || cachedSubtitleFile(it) != null
+                } ?: throw IllegalArgumentException("Invalid subtitle URL")
+            } else null
+            VegaLog.i(TAG, "Preparing selected subtitle: ordinal=$ordinal external=${externalUrl != null}")
+            if (externalUrl != null && parts[2].endsWith(".ttml")) {
+                loadExternalSubtitle(externalUrl, session.headers)
+            } else {
+                val lines = loadSubtitleLines(session, ordinal, externalUrl)
+                VegaLog.i(TAG, "Selected subtitle ready: ordinal=$ordinal cues=${lines.size}")
+            }
+            if (sessions[session.sessionId] !== session) throw java.io.IOException("Cast session expired")
+        }
+
+        private fun loadSubtitleLines(
+            session: MediaSession, ordinal: Int, externalUrl: String?
+        ): List<MkvCueIndex.SubtitleLine> {
+            // Keyed by source, not session: an audio switch makes a new session for the same file.
+            val key = metadataKey(externalUrl?.let { "ext#$it" } ?: "${session.sourceUrl}#$ordinal", session.headers)
+            return subtitleCache.get(key) {
+                if (externalUrl != null) {
+                    val body = loadExternalSubtitle(externalUrl, session.headers)
+                    EmbeddedSubtitleVtt.parseText(body)
+                } else {
+                    EmbeddedSubtitleVtt.loadLines(
+                        reactContext, session.sourceUrl, session.isLocal, session.headers, ordinal
+                    )
+                }
             }
         }
 

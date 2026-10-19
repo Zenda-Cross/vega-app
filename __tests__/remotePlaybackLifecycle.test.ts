@@ -28,6 +28,7 @@ jest.mock('../src/lib/remote/remoteDeliveryService', () => ({
     onMediaAction: jest.fn(),
     inspectTracks: jest.fn(),
     prepareStream: jest.fn(),
+    prepareSubtitle: jest.fn(async () => {}),
     cleanupSession: jest.fn(async () => {}),
     retireSessionWhenReady: jest.fn(async () => {}),
     startForegroundService: jest.fn(async () => {}),
@@ -60,6 +61,7 @@ const inspected = {
   container: 'mp4',
   hasVideo: true,
 };
+const originalFetch = global.fetch;
 const deferred = <T>() => {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>(r => {
@@ -72,6 +74,8 @@ const tick = async () => {
 };
 beforeEach(() => {
   jest.clearAllMocks();
+  global.fetch = jest.fn().mockResolvedValue({ok: true, status: 200});
+  (delivery.prepareSubtitle as jest.Mock).mockReset().mockResolvedValue(undefined);
   (GoogleCast.getSessionManager().getCurrentCastSession as jest.Mock).mockResolvedValue(null);
   useRemoteStore.getState().resetSession();
   (delivery.inspectTracks as jest.Mock).mockResolvedValue(inspected);
@@ -84,6 +88,7 @@ beforeEach(() => {
 });
 afterEach(async () => {
   await manager.stop();
+  global.fetch = originalFetch;
 });
 
 it.each(['cast', 'dlna'] as const)('seeks video-only remuxed media on %s without inventing an audio track', async type => {
@@ -342,4 +347,116 @@ it('resets remote delays for a new source even when the titles match', async () 
     sourceUrl: 'http://source/e2.mp4',
   });
   expect(delays()).toEqual([0, 0]);
+});
+
+const setupEmbeddedSubtitles = () => {
+  (delivery.inspectTracks as jest.Mock).mockResolvedValue({
+    ...inspected, container: 'matroska', subtitleTracks: [
+      {id: 'en', index: 0, isEmbedded: true, language: 'en'},
+      {id: 'ja', index: 1, isEmbedded: true, language: 'ja'},
+    ],
+  });
+  (delivery.prepareStream as jest.Mock).mockImplementation(async o => ({
+    streamUrl: `http://phone/ffmpeg/${o.sessionId}/stream.mp4`,
+    mimeType: 'video/mp4', durationSeconds: 900,
+    timelineOffsetSeconds: o.startPositionSeconds || 0,
+  }));
+};
+
+it('prepares only the selected DLNA subtitle before reloading and uses the latest position', async () => {
+  jest.useFakeTimers();
+  try {
+    setupEmbeddedSubtitles();
+    await manager.startRemotePlayback(device, {sourceUrl: 'https://source/movie.mkv', title: 'Movie'});
+    useRemoteStore.getState().setTimeline(100, 900);
+    const ready = deferred<any>();
+    (delivery.prepareSubtitle as jest.Mock).mockImplementationOnce(() => ready.promise);
+    const changing = manager.setActiveSubtitleTrack('en');
+    await tick();
+    expect(delivery.prepareSubtitle).toHaveBeenCalledTimes(1);
+    expect((delivery.prepareSubtitle as jest.Mock).mock.calls[0][0]).toMatch(/\/subtitle\/session_[^/]+\/0\.vtt$/);
+    expect(dlna.loadMedia).toHaveBeenCalledTimes(1);
+    expect(useRemoteStore.getState().activeSubtitleTrackId).toBeUndefined();
+    expect(useRemoteStore.getState().preparingSubtitle).toBe(true);
+    useRemoteStore.getState().setTimeline(175, 900);
+    ready.resolve({ok: true});
+    await changing;
+    expect(delivery.prepareStream).toHaveBeenLastCalledWith(expect.objectContaining({startPositionSeconds: 175}));
+    expect(dlna.loadMedia).toHaveBeenCalledTimes(2);
+    expect(useRemoteStore.getState().activeSubtitleTrackId).toBe('en');
+    expect(useRemoteStore.getState().preparingSubtitle).toBe(false);
+    expect((delivery.prepareSubtitle as jest.Mock).mock.calls.every(([url]) => url.endsWith('/0.vtt'))).toBe(true);
+  } finally {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  }
+});
+
+it('keeps the current DLNA video and selection when subtitle preparation fails', async () => {
+  setupEmbeddedSubtitles();
+  await manager.startRemotePlayback(device, {sourceUrl: 'https://source/movie.mkv', title: 'Movie'});
+  (delivery.prepareSubtitle as jest.Mock).mockRejectedValueOnce(new Error('Unable to prepare selected subtitles'));
+  await expect(manager.setActiveSubtitleTrack('en')).rejects.toThrow('prepare selected subtitles');
+  expect(dlna.loadMedia).toHaveBeenCalledTimes(1);
+  expect(delivery.prepareStream).toHaveBeenCalledTimes(1);
+  expect(useRemoteStore.getState().activeSubtitleTrackId).toBeUndefined();
+  expect(useRemoteStore.getState().status).not.toBe('error');
+  expect(useRemoteStore.getState().preparingSubtitle).toBe(false);
+});
+
+it('cancels a pending subtitle preparation on Stop without sending another receiver load', async () => {
+  setupEmbeddedSubtitles();
+  await manager.startRemotePlayback(device, {sourceUrl: 'https://source/movie.mkv', title: 'Movie'});
+  const ready = deferred<any>();
+  (delivery.prepareSubtitle as jest.Mock).mockImplementationOnce(() => ready.promise);
+  const changing = manager.setActiveSubtitleTrack('en');
+  const canceled = expect(changing).rejects.toThrow('canceled');
+  await tick();
+  await manager.stop();
+  await canceled;
+  expect(dlna.loadMedia).toHaveBeenCalledTimes(1);
+  expect(useRemoteStore.getState().preparingSubtitle).toBe(false);
+  ready.resolve({ok: true});
+  await tick();
+  expect(dlna.loadMedia).toHaveBeenCalledTimes(1);
+});
+
+it('prepares the selected Chromecast subtitle before loading or activating it', async () => {
+  setupEmbeddedSubtitles();
+  const client = {loadMedia: jest.fn(async () => {}), setActiveTrackIds: jest.fn(async () => {})};
+  (GoogleCast.getSessionManager().getCurrentCastSession as jest.Mock).mockResolvedValue({
+    client, getCastDevice: async () => ({ipAddress: 'tv'}),
+  });
+  useRemoteStore.getState().setActiveSubtitleTrackId('en');
+  const ready = deferred<any>();
+  (delivery.prepareSubtitle as jest.Mock).mockImplementationOnce(() => ready.promise);
+  const loading = manager.startRemotePlayback({...device, type: 'cast'}, {
+    sourceUrl: 'https://source/movie.mkv', title: 'Movie',
+  });
+  for (let i = 0; i < 5; i++) await tick();
+  expect(delivery.prepareSubtitle).toHaveBeenCalledTimes(1);
+  expect(client.loadMedia).not.toHaveBeenCalled();
+  expect(client.setActiveTrackIds).not.toHaveBeenCalled();
+  ready.resolve({ok: true});
+  await loading;
+  expect(client.loadMedia).toHaveBeenCalledTimes(1);
+  expect(client.setActiveTrackIds).toHaveBeenCalledWith([1]);
+  expect(delivery.prepareSubtitle).toHaveBeenCalledTimes(1);
+});
+
+it('clears subtitle preparation when a different video supersedes it', async () => {
+  setupEmbeddedSubtitles();
+  await manager.startRemotePlayback(device, {sourceUrl: 'https://source/movie.mkv', title: 'Movie'});
+  const ready = deferred<any>();
+  (delivery.prepareSubtitle as jest.Mock).mockImplementationOnce(() => ready.promise);
+  const changing = manager.setActiveSubtitleTrack('en');
+  const canceled = expect(changing).rejects.toThrow('canceled');
+  await tick();
+  (delivery.inspectTracks as jest.Mock).mockResolvedValue(inspected);
+  await manager.startRemotePlayback(device, {sourceUrl: 'https://source/next.mp4', title: 'Next'});
+  await canceled;
+  expect(useRemoteStore.getState().preparingSubtitle).toBe(false);
+  expect((dlna.loadMedia as jest.Mock).mock.calls.at(-1)[2]).toBe('Next');
+  ready.resolve({ok: true});
+  await tick();
 });

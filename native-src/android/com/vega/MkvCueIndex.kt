@@ -7,8 +7,6 @@ import okhttp3.Request
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /** Reads only Matroska metadata and the blocks it points at. The film itself is never downloaded here. */
@@ -25,11 +23,12 @@ internal object MkvCueIndex {
     // unknown cluster-header length (4-byte id + 1..8-byte size) in front of it.
     private const val BLOCK_WINDOW = 2 * 1024
     private const val MERGE_GAP = 32 * 1024
-    // Subtitle blocks usually sit one per cluster, so each is its own small request.
-    private const val SUBTITLE_FETCH_THREADS = 2
-    private val subtitleFetchPermits = java.util.concurrent.Semaphore(2)
     private val metadata = RemoteMetadataCache<Parsed?>(maxEntries = 2, ttlMs = 5 * 60_000L)
-    fun clearCache() = metadata.clear()
+    private val readGeneration = java.util.concurrent.atomic.AtomicInteger()
+    fun clearCache() {
+        readGeneration.incrementAndGet()
+        metadata.clear()
+    }
 
     private data class Element(val id: Int, val start: Int, val body: Int, val end: Int, val size: Long)
     private data class RangeData(val bytes: ByteArray, val total: Long)
@@ -74,6 +73,20 @@ internal object MkvCueIndex {
         local: Boolean,
         private val headers: Map<String, String>
     ) : AutoCloseable {
+        private val generation = readGeneration.get()
+        @Volatile private var canceled = false
+        private val calls = java.util.concurrent.ConcurrentHashMap.newKeySet<okhttp3.Call>()
+
+        private fun checkActive() {
+            if (canceled || generation != readGeneration.get() || Thread.currentThread().isInterrupted) {
+                throw java.io.InterruptedIOException("Cast metadata read canceled")
+            }
+        }
+
+        fun cancel() {
+            canceled = true
+            calls.forEach { it.cancel() }
+        }
         val cacheKey = if (!local && (source.startsWith("http://") || source.startsWith("https://")))
             source + "\n" + headers.entries.sortedBy { it.key.lowercase() }.joinToString("\n") { "${it.key.lowercase()}:${it.value}" }
             else null
@@ -83,6 +96,7 @@ internal object MkvCueIndex {
             context.contentResolver.openFileDescriptor(Uri.parse(source), "r") else null
 
         fun range(start: Long, count: Int): RangeData? {
+            checkActive()
             if (start < 0 || count < 1 || count > MAX_CUES + 16) return null
             val localSize = file?.length() ?: descriptor?.statSize ?: -1L
             if (localSize >= 0) {
@@ -93,6 +107,7 @@ internal object MkvCueIndex {
                     // pread leaves the shared descriptor position unchanged for parallel subtitle reads.
                     var read = 0
                     while (read < size) {
+                        checkActive()
                         val countRead = android.system.Os.pread(
                             descriptor!!.fileDescriptor, bytes, read, size - read, start + read
                         )
@@ -107,6 +122,7 @@ internal object MkvCueIndex {
                     channel.position(start)
                     val buffer = ByteBuffer.wrap(bytes)
                     while (buffer.hasRemaining()) {
+                        checkActive()
                         if (channel.read(buffer) <= 0) return null
                     }
                 }
@@ -118,31 +134,38 @@ internal object MkvCueIndex {
                 header("Range", "bytes=$start-${start + count - 1}")
             }.build()
             RemoteSourceFailures.noteMetadataRead()
-            client.newCall(request).execute().use { response ->
-                RemoteSourceFailures.record(source, response.code, response.header("Retry-After"))
-                RemoteSourceFailures.check(source)
-                // Only a real partial response is accepted: a 200 would be the whole film.
-                if (response.code != 206) return null
-                val contentRange = response.header("Content-Range") ?: return null
-                val match = Regex("bytes (\\d+)-(\\d+)/(\\d+)").matchEntire(contentRange) ?: return null
-                if (match.groupValues[1].toLong() != start) return null
-                val total = match.groupValues[3].toLong()
-                val declared = match.groupValues[2].toLong() - start + 1
-                if (declared > count) return null
-                val bytes = ByteArray(declared.toInt())
-                val stream = response.body?.byteStream() ?: return null
-                var read = 0
-                while (read < bytes.size) {
-                    val countRead = stream.read(bytes, read, bytes.size - read)
-                    if (countRead <= 0) break
-                    read += countRead
+            val call = client.newCall(request)
+            calls.add(call)
+            try {
+                checkActive()
+                call.execute().use { response ->
+                    RemoteSourceFailures.record(source, response.code, response.header("Retry-After"))
+                    RemoteSourceFailures.check(source)
+                    // Only a real partial response is accepted: a 200 would be the whole film.
+                    if (response.code != 206) return null
+                    val contentRange = response.header("Content-Range") ?: return null
+                    val match = Regex("bytes (\\d+)-(\\d+)/(\\d+)").matchEntire(contentRange) ?: return null
+                    if (match.groupValues[1].toLong() != start) return null
+                    val total = match.groupValues[3].toLong()
+                    val declared = match.groupValues[2].toLong() - start + 1
+                    if (declared > count) return null
+                    val bytes = ByteArray(declared.toInt())
+                    val stream = response.body?.byteStream() ?: return null
+                    var read = 0
+                    while (read < bytes.size) {
+                        checkActive()
+                        val countRead = stream.read(bytes, read, bytes.size - read)
+                        if (countRead <= 0) break
+                        read += countRead
+                    }
+                    if (read != bytes.size) return null
+                    return RangeData(bytes, total)
                 }
-                if (read != bytes.size) return null
-                return RangeData(bytes, total)
-            }
+            } finally { calls.remove(call) }
         }
 
         override fun close() {
+            cancel()
             descriptor?.close()
         }
     }
@@ -246,31 +269,22 @@ internal object MkvCueIndex {
         }
         if (current.isNotEmpty()) groups.add(current)
 
-        val pool = Executors.newFixedThreadPool(SUBTITLE_FETCH_THREADS)
-        try {
-            val results = pool.invokeAll(groups.map { group ->
-                Callable {
-                    val start = earliest(group.first())
-                    val length = (earliest(group.last()) - start + BLOCK_WINDOW).toInt()
-                    subtitleFetchPermits.acquire()
-                    val window = try {
-                        src.range(start, length)
-                            ?: throw IllegalStateException("Subtitle block could not be read")
-                    } finally { subtitleFetchPermits.release() }
-                    group.mapNotNull { entry ->
-                        val text = blockText(window.bytes, (earliest(entry) - start).toInt(), track)
-                            ?: return@mapNotNull null
-                        val startUs = entry.ticks * parsed.scaleNs / 1_000
-                        val durationTicks = text.second.takeIf { it > 0 } ?: entry.durationTicks
-                        val endUs = if (durationTicks > 0) startUs + durationTicks * parsed.scaleNs / 1_000 else null
-                        SubtitleLine(startUs, endUs, text.first)
-                    }
-                }
-            })
-            return results.flatMap { it.get() }.sortedBy { it.startUs }
-        } finally {
-            pool.shutdownNow()
+        VegaLog.i("MkvCueIndex", "Subtitle extraction: ${entries.size} cues, ${groups.size} indexed reads, concurrency=${SubtitleReadBatch.MAX_PARALLELISM}")
+        val results = SubtitleReadBatch.read(groups, onFailure = { src.cancel() }) { group ->
+            val start = earliest(group.first())
+            val length = (earliest(group.last()) - start + BLOCK_WINDOW).toInt()
+            val window = src.range(start, length)
+                ?: throw IllegalStateException("Subtitle block could not be read")
+            group.mapNotNull { entry ->
+                val text = blockText(window.bytes, (earliest(entry) - start).toInt(), track)
+                    ?: return@mapNotNull null
+                val startUs = entry.ticks * parsed.scaleNs / 1_000
+                val durationTicks = text.second.takeIf { it > 0 } ?: entry.durationTicks
+                val endUs = if (durationTicks > 0) startUs + durationTicks * parsed.scaleNs / 1_000 else null
+                SubtitleLine(startUs, endUs, text.first)
+            }
         }
+        return results.flatten().sortedBy { it.startUs }
     }
 
     /**

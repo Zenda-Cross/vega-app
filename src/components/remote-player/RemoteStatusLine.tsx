@@ -27,6 +27,7 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
   const colors = useM3Colors();
   const status = useRemoteStore(state => state.status);
   const seeking = useRemoteStore(state => !!state.pendingSeek);
+  const preparingSubtitle = useRemoteStore(state => state.preparingSubtitle);
   const errorMessage = useRemoteStore(state => state.errorMessage);
   const connectedDevice = useRemoteStore(state => state.connectedDevice);
   const currentTime = useRemoteStore(state => state.currentTime);
@@ -54,12 +55,12 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
         </AppText>
       </View>
     );
-  } else if (preparingText || seeking || status === 'buffering' || status === 'loading' || status === 'connecting') {
+  } else if (preparingSubtitle || preparingText || seeking || status === 'buffering' || status === 'loading' || status === 'connecting') {
     content = (
       <View style={{alignItems: 'center', flexDirection: 'row', gap: 10}}>
         <ActivityIndicator size="small" color={colors.primary} />
         <AppText role="labelLarge" numberOfLines={1} style={{color: colors.primary}}>
-          {preparingText || (seeking ? 'Seeking…' : 'Buffering…')}
+          {preparingSubtitle ? 'Preparing subtitles…' : preparingText || (seeking ? 'Seeking…' : 'Buffering…')}
         </AppText>
       </View>
     );
