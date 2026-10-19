@@ -1,7 +1,6 @@
 import axios from 'axios';
 import {
   extensionStorage,
-  ExtensionKeys,
   ProviderExtension,
   ProviderModule,
   ProviderSource,
@@ -518,21 +517,6 @@ export class ExtensionManager {
   async initialize(): Promise<void> {
     try {
       this.migrateLegacyCustomProviderSource();
-
-      // Seed only a new installation. A stored empty list means the user
-      // deliberately removed their sources and must remain empty.
-      if (
-        extensionStorage.getProviderSources().length === 0 &&
-        !mainStorage.contains(ExtensionKeys.PROVIDER_SOURCES)
-      ) {
-        try {
-          const defaultSource = createProviderSource('Zenda-Cross');
-          extensionStorage.addProviderSources(defaultSource.author, defaultSource.url);
-          extensionStorage.setDefaultProviderSource(defaultSource.author);
-        } catch (e) {
-          console.warn('Failed to seed default provider source:', e);
-        }
-      }
 
       // Load providers from cache
       const source = this.getActiveSource();

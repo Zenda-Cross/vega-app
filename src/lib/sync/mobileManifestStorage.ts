@@ -1,16 +1,41 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import {NativeModules} from 'react-native';
 import type {SafDownloadLocation} from '../downloadLocation';
-import {getSafEntryName} from '../downloadLocation';
 import {
   parseSyncManifest,
   VEGA_SYNC_DIRECTORY,
   type VegaSyncManifest,
 } from './manifest';
 
-const MANIFEST_MIME_TYPE = 'application/json';
-
 let manifestWriteQueue: Promise<void> = Promise.resolve();
+
+type DirectoryEntry = {uri: string; name: string; isDirectory: boolean};
+
+const listDirectory = (uri: string): Promise<DirectoryEntry[]> => {
+  const storage = NativeModules.VegaSyncStorage as
+    | {listDirectory?: (directory: string) => Promise<DirectoryEntry[]>}
+    | undefined;
+  if (!storage?.listDirectory) {
+    throw new Error('Update Vega to enable safe sync folder lookup');
+  }
+  return storage.listDirectory(uri);
+};
+
+const createDocument = (uri: string, name: string, directory: boolean) => {
+  const storage = NativeModules.VegaSyncStorage as
+    | {
+        createDocument?: (
+          parent: string,
+          name: string,
+          directory: boolean,
+        ) => Promise<string>;
+      }
+    | undefined;
+  if (!storage?.createDocument) {
+    throw new Error('Update Vega to enable safe sync document creation');
+  }
+  return storage.createDocument(uri, name, directory);
+};
 
 const normalizeName = (name: string) =>
   name
@@ -18,55 +43,60 @@ const normalizeName = (name: string) =>
     .replace(/[^a-z0-9]+/gi, ' ')
     .trim();
 
-const findChild = async (directoryUri: string, name: string) => {
-  try {
-    const entries =
-      await FileSystem.StorageAccessFramework.readDirectoryAsync(directoryUri);
-    // 1. Exact match
-    const exact = entries.find(entry => getSafEntryName(entry) === name);
-    if (exact) {
-      return exact;
-    }
-    // 2. Normalized match (ignores case, underscores, spaces, dashes)
-    const targetNorm = normalizeName(name);
-    const normalized = entries.find(
-      entry => normalizeName(getSafEntryName(entry)) === targetNorm,
-    );
-    if (normalized) {
-      return normalized;
-    }
-    // 3. Stem match without extension
-    const nameStem = name.includes('.')
-      ? name.slice(0, name.lastIndexOf('.'))
-      : name;
-    const stemNorm = normalizeName(nameStem);
-    return entries.find(entry => {
-      const entryName = getSafEntryName(entry);
-      const entryStem = entryName.includes('.')
-        ? entryName.slice(0, entryName.lastIndexOf('.'))
-        : entryName;
-      return normalizeName(entryStem) === stemNorm;
-    });
-  } catch {
-    return undefined;
+const findChild = async (
+  directoryUri: string,
+  name: string,
+  kind?: 'directory' | 'file',
+) => {
+  const entries = (await listDirectory(directoryUri)).filter(
+    entry => !kind || entry.isDirectory === (kind === 'directory'),
+  );
+  // 1. Exact match
+  const exact = entries.find(entry => entry.name === name);
+  if (exact) {
+    return exact.uri;
   }
+  // 2. Normalized match (ignores case, underscores, spaces, dashes)
+  const targetNorm = normalizeName(name);
+  const normalized = entries.find(
+    entry => normalizeName(entry.name) === targetNorm,
+  );
+  if (normalized) {
+    return normalized.uri;
+  }
+  // Sync directories and device manifests must never adopt a different
+  // filename just because its stem happens to match.
+  if (kind) return undefined;
+  // 3. Stem match without extension
+  const nameStem = name.includes('.')
+    ? name.slice(0, name.lastIndexOf('.'))
+    : name;
+  const stemNorm = normalizeName(nameStem);
+  return entries.find(entry => {
+    const entryName = entry.name;
+    const entryStem = entryName.includes('.')
+      ? entryName.slice(0, entryName.lastIndexOf('.'))
+      : entryName;
+    return normalizeName(entryStem) === stemNorm;
+  })?.uri;
 };
 
 const getSyncDirectory = async (
   location: SafDownloadLocation,
   create: boolean,
 ): Promise<string | null> => {
-  const existing = await findChild(location.uri, VEGA_SYNC_DIRECTORY);
+  const existing = await findChild(
+    location.uri,
+    VEGA_SYNC_DIRECTORY,
+    'directory',
+  );
   if (existing) {
     return existing;
   }
   if (!create) {
     return null;
   }
-  return FileSystem.StorageAccessFramework.makeDirectoryAsync(
-    location.uri,
-    VEGA_SYNC_DIRECTORY,
-  );
+  return createDocument(location.uri, VEGA_SYNC_DIRECTORY, true);
 };
 
 export const readMobileSyncManifests = async (
@@ -76,14 +106,16 @@ export const readMobileSyncManifests = async (
   if (!directory) {
     return [];
   }
-  const entries =
-    await FileSystem.StorageAccessFramework.readDirectoryAsync(directory);
+  const entries = await listDirectory(directory);
   const manifests = await Promise.all(
     entries
-      .filter(entry => getSafEntryName(entry).endsWith('.json'))
+      .filter(
+        entry =>
+          !entry.isDirectory && entry.name.toLowerCase().endsWith('.json'),
+      )
       .map(async entry => {
         const content =
-          await FileSystem.StorageAccessFramework.readAsStringAsync(entry);
+          await FileSystem.StorageAccessFramework.readAsStringAsync(entry.uri);
         return parseSyncManifest(content);
       }),
   );
@@ -120,7 +152,7 @@ const writeMobileSyncManifestNow = async (
     throw new Error('Unable to create Vega sync directory');
   }
   const fileName = `vega-${manifest.deviceId}.json`;
-  const existing = await findChild(directory, fileName);
+  const existing = await findChild(directory, fileName, 'file');
   if (existing && canOverwrite) {
     const current = await readManifestFile(existing);
     if (current?.deviceId === manifest.deviceId && !canOverwrite(current)) {
@@ -128,17 +160,13 @@ const writeMobileSyncManifestNow = async (
     }
   }
   const fileUri =
-    existing ||
-    (await FileSystem.StorageAccessFramework.createFileAsync(
-      directory,
-      fileName,
-      MANIFEST_MIME_TYPE,
-    ));
+    existing || (await createDocument(directory, fileName, false));
   const content = JSON.stringify(manifest);
   const writer = NativeModules.VegaSyncStorage as
     | {writeManifest: (uri: string, text: string) => Promise<void>}
     | undefined;
-  if (!writer) throw new Error('Update Vega to enable safe sync document writes');
+  if (!writer)
+    throw new Error('Update Vega to enable safe sync document writes');
   await writer.writeManifest(fileUri, content);
   const written =
     await FileSystem.StorageAccessFramework.readAsStringAsync(fileUri);

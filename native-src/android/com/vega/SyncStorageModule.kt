@@ -2,6 +2,8 @@ package com.vega
 
 import android.net.Uri
 import android.provider.Settings
+import android.provider.DocumentsContract
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -21,6 +23,69 @@ class SyncStorageModule(private val context: ReactApplicationContext) : ReactCon
         // Publish a namespaced UUID rather than the underlying Android identifier.
         val id = UUID.nameUUIDFromBytes(("vega-sync:" + context.packageName + ":" + androidId).toByteArray(Charsets.UTF_8)).toString()
         return mapOf("deviceId" to id)
+    }
+
+    @ReactMethod
+    fun listDirectory(uri: String, promise: Promise) {
+        writer.execute {
+            try {
+                val parent = Uri.parse(uri)
+                // Tree URIs and nested document URIs can have different ids.
+                // DocumentFile.fromTreeUri would list the tree root for both.
+                val id = if (DocumentsContract.isDocumentUri(context, parent)) {
+                    DocumentsContract.getDocumentId(parent)
+                } else {
+                    DocumentsContract.getTreeDocumentId(parent)
+                }
+                val children = DocumentsContract.buildChildDocumentsUriUsingTree(parent, id)
+                val result = Arguments.createArray()
+                val columns = arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE,
+                )
+                val cursor = context.contentResolver.query(children, columns, null, null, null)
+                    ?: throw java.io.IOException("Unable to list sync directory")
+                cursor.use {
+                    // Some cloud providers return an incomplete listing while loading.
+                    // It must never be mistaken for an absent directory or manifest.
+                    if (it.extras.getBoolean(DocumentsContract.EXTRA_LOADING, false)) {
+                        throw java.io.IOException("Sync directory is still loading; retry later")
+                    }
+                    while (it.moveToNext()) {
+                        val entry = Arguments.createMap()
+                        entry.putString("uri", DocumentsContract.buildDocumentUriUsingTree(parent, it.getString(0)).toString())
+                        entry.putString("name", it.getString(1))
+                        entry.putBoolean("isDirectory", it.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR)
+                        result.pushMap(entry)
+                    }
+                }
+                promise.resolve(result)
+            } catch (error: Exception) {
+                promise.reject("SYNC_LIST_FAILED", "Unable to read sync directory", error)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun createDocument(uri: String, name: String, directory: Boolean, promise: Promise) {
+        writer.execute {
+            try {
+                val parent = Uri.parse(uri)
+                val id = if (DocumentsContract.isDocumentUri(context, parent)) {
+                    DocumentsContract.getDocumentId(parent)
+                } else {
+                    DocumentsContract.getTreeDocumentId(parent)
+                }
+                val document = DocumentsContract.buildDocumentUriUsingTree(parent, id)
+                val mime = if (directory) DocumentsContract.Document.MIME_TYPE_DIR else "application/json"
+                val created = DocumentsContract.createDocument(context.contentResolver, document, mime, name)
+                    ?: throw java.io.IOException("Unable to create sync document")
+                promise.resolve(created.toString())
+            } catch (error: Exception) {
+                promise.reject("SYNC_CREATE_FAILED", "Unable to create sync document", error)
+            }
+        }
     }
 
     @ReactMethod

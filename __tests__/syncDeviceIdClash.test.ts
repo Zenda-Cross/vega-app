@@ -101,6 +101,16 @@ jest.mock('react-native', () => ({
   NativeModules: {
     VegaSyncStorage: {
       deviceId: mockHardwareId,
+      listDirectory: async (uri: string) =>
+        [...mockDirectories, ...mockFiles.keys()]
+          .filter(child => child.slice(0, child.lastIndexOf('/')) === uri)
+          .map(child => ({uri: child, name: child.split('/').pop(), isDirectory: mockDirectories.has(child)})),
+      createDocument: async (uri: string, name: string, directory: boolean) => {
+        const child = `${uri}/${name}`;
+        if (directory) mockDirectories.add(child);
+        else mockFiles.set(child, '');
+        return child;
+      },
       writeManifest: async (uri: string, content: string) => {
         mockFiles.set(uri, content);
       },
