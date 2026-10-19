@@ -10,6 +10,8 @@ import type {AnimatedTabIconName} from './AnimatedTabIcon';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// SVG groups expose their native affine matrix through setNativeProps.
+const AnimatedG = Animated.createAnimatedComponent(G<{matrix?: number[]}>);
 const PATH_LENGTH = 80;
 
 type StrokePathProps = {
@@ -25,12 +27,14 @@ const AnimatedStrokePath = ({
   d,
   progress,
   color,
+  start = 0,
+  end = 1,
   strokeWidth = 1.9,
 }: StrokePathProps) => {
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: interpolate(
       progress.value,
-      [0, 1],
+      [start, end],
       [PATH_LENGTH, 0],
       Extrapolation.CLAMP,
     ),
@@ -67,12 +71,14 @@ const AnimatedStrokeCircle = ({
   cx,
   cy,
   r,
+  start = 0,
+  end = 1,
   strokeWidth = 1.9,
 }: StrokeCircleProps) => {
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: interpolate(
       progress.value,
-      [0, 1],
+      [start, end],
       [PATH_LENGTH, 0],
       Extrapolation.CLAMP,
     ),
@@ -102,8 +108,33 @@ type RotatingPartProps = {
   children: React.ReactNode;
 };
 
-const RotatingPart = ({children}: RotatingPartProps) => {
-  return <G>{children}</G>;
+const RotatingPart = ({
+  children,
+  progress,
+  start,
+  end,
+  from,
+  originX,
+  originY,
+}: RotatingPartProps) => {
+  const animatedProps = useAnimatedProps(() => {
+    const angle = interpolate(
+      progress.value,
+      [start, end],
+      [from, 0],
+      Extrapolation.CLAMP,
+    ) * Math.PI / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return {
+      matrix: [
+        cos, sin, -sin, cos,
+        originX - cos * originX + sin * originY,
+        originY - sin * originX - cos * originY,
+      ],
+    };
+  });
+  return <AnimatedG animatedProps={animatedProps}>{children}</AnimatedG>;
 };
 
 export const FilledTabIcon = ({
