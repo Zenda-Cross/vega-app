@@ -20,6 +20,10 @@ import MediaPosterCard from './MediaPosterCard';
 import AppText from './ui/Text';
 import {isTV} from '../lib/tv/constants';
 import {TVFocusable} from './tv';
+import useLocalContentStore from '../lib/zustand/localContentStore';
+import {localContentId, localContentInfo, localContentLink} from '../lib/localContent/library';
+import {getLocalContinueWatching} from '../lib/localContent/playback';
+import {cacheStorage} from '../lib/storage';
 
 interface ContinueWatchingCardProps {
   item: ContinueWatchingItem;
@@ -84,11 +88,12 @@ const ContinueWatchingCard = ({
   );
 };
 
-const ContinueWatching = () => {
+const ContinueWatching = ({localOnly = false}: {localOnly?: boolean}) => {
   const colors = useM3Colors();
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const storedItems = useContinueWatchingStore(state => state.items);
+  const localTitles = useLocalContentStore(state => state.titles);
   const removeItem = useContinueWatchingStore(state => state.removeItem);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -97,8 +102,22 @@ const ContinueWatching = () => {
   // Watched movies stay in the store (and synced history), only the row
   // leaves them out.
   const items = useMemo(
-    () => getContinueWatchingRow(storedItems),
-    [storedItems],
+    () => {
+      const localItems: ContinueWatchingItem[] = localTitles.flatMap(title => {
+        const target = getLocalContinueWatching(title, uri => {
+          try { return JSON.parse(cacheStorage.getString(uri) || 'null') || undefined; } catch { return undefined; }
+        });
+        if (!target) return [];
+        const link = localContentLink(title.id);
+        return [{id: link, infoUrl: link, providerValue: 'local',
+          title: title.metadata?.title || title.name, episodeTitle: target.title, seasonTitle: target.seasonTitle,
+          episode: {id: target.episode.uri, link: target.episode.uri, title: target.title},
+          type: localContentInfo(title).type || 'series', poster: title.metadata?.poster, background: title.metadata?.background,
+          position: target.position, duration: target.duration, updatedAt: target.updatedAt}];
+      });
+      return getContinueWatchingRow([...(localOnly ? [] : storedItems), ...localItems]);
+    },
+    [storedItems, localTitles, localOnly],
   );
 
   const triggerHaptic = useCallback(
@@ -190,7 +209,9 @@ const ContinueWatching = () => {
           variant: 'destructive',
           onPress: () => {
             selectedIds.forEach(id => {
-              removeItem(id);
+              const localId = localContentId(id);
+              if (localId) useLocalContentStore.getState().clearPlayback(localId);
+              else removeItem(id);
             });
             setSelectedIds(new Set());
           },

@@ -20,6 +20,7 @@ import ManagedEpisodeSelectionBar from '../ManagedEpisodeSelectionBar';
 import {deleteLocalEpisodes} from '../../lib/localContent/delete';
 import {showAppDialog} from '../../lib/zustand/appDialogStore';
 import MaterialDialogSurface from '../ui/MaterialDialogSurface';
+import LocalResumeCard from './LocalResumeCard';
 
 export default function LocalSeasonList({
   title,
@@ -147,6 +148,7 @@ export default function LocalSeasonList({
   }, [setOverlay, selectionMenu]);
   return (
     <View style={{gap: 18}}>
+      <LocalResumeCard title={title} />
       <View
         style={{
           flexDirection: 'row',

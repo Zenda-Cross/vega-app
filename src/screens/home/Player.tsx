@@ -1,4 +1,6 @@
 import {getPlaybackQuality} from '../../lib/player/playbackQuality';
+import {localContentId} from '../../lib/localContent/library';
+import useLocalContentStore from '../../lib/zustand/localContentStore';
 import PlayerMoreMenu from '../../components/PlayerMoreMenu';
 import {PlayerControlStyle} from '../../lib/player/controlStyle';
 import {languageLabel, shortLanguageLabel} from '../../lib/player/languageLabel';
@@ -977,6 +979,11 @@ const Player = ({route}: Props): React.JSX.Element => {
 
   const saveContinueWatchingProgress = useCallback(
     (position: number, duration: number) => {
+      if (route.params.localContent) {
+        const id = localContentId(route.params.infoUrl || '');
+        if (id && activeEpisode?.link) useLocalContentStore.getState().savePlayback(id, activeEpisode.link, position, duration);
+        return;
+      }
       if (!route.params.localContent && continueWatchingId) {
         updateContinueWatchingProgress(
           continueWatchingId,
@@ -1006,6 +1013,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       finishContinueWatchingEpisode,
       route.params.episodeList,
       route.params.localContent,
+      route.params.infoUrl,
       updateContinueWatchingProgress,
     ],
   );

@@ -34,6 +34,8 @@ export interface LocalMetadata {
 }
 
 export interface LocalTitle {
+  playback?: import('./playback').LocalPlayback;
+  continueWatchingHidden?: boolean;
   id: string;
   rootUri: string;
   folderUri: string;

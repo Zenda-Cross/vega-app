@@ -5,7 +5,7 @@ import {
   beginUIInteraction,
   endUIInteraction,
 } from '../../lib/performance/idleWork';
-import {RefreshControl, View, Modal, Pressable} from 'react-native';
+import {RefreshControl, ScrollView, View, Modal, Pressable} from 'react-native';
 import {FlashList} from '@shopify/flash-list';
 import Slider from '../../components/Slider';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
@@ -279,7 +279,10 @@ const Home = ({}: Props) => {
     installedProviders.length === 0 ||
     !provider?.value
   ) {
-    return <Tutorial />;
+    return <ScrollView contentContainerStyle={{flexGrow: 1, paddingTop: isTV ? 12 : 32}}>
+      {showContinueWatching && <ContinueWatching localOnly />}
+      <View style={{flex: 1, minHeight: 400}}><Tutorial /></View>
+    </ScrollView>;
   }
 
   return (
