@@ -24,7 +24,7 @@ import {SourcePickerModal} from './SourcePickerModal';
 
 const RAW_GITHUB_PREFIX = 'https://raw.githubusercontent.com/';
 const INVALID_SOURCE_MESSAGE =
-  'Enter a GitHub, Codeberg, Bitbucket or GitLab repo URL, an https link to a manifest.json, or an author name such as author, author@cb, author@bb or author@gl.';
+  'Enter a GitHub, Codeberg, Bitbucket or GitLab repo URL, an HTTP or HTTPS link to a manifest.json, or an author name such as author, author@cb, author@bb or author@gl.';
 
 type Props = {
   primary: string;
@@ -111,7 +111,7 @@ const ProviderSourceManager = ({
           setInvalidSourceMessage('Enter a valid GitHub token.');
           return;
         }
-        // GitHub raw files and custom https sources take a token; the other
+        // GitHub raw files and custom HTTP/HTTPS sources take a token; the other
         // hosts use their own auth schemes.
         if (!source.url.startsWith(RAW_GITHUB_PREFIX) && !source.manifestUrl) {
           setInvalidSourceMessage(

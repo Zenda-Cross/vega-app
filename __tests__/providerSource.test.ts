@@ -65,13 +65,31 @@ describe('createProviderSource', () => {
   it.each([
     'foo@xx',
     'foo bar',
-    'http://example.com/manifest.json',
+    'ftp://example.com/manifest.json',
     'https://gitlab.com/foo',
   ])('rejects %s', input => {
     expect(() => createProviderSource(input)).toThrow();
   });
 
   it.each([
+    [
+      'http://localhost:3001/manifest.json',
+      'localhost:3001',
+      'http://localhost:3001',
+      'http://localhost:3001/manifest.json',
+    ],
+    [
+      'http://192.168.1.20:3001/',
+      '192.168.1.20:3001',
+      'http://192.168.1.20:3001',
+      'http://192.168.1.20:3001/manifest.json',
+    ],
+    [
+      'http://example.com/manifest.json',
+      'example.com',
+      'http://example.com',
+      'http://example.com/manifest.json',
+    ],
     [
       'https://cdn.example.com/vega/manifest.json',
       'cdn.example.com/vega',

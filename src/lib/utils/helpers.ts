@@ -236,14 +236,14 @@ const toProviderSource = (parsed: ParsedSource): ProviderSource => ({
 });
 
 /**
- * Any other https URL: a manifest file (path ending in .json) or the folder
+ * Any other HTTP or HTTPS URL: a manifest file (path ending in .json) or the folder
  * holding manifest.json. Provider files are resolved against that folder. The
  * author key is the host and folder path, so two sites never share provider
  * data, cookies or tokens.
  */
 const toCustomProviderSource = (url: URL): ProviderSource => {
-  if (url.protocol !== 'https:') {
-    throw new Error('Custom provider sources must use https');
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error('Custom provider sources must use http or https');
   }
   const segments = url.pathname.split('/').filter(Boolean);
   const manifestFile =
@@ -299,7 +299,7 @@ export const getProviderFilesUrl = (
 
 /**
  * Accepts a repo or raw URL on GitHub, Codeberg, Bitbucket or GitLab, any
- * other https manifest URL, or a short name: "author" (GitHub), "author@cb"
+ * other HTTP or HTTPS manifest URL, or a short name: "author" (GitHub), "author@cb"
  * (Codeberg), "author@bb" (Bitbucket) or "author@gl" (GitLab). Short names use
  * the default vega-providers repo on the main branch.
  */
