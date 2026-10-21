@@ -610,11 +610,14 @@ export const useStream = ({
     refetch,
   } = useQuery<Stream[], Error>({
     queryKey: getStreamQueryKey(activeEpisode, routeParams, provider),
-    queryFn: () =>
+    // Reading signal lets React Query cancel the provider call once nothing
+    // needs it (player closed, episode changed), so it frees its sandbox slot.
+    queryFn: ({signal}) =>
       fetchStreamList({
         episode: activeEpisode,
         routeParams,
         provider,
+        signal,
         isLocalFailed: () => localFailedRef.current,
         // A fetch from a previous episode must not replace the current selection.
         onLocalStream: localStream => {
