@@ -868,6 +868,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     setExternalSubs,
     isLoading: streamLoading,
     error: streamError,
+    refreshLinks,
     switchToNextStream,
   } = useStream({
     activeEpisode,
@@ -1874,6 +1875,10 @@ const Player = ({route}: Props): React.JSX.Element => {
   } | null>(null);
   const reloadStartMs =
     reloadStart?.stream === selectedStream ? reloadStart.ms : undefined;
+  // Stream whose links were last refreshed after its reload failed.
+  const linkRefreshRef = useRef<unknown>(null);
+  const switchToNextStreamRef = useRef(switchToNextStream);
+  switchToNextStreamRef.current = switchToNextStream;
 
   const handleVideoError = useCallback(
     (e: any) => {
@@ -1925,6 +1930,35 @@ const Player = ({route}: Props): React.JSX.Element => {
           ToastAndroid.show('Connection lost, retrying', ToastAndroid.SHORT);
           return;
         }
+        // The reload failed too, so the link has likely expired. Ask the
+        // provider for new links once; the same server then continues from
+        // where it stopped.
+        if (state.retried && linkRefreshRef.current !== stream) {
+          linkRefreshRef.current = stream;
+          const episodeKey = activeEpisodeKeyRef.current;
+          ToastAndroid.show('Getting a new link', ToastAndroid.SHORT);
+          refreshLinks()
+            .catch(() => false)
+            .then(refreshed => {
+              if (
+                refreshed ||
+                activeEpisodeKeyRef.current !== episodeKey ||
+                selectedStreamRef.current !== stream ||
+                !navigation.isFocused()
+              ) {
+                return;
+              }
+              if (!switchToNextStreamRef.current()) {
+                ToastAndroid.show(
+                  'Video could not be played, try again later',
+                  ToastAndroid.SHORT,
+                );
+                navigation.goBack();
+              }
+            });
+          setShowControls(true);
+          return;
+        }
       }
 
       if (!switchToNextStream()) {
@@ -1942,6 +1976,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       keepPosition,
       markStreamsOnline,
       navigation,
+      refreshLinks,
       route.params.localContent,
       setSelectedStream,
       setShowControls,
