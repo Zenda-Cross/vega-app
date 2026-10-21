@@ -55,7 +55,7 @@ it('gives Dolby Vision enough width while keeping the control row height', async
   const onWidthChange = jest.fn();
   let tree!: renderer.ReactTestRenderer;
   await act(async () => {tree = renderer.create(<HdrBadge {...props} onWidthChange={onWidthChange} />);});
-  expect(tree.root.findAllByProps({type: 'Dolby Vision', height: 16}).length).toBeGreaterThan(0);
+  expect(tree.root.findAllByProps({type: 'Dolby Vision', height: 14}).length).toBeGreaterThan(0);
   const style = tree.root.findByProps({accessibilityLabel: 'HDR playback details'}).props.style;
   expect(style.height).toBe(40);
   expect(style.width).toBeCloseTo(hdrIconWidth('Dolby Vision', 16) + 16);

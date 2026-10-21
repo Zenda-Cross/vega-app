@@ -66,7 +66,7 @@ export default function HdrBadge({videoView, source, suspended, scale, backgroun
         onPress={() => {onInteract(); setDetails(status);}}
         borderRadius={20 * scale} style={{width: buttonWidth, height: 40 * scale,
           alignItems: 'center', justifyContent: 'center', borderRadius: 20 * scale}}>
-        <HdrFormatIcon type={status.type} height={iconHeight} />
+        <HdrFormatIcon type={status.type} height={status.type === 'Dolby Vision' ? 14 * scale : iconHeight} />
       </TVFocusable>
     </View>}
     {details && <Modal transparent visible animationType="fade" statusBarTranslucent navigationBarTranslucent
