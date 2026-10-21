@@ -107,6 +107,14 @@ const Preferences = ({navigation}: any) => {
 
   const [ambientVideo, setAmbientVideo] = useState(() => settingsStorage.isAmbientVideoEnabled());
   const [ambientIntensity, setAmbientIntensity] = useState(() => Math.round(settingsStorage.getAmbientIntensity() * 100));
+  const [ambientSpread, setAmbientSpread] = useState(() => Math.round(settingsStorage.getAmbientSpread() * 100));
+  const [ambientResponseMs, setAmbientResponseMs] = useState(() => settingsStorage.getAmbientResponseMs());
+  useFocusEffect(useCallback(() => {
+    setAmbientVideo(settingsStorage.isAmbientVideoEnabled());
+    setAmbientIntensity(Math.round(settingsStorage.getAmbientIntensity() * 100));
+    setAmbientSpread(Math.round(settingsStorage.getAmbientSpread() * 100));
+    setAmbientResponseMs(settingsStorage.getAmbientResponseMs());
+  }, []));
 
   const [showSleepTimer, setShowSleepTimer] = useState<boolean>(() =>
     settingsStorage.showSleepTimer(),
@@ -361,9 +369,20 @@ const Preferences = ({navigation}: any) => {
             {Platform.OS === 'android' && <>
             <SettingsSwitchRow title="Ambient lighting" description="Soft video colors in the black bars around the picture"
               value={ambientVideo} onValueChange={next => {settingsStorage.setAmbientVideoEnabled(next); setAmbientVideo(next);}} />
-            {ambientVideo && <SettingsSliderRow title="Ambient intensity" value={ambientIntensity} min={0} max={100} step={5}
-              valueDisplay={`${ambientIntensity}%`} widestValue="100%" onValueChange={setAmbientIntensity}
-              onValueChangeFinished={value => settingsStorage.setAmbientIntensity(value / 100)} />}
+            {ambientVideo && <>
+              <SettingsSliderRow title="Ambient intensity" value={ambientIntensity} min={0} max={100} step={5}
+                valueDisplay={`${ambientIntensity}%`} widestValue="100%" onValueChange={setAmbientIntensity}
+                onValueChangeFinished={value => settingsStorage.setAmbientIntensity(value / 100)} />
+              <SettingsSliderRow title="Ambient spread" description="Above 100%, the glow retains more color at the screen edges"
+                value={ambientSpread} min={10} max={300} step={5}
+                valueDisplay={`${ambientSpread}%`} widestValue="300%" onValueChange={setAmbientSpread}
+                onValueChangeFinished={value => settingsStorage.setAmbientSpread(value / 100)} />
+              <SettingsSliderRow title="Ambient responsiveness"
+                description="Lower values follow the video faster and use more power. Higher values are smoother and use less power."
+                value={ambientResponseMs} min={16} max={1000} step={2}
+                valueDisplay={`${ambientResponseMs} ms`} widestValue="1000 ms" onValueChange={setAmbientResponseMs}
+                onValueChangeFinished={value => settingsStorage.setAmbientResponseMs(value)} />
+            </>}
             </>}
 
             <SettingsSwitchRow

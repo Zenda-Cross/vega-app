@@ -40,6 +40,8 @@ export enum SettingsKeys {
   SHOW_SLEEP_TIMER = 'showSleepTimer',
   AMBIENT_VIDEO = 'ambientVideo',
   AMBIENT_INTENSITY = 'ambientIntensity',
+  AMBIENT_SPREAD = 'ambientSpread',
+  AMBIENT_RESPONSE = 'ambientResponseMs',
   ENABLE_2X_GESTURE = 'enable2xGesture',
   ENABLE_SWIPE_GESTURE = 'enableSwipeGesture',
   ENABLE_VOLUME_BOOST = 'enableVolumeBoost',
@@ -381,6 +383,24 @@ export class SettingsStorage {
 
   setAmbientIntensity(value: number): void {
     if (Number.isFinite(value)) mainStorage.setNumber(SettingsKeys.AMBIENT_INTENSITY, Math.max(0, Math.min(1, value)));
+  }
+
+  getAmbientSpread(): number {
+    const value = mainStorage.getNumber(SettingsKeys.AMBIENT_SPREAD);
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0.1, Math.min(3, value)) : 1;
+  }
+
+  setAmbientSpread(value: number): void {
+    if (Number.isFinite(value)) mainStorage.setNumber(SettingsKeys.AMBIENT_SPREAD, Math.max(0.1, Math.min(3, value)));
+  }
+
+  getAmbientResponseMs(): number {
+    const value = mainStorage.getNumber(SettingsKeys.AMBIENT_RESPONSE);
+    return typeof value === 'number' && Number.isFinite(value) ? Math.round(Math.max(16, Math.min(1000, value))) : 220;
+  }
+
+  setAmbientResponseMs(value: number): void {
+    if (Number.isFinite(value)) mainStorage.setNumber(SettingsKeys.AMBIENT_RESPONSE, Math.round(Math.max(16, Math.min(1000, value))));
   }
 
   showSleepTimer(): boolean {

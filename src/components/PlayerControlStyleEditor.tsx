@@ -8,7 +8,7 @@ import {TVFocusable} from './tv';
 import {PlayerControlStyle} from '../lib/player/controlStyle';
 import PlayerControlBar, {PlayerControl} from './PlayerControlBar';
 
-function StyleSlider({
+export function StyleSlider({
   label,
   value,
   min,
@@ -128,8 +128,8 @@ export default function PlayerControlStyleEditor({
   ambient,
   onAmbientChange,
 }: {
-  ambient?: {enabled: boolean; intensity: number};
-  onAmbientChange?: (value: {enabled: boolean; intensity: number}) => void;
+  ambient?: {enabled: boolean; intensity: number; spread: number; responseMs: number};
+  onAmbientChange?: (value: {enabled: boolean; intensity: number; spread: number; responseMs: number}) => void;
   value: PlayerControlStyle;
   color: string;
   onChange: (style: PlayerControlStyle) => void;
@@ -215,11 +215,26 @@ export default function PlayerControlStyleEditor({
               trackColor={{false: '#555', true: color}}
             />
           </TVFocusable>
-          {ambient.enabled && <StyleSlider
-            label="Ambient intensity" value={ambient.intensity}
-            min={0} max={1} step={0.05} format={percent} color={color}
-            onChange={intensity => onAmbientChange({...ambient, intensity})}
-          />}
+          {ambient.enabled && <>
+            <StyleSlider
+              label="Ambient intensity" value={ambient.intensity}
+              min={0} max={1} step={0.05} format={percent} color={color}
+              onChange={intensity => onAmbientChange({...ambient, intensity})}
+            />
+            <StyleSlider
+              label="Ambient spread" value={ambient.spread}
+              min={0.1} max={3} step={0.05} format={percent} color={color}
+              onChange={spread => onAmbientChange({...ambient, spread})}
+            />
+            <StyleSlider
+              label="Ambient responsiveness" value={ambient.responseMs}
+              min={16} max={1000} step={2} format={value => `${Math.round(value)} ms`} color={color}
+              onChange={responseMs => onAmbientChange({...ambient, responseMs})}
+            />
+            <Text style={{color: '#999', fontSize: 11, marginTop: 4}}>
+              Lower values sample more often and blend faster, using more power. Higher values are smoother and lighter.
+            </Text>
+          </>}
         </View>
       )}
       {choices('labels', 'Bottom labels', [

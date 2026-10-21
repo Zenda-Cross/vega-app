@@ -3,6 +3,7 @@ import renderer, {act} from 'react-test-renderer';
 import {GestureDetector} from 'react-native-gesture-handler';
 import {TVFocusable} from '../src/components/tv';
 import PlayerControlEditor from '../src/components/PlayerControlEditor';
+import {StyleSlider} from '../src/components/PlayerControlStyleEditor';
 import {PlayerControl} from '../src/components/PlayerControlBar';
 import {
   defaultPlayerControlLayout,
@@ -12,6 +13,12 @@ import {
 jest.mock('../src/lib/storage', () => ({settingsStorage: {
   isAmbientVideoEnabled: () => false,
   getAmbientIntensity: () => 0.35,
+  getAmbientSpread: () => 1,
+  getAmbientResponseMs: () => 220,
+  getSubtitleFontSize: () => 16,
+  getSubtitleTextOpacity: () => 1,
+  getSubtitleOpacity: () => 1,
+  getSubtitleBottomPadding: () => 10,
 }}));
 
 let mockIsTV = false;
@@ -129,6 +136,29 @@ beforeEach(() => {
   mockIsTV = false;
 });
 
+it('keeps subtitle changes as drafts until Save and supports TV adjustment', () => {
+  mockIsTV = true;
+  const {tree, press, onSave} = makeEditor();
+  press('Subtitles');
+  press('Increase Font size');
+  press('Increase Bottom elevation');
+  expect(onSave).not.toHaveBeenCalled();
+  expect(tree.root.findAllByType(StyleSlider).find(node => node.props.label === 'Font size')!.props.value).toBe(17);
+  press('Save');
+  expect(onSave.mock.calls[0][4]).toEqual({fontSize: 17, textOpacity: 1, opacity: 1, paddingBottom: 11});
+  act(() => tree.unmount());
+});
+
+it('discards subtitle drafts on Cancel', () => {
+  const {tree, press, onSave, onClose} = makeEditor();
+  press('Subtitles');
+  act(() => tree.root.findAllByType(StyleSlider)[0].props.onChange(24));
+  press('Cancel');
+  expect(onSave).not.toHaveBeenCalled();
+  expect(onClose).toHaveBeenCalledTimes(1);
+  act(() => tree.unmount());
+});
+
 it('keeps eye toggles in the preview until Save and keeps hidden controls available to restore', () => {
   const {tree, press, onSave, onClose} = makeEditor();
   act(() => tree.root.findAllByProps({accessibilityLabel: 'Move audio'})[0].props.onAccessibilityTap());
@@ -232,7 +262,7 @@ it('keeps ambient edits as a draft until Save and discards them on Cancel', () =
   press('Ambient lighting');
   expect(onSave).not.toHaveBeenCalled();
   press('Save');
-  expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35});
+  expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
   onSave.mockClear();
   press('Ambient lighting');
   press('Cancel');
@@ -256,7 +286,7 @@ it('toggles ambient lighting directly with the phone switch and saves its value'
     expect(toggle().props.value).toBe(true);
     expect(onSave).not.toHaveBeenCalled();
     press('Save');
-    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35});
+    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
     act(() => toggle().props.onValueChange(false));
     expect(toggle().props.value).toBe(false);
     act(() => tree.unmount());
@@ -277,7 +307,7 @@ it('toggles ambient lighting using the TV remote row', () => {
     press('Ambient lighting');
     expect(tree.root.findByType(Switch).props.value).toBe(true);
     press('Save');
-    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35});
+    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
     act(() => tree.unmount());
   } finally {
     Platform.OS = originalOS;

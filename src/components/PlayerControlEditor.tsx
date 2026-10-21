@@ -1,5 +1,6 @@
 import {settingsStorage} from '../lib/storage';
 import PlayerControlStyleEditor from './PlayerControlStyleEditor';
+import PlayerSubtitleStyleEditor, {readSubtitleQuickStyle, SubtitleQuickStyle} from './PlayerSubtitleStyleEditor';
 import {
   defaultPlayerControlStyle,
   PlayerControlStyle,
@@ -207,7 +208,8 @@ type Props = {
     layout: PlayerControlLayout,
     hidden: PlayerControlId[],
     style: PlayerControlStyle,
-    ambient?: {enabled: boolean; intensity: number},
+    ambient?: {enabled: boolean; intensity: number; spread: number; responseMs: number},
+    subtitle?: SubtitleQuickStyle,
   ) => void;
   appearance?: PlayerControlStyle;
   onClose: () => void;
@@ -225,13 +227,16 @@ function PlayerControlEditor({
   appearance,
 }: Props) {
   const {width, height} = useWindowDimensions();
-  const [tab, setTab] = useState<'arrange' | 'style'>('arrange');
+  const [tab, setTab] = useState<'arrange' | 'style' | 'subtitles'>('arrange');
   const [styleDraft, setStyleDraft] = useState(
     () => appearance || defaultPlayerControlStyle(),
   );
+  const [subtitleDraft, setSubtitleDraft] = useState(readSubtitleQuickStyle);
   const [ambientDraft, setAmbientDraft] = useState(() => ({
     enabled: settingsStorage.isAmbientVideoEnabled(),
     intensity: settingsStorage.getAmbientIntensity(),
+    spread: settingsStorage.getAmbientSpread(),
+    responseMs: settingsStorage.getAmbientResponseMs(),
   }));
   const limit = getTopControlLimit(width / styleDraft.scale);
   const [draft, setDraft] = useState(() =>
@@ -420,25 +425,26 @@ function PlayerControlEditor({
                 setEpoch(value => value + 1);
                 setHidden([]);
                 setStyleDraft(defaultPlayerControlStyle());
-                setAmbientDraft({enabled: false, intensity: 0.35});
+                setSubtitleDraft({fontSize: 16, textOpacity: 1, opacity: 1, paddingBottom: 10});
+                setAmbientDraft({enabled: false, intensity: 0.35, spread: 1, responseMs: 220});
               },
               'restore',
             )}
             {action('Cancel', onClose, 'close')}
             {action(
               'Save',
-              () => onSave(draft, hidden, styleDraft, ambientDraft),
+              () => onSave(draft, hidden, styleDraft, ambientDraft, subtitleDraft),
               undefined,
               true,
             )}
           </View>
           <View style={{flexDirection: 'row', gap: 8, marginBottom: 10}}>
-            {(['arrange', 'style'] as const).map(item => (
+            {(['arrange', 'style', 'subtitles'] as const).map(item => (
               <TVFocusable
                 key={item}
                 registerScreenFocus={false}
                 accessibilityRole="tab"
-                accessibilityLabel={item === 'arrange' ? 'Arrange' : 'Style'}
+                accessibilityLabel={item === 'arrange' ? 'Arrange' : item === 'style' ? 'Style' : 'Subtitles'}
                 accessibilityState={{selected: tab === item}}
                 onPress={() => setTab(item)}
                 borderRadius={16}
@@ -453,7 +459,7 @@ function PlayerControlEditor({
                     color: tab === item ? 'white' : '#999',
                     fontSize: 12,
                   }}>
-                  {item === 'arrange' ? 'Arrange' : 'Style'}
+                  {item === 'arrange' ? 'Arrange' : item === 'style' ? 'Style' : 'Subtitles'}
                 </Text>
               </TVFocusable>
             ))}
@@ -462,7 +468,9 @@ function PlayerControlEditor({
             style={{flexShrink: 1}}
             contentContainerStyle={{paddingBottom: 8}}
             showsVerticalScrollIndicator={false}>
-            {tab === 'style' ? (
+            {tab === 'subtitles' ? (
+              <PlayerSubtitleStyleEditor value={subtitleDraft} color={color} onChange={setSubtitleDraft} />
+            ) : tab === 'style' ? (
               <PlayerControlStyleEditor
                 value={styleDraft}
                 ambient={ambientDraft}

@@ -112,14 +112,16 @@ const AnimatedVideoPlayer = (
 
   const localVideoView = useRef<View>(null);
   const ambientView = props.nativeVideoViewRef || localVideoView;
-  const [ambientConfig, setAmbientConfig] = useState(() => ({enabled: settingsStorage.isAmbientVideoEnabled(), intensity: settingsStorage.getAmbientIntensity()}));
+  const [ambientConfig, setAmbientConfig] = useState(() => ({enabled: settingsStorage.isAmbientVideoEnabled(), intensity: settingsStorage.getAmbientIntensity(), spread: settingsStorage.getAmbientSpread(), responseMs: settingsStorage.getAmbientResponseMs()}));
   const [ambientViewport, setAmbientViewport] = useState({width: 0, height: 0});
   const [ambientPip, setAmbientPip] = useState(false);
   useFocusEffect(useCallback(() => {
     setAmbientConfig(previous => {
       const enabled = settingsStorage.isAmbientVideoEnabled();
       const intensity = settingsStorage.getAmbientIntensity();
-      return enabled === previous.enabled && intensity === previous.intensity ? previous : {enabled, intensity};
+      const spread = settingsStorage.getAmbientSpread();
+      const responseMs = settingsStorage.getAmbientResponseMs();
+      return enabled === previous.enabled && intensity === previous.intensity && spread === previous.spread && responseMs === previous.responseMs ? previous : {enabled, intensity, spread, responseMs};
     });
   }, [playbackSuspended]));
   const ambientBars = useMemo(() => getAmbientBars(ambientViewport.width, ambientViewport.height, ambientVideoSize?.width || 0, ambientVideoSize?.height || 0, resizeMode), [ambientViewport, ambientVideoSize, resizeMode]);
@@ -1035,7 +1037,7 @@ const AnimatedVideoPlayer = (
           />
           {Platform.OS === 'android' && ambientConfig.enabled && !ambientDisabled && !ambientPip && sourceUri && (
             <AmbientBackground key={String(sourceUri)} videoView={ambientView} bars={ambientBars}
-              paused={_paused || playbackSuspended || loading || buffering} intensity={ambientConfig.intensity} />
+              paused={_paused || playbackSuspended || loading || buffering} intensity={ambientConfig.intensity} spread={ambientConfig.spread} responseMs={ambientConfig.responseMs} />
           )}
         </Animated.View>
         {

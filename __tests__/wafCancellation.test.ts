@@ -1,3 +1,6 @@
+jest.mock('../src/lib/sandbox/providerFetch', () => ({
+  providerFetch: jest.fn(async () => { throw new Error('still blocked'); }),
+}));
 jest.mock('../src/lib/providers/headers', () => ({
   headers: {'User-Agent': 'test'},
 }));
@@ -112,10 +115,12 @@ it('blocks all coalesced callers, including those with a different invocation sc
     'alice',
     b,
   );
-  expect(second).toBe(first);
+  expect(second).not.toBe(first);
+  const secondOutcome = second.catch(error => error);
   const outcome = first.catch(error => error);
   useWafStore.getState().cancelAll();
   expect((await outcome).message).toBe('WAF_DIALOG_CANCELLED');
+  expect((await secondOutcome).message).toBe('WAF_DIALOG_CANCELLED');
   await expect(
     openWebView('https://other.test/a', undefined, 'alice', a),
   ).rejects.toThrow('WAF_DIALOG_CANCELLED');
