@@ -100,6 +100,7 @@ export default function PlayerControlBar({
         delayLongPress={500}
         style={[
           focusProps.style,
+          top && {padding: 8 * appearance.scale},
           !top && {
             minHeight: Math.max(44, 44 * appearance.scale),
             flexShrink: 0,
@@ -134,7 +135,7 @@ export default function PlayerControlBar({
   };
   if (top)
     return (
-      <View style={[{flexDirection: 'row', gap: 8}, backgroundStyle]}>
+      <View style={[{flexDirection: 'row', gap: 8 * appearance.scale}, backgroundStyle]}>
         {children}
       </View>
     );

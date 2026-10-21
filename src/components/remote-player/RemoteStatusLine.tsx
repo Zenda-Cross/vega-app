@@ -15,8 +15,8 @@ interface RemoteStatusLineProps {
 }
 
 /**
- * One fixed-height slot for error, skip, or playback state, so a message
- * never pushes the poster or controls around.
+ * Reserve space for status/actions and their detail line. Native buttons and
+ * larger system fonts must never overflow into the media title or seekbar.
  */
 export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
   skipIntervals,
@@ -66,11 +66,13 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
     );
   } else if (showSkip) {
     content = (
-      <Button variant="tonal" compact onPress={() => onSkipPress?.(skipInterval!.to)}>
-        {skipInterval?.title
-          ? (/^skip\b/i.test(skipInterval.title) ? skipInterval.title : `Skip ${skipInterval.title}`)
-          : 'Skip intro'}
-      </Button>
+      <View style={{alignSelf: 'flex-end'}}>
+        <Button variant="tonal" compact onPress={() => onSkipPress?.(skipInterval!.to)}>
+          {skipInterval?.title
+            ? (/^skip\b/i.test(skipInterval.title) ? skipInterval.title : `Skip ${skipInterval.title}`)
+            : 'Skip intro'}
+        </Button>
+      </View>
     );
   } else {
     const text = !connectedDevice
@@ -91,19 +93,22 @@ export const RemoteStatusLine: React.FC<RemoteStatusLineProps> = ({
     <View
       style={{
         alignItems: 'center',
-        height: 48,
-        justifyContent: 'center',
+        minHeight: detailText ? 80 : 64,
+        flexShrink: 0,
+        paddingTop: 8,
+        paddingBottom: 0,
+        justifyContent: 'flex-end',
         paddingHorizontal: 24,
       }}>
-      {content}
       {!!detailText && (
         <AppText
           role="labelSmall"
           numberOfLines={1}
-          style={{color: colors.onSurfaceVariant, marginTop: 2}}>
+          style={{color: colors.onSurfaceVariant, marginBottom: 8}}>
           {detailText}
         </AppText>
       )}
+      {content}
     </View>
   );
 };

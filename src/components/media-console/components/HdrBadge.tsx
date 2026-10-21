@@ -5,7 +5,7 @@ import {TVFocusable, TVFocusGuide} from '../../tv';
 
 type HdrStatus = {
   type: string; codec: string; resolution: string; transfer: string;
-  colorSpace: string; headroom: number; displayTypes: string;
+  colorSpace: string; headroom?: number; displayTypes: string; vendorDolbyPath?: boolean; headroomUnreported?: boolean;
   maxCllNits?: number;
 };
 
@@ -53,19 +53,19 @@ export default function HdrBadge({videoView, source, suspended, scale, backgroun
   // Dolby's symbol and lettering need comparable height, not the same width.
   const iconHeight = status ? status.type === 'Dolby Vision'
     ? 16 * scale : (32 * scale) / hdrIconWidth(status.type, 1) : 0;
-  const buttonWidth = status ? Math.max(40 * scale + 16, hdrIconWidth(status.type, iconHeight) + 16) : 0;
-  const width = status ? buttonWidth + 12 : 0;
+  const buttonWidth = status ? Math.max(56 * scale, hdrIconWidth(status.type, iconHeight) + 16 * scale) : 0;
+  const width = status ? buttonWidth + 12 * scale : 0;
   useEffect(() => {
     onWidthChange?.(width);
     return () => onWidthChange?.(0);
   }, [width, onWidthChange]);
   return <>
-    {status && <View style={{justifyContent: 'center', marginRight: 12,
+    {status && <View style={{justifyContent: 'center', marginRight: 12 * scale,
       backgroundColor: `rgba(0,0,0,${backgroundOpacity})`, borderRadius: 28 * scale}}>
       <TVFocusable registerScreenFocus={false} accessibilityRole="button" accessibilityLabel="HDR playback details"
         onPress={() => {onInteract(); setDetails(status);}}
-        borderRadius={24} style={{width: buttonWidth, height: 24 * scale + 16,
-          alignItems: 'center', justifyContent: 'center', borderRadius: 24}}>
+        borderRadius={20 * scale} style={{width: buttonWidth, height: 40 * scale,
+          alignItems: 'center', justifyContent: 'center', borderRadius: 20 * scale}}>
         <HdrFormatIcon type={status.type} height={iconHeight} />
       </TVFocusable>
     </View>}
@@ -78,8 +78,14 @@ export default function HdrBadge({videoView, source, suspended, scale, backgroun
           {[
             ['Format', details.type], ['Resolution', details.resolution], ['Codec', details.codec],
             ['Transfer', details.transfer], ['Color space', details.colorSpace],
-            ['HDR/SDR brightness ratio', `${details.headroom.toFixed(2)}×`], ['Display supports', details.displayTypes],
+            ['HDR/SDR brightness ratio', typeof details.headroom === 'number' ? `${details.headroom.toFixed(2)}×` : 'Not reported'], ['Display supports', details.displayTypes],
           ].map(([label, value]) => <Text key={label} style={{color: '#ccc', fontSize: 13, marginBottom: 8}}>{label}: {value}</Text>)}
+          {details.vendorDolbyPath && <Text style={{color: '#ccc', fontSize: 13, marginBottom: 8}}>
+            Dolby Vision hardware output is active. The Android brightness ratio does not confirm its display headroom on this device.
+          </Text>}
+          {details.headroomUnreported && !details.vendorDolbyPath && <Text style={{color: '#ccc', fontSize: 13, marginBottom: 8}}>
+            HDR rendering is detected independently of the reported brightness ratio. This ratio does not measure the video's peak brightness.
+          </Text>}
           {typeof details.maxCllNits === 'number' && Number.isFinite(details.maxCllNits) && details.maxCllNits > 0 && details.maxCllNits <= 10000 && (
             <Text style={{color: '#ccc', fontSize: 13, marginBottom: 8}}>
               Video peak: {details.maxCllNits} nits (metadata, MaxCLL)

@@ -458,16 +458,24 @@ class FFmpegMp4Packager(
 
         VegaLog.i(TAG, "Starting FFmpeg remux at ${startSeconds}s [audio: transcode aac 192k]")
 
+        val prematureEndWarning = AtomicBoolean(false)
         val failure = AtomicReference<String?>(null)
         val completion = CompletableFuture<Unit>()
         val session = FFmpegKit.executeWithArgumentsAsync(
             args.toTypedArray(),
             { completedSession ->
                 val returnCode = completedSession.returnCode
+                // FFmpeg can recover from an EOF warning while probing the MKV tail.
+                // Judge truncation after processing ends, never while bytes still flow.
+                if (ReturnCode.isSuccess(returnCode) && RemuxCompletionPolicy.endedEarly(
+                        prematureEndWarning.get(), (durationSeconds - startSeconds) * 1000.0,
+                        completedSession.lastReceivedStatistics?.time)) {
+                    failure.compareAndSet(null, "Video stream ended unexpectedly. Refresh the link or try another server.")
+                }
                 if (ReturnCode.isSuccess(returnCode) && failure.get() == null) {
                     VegaLog.i(TAG, "FFmpeg remux session completed successfully")
                 } else if (ReturnCode.isSuccess(returnCode)) {
-                    VegaLog.w(TAG, "FFmpeg ended after an upstream HTTP failure")
+                    VegaLog.w(TAG, "FFmpeg ended with a delivery failure: ${failure.get()}")
                 } else if (ReturnCode.isCancel(returnCode)) {
                     VegaLog.i(TAG, "FFmpeg remux session cancelled")
                 } else {
@@ -487,7 +495,7 @@ class FFmpegMp4Packager(
                         else "Video server denied access (HTTP 403). Refresh the link or try another server."
                     failure.set(message)
                 } else if (log.message.contains("File ended prematurely", ignoreCase = true)) {
-                    failure.compareAndSet(null, "Video stream ended unexpectedly. Refresh the link or try another server.")
+                    prematureEndWarning.set(true)
                 }
                 VegaLog.w(TAG, "[FFmpeg] ${log.message}")
             },

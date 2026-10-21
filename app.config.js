@@ -55,6 +55,8 @@ module.exports = () => {
     [
       'react-native-google-cast',
       {
+        // Avoid unreviewed SDK upgrades requiring a newer compileSdk/AGP/Kotlin.
+        androidPlayServicesCastFrameworkVersion: '22.3.1',
         expandedController: true,
       },
     ],

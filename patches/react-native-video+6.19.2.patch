@@ -2515,7 +2515,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                  allocator,
                  source.getBufferConfig()
          );
-@@ -731,9 +1008,21 @@
+@@ -731,9 +1008,27 @@
          }
  
          DefaultRenderersFactory renderersFactory =
@@ -2537,9 +2537,15 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
 +                            return candidates;
 +                        })
                          .forceEnableMediaCodecAsynchronousQueueing();
++        // Android 16 vendor codecs can invalidate asynchronously owned input buffers
++        // during flush/reconfiguration. Use the synchronous adapter on this OS;
++        // hardware decoding and the selected decoder stay unchanged.
++        if (android.os.Build.VERSION.SDK_INT >= 36) {
++            renderersFactory.forceDisableMediaCodecAsynchronousQueueing();
++        }
  
          DefaultMediaSourceFactory mediaSourceFactory;
-@@ -759,7 +1048,20 @@
+@@ -759,7 +1054,20 @@
          ReactNativeVideoManager.Companion.getInstance().onInstanceCreated(instanceId, player);
          refreshDebugState();
          player.addListener(self);
@@ -2561,7 +2567,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          exoPlayerView.setPlayer(player);
  
          audioBecomingNoisyReceiver.setListener(self);
-@@ -875,6 +1177,10 @@
+@@ -875,6 +1183,10 @@
                  Thread.currentThread().interrupt();
                  DebugLog.e(TAG, ex.toString());
              }
@@ -2572,7 +2578,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          }
  
          boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
-@@ -969,10 +1275,19 @@
+@@ -969,10 +1281,19 @@
          Intent intent = new Intent(themedReactContext, VideoPlaybackService.class);
          intent.setAction(MediaSessionService.SERVICE_INTERFACE);
  
@@ -2596,7 +2602,16 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          }
  
          int flags;
-@@ -1100,12 +1415,16 @@
+@@ -1089,6 +1410,7 @@
+                 mediaSourceFactory = new HlsMediaSource.Factory(
+                         dataSourceFactory
+-                ).setAllowChunklessPreparation(source.getTextTracksAllowChunklessPreparation());
++                ).setPlaylistParserFactory(new SafeHlsPlaylistParserFactory())
++                        .setAllowChunklessPreparation(source.getTextTracksAllowChunklessPreparation());
+                 break;
+             case CONTENT_TYPE_OTHER:
+                 if ("asset".equals(uri.getScheme())) {
+@@ -1100,12 +1422,16 @@
                      }
                  } else if ("file".equals(uri.getScheme()) ||
                          !useCache) {
@@ -2615,7 +2630,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      );
  
                  }
-@@ -1144,12 +1463,63 @@
+@@ -1144,12 +1470,63 @@
                  ? overridenMediaItemBuilder.build()
                  : mediaItemBuilder.build();
  
@@ -2680,7 +2695,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
  
          if (cropStartMs >= 0 && cropEndMs >= 0) {
              return new ClippingMediaSource(mediaSource, cropStartMs * 1000, cropEndMs * 1000);
-@@ -1160,6 +1530,109 @@
+@@ -1160,6 +1537,109 @@
          }
  
          return mediaSource;
@@ -2790,7 +2805,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      @Nullable
-@@ -1183,9 +1656,23 @@
+@@ -1183,9 +1663,23 @@
                      }
                  }
                  
@@ -2815,7 +2830,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          .setLabel(label)
                          .setRoleFlags(C.ROLE_FLAG_SUBTITLE);
                  
-@@ -1219,6 +1706,7 @@
+@@ -1219,6 +1713,7 @@
      }
  
      private void releasePlayer() {
@@ -2823,7 +2838,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (player != null) {
              if(playbackServiceBinder != null) {
                  playbackServiceBinder.getService().unregisterPlayer(player);
-@@ -1298,14 +1786,14 @@
+@@ -1298,14 +1793,14 @@
                      // Lower the volume
                      if (!view.muted) {
                          activity.runOnUiThread(() ->
@@ -2840,7 +2855,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          );
                      }
                  }
-@@ -1586,7 +2074,17 @@
+@@ -1586,7 +2081,17 @@
      }
  
      private ArrayList<VideoTrack> getVideoTrackInfo() {
@@ -2859,7 +2874,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (trackSelector == null) {
              // Likely player is unmounting so no video tracks are available anymore
              return videoTracks;
-@@ -1610,6 +2108,72 @@
+@@ -1610,6 +2115,72 @@
              }
          }
          return videoTracks;
@@ -2932,7 +2947,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      private ArrayList<VideoTrack> getVideoTrackInfoFromManifest() {
-@@ -1703,7 +2267,7 @@
+@@ -1703,7 +2274,7 @@
          }
          
          TrackSelectionArray selectionArray = player.getCurrentTrackSelections();
@@ -2941,7 +2956,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          TrackGroupArray groups = info.getTrackGroups(index);
  
          for (int groupIndex = 0; groupIndex < groups.length; ++groupIndex) {
-@@ -1861,6 +2425,9 @@
+@@ -1861,6 +2432,9 @@
  
      @Override
      public void onTracksChanged(@NonNull Tracks tracks) {
@@ -2951,7 +2966,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          DebugLog.d(TAG, "onTracksChanged called - updating track information, controls=" + controls);
          
          if (controls) {
-@@ -1889,6 +2456,13 @@
+@@ -1889,6 +2463,13 @@
          
          updateSubtitleButtonVisibility();
      }
@@ -2965,7 +2980,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      
      
      private boolean hasBuiltInTextTracks() {
-@@ -1950,10 +2524,62 @@
+@@ -1950,10 +2531,62 @@
          }
      }
  
@@ -3028,7 +3043,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          switch(e.errorCode) {
              case PlaybackException.ERROR_CODE_DRM_DEVICE_REVOKED:
              case PlaybackException.ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED:
-@@ -2031,6 +2657,9 @@
+@@ -2031,6 +2664,9 @@
      }
  
      public void onCues(CueGroup cueGroup) {
@@ -3038,7 +3053,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (!cueGroup.cues.isEmpty() && cueGroup.cues.get(0).text != null) {
              String subtitleText = cueGroup.cues.get(0).text.toString();
              eventEmitter.onTextTrackDataChanged.invoke(subtitleText);
-@@ -2061,6 +2690,8 @@
+@@ -2061,6 +2697,8 @@
              }
  
              if (!isSourceEqual) {
@@ -3047,7 +3062,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                  hasVideoEnded = false;
                  playerNeedsSource = true;
                  initializePlayer();
-@@ -2147,6 +2778,12 @@
+@@ -2147,6 +2785,12 @@
                      TrackGroupArray groups = info.getTrackGroups(textRendererIndex);
                      boolean trackFound = false;
                      
@@ -3060,7 +3075,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      for (int groupIndex = 0; groupIndex < groups.length; groupIndex++) {
                          TrackGroup group = groups.get(groupIndex);
                          for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
-@@ -2159,18 +2796,21 @@
+@@ -2159,18 +2803,21 @@
                                  isMatch = true;
                              } else if ("index".equals(type)) {
                                  int targetIndex = ReactBridgeUtils.safeParseInt(value, -1);
@@ -3083,7 +3098,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                          }
                          if (trackFound) break;
                      }
-@@ -2178,13 +2818,17 @@
+@@ -2178,13 +2825,17 @@
                      if (!trackFound) {
                          DebugLog.w(TAG, "Text track not found for type=" + type + ", value=" + value + 
                              ". Keeping current selection.");
@@ -3102,7 +3117,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
              
              // Give PlayerView time to update its controls
              mainHandler.postDelayed(() -> {
-@@ -2197,18 +2841,121 @@
+@@ -2197,18 +2848,121 @@
          }
      }
  
@@ -3227,7 +3242,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          MappingTrackSelector.MappedTrackInfo info = trackSelector.getCurrentMappedTrackInfo();
          if (info == null) {
              return;
-@@ -2317,6 +3064,15 @@
+@@ -2317,6 +3071,15 @@
              groupIndex = getGroupIndexForDefaultLocale(groups);
          }
  
@@ -3243,7 +3258,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          if (groupIndex == C.INDEX_UNSET && trackType == C.TRACK_TYPE_VIDEO && groups.length != 0) { // Video auto
              // Add all tracks as valid options for ABR to choose from
              TrackGroup group = groups.get(0);
-@@ -2359,7 +3115,7 @@
+@@ -2359,7 +3122,7 @@
              DefaultTrackSelector.Parameters.Builder selectionParameters = trackSelector.getParameters()
                      .buildUpon()
                      .setExceedAudioConstraintsIfNecessary(true)
@@ -3252,7 +3267,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
                      .setExceedVideoConstraintsIfNecessary(true)
                      .setRendererDisabled(rendererIndex, false);
  
-@@ -2429,10 +3185,225 @@
+@@ -2429,10 +3192,225 @@
          return groupIndex;
      }
  
@@ -3479,7 +3494,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      public void setSelectedAudioTrack(String type, String value) {
-@@ -2546,9 +3517,7 @@
+@@ -2546,9 +3524,7 @@
  
      public void setMutedModifier(boolean muted) {
          this.muted = muted;
@@ -3490,7 +3505,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
      }
  
      private void changeAudioOutput(AudioOutput output) {
-@@ -2577,9 +3546,14 @@
+@@ -2577,9 +3553,14 @@
      }
  
      public void setVolumeModifier(float volume) {
@@ -3507,7 +3522,7 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
          }
      }
  
-@@ -2587,6 +3561,51 @@
+@@ -2587,6 +3568,51 @@
          if (player != null) {
              player.seekTo(positionMs);
          }
@@ -3817,3 +3832,58 @@ diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatn
  
          const val NOTIFICATION_CHANEL_ID = "RNVIDEO_SESSION_NOTIFICATION"
  
+diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/SafeHlsPlaylistParserFactory.java b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/SafeHlsPlaylistParserFactory.java
+new file mode 100644
+--- /dev/null
++++ b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/SafeHlsPlaylistParserFactory.java
+@@ -0,0 +1,50 @@
++package com.brentvatne.exoplayer;
++
++import android.net.Uri;
++import androidx.annotation.Nullable;
++import androidx.media3.common.ParserException;
++import androidx.media3.exoplayer.hls.playlist.DefaultHlsPlaylistParserFactory;
++import androidx.media3.exoplayer.hls.playlist.HlsMediaPlaylist;
++import androidx.media3.exoplayer.hls.playlist.HlsMultivariantPlaylist;
++import androidx.media3.exoplayer.hls.playlist.HlsPlaylist;
++import androidx.media3.exoplayer.hls.playlist.HlsPlaylistParserFactory;
++import androidx.media3.exoplayer.upstream.ParsingLoadable;
++
++/** Prevent Media3's LL-HLS error handler from querying opaque playlist URIs. */
++public final class SafeHlsPlaylistParserFactory implements HlsPlaylistParserFactory {
++    private final HlsPlaylistParserFactory delegate = new DefaultHlsPlaylistParserFactory();
++
++    @Override
++    public ParsingLoadable.Parser<HlsPlaylist> createPlaylistParser() {
++        return guarded(delegate.createPlaylistParser());
++    }
++
++    @Override
++    public ParsingLoadable.Parser<HlsPlaylist> createPlaylistParser(
++            HlsMultivariantPlaylist master, @Nullable HlsMediaPlaylist previous) {
++        return guarded(delegate.createPlaylistParser(master, previous));
++    }
++
++    static ParsingLoadable.Parser<HlsPlaylist> guarded(ParsingLoadable.Parser<HlsPlaylist> parser) {
++        return (uri, input) -> {
++            // Check before parsing; a direct media playlist is otherwise promoted
++            // to a synthetic master referencing this same opaque URI.
++            requireHierarchical(uri);
++            HlsPlaylist playlist = parser.parse(uri, input);
++            if (playlist instanceof HlsMultivariantPlaylist) {
++                for (Uri url : ((HlsMultivariantPlaylist) playlist).mediaPlaylistUrls) {
++                    requireHierarchical(url);
++                }
++            }
++            return playlist;
++        };
++    }
++
++    private static void requireHierarchical(Uri uri) throws ParserException {
++        if (!uri.isHierarchical()) {
++            // Do not include data URIs or signed URLs in the error/log.
++            throw ParserException.createForMalformedManifest(
++                    "Unsupported opaque HLS playlist URI; try another server", null);
++        }
++    }
++}

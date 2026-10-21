@@ -136,3 +136,37 @@ it('tolerates one failed native query without latching through repeated failures
   expect(badgeCount(tree)).toBe(0);
   act(() => tree.unmount());
 });
+it.each([1, undefined])('explains vendor Dolby output when brightness ratio is %s', async headroom => {
+  query.mockResolvedValue({type: 'Dolby Vision', codec: 'video/dolby-vision', resolution: '3840 × 2160',
+    transfer: 'Dolby Vision', colorSpace: 'Managed by Dolby Vision decoder', headroom,
+    displayTypes: 'Dolby Vision', vendorDolbyPath: true});
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  act(() => tree.root.findByProps({accessibilityLabel: 'HDR playback details'}).props.onPress());
+  expect(JSON.stringify(tree.toJSON())).toContain('does not confirm its display headroom');
+  if (headroom === undefined) expect(JSON.stringify(tree.toJSON())).toContain('Not reported');
+  act(() => tree.unmount());
+});
+it.each(['HDR', 'HLG'])('keeps the %s badge with a reported ratio of one', async type => {
+  query.mockResolvedValue({...confirmedHdr, type, headroom: 1, headroomUnreported: true});
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} />);});
+  act(() => tree.root.findByProps({accessibilityLabel: 'HDR playback details'}).props.onPress());
+  expect(JSON.stringify(tree.toJSON())).toContain('does not measure the video');
+  expect(JSON.stringify(tree.toJSON())).not.toContain('Dolby Vision hardware output is active');
+  act(() => tree.unmount());
+});
+
+it.each(['HDR', 'HLG', 'Dolby Vision'])('scales the entire %s pill and its title inset proportionally', async type => {
+  query.mockResolvedValue({...confirmedHdr, type});
+  const inset = jest.fn();
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {tree = renderer.create(<HdrBadge {...props} onWidthChange={inset} />);});
+  const normal = tree.root.findByProps({accessibilityLabel: 'HDR playback details'}).props.style;
+  await act(async () => {tree.update(<HdrBadge {...props} scale={0.75} onWidthChange={inset} />);});
+  const small = tree.root.findByProps({accessibilityLabel: 'HDR playback details'}).props.style;
+  expect(small.width).toBeCloseTo(normal.width * 0.75);
+  expect(small.height).toBeCloseTo(normal.height * 0.75);
+  expect(inset).toHaveBeenLastCalledWith(small.width + 12 * 0.75);
+  act(() => tree.unmount());
+});

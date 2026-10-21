@@ -3336,7 +3336,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     fittedControlLayout.top.filter((id) =>
       toolbarControls.some((control) => control.id === id && control.visible),
     ).length *
-      (24 * controlStyle.scale + 24) +
+      (48 * controlStyle.scale) +
     20 + hdrWidth;
 
   // Ask for a local file before touching the network.

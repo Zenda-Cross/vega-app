@@ -86,7 +86,8 @@ export const Seekbar = ({
   return (
     <View
       style={{
-        marginBottom: 55 * controlScale,
+        // Bottom row retains a 44dp touch target when controls shrink.
+        marginBottom: 10 + Math.max(44, 44 * controlScale) + controlScale,
         paddingHorizontal: 12,
         flexDirection: 'row',
         justifyContent: 'center',

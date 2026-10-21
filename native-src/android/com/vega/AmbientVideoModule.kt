@@ -1,5 +1,6 @@
 package com.vega
 
+import com.brentvatne.exoplayer.ReactExoplayerView
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
@@ -67,6 +68,7 @@ class AmbientVideoModule(context: ReactApplicationContext) : ReactContextBaseJav
             } catch (_: Exception) { null } ?: readMaxCll(format.colorInfo?.hdrStaticInfo?.let { java.nio.ByteBuffer.wrap(it) })
             output = OutputColor(format, number(MediaFormat.KEY_COLOR_TRANSFER), number(MediaFormat.KEY_COLOR_STANDARD), maxCll)
         }
+        override fun onTracksChanged(tracks: androidx.media3.common.Tracks) { output = null }
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) { output = null }
         override fun onPlaybackStateChanged(state: Int) {
             if (state == Player.STATE_IDLE || state == Player.STATE_ENDED) output = null
@@ -92,6 +94,14 @@ class AmbientVideoModule(context: ReactApplicationContext) : ReactContextBaseJav
         return null
     }
 
+    private fun findVideoView(view: View?): ReactExoplayerView? {
+        if (view is ReactExoplayerView) return view
+        if (view is ViewGroup) for (i in 0 until view.childCount) {
+            findVideoView(view.getChildAt(i))?.let { return it }
+        }
+        return null
+    }
+
     @ReactMethod
     fun hdrStatus(reactTag: Int, promise: Promise) {
         UiThreadUtil.runOnUiThread {
@@ -108,54 +118,65 @@ class AmbientVideoModule(context: ReactApplicationContext) : ReactContextBaseJav
                         }
                     }
                 }
-                val output = observer?.output?.takeIf { it.format == format }
+                // Decoder frame formats may add color/range metadata. Whole-Format
+                // equality discards those valid callbacks (notably software AV1).
+                val output = observer?.output?.takeIf { frame ->
+                    format != null && HdrPlaybackPolicy.sameTrack(format.sampleMimeType, frame.format.sampleMimeType,
+                        format.width, frame.format.width, format.height, frame.format.height)
+                }
+                val counters = player?.videoDecoderCounters
+                counters?.ensureUpdated()
+                val rendered = output != null || (counters?.renderedOutputBufferCount ?: 0) > 0
                 val color = format?.colorInfo
-                val outputHdr = output?.transfer == C.COLOR_TRANSFER_ST2084 || output?.transfer == C.COLOR_TRANSFER_HLG
                 // Prefer the actual decoder output. Explicit SDR output overrides
                 // HDR input metadata (for example, decoder tone mapping).
                 val transfer = output?.transfer ?: color?.colorTransfer
                 val colorSpace = output?.space ?: color?.colorSpace
                 val display = playerView?.display
                 val surface = playerView?.videoSurfaceView
-                val diagnostic = "playing=${player?.isPlaying} mime=${format?.sampleMimeType} inputColor=$color outputTransfer=${output?.transfer} outputSpace=${output?.space} ratio=${if (Build.VERSION.SDK_INT >= 34) display?.hdrSdrRatio else null}"
+                val diagnostic = "playing=${player?.isPlaying} mime=${format?.sampleMimeType} inputColor=$color outputTransfer=${output?.transfer} outputSpace=${output?.space} frameSeen=${observer?.output != null} frameMatches=${output != null} rendered=$rendered ratio=${if (Build.VERSION.SDK_INT >= 34) display?.hdrSdrRatio else null}"
                 if (diagnostic != lastHdrDiagnostic) {
                     lastHdrDiagnostic = diagnostic
                     android.util.Log.d("VegaHDR", diagnostic)
                 }
-                // Only advertise HDR when Android confirms active HDR headroom.
-                // Older devices without this signal remain unbadged rather than guessed.
-                if (Build.VERSION.SDK_INT < 34 || display == null || !display.isHdrSdrRatioAvailable ||
-                    display.hdrSdrRatio <= 1.01f || surface !is SurfaceView || !surface.isShown ||
+                if (Build.VERSION.SDK_INT < 24 || display == null || surface !is SurfaceView || !surface.isShown ||
                     !surface.holder.surface.isValid || player?.playbackState != Player.STATE_READY || format == null) {
                     promise.resolve(null)
                     return@runOnUiThread
                 }
                 val supported = display.hdrCapabilities.supportedHdrTypes
                 val dolby = format.sampleMimeType == "video/dolby-vision"
+                val decoder = findVideoView(root)?.videoDecoderStatus
+                val decoderName = decoder?.getString("name").orEmpty()
+                val dolbyDecoderActive = HdrPlaybackPolicy.dolbyDecoderActive(
+                    dolby, supported.contains(1), decoderName,
+                    decoder?.getString("mode") == "hardware", rendered)
+                // Some Dolby hardware paths use vendor display signalling while
+                // reporting SDR color aspects and a framework brightness ratio of 1.
+                // Require rendered DV frames and the actual Dolby hardware decoder;
+                // the source MIME/display capability alone must never enable this.
+                val headroom = if (Build.VERSION.SDK_INT >= 34 && display.isHdrSdrRatioAvailable) display.hdrSdrRatio.toDouble() else null
+                if (!HdrPlaybackPolicy.hasHdrEvidence(output?.transfer ?: output?.format?.colorInfo?.colorTransfer,
+                        color?.colorTransfer, rendered, supported.isNotEmpty(), dolbyDecoderActive, headroom)) {
+                    promise.resolve(null)
+                    return@runOnUiThread
+                }
                 val pq = transfer == C.COLOR_TRANSFER_ST2084
                 val hlg = transfer == C.COLOR_TRANSFER_HLG
-                val explicitSdrOutput = output?.transfer != null && !outputHdr
-                val compatible = when {
-                    explicitSdrOutput && !dolby -> false
-                    dolby -> supported.contains(1)
-                    outputHdr -> supported.isNotEmpty()
-                    hlg -> supported.contains(3)
-                    pq -> supported.contains(2) || supported.contains(4)
-                    else -> false
-                }
-                if (!compatible) { promise.resolve(null); return@runOnUiThread }
                 promise.resolve(Arguments.createMap().apply {
-                    putString("type", if (dolby) "Dolby Vision" else if (hlg) "HLG" else "HDR")
+                    putString("type", if (dolbyDecoderActive) "Dolby Vision" else if (hlg) "HLG" else "HDR")
                     putString("codec", format.sampleMimeType ?: "Unknown")
-                    putString("resolution", "${format.width} × ${format.height}")
-                    putString("transfer", if (hlg) "HLG" else if (pq) "PQ (ST 2084)" else "Dolby Vision")
-                    putString("colorSpace", when (colorSpace) {
+                    putString("resolution", "${format.width} \u00d7 ${format.height}")
+                    putString("transfer", if (dolbyDecoderActive) "Dolby Vision" else if (hlg) "HLG" else if (pq) "PQ (ST 2084)" else "Not reported")
+                    putString("colorSpace", if (dolbyDecoderActive) "Managed by Dolby Vision decoder" else when (colorSpace) {
                         C.COLOR_SPACE_BT2020 -> "BT.2020"
                         C.COLOR_SPACE_BT709 -> "BT.709"
                         C.COLOR_SPACE_BT601 -> "BT.601"
                         else -> if (dolby) "Managed by Dolby Vision decoder" else "Not reported"
                     })
-                    putDouble("headroom", display.hdrSdrRatio.toDouble())
+                    headroom?.let { putDouble("headroom", it) }
+                    putBoolean("vendorDolbyPath", dolbyDecoderActive && (headroom == null || headroom <= 1.01))
+                    putBoolean("headroomUnreported", headroom == null || headroom <= 1.01)
                     val maxCll = if (output != null) output.maxCllNits else
                         readMaxCll(color?.hdrStaticInfo?.let { java.nio.ByteBuffer.wrap(it) })
                     maxCll?.let { putInt("maxCllNits", it) }
