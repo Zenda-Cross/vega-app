@@ -19,8 +19,9 @@ export {
   PLAYBACK_SPEED_MIN,
   PLAYBACK_SPEED_MAX,
   PLAYBACK_SPEED_STEP,
+  PLAYER_RESIZE_MODES,
 } from './SettingsStorage';
-export type {SettingsKeys} from './SettingsStorage';
+export type {SettingsKeys, PlayerResizeMode} from './SettingsStorage';
 
 // Export WatchListStorage
 export {
