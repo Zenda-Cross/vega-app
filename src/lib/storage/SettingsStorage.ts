@@ -49,6 +49,7 @@ export enum SettingsKeys {
   BACK_BUFFER_MB = 'backBufferMB',
   SEEK_INTERVAL = 'seekInterval',
   PLAYBACK_SPEED = 'playbackSpeed',
+  DEFAULT_RESIZE_MODE = 'defaultResizeMode',
   PLAYER_CONTROL_LAYOUT = 'playerControlLayout',
   PLAYER_CONTROL_STYLE = 'playerControlStyle',
   HIDDEN_PLAYER_CONTROLS = 'hiddenPlayerControls',
@@ -145,6 +146,19 @@ export const PLAYBACK_SPEED_MIN = 0.25;
 export const PLAYBACK_SPEED_MAX = 2;
 export const PLAYBACK_SPEED_STEP = 0.05;
 const DEFAULT_PLAYBACK_SPEED = 1.0;
+
+/** Video fit modes in the order the player button cycles through them. */
+export const PLAYER_RESIZE_MODES = [
+  {mode: 'none', label: 'Fit'},
+  {mode: 'cover', label: 'Cover'},
+  {mode: 'stretch', label: 'Stretch'},
+  {mode: 'contain', label: 'Contain'},
+] as const;
+export type PlayerResizeMode = (typeof PLAYER_RESIZE_MODES)[number]['mode'];
+const DEFAULT_RESIZE_MODE: PlayerResizeMode = 'none';
+
+const isPlayerResizeMode = (value: unknown): value is PlayerResizeMode =>
+  PLAYER_RESIZE_MODES.some(option => option.mode === value);
 
 const isAllowedPlaybackSpeed = (value: unknown): value is number =>
   typeof value === 'number' &&
@@ -572,6 +586,17 @@ export class SettingsStorage {
   setPlaybackSpeed(speed: number): void {
     if (isAllowedPlaybackSpeed(speed)) {
       mainStorage.setNumber(SettingsKeys.PLAYBACK_SPEED, speed);
+    }
+  }
+
+  getDefaultResizeMode(): PlayerResizeMode {
+    const value = mainStorage.getString(SettingsKeys.DEFAULT_RESIZE_MODE);
+    return isPlayerResizeMode(value) ? value : DEFAULT_RESIZE_MODE;
+  }
+
+  setDefaultResizeMode(mode: PlayerResizeMode): void {
+    if (isPlayerResizeMode(mode)) {
+      mainStorage.setString(SettingsKeys.DEFAULT_RESIZE_MODE, mode);
     }
   }
 

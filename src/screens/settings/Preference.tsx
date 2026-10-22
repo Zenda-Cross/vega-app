@@ -6,7 +6,11 @@ import {
   Platform,
 } from 'react-native';
 import React, {useState, useCallback} from 'react';
-import {settingsStorage, SEEK_INTERVAL_OPTIONS} from '../../lib/storage';
+import {
+  settingsStorage,
+  SEEK_INTERVAL_OPTIONS,
+  PLAYER_RESIZE_MODES,
+} from '../../lib/storage';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import Constants from 'expo-constants';
 import {setVideoIntentsEnabled, supportsVideoIntents} from '../../lib/services/videoIntent';
@@ -99,6 +103,10 @@ const Preferences = ({navigation}: any) => {
 
   const [seekInterval, setSeekInterval] = useState<number>(() =>
     settingsStorage.getSeekInterval(),
+  );
+
+  const [defaultResizeMode, setDefaultResizeMode] = useState(() =>
+    settingsStorage.getDefaultResizeMode(),
   );
 
   const [showEpisodeSidebar, setShowEpisodeSidebar] = useState<boolean>(() =>
@@ -434,6 +442,36 @@ const Preferences = ({navigation}: any) => {
                   onChange={option => {
                     settingsStorage.setSeekInterval(option);
                     setSeekInterval(option);
+                  }}
+                />
+              </View>
+            </View>
+            <View
+              className="px-4 py-3"
+              style={{
+                borderBottomColor: colors.outlineVariant,
+                borderBottomWidth: 1,
+              }}>
+              <AppText role="bodyLarge" style={{color: colors.onSurface}}>
+                Default video fit
+              </AppText>
+              <AppText
+                role="bodySmall"
+                style={{color: colors.onSurfaceVariant, marginTop: 3}}>
+                How videos fill the screen when playback starts
+              </AppText>
+              <View style={{width: '100%', minHeight: 56, marginTop: 12}}>
+                <DropdownField
+                  placeholder="Default video fit"
+                  options={PLAYER_RESIZE_MODES}
+                  value={PLAYER_RESIZE_MODES.find(
+                    option => option.mode === defaultResizeMode,
+                  )}
+                  getKey={option => option.mode}
+                  getLabel={option => option.label}
+                  onChange={option => {
+                    settingsStorage.setDefaultResizeMode(option.mode);
+                    setDefaultResizeMode(option.mode);
                   }}
                 />
               </View>
