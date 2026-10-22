@@ -21,6 +21,7 @@ import Video, {
   OnSeekData,
   ResizeMode,
   VideoRef,
+  ViewType,
 } from 'react-native-video';
 import {useControlTimeout, useJSAnimations, usePanResponders} from './hooks';
 import {
@@ -1028,28 +1029,26 @@ const AnimatedVideoPlayer = (
             source={source}
             onBuffer={onBuffer}
             onPictureInPictureStatusChanged={handlePipStatus}
-            // SurfaceView is rendered in a separate Android surface and does
-            // not follow React Native transforms. Pinch zoom therefore needs
-            // TextureView, which remains part of the normal view hierarchy.
-            useTextureView={
-              Platform.OS === 'android' ? true : props.useTextureView
-            }
+            // Preserve the native HDR/Dolby Vision output path.
+            useTextureView={Platform.OS === 'android' ? false : props.useTextureView}
+            viewType={Platform.OS === 'android' ? ViewType.SURFACE : props.viewType}
           />
           {Platform.OS === 'android' && ambientConfig.enabled && !ambientDisabled && !ambientPip && sourceUri && (
             <AmbientBackground key={String(sourceUri)} videoView={ambientView} bars={ambientBars}
               paused={_paused || playbackSuspended || loading || buffering} intensity={ambientConfig.intensity} spread={ambientConfig.spread} responseMs={ambientConfig.responseMs} />
           )}
         </Animated.View>
+        {!hideAllControlls && !disableOverlay && <Overlay animations={animations} />}
         {
           <>
             <Error error={error} />
             {!hideAllControlls && (
               <>
-                {!disableOverlay && <Overlay animations={animations} />}
                 <TopControls
                   title={title}
                   headerStatus={headerStatus}
                   headerRightInset={headerRightInset}
+                  controlAppearance={props.controlAppearance}
                   controlScale={controlScale}
                   panHandlers={volumePanResponder.panHandlers}
                   animations={animations}

@@ -1,9 +1,9 @@
+jest.mock('expo-blur', () => ({BlurView: 'BlurView'}));
 import React from 'react';
 import renderer, {act} from 'react-test-renderer';
 import {GestureDetector} from 'react-native-gesture-handler';
 import {TVFocusable} from '../src/components/tv';
 import PlayerControlEditor from '../src/components/PlayerControlEditor';
-import {StyleSlider} from '../src/components/PlayerControlStyleEditor';
 import {PlayerControl} from '../src/components/PlayerControlBar';
 import {
   defaultPlayerControlLayout,
@@ -105,7 +105,7 @@ const controls: PlayerControl[] = PLAYER_CONTROL_IDS.map(id => ({
   visible: true,
   onPress: jest.fn(),
 }));
-const makeEditor = () => {
+const makeEditor = (options: Partial<React.ComponentProps<typeof PlayerControlEditor>> = {}) => {
   const onSave = jest.fn();
   const onClose = jest.fn();
   const onHaptic = jest.fn();
@@ -119,6 +119,7 @@ const makeEditor = () => {
         onSave={onSave}
         onClose={onClose}
         onHaptic={onHaptic}
+        {...options}
       />,
     );
   });
@@ -136,180 +137,100 @@ beforeEach(() => {
   mockIsTV = false;
 });
 
-it('keeps subtitle changes as drafts until Save and supports TV adjustment', () => {
-  mockIsTV = true;
-  const {tree, press, onSave} = makeEditor();
-  press('Subtitles');
-  press('Increase Font size');
-  press('Increase Bottom elevation');
-  expect(onSave).not.toHaveBeenCalled();
-  expect(tree.root.findAllByType(StyleSlider).find(node => node.props.label === 'Font size')!.props.value).toBe(17);
-  press('Save');
-  expect(onSave.mock.calls[0][4]).toEqual({fontSize: 17, textOpacity: 1, opacity: 1, paddingBottom: 11});
-  act(() => tree.unmount());
-});
 
-it('discards subtitle drafts on Cancel', () => {
+it('does not save on opening or tab changes, and closes without a Save button', () => {
   const {tree, press, onSave, onClose} = makeEditor();
-  press('Subtitles');
-  act(() => tree.root.findAllByType(StyleSlider)[0].props.onChange(24));
-  press('Cancel');
+  press('Style'); press('Arrange');
   expect(onSave).not.toHaveBeenCalled();
+  expect(tree.root.findAllByProps({accessibilityLabel: 'Save'})).toHaveLength(0);
+  press('Close');
   expect(onClose).toHaveBeenCalledTimes(1);
   act(() => tree.unmount());
 });
 
-it('keeps eye toggles in the preview until Save and keeps hidden controls available to restore', () => {
+it('automatically saves subtitle adjustments without closing the dialog', () => {
+  mockIsTV = true;
   const {tree, press, onSave, onClose} = makeEditor();
+  press('Subtitles'); press('Increase Font size'); press('Increase Bottom elevation');
+  expect(onSave.mock.calls.at(-1)![4]).toEqual({fontSize: 17, textOpacity: 1, opacity: 1, paddingBottom: 11});
+  expect(onClose).not.toHaveBeenCalled();
+  act(() => tree.unmount());
+});
+
+it('automatically saves visibility and keeps hidden controls available to restore', () => {
+  const {tree, press, onSave} = makeEditor();
   act(() => tree.root.findAllByProps({accessibilityLabel: 'Move audio'})[0].props.onAccessibilityTap());
   press('Hide control');
-  expect(onSave).not.toHaveBeenCalled();
-  press('Save');
-  expect(onSave.mock.calls[0][1]).toEqual(['audio']);
-  expect(onSave.mock.calls[0][0].bottom).toContain('audio');
-  onSave.mockClear();
+  expect(onSave.mock.calls.at(-1)![1]).toEqual(['audio']);
+  expect(onSave.mock.calls.at(-1)![0].bottom).toContain('audio');
   press('Show control');
-  press('Cancel');
-  expect(onSave).not.toHaveBeenCalled();
-  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(onSave.mock.calls.at(-1)![1]).toEqual([]);
   act(() => tree.unmount());
 });
 
-it('keeps a drag alive across selection updates and applies a cross-bar drop only on Save', () => {
+it('keeps drag gestures stable and saves only the completed drop', () => {
   const {tree, press, onSave, onHaptic} = makeEditor();
-  const pan = () =>
-    tree.root
-      .findAllByType(GestureDetector)
-      .find(
-        node =>
-          node.findAllByProps({accessibilityLabel: 'Move audio'}).length > 0,
-      )!.props.gesture.pan;
+  const pan = () => tree.root.findAllByType(GestureDetector).find(node =>
+    node.findAllByProps({accessibilityLabel: 'Move audio'}).length > 0)!.props.gesture.pan;
   const gesture = pan();
   act(() => gesture.start({x: 10, y: 10, absoluteX: 10, absoluteY: 114}));
-  expect(onHaptic).toHaveBeenCalledTimes(1);
   expect(pan()).toBe(gesture);
   act(() => gesture.update({translationX: 150, translationY: -74}));
-  expect(onHaptic).toHaveBeenCalledTimes(1);
   expect(onSave).not.toHaveBeenCalled();
   act(() => gesture.end({absoluteX: 160, absoluteY: 40}));
-  expect(onHaptic).toHaveBeenCalledTimes(2);
   press('To top');
   expect(onHaptic).toHaveBeenCalledTimes(3);
-  expect(onSave).not.toHaveBeenCalled();
-  press('Save');
-  const saved = onSave.mock.calls[0][0];
-  expect(saved.top).toEqual(['sleep', 'lock', 'cast', 'decoder', 'audio']);
-  expect(saved.bottom).not.toContain('audio');
+  expect(onSave.mock.calls.at(-1)![0].top).toEqual(['sleep', 'lock', 'cast', 'decoder', 'audio']);
   act(() => tree.unmount());
 });
 
-it('moves controls to Settings and commits style changes only on Save', () => {
+it('saves style choices immediately and sliders when interaction finishes', () => {
   const {tree, press, onSave} = makeEditor();
-  act(() => tree.root.findAllByProps({accessibilityLabel: 'Move audio'})[0].props.onAccessibilityTap());
-  press('To menu');
-  press('Style');
-  press('Short');
-  press('Right');
+  press('Style'); press('Short'); press('Right');
+  expect(onSave.mock.calls.at(-1)![2]).toEqual(expect.objectContaining({labels: 'short', alignment: 'right'}));
+  onSave.mockClear();
   const opacity = tree.root.findAllByType('Slider' as any)[0];
   act(() => opacity.props.onValueChange(0.5));
   expect(onSave).not.toHaveBeenCalled();
   act(() => opacity.props.onValueChangeFinished());
-  expect(onSave).not.toHaveBeenCalled();
-  press('Arrange');
-  press('Save');
-  expect(onSave.mock.calls[0][0].more).toEqual(['audio']);
-  expect(onSave.mock.calls[0][2]).toEqual(expect.objectContaining({labels: 'short', alignment: 'right', backgroundOpacity: 0.5}));
-  onSave.mockClear();
-  press('Style');
-  press('Hidden');
-  press('Cancel');
-  expect(onSave).not.toHaveBeenCalled();
+  expect(onSave.mock.calls.at(-1)![2].backgroundOpacity).toBe(0.5);
   act(() => tree.unmount());
 });
 
-it('supports TV moves, rejects an overflowing top bar, and cancels without saving', () => {
+it('supports TV moves and does not save rejected moves into a full row', () => {
   mockIsTV = true;
-  const {tree, press, onSave, onClose} = makeEditor();
-  press('Move speed');
-  press('To top');
-  press('Move audio');
-  press('To top');
-  press('Move subtitle');
-  press('To top');
-  press('Save');
-  expect(onSave.mock.calls[0][0].top).toEqual([
-    'sleep',
-    'lock',
-    'cast',
-    'decoder',
-    'speed',
-  ]);
-  onSave.mockClear();
-  press('To bottom');
-  press('Cancel');
-  expect(onSave).not.toHaveBeenCalled();
-  expect(onClose).toHaveBeenCalledTimes(1);
-  act(() => tree.unmount());
-});
-
-
-it('keeps ambient edits as a draft until Save and discards them on Cancel', () => {
-  const platform = require('react-native').Platform;
-  const originalOS = platform.OS;
-  platform.OS = 'android';
   const {tree, press, onSave} = makeEditor();
-  press('Style');
-  press('Ambient lighting');
-  expect(onSave).not.toHaveBeenCalled();
-  press('Save');
-  expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
+  press('Move speed'); press('To top');
+  expect(onSave.mock.calls.at(-1)![0].top).toEqual(['sleep', 'lock', 'cast', 'decoder', 'speed']);
   onSave.mockClear();
-  press('Ambient lighting');
-  press('Cancel');
+  press('Move audio'); press('To top');
   expect(onSave).not.toHaveBeenCalled();
+  press('To menu');
+  expect(onSave.mock.calls.at(-1)![0].more).toEqual(['audio']);
   act(() => tree.unmount());
-  platform.OS = originalOS;
-  platform.OS = originalOS;
 });
 
-it('toggles ambient lighting directly with the phone switch and saves its value', () => {
+it.each([false, true])('automatically saves ambient lighting for TV=%s', tv => {
   const {Platform, Switch} = require('react-native');
   const originalOS = Platform.OS;
-  Platform.OS = 'android';
+  Platform.OS = 'android'; mockIsTV = tv;
   try {
     const {tree, press, onSave} = makeEditor();
     press('Style');
-    const toggle = () => tree.root.findByType(Switch);
-    expect(toggle().props.value).toBe(false);
-    expect(toggle().props.pointerEvents).toBe('auto');
-    act(() => toggle().props.onValueChange(true));
-    expect(toggle().props.value).toBe(true);
-    expect(onSave).not.toHaveBeenCalled();
-    press('Save');
-    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
-    act(() => toggle().props.onValueChange(false));
-    expect(toggle().props.value).toBe(false);
+    if (tv) press('Ambient lighting');
+    else act(() => tree.root.findAllByType(Switch).find(node => node.props.accessibilityLabel === 'Ambient lighting')!.props.onValueChange(true));
+    expect(onSave.mock.calls.at(-1)![3].enabled).toBe(true);
     act(() => tree.unmount());
-  } finally {
-    Platform.OS = originalOS;
-  }
+  } finally {Platform.OS = originalOS;}
 });
 
-it('toggles ambient lighting using the TV remote row', () => {
-  const {Platform, Switch} = require('react-native');
-  const originalOS = Platform.OS;
-  Platform.OS = 'android';
-  mockIsTV = true;
-  try {
-    const {tree, press, onSave} = makeEditor();
-    press('Style');
-    expect(tree.root.findByType(Switch).props.onValueChange).toBeUndefined();
-    press('Ambient lighting');
-    expect(tree.root.findByType(Switch).props.value).toBe(true);
-    press('Save');
-    expect(onSave.mock.calls[0][3]).toEqual({enabled: true, intensity: 0.35, spread: 1, responseMs: 220});
-    act(() => tree.unmount());
-  } finally {
-    Platform.OS = originalOS;
-  }
+it('automatically saves the title background toggle without closing', () => {
+  const {Switch} = require('react-native');
+  const {tree, press, onSave, onClose} = makeEditor();
+  press('Style');
+  act(() => tree.root.findAllByType(Switch).find(node =>
+    node.props.accessibilityLabel === 'Title background')!.props.onValueChange(true));
+  expect(onSave.mock.calls.at(-1)![2].titleBackground).toBe(true);
+  expect(onClose).not.toHaveBeenCalled();
+  act(() => tree.unmount());
 });

@@ -14,7 +14,10 @@ import useContentStore from './zustand/contentStore';
 import useThemeStore from './zustand/themeStore';
 import {createLibraryBackup, restoreLibraryBackup, validateLibraryBackup, type LibraryBackup} from './libraryBackup';
 
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
+
+export type BackupSelection = {settings: boolean; library: boolean; providers: boolean};
+const ALL_SECTIONS: BackupSelection = {settings: true, library: true, providers: true};
 
 type SettingType = 'bool' | 'string' | 'number' | 'array';
 
@@ -42,6 +45,14 @@ const BACKUP_SETTINGS: Record<string, SettingType> = {
   [SettingsKeys.SHOW_PLAYER_EPISODE_SIDEBAR]: 'bool',
   [SettingsKeys.AUTO_PLAY_NEXT_EPISODE]: 'bool',
   [SettingsKeys.SHOW_SLEEP_TIMER]: 'bool',
+  [SettingsKeys.AMBIENT_VIDEO]: 'bool',
+  [SettingsKeys.AMBIENT_INTENSITY]: 'number',
+  [SettingsKeys.AMBIENT_SPREAD]: 'number',
+  [SettingsKeys.AMBIENT_RESPONSE]: 'number',
+  [SettingsKeys.ENABLE_VOLUME_BOOST]: 'bool',
+  [SettingsKeys.PLAYER_CONTROL_LAYOUT]: 'string',
+  [SettingsKeys.PLAYER_CONTROL_STYLE]: 'string',
+  [SettingsKeys.HIDDEN_PLAYER_CONTROLS]: 'array',
   [SettingsKeys.ENABLE_2X_GESTURE]: 'bool',
   [SettingsKeys.ENABLE_SWIPE_GESTURE]: 'bool',
   [SettingsKeys.SEEK_INTERVAL]: 'number',
@@ -52,6 +63,7 @@ const BACKUP_SETTINGS: Record<string, SettingType> = {
   [SettingsKeys.EXCLUDED_QUALITIES]: 'array',
   [SettingsKeys.PROVIDER_ORDER]: 'array',
   [SettingsKeys.DOWNLOAD_CONCURRENCY]: 'number',
+  [SettingsKeys.AUTO_DOWNLOAD_SERVER_FALLBACK]: 'bool',
   [SettingsKeys.DOWNLOAD_CONNECTIONS]: 'number',
   [SettingsKeys.PARALLEL_STREAMING]: 'bool',
   [SettingsKeys.SUBTITLE_FONT_SIZE]: 'number',
@@ -88,8 +100,8 @@ export interface VegaBackup {
   app: 'vega';
   version: number;
   createdAt: string;
-  settings: Record<string, SettingValue>;
-  providers: {
+  settings?: Record<string, SettingValue>;
+  providers?: {
     installed: ProviderExtension[];
     sources: ProviderSource[];
     modules: ProviderModule[];
@@ -165,9 +177,14 @@ const isProviderSource = (value: unknown): value is ProviderSource =>
   typeof (value as ProviderSource)?.author === 'string' &&
   typeof (value as ProviderSource)?.url === 'string';
 
-export const createBackup = (): VegaBackup => {
+export function createBackup(): VegaBackup & {settings: Record<string, SettingValue>};
+export function createBackup(selection: BackupSelection): VegaBackup;
+export function createBackup(selection: BackupSelection = ALL_SECTIONS): VegaBackup {
+  if (!selection.settings && !selection.library && !selection.providers) {
+    throw new Error('Select at least one section to back up');
+  }
   const settings: Record<string, SettingValue> = {};
-  for (const [key, type] of Object.entries(BACKUP_SETTINGS)) {
+  if (selection.settings) for (const [key, type] of Object.entries(BACKUP_SETTINGS)) {
     // Only saved values are included so defaults stay defaults after restore.
     if (!mainStorage.hasKey(key)) {
       continue;
@@ -178,15 +195,15 @@ export const createBackup = (): VegaBackup => {
     }
   }
 
-  const selected = useContentStore.getState().provider;
+  const selected = selection.providers ? useContentStore.getState().provider : undefined;
 
   return {
-    library: createLibraryBackup(),
+    ...(selection.library ? {library: createLibraryBackup()} : {}),
     app: 'vega',
     version: BACKUP_VERSION,
     createdAt: new Date().toISOString(),
-    settings,
-    providers: {
+    ...(selection.settings ? {settings} : {}),
+    ...(selection.providers ? {providers: {
       installed:
         mainStorage.getArray<ProviderExtension>(
           ExtensionKeys.INSTALLED_PROVIDERS,
@@ -199,9 +216,9 @@ export const createBackup = (): VegaBackup => {
         [],
       disabled: mainStorage.getArray<string>(ProvidersKeys.DISABLED_PROVIDERS),
       selected: selected?.value ? selected : undefined,
-    },
+    }} : {}),
   };
-};
+}
 
 export const parseBackup = (text: string): VegaBackup => {
   let data: VegaBackup;
@@ -216,15 +233,17 @@ export const parseBackup = (text: string): VegaBackup => {
   if (data.version > BACKUP_VERSION) {
     throw new Error('This backup was made by a newer version of Vega');
   }
-  const {settings, providers} = data;
-  if (
-    !settings ||
-    typeof settings !== 'object' ||
-    Array.isArray(settings) ||
-    !Array.isArray(providers?.installed) ||
-    !Array.isArray(providers.sources) ||
-    !Array.isArray(providers.modules)
-  ) {
+  const {settings, providers, library} = data;
+  const settingsValid = settings !== undefined && settings !== null &&
+    typeof settings === 'object' && !Array.isArray(settings);
+  const providersValid = providers !== undefined && providers !== null &&
+    typeof providers === 'object' && !Array.isArray(providers) &&
+    Array.isArray(providers.installed) && Array.isArray(providers.sources) &&
+    Array.isArray(providers.modules);
+  if ((settings !== undefined && !settingsValid) ||
+    (providers !== undefined && !providersValid) ||
+    (data.version < 2 && (!settingsValid || !providersValid)) ||
+    (settings === undefined && providers === undefined && library === undefined)) {
     throw new Error('This backup file is incomplete');
   }
   validateLibraryBackup(data.library);
@@ -244,7 +263,7 @@ export const restoreBackup = (backup: VegaBackup): void => {
 
   // The theme store keeps its own persisted copy, so update it too. Do this
   // before selecting the provider so it cannot overwrite it (see #526).
-  useThemeStore.setState({
+  if (backup.settings !== undefined) useThemeStore.setState({
     primary: settingsStorage.getPrimaryColor(),
     isCustom: settingsStorage.isCustomTheme(),
     source: settingsStorage.getAccentSource(),
@@ -284,14 +303,15 @@ const getBackupFileName = () =>
  * Saves a single backup document without requesting access to its whole folder.
  * Returns false when the user cancels the picker.
  */
-export const exportBackup = async (): Promise<boolean> => {
+export const exportBackup = async (selection: BackupSelection = ALL_SECTIONS): Promise<boolean> => {
+  const contents = JSON.stringify(createBackup(selection), null, 2);
   if (Platform.OS === 'android') {
     if (!NativeModules.BackupExport?.save) {
       throw new Error('Please update the app to use the backup save dialog.');
     }
     return NativeModules.BackupExport.save(
       `${getBackupFileName()}.json`,
-      JSON.stringify(createBackup(), null, 2),
+      contents,
     );
   }
   const permission =
@@ -306,7 +326,7 @@ export const exportBackup = async (): Promise<boolean> => {
   );
   await FileSystem.StorageAccessFramework.writeAsStringAsync(
     fileUri,
-    JSON.stringify(createBackup(), null, 2),
+    contents,
   );
   return true;
 };

@@ -26,7 +26,7 @@ export default function PlayerSubtitleStyleEditor({value, color, onChange}: {
   return (
     <View>
       <Text style={{color: '#999', fontSize: 11}}>
-        Save to apply to this video and future playback. Uses the same settings as Subtitle settings.
+        Changes apply automatically to this video and future playback.
       </Text>
       <View style={{height: 110, marginTop: 12, backgroundColor: '#202020', borderRadius: 16, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden', paddingBottom: Math.min(value.paddingBottom + 8, 60)}}>
         <Text style={{fontSize: value.fontSize, color: `rgba(255,255,255,${value.textOpacity})`, backgroundColor: `rgba(0,0,0,${value.opacity})`, paddingHorizontal: 8, paddingVertical: 2}}>

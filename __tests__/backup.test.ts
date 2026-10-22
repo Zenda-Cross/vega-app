@@ -78,6 +78,48 @@ describe('backup', () => {
     jest.clearAllMocks();
   });
 
+  it.each([1, 2, 3, 4, 5, 6, 7])('exports only selected sections for selection %i', mask => {
+    const selection = {settings: Boolean(mask & 1), library: Boolean(mask & 2), providers: Boolean(mask & 4)};
+    mockValues.set('hapticFeedback', false);
+    const backup = parseBackup(JSON.stringify(createBackup(selection)));
+    expect(Object.prototype.hasOwnProperty.call(backup, 'settings')).toBe(selection.settings);
+    expect(Object.prototype.hasOwnProperty.call(backup, 'library')).toBe(selection.library);
+    expect(Object.prototype.hasOwnProperty.call(backup, 'providers')).toBe(selection.providers);
+
+    mockValues.clear();
+    mockValues.set('hapticFeedback', true);
+    mockValues.set('installedProviders', [provider]);
+    mockValues.set('providerSources', [{author: 'mine', url: 'https://example.com/mine'}]);
+    mockValues.set('watchlist', ['existing library']);
+    mockSetThemeState.mockClear();
+    mockSetLibraryState.mockClear();
+    mockContentState.setInstalledProviders.mockClear();
+    restoreBackup(backup);
+    expect(mockValues.get('hapticFeedback')).toBe(!selection.settings);
+    expect(mockSetThemeState).toHaveBeenCalledTimes(selection.settings ? 1 : 0);
+    expect(mockSetLibraryState).toHaveBeenCalledTimes(selection.library ? 1 : 0);
+    expect(mockContentState.setInstalledProviders).toHaveBeenCalledTimes(selection.providers ? 1 : 0);
+    if (!selection.providers) {
+      expect(mockValues.get('installedProviders')).toEqual([provider]);
+      expect(mockValues.get('providerSources')).toEqual([{author: 'mine', url: 'https://example.com/mine'}]);
+    }
+    if (!selection.library) expect(mockValues.get('watchlist')).toEqual(['existing library']);
+  });
+
+  it('rejects an empty selection and malformed optional sections', () => {
+    expect(() => createBackup({settings: false, library: false, providers: false})).toThrow('Select at least one');
+    const header = {app: 'vega', version: BACKUP_VERSION, createdAt: ''};
+    for (const sections of [{}, {settings: null}, {providers: {}}, {settings: {}, providers: null}]) {
+      expect(() => parseBackup(JSON.stringify({...header, ...sections}))).toThrow('incomplete');
+    }
+  });
+
+  it('still accepts version 1 full backups', () => {
+    const backup = createBackup();
+    backup.version = 1;
+    expect(parseBackup(JSON.stringify(backup)).version).toBe(1);
+  });
+
   it('includes only saved settings and skips device specific ones', () => {
     mockValues.set('hapticFeedback', false);
     mockValues.set('useExternalPlayer', true);
@@ -114,6 +156,27 @@ describe('backup', () => {
       alwaysCastMode: true,
       askLocalFileFirst: true,
     });
+  });
+
+  it('round trips player appearance, arrangement, ambient and download preferences', () => {
+    const saved = {
+      playerControlStyle: JSON.stringify({backgroundOpacity: 0.3,
+        titleBackground: true, scale: 1.2, seekbarScale: 1.5}),
+      playerControlLayout: JSON.stringify({top: ['settings'], bottom: ['audio', 'subtitle']}),
+      hiddenPlayerControls: ['speed', 'pip'],
+      ambientVideo: true,
+      ambientIntensity: 0.45,
+      ambientSpread: 1.25,
+      ambientResponseMs: 120,
+      enableVolumeBoost: false,
+      autoDownloadServerFallback: false,
+    };
+    Object.entries(saved).forEach(([key, value]) => mockValues.set(key, value));
+    const backup = parseBackup(JSON.stringify(createBackup()));
+    expect(backup.settings).toEqual(saved);
+    mockValues.clear();
+    restoreBackup(backup);
+    Object.entries(saved).forEach(([key, value]) => expect(mockValues.get(key)).toEqual(value));
   });
 
   it('restores settings, providers and the selected provider', () => {

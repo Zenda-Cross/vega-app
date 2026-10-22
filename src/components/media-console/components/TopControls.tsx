@@ -1,3 +1,4 @@
+import type {PlayerControlStyle} from '../../../lib/player/controlStyle';
 import React, {memo} from 'react';
 import {
   // ImageBackground,
@@ -18,6 +19,7 @@ interface TopControlProps {
   headerStatus?: string;
   headerRightInset?: number;
   controlScale?: number;
+  controlAppearance?: PlayerControlStyle;
   showControls: boolean;
   panHandlers: GestureResponderHandlers;
   animations: VideoAnimations;
@@ -36,6 +38,7 @@ export const TopControls = memo(
     headerStatus,
     headerRightInset = 0,
     controlScale = 1,
+    controlAppearance,
     showControls,
     panHandlers,
     animations: {AnimatedView, controlsOpacity, topControl},
@@ -69,14 +72,23 @@ export const TopControls = memo(
       />
     );
 
+    const titleBackground = controlAppearance?.titleBackground;
     return (
       <AnimatedView
         pointerEvents={showControls ? 'box-none' : 'none'}
         style={[_styles.top, controlsOpacity, topControl]}>
         <SafeAreaView style={_styles.topControlGroup}>
           <View style={[_styles.sideControl, {marginRight: Math.max(0, headerRightInset - 48)}]}>
-            {backControl}
-            <Title {...title} status={headerStatus} scale={controlScale} />
+            <View collapsable={false} testID="player-title-background" style={[
+              {flexDirection: 'row', alignItems: 'flex-start', flexShrink: 1, maxWidth: '100%'},
+              titleBackground && {
+                borderRadius: 28 * controlScale, overflow: 'hidden', paddingLeft: 12 * controlScale, paddingRight: 28 * controlScale,
+                backgroundColor: `rgba(0,0,0,${controlAppearance.backgroundOpacity})`,
+              },
+            ]}>
+              {backControl}
+              <Title {...title} status={headerStatus} scale={controlScale} />
+            </View>
           </View>
           <View style={_styles.pullRight}>{volumeControl}</View>
         </SafeAreaView>
@@ -102,13 +114,13 @@ const _styles = StyleSheet.create({
     justifyContent: 'space-between',
     flexDirection: 'row',
     margin: 12,
-    marginTop: 4,
+    marginTop: 12,
     marginBottom: 18,
   },
   sideControl: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
 });

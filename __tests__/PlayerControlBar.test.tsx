@@ -1,11 +1,11 @@
 import React from 'react';
 import renderer, {act} from 'react-test-renderer';
-import {ScrollView, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import type {PlayerControlId} from '../src/lib/player/controlLayout';
 import PlayerControlBar, {
   PlayerControl,
 } from '../src/components/PlayerControlBar';
-import {defaultPlayerControlStyle} from '../src/lib/player/controlStyle';
+import {normalizePlayerControlStyle, defaultPlayerControlStyle} from '../src/lib/player/controlStyle';
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('@expo/vector-icons/MaterialIcons', () => 'Icon');
@@ -135,7 +135,11 @@ it('supports short and hidden labels, all alignments, scaling and a transparent 
   expect(tree.root.findByType(Text).props.style.fontSize).toBeCloseTo(14.4);
   expect(StyleSheet.flatten(tree.root.findByType(ScrollView).props.style).backgroundColor).toBeUndefined();
   const rowStyle = () => StyleSheet.flatten(tree.root.findByProps({testID: 'player-control-row'}).props.style);
-  expect(rowStyle().backgroundColor).toBe('rgba(0,0,0,0.5)');
+  const viewport = tree.root.findByProps({testID: 'player-control-row-background'});
+  expect(StyleSheet.flatten(viewport.props.style)).toEqual(expect.objectContaining({
+    backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'hidden', borderRadius: 33.6,
+  }));
+  expect(rowStyle().backgroundColor).toBeUndefined();
   expect(rowStyle().flexGrow).toBe(0);
   expect(rowStyle().width).toBeUndefined();
   expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('flex-start');
@@ -146,5 +150,17 @@ it('supports short and hidden labels, all alignments, scaling and a transparent 
   act(() => tree.update(render('hidden', 'center')));
   expect(tree.root.findAllByType(Text)).toHaveLength(0);
   expect(tree.root.findByType(ScrollView).props.contentContainerStyle.justifyContent).toBe('center');
+  act(() => tree.unmount());
+});
+
+
+it('ignores obsolete saved blur settings and keeps the chosen tint', () => {
+  const appearance = normalizePlayerControlStyle({backgroundBlur: 100, backgroundOpacity: 0.4});
+  expect(appearance).not.toHaveProperty('backgroundBlur');
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {tree = renderer.create(<PlayerControlBar ids={['speed']} controls={controls}
+    onEdit={() => {}} getTVFocusProps={() => ({})} appearance={appearance} />);});
+  const viewport = tree.root.findByProps({testID: 'player-control-row-background'});
+  expect(StyleSheet.flatten(viewport.props.style).backgroundColor).toBe('rgba(0,0,0,0.4)');
   act(() => tree.unmount());
 });

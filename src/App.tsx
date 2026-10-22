@@ -34,6 +34,8 @@ import BootSplash from 'react-native-bootsplash';
 import {SystemBars} from 'react-native-edge-to-edge';
 import {enableFreeze, enableScreens} from 'react-native-screens';
 import Preferences from './screens/settings/Preference';
+import PlayerSettings from './screens/settings/PlayerSettings';
+import PlayerControlSettings from './screens/settings/PlayerControlSettings';
 import Appearance from './screens/settings/Appearance';
 import {M3ThemeProvider} from './theme/M3ThemeProvider';
 import {AppState, LogBox, useWindowDimensions} from 'react-native';
@@ -159,6 +161,8 @@ export type SettingsStackParamList = {
   DisableProviders: undefined;
   About: undefined;
   Preferences: undefined;
+  PlayerSettings: undefined;
+  PlayerControlSettings: undefined;
   SubTitlesPreferences: undefined;
   Extensions: {addSource?: string; requestId?: number} | undefined;
   DownloadsStack: undefined;
@@ -436,6 +440,8 @@ function SettingsStackScreen() {
         component={About}
         options={subpageOptions}
       />
+      <SettingsStack.Screen name="PlayerSettings" component={PlayerSettings} options={subpageOptions} />
+      <SettingsStack.Screen name="PlayerControlSettings" component={PlayerControlSettings} options={subpageOptions} />
       <SettingsStack.Screen
         name="Preferences"
         component={Preferences}

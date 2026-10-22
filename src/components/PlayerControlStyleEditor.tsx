@@ -258,6 +258,27 @@ export default function PlayerControlStyleEditor({
         color={color}
         onChange={backgroundOpacity => onChange({...value, backgroundOpacity})}
       />
+      <TVFocusable registerScreenFocus={false} accessibilityRole="switch"
+        accessibilityLabel="Title background"
+        accessibilityState={{checked: value.titleBackground}}
+        onPress={() => onChange({...value, titleBackground: !value.titleBackground})}
+        borderRadius={18}
+        style={{marginTop: 12, padding: 12, borderRadius: 18, backgroundColor: '#292929',
+          flexDirection: 'row', alignItems: 'center', gap: 12}}>
+        <View style={{flex: 1}}>
+          <Text style={{color: '#bbb', fontSize: 12}}>Title background</Text>
+          <Text style={{color: '#999', fontSize: 11, marginTop: 4}}>
+            Use the same rounded background as the control rows
+          </Text>
+        </View>
+        <Switch value={value.titleBackground} focusable={false}
+          pointerEvents={isTV ? 'none' : 'auto'}
+          importantForAccessibility={isTV ? 'no' : 'auto'} accessibilityElementsHidden={isTV}
+          accessibilityLabel="Title background"
+          onValueChange={isTV ? undefined : titleBackground => onChange({...value, titleBackground})}
+          thumbColor={value.titleBackground ? '#fff' : '#bbb'}
+          trackColor={{false: '#555', true: color}} />
+      </TVFocusable>
       <StyleSlider
         label="Seekbar height · track, knob and markers"
         value={value.seekbarScale}

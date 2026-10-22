@@ -131,8 +131,10 @@ const isValidConnectionCount = (value: number | undefined): value is number =>
   (value as number) >= MIN_DOWNLOAD_CONNECTIONS &&
   (value as number) <= MAX_DOWNLOAD_CONNECTIONS;
 
-/** Seek step choices in seconds; 85 skips a typical anime opening. */
-export const SEEK_INTERVAL_OPTIONS = [5, 10, 15, 30, 60, 85] as const;
+/** Seek steps in seconds, from 5 to 90 in increments of 5. */
+export const SEEK_INTERVAL_OPTIONS = [
+  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90,
+] as const;
 const DEFAULT_SEEK_INTERVAL = 10;
 
 const isValidSeekInterval = (value: number | undefined): value is number =>
@@ -552,7 +554,7 @@ export class SettingsStorage {
     const hidden = new Set<PlayerControlId>((Array.isArray(saved) ? saved : []).filter(id =>
       PLAYER_CONTROL_IDS.includes(id as PlayerControlId) && id !== 'sleep' && id !== 'episodes',
     ) as PlayerControlId[]);
-    // These controls already have Preferences switches; keep those keys authoritative.
+    // Preserve the legacy visibility keys used by existing backups and Arrange.
     if (!this.showSleepTimer()) hidden.add('sleep');
     if (!this.showPlayerEpisodeSidebar()) hidden.add('episodes');
     return [...hidden];

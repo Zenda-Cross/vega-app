@@ -85,7 +85,7 @@ describe('settings defaults', () => {
   });
 
   it('saves every allowed seek interval', () => {
-    for (const seconds of [5, 10, 15, 30, 60, 85]) {
+    for (let seconds = 5; seconds <= 90; seconds += 5) {
       settingsStorage.setSeekInterval(seconds);
       expect(settingsStorage.getSeekInterval()).toBe(seconds);
       expect(mockNumberValues.get(SettingsKeys.SEEK_INTERVAL)).toBe(seconds);
@@ -138,8 +138,8 @@ describe('settings defaults', () => {
 
   it('persists player styling, validates saved values, and defaults corrupt JSON', () => {
     const defaults = settingsStorage.getPlayerControlStyle();
-    expect(defaults).toEqual({labels: 'full', alignment: 'distributed', scale: 1, backgroundOpacity: 0, seekbarScale: 1});
-    const style = {...defaults, labels: 'hidden' as const, alignment: 'right' as const, scale: 1.2, backgroundOpacity: 0.4, seekbarScale: 1.5};
+    expect(defaults).toEqual({labels: 'full', alignment: 'distributed', scale: 1, backgroundOpacity: 0, titleBackground: false, seekbarScale: 1});
+    const style = {...defaults, titleBackground: true, labels: 'hidden' as const, alignment: 'right' as const, scale: 1.2, backgroundOpacity: 0.4, seekbarScale: 1.5};
     settingsStorage.setPlayerControlStyle(style);
     expect(settingsStorage.getPlayerControlStyle()).toEqual(style);
     mockStringValues.set(SettingsKeys.PLAYER_CONTROL_STYLE, JSON.stringify({labels: 'bad', alignment: 'bad', scale: 100, backgroundOpacity: -1, seekbarScale: 999}));

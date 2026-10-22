@@ -131,50 +131,54 @@ export default function PlayerControlBar({
   });
   const backgroundStyle = {
     backgroundColor: `rgba(0,0,0,${appearance.backgroundOpacity})`,
+    overflow: 'hidden' as const,
     borderRadius: 28 * appearance.scale,
   };
   if (top)
     return (
-      <View style={[{flexDirection: 'row', gap: 8 * appearance.scale}, backgroundStyle]}>
+      <View collapsable={false} style={[{flexDirection: 'row', gap: 8 * appearance.scale}, backgroundStyle]}>
         {children}
       </View>
     );
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-      style={{width: '100%'}}
-      contentContainerStyle={{
-        alignItems: 'center',
-        justifyContent:
-          appearance.alignment === 'left'
-            ? 'flex-start'
-            : appearance.alignment === 'right'
-              ? 'flex-end'
-              : appearance.alignment === 'center' || visible.length === 1
-                ? 'center'
-                : 'space-between',
-        flexGrow: 1,
-        minWidth: '100%',
-      }}>
-      <View
-        testID="player-control-row"
-        style={[
-          backgroundStyle,
-          {
-            flexDirection: 'row',
-            alignItems: 'center',
-            flexShrink: 0,
-            flexGrow: appearance.alignment === 'distributed' ? 1 : 0,
-            justifyContent: visible.length === 1 ? 'center' : 'space-between',
-            columnGap: 20 * appearance.scale,
-            paddingHorizontal: BOTTOM_EDGE_PADDING,
-          },
-        ]}>
-        {children}
-      </View>
-    </ScrollView>
+    <View
+      testID="player-control-row-background"
+      style={[backgroundStyle, {width: '100%', overflow: 'hidden'}]}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        style={{width: '100%'}}
+        contentContainerStyle={{
+          alignItems: 'center',
+          justifyContent:
+            appearance.alignment === 'left'
+              ? 'flex-start'
+              : appearance.alignment === 'right'
+                ? 'flex-end'
+                : appearance.alignment === 'center' || visible.length === 1
+                  ? 'center'
+                  : 'space-between',
+          flexGrow: 1,
+          minWidth: '100%',
+        }}>
+        <View
+          testID="player-control-row"
+          style={[
+            {
+              flexDirection: 'row',
+              alignItems: 'center',
+              flexShrink: 0,
+              flexGrow: appearance.alignment === 'distributed' ? 1 : 0,
+              justifyContent: visible.length === 1 ? 'center' : 'space-between',
+              columnGap: 20 * appearance.scale,
+              paddingHorizontal: BOTTOM_EDGE_PADDING,
+            },
+          ]}>
+          {children}
+        </View>
+      </ScrollView>
+    </View>
   );
 }

@@ -1,3 +1,4 @@
+import BackupExportDialog from '../../components/BackupExportDialog';
 import ScreenSafeArea from '../../components/ui/ScreenSafeArea';
 import {
   DevSettings,
@@ -133,7 +134,7 @@ import AppText from '../../components/ui/Text';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import {showAppDialog} from '../../lib/zustand/appDialogStore';
 import {clearAppCache} from '../../lib/clearAppCache';
-import {exportBackup, pickBackup, restoreBackup} from '../../lib/backup';
+import {exportBackup, pickBackup, restoreBackup, type BackupSelection} from '../../lib/backup';
 import {TVFocusable, TVFocusGuide} from '../../components/tv';
 import {isTV} from '../../lib/tv';
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
@@ -146,6 +147,7 @@ const AnimatedSection = ({
 }) => <View>{children}</View>;
 
 const Settings = ({navigation}: Props) => {
+  const [backupOptionsVisible, setBackupOptionsVisible] = React.useState(false);
   const providerManagerRowRef = React.useRef<View>(null);
   const tabNavigation =
     useNavigation<NativeStackNavigationProp<TabStackParamList>>();
@@ -240,9 +242,10 @@ const Settings = ({navigation}: Props) => {
     await reloadApp('All MMKV storage erased');
   }, [reloadApp]);
 
-  const exportBackupHandler = useCallback(async () => {
+  const exportBackupHandler = useCallback(async (selection: BackupSelection) => {
+    setBackupOptionsVisible(false);
     try {
-      if (await exportBackup()) {
+      if (await exportBackup(selection)) {
         ToastAndroid.show('Backup saved', ToastAndroid.SHORT);
       }
     } catch (error) {
@@ -260,7 +263,7 @@ const Settings = ({navigation}: Props) => {
       showAppDialog({
         title: 'Restore backup?',
         message:
-          'This replaces your settings and installed providers, and your library if included in the backup. Vega will restart after restoring.',
+          `This restores ${[backup.settings !== undefined && 'settings', backup.library !== undefined && 'library', backup.providers !== undefined && 'providers'].filter(Boolean).join(', ')}. Sections absent from the backup stay unchanged. Vega will restart after restoring.`,
         actions: [
           {label: 'Cancel'},
           {
@@ -413,9 +416,9 @@ const Settings = ({navigation}: Props) => {
                   onPress={() => navigation.navigate('Appearance')}
                 />
                 <SettingsRow
-                  title="Subtitle Style"
-                  icon="subtitles-outline"
-                  onPress={() => navigation.navigate('SubTitlesPreferences')}
+                  title="Player settings"
+                  icon="play-circle-outline"
+                  onPress={() => navigation.navigate('PlayerSettings')}
                 />
                 {hideDownloadsTab && (
                   <SettingsRow
@@ -446,7 +449,7 @@ const Settings = ({navigation}: Props) => {
                   title="Export backup"
                   description="Save settings, providers and library to a file"
                   icon="content-save-outline"
-                  onPress={exportBackupHandler}
+                  onPress={() => setBackupOptionsVisible(true)}
                 />
                 <SettingsRow
                   title="Import backup"
@@ -478,6 +481,8 @@ const Settings = ({navigation}: Props) => {
           </View>
         </ScrollContainer>
       </TVFocusGuide>
+      {backupOptionsVisible && <BackupExportDialog
+        onClose={() => setBackupOptionsVisible(false)} onExport={exportBackupHandler} />}
     </ScreenSafeArea>
   );
 };

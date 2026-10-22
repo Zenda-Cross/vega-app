@@ -533,12 +533,13 @@ index 0000000..245a32c
 +}
 diff --git a/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/CustomSubtitleOverlayView.kt b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/CustomSubtitleOverlayView.kt
 new file mode 100644
-index 0000000..2451a2d
 --- /dev/null
 +++ b/node_modules/react-native-video/android/src/main/java/com/brentvatne/exoplayer/CustomSubtitleOverlayView.kt
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,357 @@
 +package com.brentvatne.exoplayer
 +
++import android.animation.ValueAnimator
++import android.view.animation.DecelerateInterpolator
 +import android.content.Context
 +import android.graphics.Bitmap
 +import android.graphics.Canvas
@@ -569,6 +570,9 @@ index 0000000..2451a2d
 +
 +    private var cues: List<Cue> = emptyList()
 +    private var style = SubtitleStyle()
++    private var animatedBottomPadding = 0f
++    private var paddingAnimator: ValueAnimator? = null
++    private var hasStyle = false
 +
 +    private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
 +        isSubpixelText = true
@@ -588,8 +592,33 @@ index 0000000..2451a2d
 +    }
 +
 +    fun setStyle(newStyle: SubtitleStyle) {
++        val targetPadding = newStyle.paddingBottom.toFloat()
++        val paddingChanged = style.paddingBottom != newStyle.paddingBottom
 +        this.style = newStyle
++        if (!hasStyle || !isAttachedToWindow) {
++            paddingAnimator?.cancel()
++            animatedBottomPadding = targetPadding
++        } else if (paddingChanged) {
++            paddingAnimator?.cancel()
++            paddingAnimator = ValueAnimator.ofFloat(animatedBottomPadding, targetPadding).apply {
++                duration = 350L
++                interpolator = DecelerateInterpolator()
++                addUpdateListener {
++                    animatedBottomPadding = it.animatedValue as Float
++                    invalidate()
++                }
++                start()
++            }
++        }
++        hasStyle = true
 +        postInvalidate()
++    }
++
++    override fun onDetachedFromWindow() {
++        paddingAnimator?.cancel()
++        paddingAnimator = null
++        animatedBottomPadding = style.paddingBottom.toFloat()
++        super.onDetachedFromWindow()
 +    }
 +
 +    private fun createEdgeText(source: CharSequence): CharSequence {
@@ -703,7 +732,7 @@ index 0000000..2451a2d
 +        val bgAlpha = if (style.opacity in 0.0f..1.0f) (style.opacity * 255).toInt() else 0
 +        val edgeType = style.edgeType ?: "outline"
 +        val outlineWidthPx = style.outlineWidth.toFloat() * density
-+        val bottomPaddingPx = style.paddingBottom.toFloat() * density
++        val bottomPaddingPx = animatedBottomPadding * density
 +
 +        val contentFrame = (parent as? ViewGroup)?.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame)
 +        val hasFrame = contentFrame != null && contentFrame.width > 0 && contentFrame.height > 0

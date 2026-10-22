@@ -1,3 +1,4 @@
+import type {PlayerControlStyle} from '../../lib/player/controlStyle';
 import type {RefObject} from 'react';
 import type {View, ViewStyle, StyleProp, Animated} from 'react-native';
 import type Reanimated from 'react-native-reanimated';
@@ -88,6 +89,7 @@ export interface VideoPlayerProps extends ReactVideoProps {
   /** Space reserved for the app's configurable top-right toolbar. */
   headerRightInset?: number;
   controlScale?: number;
+  controlAppearance?: PlayerControlStyle;
   ambientVideoSize?: {width: number; height: number} | null;
   ambientDisabled?: boolean;
   nativeVideoViewRef?: RefObject<View | null>;

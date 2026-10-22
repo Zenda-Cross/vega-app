@@ -2,6 +2,7 @@ export type PlayerControlStyle = {
   labels: 'full' | 'short' | 'hidden';
   alignment: 'distributed' | 'center' | 'left' | 'right';
   backgroundOpacity: number;
+  titleBackground: boolean;
   seekbarScale: number;
   scale: number;
 };
@@ -9,6 +10,7 @@ export const defaultPlayerControlStyle = (): PlayerControlStyle => ({
   labels: 'full',
   alignment: 'distributed',
   backgroundOpacity: 0,
+  titleBackground: false,
   seekbarScale: 1,
   scale: 1,
 });
@@ -32,6 +34,7 @@ export function normalizePlayerControlStyle(
       ? saved.alignment!
       : defaults.alignment,
     backgroundOpacity: clamp(saved.backgroundOpacity, 0, 1, 0),
+    titleBackground: saved.titleBackground === true,
     seekbarScale: clamp(saved.seekbarScale, 0.75, 2, 1),
     scale: clamp(saved.scale, 0.75, 1.4, 1),
   };

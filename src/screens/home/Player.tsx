@@ -1524,6 +1524,7 @@ const Player = ({route}: Props): React.JSX.Element => {
   // Sync fixes for the current video. Each source can be off by a different
   // amount, so both reset when the stream changes.
   const [subtitleStyle, setSubtitleStyle] = useState(readSubtitleStyle);
+  const [bottomControlHeight, setBottomControlHeight] = useState(44);
   useFocusEffect(useCallback(() => {
     const nextStyle = readSubtitleStyle();
     setSubtitleStyle(previous =>
@@ -3179,9 +3180,8 @@ const Player = ({route}: Props): React.JSX.Element => {
       setControlLayout(layout);
       settingsStorage.setPlayerControlStyle(appearance);
       setControlStyle(appearance);
-      closeControlEditor();
     },
-    [closeControlEditor],
+    [],
   );
   const openToolbarTab = (
     tab: 'audio' | 'subtitle' | 'speed' | 'server' | 'sleep',
@@ -3353,6 +3353,16 @@ const Player = ({route}: Props): React.JSX.Element => {
     ).length *
       (48 * controlStyle.scale) +
     20 + hdrWidth;
+
+  const subtitleControlsVisible = showControls && !isCasting && !isPlayerLocked &&
+    !showSettings && !showEpisodeSidebar && !editingControls;
+  const playbackSubtitleStyle = {
+    ...subtitleStyle,
+    paddingBottom: subtitleControlsVisible
+      ? Math.max(subtitleStyle.paddingBottom, Math.ceil(10 + bottomControlHeight + 40 * controlStyle.scale))
+      : subtitleStyle.paddingBottom,
+  };
+
 
   // Ask for a local file before touching the network.
   if (localDecision === 'pending') {
@@ -3619,7 +3629,7 @@ const Player = ({route}: Props): React.JSX.Element => {
           onSkipPress={handleRemoteSkip}
         />
       ) : processedStreamUrl ? (
-        <VideoPlayer {...videoPlayerProps} nativeVideoViewRef={nativeVideoViewRef} headerStatus={torrentHeaderStatus} headerRightInset={toolbarHeaderInset} playbackSuspended={editingControls} controlScale={controlStyle.scale} seekbarScale={controlStyle.seekbarScale} ambientVideoSize={loadedVideoSize} ambientDisabled={isCasting} />
+        <VideoPlayer {...videoPlayerProps} controlAppearance={controlStyle} subtitleStyle={playbackSubtitleStyle} nativeVideoViewRef={nativeVideoViewRef} headerStatus={torrentHeaderStatus} headerRightInset={toolbarHeaderInset} playbackSuspended={editingControls} controlScale={controlStyle.scale} seekbarScale={controlStyle.seekbarScale} ambientVideoSize={loadedVideoSize} ambientDisabled={isCasting} />
       ) : (
         <View className="flex-1 justify-center items-center">
           <Animated.View style={[loadingContainerStyle]}>
@@ -3816,6 +3826,7 @@ const Player = ({route}: Props): React.JSX.Element => {
       )}
       {!isCasting && !isPlayerLocked && !showSettings && !showEpisodeSidebar && !editingControls && (
         <NativeAnimated.View pointerEvents={showControls ? 'auto' : 'none'}
+          onLayout={event => setBottomControlHeight(event.nativeEvent.layout.height)}
           style={[controlsStyle, {left: '10%', right: '10%', bottom: 10}]} className="absolute">
           <PlayerControlBar ids={fittedControlLayout.bottom} controls={toolbarControls}
             onEdit={openControlEditor} appearance={controlStyle} getTVFocusProps={getTVFocusProps} />
