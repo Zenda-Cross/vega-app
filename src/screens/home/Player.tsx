@@ -1877,6 +1877,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     reloadStart?.stream === selectedStream ? reloadStart.ms : undefined;
   // Stream whose links were last refreshed after its reload failed.
   const linkRefreshRef = useRef<unknown>(null);
+  const pendingLinkRefreshRef = useRef<{stream: unknown; episodeKey: string} | null>(null);
   const switchToNextStreamRef = useRef(switchToNextStream);
   switchToNextStreamRef.current = switchToNextStream;
 
@@ -1909,6 +1910,12 @@ const Player = ({route}: Props): React.JSX.Element => {
       }
 
       const stream = selectedStreamRef.current;
+      // Native playback may report another error while extraction is pending.
+      // Let that request finish before deciding whether to switch or close.
+      if (pendingLinkRefreshRef.current?.stream === stream &&
+          pendingLinkRefreshRef.current.episodeKey === activeEpisodeKeyRef.current) {
+        return;
+      }
       if (!isTorrentStream(stream) && !isLocalPath(stream?.link)) {
         const {action, state} = decidePlaybackError(
           playbackRetryRef.current,
@@ -1936,6 +1943,8 @@ const Player = ({route}: Props): React.JSX.Element => {
         if (state.retried && linkRefreshRef.current !== stream) {
           linkRefreshRef.current = stream;
           const episodeKey = activeEpisodeKeyRef.current;
+          const pending = {stream, episodeKey};
+          pendingLinkRefreshRef.current = pending;
           ToastAndroid.show('Getting a new link', ToastAndroid.SHORT);
           refreshLinks()
             .catch(() => false)
@@ -1954,6 +1963,12 @@ const Player = ({route}: Props): React.JSX.Element => {
                   ToastAndroid.SHORT,
                 );
                 navigation.goBack();
+              }
+            })
+            .finally(() => {
+              // An older request must not clear a new episode's pending guard.
+              if (pendingLinkRefreshRef.current === pending) {
+                pendingLinkRefreshRef.current = null;
               }
             });
           setShowControls(true);
