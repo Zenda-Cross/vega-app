@@ -1,4 +1,4 @@
-import {ScrollView, View, TextInput, StyleSheet} from 'react-native';
+import {Pressable, ScrollView, View, TextInput, StyleSheet} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Slider from '../components/Slider';
 import ScreenSafeArea from '../components/ui/ScreenSafeArea';
@@ -46,6 +46,7 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
   const installedProviders = useMemo(() => storeProviders, [providersKey]);
   const [searchData, setSearchData] = useState<SearchPageData[]>([]);
   const [emptyResults, setEmptyResults] = useState<SearchPageData[]>([]);
+  const [showEmptyResults, setShowEmptyResults] = useState(false);
   const [editQuery, setEditQuery] = useState(route.params.filter);
   const [isEditFocused, setIsEditFocused] = useState(false);
 
@@ -170,6 +171,7 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
     emptyResultsRef.current = [];
     setSearchData([]);
     setEmptyResults([]);
+    setShowEmptyResults(false);
     setLoading(trueLoading);
 
     searchProviders(installedProviders, signal);
@@ -226,6 +228,9 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
     [failed, renderSlider],
   );
 
+  const EmptyResultsButton = isTV ? TVFocusable : Pressable;
+  const emptyCount = emptyResults.length + failed.length;
+
   return (
     <ScreenSafeArea className="h-full w-full bg-m3-background">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -252,7 +257,6 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
             role="headlineMediumEmphasized"
             className="flex-1 text-m3-on-background"
             numberOfLines={1}>
-            {isAllLoaded ? 'Searched for' : 'Searching for'}{' '}
             <AppText
               role="headlineMediumEmphasized"
               style={{color: colors.primary}}>
@@ -309,8 +313,25 @@ const SearchResults = ({route, navigation}: Props): React.ReactElement => {
 
         <TVFocusGuide autoFocus={false} style={{paddingHorizontal: 16}}>
           {searchSliders}
-          {emptySliders}
-          {failedSliders}
+          {emptyCount > 0 && (
+            <EmptyResultsButton accessibilityRole="button"
+              accessibilityLabel={showEmptyResults ? 'Hide empty results' : 'Show empty results'}
+              accessibilityHint="Providers with no results or search errors"
+              accessibilityState={{expanded: showEmptyResults}}
+              onPress={() => setShowEmptyResults(previous => !previous)}
+              style={{minHeight: 48, padding: 14, marginVertical: 12, borderRadius: 16,
+                backgroundColor: colors.surfaceContainer, flexDirection: 'row', alignItems: 'center', gap: 12}}>
+              <AppText role="labelLarge" style={{flex: 1, color: colors.primary}}>
+                {showEmptyResults ? 'Hide empty results' : 'Show empty results'} ({emptyCount})
+              </AppText>
+              <MaterialCommunityIcons name={showEmptyResults ? 'chevron-up' : 'chevron-down'}
+                size={24} color={colors.primary} />
+            </EmptyResultsButton>
+          )}
+          {showEmptyResults && <>
+            {emptySliders}
+            {failedSliders}
+          </>}
         </TVFocusGuide>
 
         {isAllLoaded && searchData.every(d => !d.Posts || d.Posts.length === 0) && (
