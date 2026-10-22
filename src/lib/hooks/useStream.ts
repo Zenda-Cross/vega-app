@@ -378,6 +378,29 @@ export const getNextStream = (
   return streams[currentIndex + 1];
 };
 
+// A refetch gives the same servers new links. Match the server, then its
+// quality and tag when it has several, so playback stays on the one the user
+// had.
+export const findSameServer = (
+  streams: Stream[],
+  current: Stream,
+): Stream | undefined => {
+  if (!current?.server) return undefined;
+  let best: Stream | undefined;
+  let bestScore = -1;
+  for (const stream of streams) {
+    if (stream.server !== current.server) continue;
+    const score =
+      (stream.quality === current.quality ? 2 : 0) +
+      (stream.tag === current.tag ? 1 : 0);
+    if (score > bestScore) {
+      best = stream;
+      bestScore = score;
+    }
+  }
+  return best;
+};
+
 // A stream handed to the player for its first episode, such as the one an
 // unfinished download reads. It plays before online servers load.
 export const getInitialStream = (
@@ -610,11 +633,14 @@ export const useStream = ({
     refetch,
   } = useQuery<Stream[], Error>({
     queryKey: getStreamQueryKey(activeEpisode, routeParams, provider),
-    queryFn: () =>
+    // Reading signal lets React Query cancel the provider call once nothing
+    // needs it (player closed, episode changed), so it frees its sandbox slot.
+    queryFn: ({signal}) =>
       fetchStreamList({
         episode: activeEpisode,
         routeParams,
         provider,
+        signal,
         isLocalFailed: () => localFailedRef.current,
         // A fetch from a previous episode must not replace the current selection.
         onLocalStream: localStream => {
@@ -668,7 +694,7 @@ export const useStream = ({
       if (!streamData.length) return current;
       return streamData.some(stream => stream.link === current.link)
         ? current
-        : streamData[0];
+        : findSameServer(streamData, current) || streamData[0];
     });
   }, [streamData, localFailed, initialStreamLink, error]);
 
@@ -771,6 +797,18 @@ export const useStream = ({
     return false;
   };
 
+  // Asks the provider for new links, for when the selected one has expired.
+  // Resolves true when the failed link is gone from the new list; the effect
+  // above then moves to the same server's new link.
+  const refreshLinks = async () => {
+    const failedLink = selectedStream.link;
+    const {data} = await refetch();
+    return (
+      Boolean(data?.length) &&
+      !data!.some(stream => stream.link === failedLink)
+    );
+  };
+
   return {
     streamData,
     selectedStream,
@@ -780,6 +818,7 @@ export const useStream = ({
     isLoading: isLoading && !isPlayingLocal,
     error: isPlayingLocal ? null : error,
     refetch,
+    refreshLinks,
     switchToNextStream,
   };
 };

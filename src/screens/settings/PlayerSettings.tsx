@@ -1,3 +1,4 @@
+import DropdownField from '../../components/ui/DropdownField';
 import PlayerControlStyleEditor from '../../components/PlayerControlStyleEditor';
 import {useFocusEffect} from '@react-navigation/native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -5,7 +6,7 @@ import React, {useState, useCallback} from 'react';
 import {View, ToastAndroid, BackHandler, Platform} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type {SettingsStackParamList} from '../../App';
-import {settingsStorage, SEEK_INTERVAL_OPTIONS, PLAYBACK_SPEED_MIN, PLAYBACK_SPEED_MAX, PLAYBACK_SPEED_STEP} from '../../lib/storage';
+import {settingsStorage, PLAYER_RESIZE_MODES, SEEK_INTERVAL_OPTIONS, PLAYBACK_SPEED_MIN, PLAYBACK_SPEED_MAX, PLAYBACK_SPEED_STEP} from '../../lib/storage';
 import {setVideoIntentsEnabled, supportsVideoIntents} from '../../lib/services/videoIntent';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import {TVFocusable, TVFocusGuide} from '../../components/tv';
@@ -29,6 +30,9 @@ export default function PlayerSettings({navigation}: Props) {
     });
     return () => sub.remove();
   }, [navigation]));
+  const [defaultResizeMode, setDefaultResizeMode] = useState(() =>
+    settingsStorage.getDefaultResizeMode(),
+  );
   const [playbackSpeed, setPlaybackSpeed] = useState(() => settingsStorage.getPlaybackSpeed());
   const [showMediaControls, setShowMediaControls] = useState<boolean>(() =>
     settingsStorage.showMediaControls(),
@@ -186,6 +190,36 @@ export default function PlayerSettings({navigation}: Props) {
             )}
           </SettingsSection>
           <SettingsSection title="Playback">
+            <View
+              className="px-4 py-3"
+              style={{
+                borderBottomColor: colors.outlineVariant,
+                borderBottomWidth: 1,
+              }}>
+              <AppText role="bodyLarge" style={{color: colors.onSurface}}>
+                Default video fit
+              </AppText>
+              <AppText
+                role="bodySmall"
+                style={{color: colors.onSurfaceVariant, marginTop: 3}}>
+                How videos fill the screen when playback starts
+              </AppText>
+              <View style={{width: '100%', minHeight: 56, marginTop: 12}}>
+                <DropdownField
+                  placeholder="Default video fit"
+                  options={PLAYER_RESIZE_MODES}
+                  value={PLAYER_RESIZE_MODES.find(
+                    option => option.mode === defaultResizeMode,
+                  )}
+                  getKey={option => option.mode}
+                  getLabel={option => option.label}
+                  onChange={option => {
+                    settingsStorage.setDefaultResizeMode(option.mode);
+                    setDefaultResizeMode(option.mode);
+                  }}
+                />
+              </View>
+            </View>
             <SettingsSliderRow title="Playback speed" value={playbackSpeed}
               min={PLAYBACK_SPEED_MIN} max={PLAYBACK_SPEED_MAX} step={PLAYBACK_SPEED_STEP}
               valueDisplay={`${playbackSpeed.toFixed(2)}x`} widestValue="2.00x"

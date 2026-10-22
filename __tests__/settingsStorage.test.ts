@@ -103,6 +103,20 @@ describe('settings defaults', () => {
     }
   });
 
+  it('defaults the video fit to Fit and saves the picked mode', () => {
+    expect(settingsStorage.getDefaultResizeMode()).toBe('none');
+    for (const mode of ['cover', 'stretch', 'contain', 'none'] as const) {
+      settingsStorage.setDefaultResizeMode(mode);
+      expect(settingsStorage.getDefaultResizeMode()).toBe(mode);
+      expect(mockStringValues.get(SettingsKeys.DEFAULT_RESIZE_MODE)).toBe(mode);
+    }
+  });
+
+  it('falls back to Fit for an unknown saved video fit', () => {
+    mockStringValues.set(SettingsKeys.DEFAULT_RESIZE_MODE, 'zoom');
+    expect(settingsStorage.getDefaultResizeMode()).toBe('none');
+  });
+
   it('defaults playback speed to 1x when nothing is saved', () => {
     expect(settingsStorage.getPlaybackSpeed()).toBe(1);
   });
