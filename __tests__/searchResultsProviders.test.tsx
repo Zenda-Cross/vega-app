@@ -126,3 +126,24 @@ it('does not claim no results when every source failed', async () => {
   expect(text(tree)).toContain('5 sources failed to search.');
   act(() => tree.unmount());
 });
+
+it('shows providers that have the searched title above ones that do not', async () => {
+  let tree!: renderer.ReactTestRenderer;
+  await act(async () => {
+    tree = renderer.create(<SearchResults {...props} />);
+  });
+  pending.c.resolve([{title: 'Other Movie', link: 'other', image: ''}]);
+  await flush();
+  pending.a.resolve([
+    {title: 'Dune: Part Two', link: 'dune2', image: ''},
+    {title: 'Dune', link: 'dune', image: ''},
+  ]);
+  await flush();
+  const rows = tree.root.findAllByType('Slider' as any);
+  expect(rows.map(row => row.props.title)).toEqual(['A', 'C']);
+  expect(rows[0].props.posts.map((post: any) => post.title)).toEqual([
+    'Dune',
+    'Dune: Part Two',
+  ]);
+  act(() => tree.unmount());
+});
