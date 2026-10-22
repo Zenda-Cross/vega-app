@@ -281,12 +281,12 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
       borderRadius={14}
       focusBorderColor={color}
       style={{
-        minWidth: icon ? 32 : 56,
-        height: 32,
+        minWidth: icon ? 44 : 56,
+        height: 44,
         paddingHorizontal: icon ? 6 : 14,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: filled ? color : 'transparent',
+        backgroundColor: filled ? color : '#242424',
         borderRadius: 16,
       }}>
       {icon ? (
@@ -319,7 +319,7 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
                   }
                   style={{height: canvasHeight}}>
                   <Text style={{color: '#aaa', fontSize: 11}}>
-                    Top row � {draft.top.length}/{limit}
+                    Top row · {draft.top.length}/{limit}
                   </Text>
                   <View
                     pointerEvents="none"
@@ -421,22 +421,15 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
                 </View>
               </>
       </ScrollView>
-          <View
-            style={{
-              minHeight: 36,
-              flexWrap: 'wrap',
-              marginTop: 6,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-            }}>
+          <View style={{marginTop: 8, padding: 12, borderRadius: 16, backgroundColor: '#171717'}}>
             {selected ? (
               <>
                 <Text
                   numberOfLines={1}
-                  style={{flex: 1, color: '#bbbbbb', fontSize: 12}}>
+                  style={{color: '#bbbbbb', fontSize: 12, marginBottom: 10}}>
                   {selectedTitle}
                 </Text>
+                <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
                 {activeId !== 'settings' &&
                   action(
                     hidden.includes(activeId) ? 'Show control' : 'Hide control',
@@ -458,14 +451,6 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
                   () => move(activeId, bar, index + 1),
                   'arrow-right',
                 )}
-                <View
-                  style={{
-                    height: 16,
-                    width: 1,
-                    backgroundColor: '#333333',
-                    marginHorizontal: 4,
-                  }}
-                />
                 {action(
                   'To top',
                   () => move(activeId, 'top', draft.top.length),
@@ -482,6 +467,7 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
                     () => move(activeId, 'more', draft.more.length),
                     'cog-outline',
                   )}
+                </View>
               </>
             ) : (
               <Text style={{color: '#777777', fontSize: 11}}>
