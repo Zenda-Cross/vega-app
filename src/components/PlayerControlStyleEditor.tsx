@@ -121,7 +121,7 @@ const PREVIEW: PlayerControl[] = [
 ];
 const percent = (n: number) => `${Math.round(n * 100)}%`;
 
-export default function PlayerControlStyleEditor({
+export function getPlayerControlStyleRows({
   value,
   color,
   onChange,
@@ -171,7 +171,7 @@ export default function PlayerControlStyleEditor({
       </View>
     </View>
   );
-  return (
+  const content = (
     <View>
       <View style={{padding: 10, backgroundColor: '#343a40', borderRadius: 12}}>
         <Text
@@ -301,4 +301,9 @@ export default function PlayerControlStyleEditor({
       />
     </View>
   );
+  return React.Children.toArray(content.props.children);
+}
+
+export default function PlayerControlStyleEditor(props: Parameters<typeof getPlayerControlStyleRows>[0]) {
+  return <View>{getPlayerControlStyleRows(props)}</View>;
 }

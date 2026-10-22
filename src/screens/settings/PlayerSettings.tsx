@@ -1,5 +1,5 @@
 import DropdownField from '../../components/ui/DropdownField';
-import PlayerControlStyleEditor from '../../components/PlayerControlStyleEditor';
+import {getPlayerControlStyleRows} from '../../components/PlayerControlStyleEditor';
 import {useFocusEffect} from '@react-navigation/native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import React, {useState, useCallback} from 'react';
@@ -139,10 +139,9 @@ export default function PlayerSettings({navigation}: Props) {
               icon="subtitles-outline" divider={false} onPress={() => navigation.navigate('SubTitlesPreferences')} />
           </SettingsSection>
           <SettingsSection title="Control appearance">
-            <View style={{padding: 16}}>
-              <PlayerControlStyleEditor value={controlStyle} color={colors.primary}
-                onChange={next => {settingsStorage.setPlayerControlStyle(next); setControlStyle(next);}} />
-            </View>
+            {getPlayerControlStyleRows({value: controlStyle, color: colors.primary,
+              onChange: next => {settingsStorage.setPlayerControlStyle(next); setControlStyle(next);},
+            }).map((row, index) => <View key={'appearance:' + index} style={{paddingHorizontal: 16, paddingBottom: 12}}>{row}</View>)}
           </SettingsSection>
           <SettingsSection title="Opening videos">
             {supportsVideoIntents && (
