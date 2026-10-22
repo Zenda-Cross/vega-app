@@ -4,8 +4,9 @@ import React, {useCallback, useState} from 'react';
 import {BackHandler, View} from 'react-native';
 import type {SettingsStackParamList} from '../../App';
 import PlayerControlArrangement from '../../components/PlayerControlArrangement';
-import SettingsRow from '../../components/ui/SettingsRow';
-import {TVFocusGuide} from '../../components/tv';
+import AppText from '../../components/ui/Text';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import {TVFocusable, TVFocusGuide} from '../../components/tv';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import type {PlayerControl} from '../../components/PlayerControlBar';
 import {PLAYER_CONTROL_IDS} from '../../lib/player/controlLayout';
@@ -49,9 +50,20 @@ export default function PlayerControlSettings({navigation}: Props) {
   }, [navigation]));
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <TVFocusGuide autoFocus style={{flex: 1, backgroundColor: colors.background, padding: 16}}>
-        <SettingsRow title="Control layout" description="Changes save automatically"
-          icon="arrow-left" onPress={() => navigation.goBack()} hasTVPreferredFocus={isTV} />
+      <TVFocusGuide autoFocus style={{flex: 1, backgroundColor: colors.background, padding: 20}}>
+        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
+          <TVFocusable hasTVPreferredFocus={isTV} accessibilityLabel="Go back"
+            accessibilityRole="button" onPress={() => navigation.goBack()} borderRadius={22}
+            style={{alignItems: 'center', height: 44, justifyContent: 'center', marginRight: 10, width: 44}}>
+            <MaterialCommunityIcons name="arrow-left" size={28} color={colors.onBackground} />
+          </TVFocusable>
+          <AppText role="headlineLargeEmphasized" className="text-m3-on-background" style={{flex: 1}}>
+            Control layout
+          </AppText>
+        </View>
+        <AppText role="bodyLarge" className="mb-7 mt-1 text-m3-on-surface-variant">
+          Changes save automatically
+        </AppText>
         <View style={{flex: 1, paddingTop: 12}}>
           <PlayerControlArrangement page layout={layout} hiddenControls={hidden} controls={controls}
             color={colors.primary} onChange={(next, nextHidden) => {

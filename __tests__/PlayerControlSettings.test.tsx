@@ -2,13 +2,13 @@ import React from 'react';
 import renderer, {act} from 'react-test-renderer';
 import PlayerControlSettings from '../src/screens/settings/PlayerControlSettings';
 import PlayerControlArrangement from '../src/components/PlayerControlArrangement';
-import SettingsRow from '../src/components/ui/SettingsRow';
 import {settingsStorage} from '../src/lib/storage';
 
 jest.mock('@react-navigation/native', () => ({useFocusEffect: jest.fn()}));
 jest.mock('../src/components/PlayerControlArrangement', () => 'Arrangement');
-jest.mock('../src/components/ui/SettingsRow', () => 'SettingsRow');
-jest.mock('../src/components/tv', () => ({TVFocusGuide: 'FocusGuide'}));
+jest.mock('../src/components/ui/Text', () => require('react-native').Text);
+jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('../src/components/tv', () => ({TVFocusGuide: 'FocusGuide', TVFocusable: 'FocusButton'}));
 jest.mock('react-native-gesture-handler', () => ({GestureHandlerRootView: 'GestureRoot'}));
 jest.mock('../src/lib/tv', () => ({isTV: false}));
 jest.mock('../src/theme/M3PaletteContext', () => ({useM3Colors: () => ({primary: '#fff'})}));
@@ -41,7 +41,7 @@ it('uses the shared Arrange component as a page, saves immediately, and does not
   expect(settingsStorage.setPlayerControlStyle).not.toHaveBeenCalled();
   expect(settingsStorage.setSubtitleFontSize).not.toHaveBeenCalled();
   expect(goBack).not.toHaveBeenCalled();
-  act(() => tree.root.findByType(SettingsRow).props.onPress());
+  act(() => tree.root.findByProps({accessibilityLabel: 'Go back'}).props.onPress());
   expect(goBack).toHaveBeenCalledTimes(1);
   act(() => tree.unmount());
 });
