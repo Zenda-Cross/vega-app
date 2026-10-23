@@ -257,13 +257,13 @@ const ProviderSourceManager = ({
         onRequestRemoveSource={author => setSourceToRemove(author)}
       />
 
-      <AddSourceModal
-        visible={showAddDialog}
+      {showAddDialog && <AddSourceModal
+        visible
         initialValue={prefillValue}
         initialToken={prefillToken}
         onClose={closeAddDialog}
         onAdd={handleConfirmAdd}
-      />
+      />}
 
       <AppDialog
         visible={Boolean(invalidSourceMessage)}

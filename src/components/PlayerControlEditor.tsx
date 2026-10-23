@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from 'react';
-import {Modal, ScrollView, Text, View, useWindowDimensions} from 'react-native';
+import {Modal, ScrollView, Text, View, findNodeHandle, useWindowDimensions} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {settingsStorage} from '../lib/storage';
 import {TVFocusable, TVFocusGuide} from './tv';
@@ -25,6 +25,9 @@ type Props = {
 function PlayerControlEditor({layout, controls, color, hiddenControls, appearance,
   onClose, onSave, onHaptic}: Props) {
   const {width, height} = useWindowDimensions();
+  const arrangeTabRef = useRef<View>(null);
+  const [arrangeTabHandle, setArrangeTabHandle] = useState<number>();
+  const [entryHandle, setEntryHandle] = useState<number>();
   const [tab, setTab] = useState<'arrange' | 'style' | 'subtitles'>('arrange');
   const [draft, setDraft] = useState(layout);
   const [hidden, setHidden] = useState(hiddenControls || []);
@@ -65,7 +68,10 @@ function PlayerControlEditor({layout, controls, color, hiddenControls, appearanc
           </View>
           <View style={{flexDirection: 'row', gap: 8, marginBottom: 10}}>
             {(['arrange', 'style', 'subtitles'] as const).map(item => (
-              <TVFocusable key={item} registerScreenFocus={false} accessibilityRole="tab"
+              <TVFocusable key={item} ref={item === 'arrange' ? arrangeTabRef : undefined}
+                onLayout={item === 'arrange' ? () => { const handle = findNodeHandle(arrangeTabRef.current); if (handle) setArrangeTabHandle(handle); } : undefined}
+                nextFocusDown={tab === 'arrange' ? entryHandle : undefined}
+                registerScreenFocus={false} accessibilityRole="tab"
                 accessibilityLabel={item === 'arrange' ? 'Arrange' : item === 'style' ? 'Style' : 'Subtitles'}
                 accessibilityState={{selected: tab === item}} onPress={() => setTab(item)}
                 style={{paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16,
@@ -77,7 +83,7 @@ function PlayerControlEditor({layout, controls, color, hiddenControls, appearanc
             ))}
           </View>
           {tab === 'arrange' ? (
-            <PlayerControlArrangement layout={draft} hiddenControls={hidden} controls={controls}
+            <PlayerControlArrangement exitUpHandle={arrangeTabHandle} onEntryHandle={setEntryHandle} layout={draft} hiddenControls={hidden} controls={controls}
               color={color} limit={getTopControlLimit(width / style.scale)} onHaptic={onHaptic}
               onChange={(next, nextHidden) => {setDraft(next); setHidden(nextHidden);}} />
           ) : (

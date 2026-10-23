@@ -1,9 +1,16 @@
+jest.mock('react-native', () => {
+  const rn = jest.requireActual('react-native');
+  Object.defineProperty(rn, 'findNodeHandle', {configurable: true, value: jest.fn(() => 123)});
+  return rn;
+});
 jest.mock('expo-blur', () => ({BlurView: 'BlurView'}));
 import React from 'react';
 import renderer, {act} from 'react-test-renderer';
 import {GestureDetector} from 'react-native-gesture-handler';
 import {TVFocusable} from '../src/components/tv';
 import PlayerControlEditor from '../src/components/PlayerControlEditor';
+import PlayerControlArrangement from '../src/components/PlayerControlArrangement';
+import * as RN from 'react-native';
 import {PlayerControl} from '../src/components/PlayerControlBar';
 import {
   defaultPlayerControlLayout,
@@ -233,4 +240,28 @@ it('automatically saves the title background toggle without closing', () => {
   expect(onSave.mock.calls.at(-1)![2].titleBackground).toBe(true);
   expect(onClose).not.toHaveBeenCalled();
   act(() => tree.unmount());
+});
+
+it('routes TV selection into actions and Up back to the selected tile and header', () => {
+  mockIsTV = true;
+  jest.useFakeTimers();
+  const handle = jest.spyOn(RN, 'findNodeHandle').mockReturnValue(123);
+  const focus = jest.spyOn(RN.UIManager, 'dispatchViewManagerCommand').mockImplementation(() => {});
+  let tree!: renderer.ReactTestRenderer;
+  try {
+    act(() => {tree = renderer.create(<PlayerControlArrangement layout={defaultPlayerControlLayout()}
+      controls={controls} color="#fff" exitUpHandle={99} onChange={jest.fn()} />,
+      {createNodeMock: () => ({})});});
+    const button = (label: string) => tree.root.findAllByType(TVFocusable).find(node => node.props.accessibilityLabel === label)!;
+    act(() => button('Move sleep').props.onLayout());
+    expect(button('Move sleep').props.nextFocusUp).toBe(99);
+    act(() => button('Move sleep').props.onPress());
+    act(() => jest.advanceTimersByTime(50));
+    expect(focus).toHaveBeenCalledWith(123, 'requestTVFocus', []);
+    expect(button('Move left').props.nextFocusUp).toBe(123);
+    expect(button('To bottom').props.nextFocusUp).toBe(123);
+  } finally {
+    act(() => tree?.unmount());
+    handle.mockRestore(); focus.mockRestore(); jest.useRealTimers();
+  }
 });

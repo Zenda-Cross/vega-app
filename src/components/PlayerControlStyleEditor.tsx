@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Platform, Switch, Text, View} from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {Host, Slider} from '@expo/ui/jetpack-compose';
 import {fillMaxWidth} from '@expo/ui/jetpack-compose/modifiers';
 import {useM3HostTheme} from '../theme/M3PaletteContext';
@@ -41,30 +42,33 @@ export function StyleSlider({
     );
     setPreview(draft.current);
   };
+  const adjust = (delta: number) => {
+    change(draft.current + delta);
+    onChange(draft.current);
+  };
+  const stepButton = (delta: number) => (
+    <TVFocusable registerScreenFocus={false} accessibilityRole="button"
+      accessibilityLabel={`${delta < 0 ? 'Decrease' : 'Increase'} ${label}`}
+      onPress={() => adjust(delta)} borderRadius={18} focusBorderColor={color}
+      style={{width: 36, height: 36, borderRadius: 18, backgroundColor: '#262626', alignItems: 'center', justifyContent: 'center'}}>
+      <MaterialCommunityIcons name={delta < 0 ? 'minus' : 'plus'} size={22}
+        color={(delta < 0 ? preview <= min : preview >= max) ? '#777777' : 'white'} />
+    </TVFocusable>
+  );
   return (
     <View style={{marginTop: 12}}>
       <Text style={{color: '#bbb', fontSize: 12}}>
         {label} · {format(preview)}
       </Text>
       {isTV ? (
-        <View style={{flexDirection: 'row', gap: 12, marginTop: 8}}>
-          {[-step, step].map(delta => (
-            <TVFocusable
-              key={delta}
-              registerScreenFocus={false}
-              accessibilityLabel={`${delta < 0 ? 'Decrease' : 'Increase'} ${label}`}
-              onPress={() => {
-                change(draft.current + delta);
-                onChange(draft.current);
-              }}
-              style={{
-                padding: 10,
-                backgroundColor: '#292929',
-                borderRadius: 16,
-              }}>
-              <Text style={{color: 'white'}}>{delta < 0 ? '−' : '+'}</Text>
-            </TVFocusable>
-          ))}
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4}}>
+          {stepButton(-step)}
+          <View accessibilityRole="progressbar" accessibilityLabel={label}
+            accessibilityValue={{min, max, now: preview, text: format(preview)}}
+            style={{flex: 1, height: 6, borderRadius: 3, backgroundColor: '#555555', overflow: 'hidden'}}>
+            <View style={{height: '100%', width: `${((preview - min) / (max - min)) * 100}%`, backgroundColor: color}} />
+          </View>
+          {stepButton(step)}
         </View>
       ) : (
         <Host

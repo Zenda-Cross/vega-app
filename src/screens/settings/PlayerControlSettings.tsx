@@ -1,7 +1,7 @@
 import {useFocusEffect} from '@react-navigation/native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import React, {useCallback, useState} from 'react';
-import {BackHandler, View} from 'react-native';
+import React, {useCallback, useRef, useState} from 'react';
+import {BackHandler, View, findNodeHandle} from 'react-native';
 import type {SettingsStackParamList} from '../../App';
 import PlayerControlArrangement from '../../components/PlayerControlArrangement';
 import AppText from '../../components/ui/Text';
@@ -41,6 +41,9 @@ const controls: PlayerControl[] = PLAYER_CONTROL_IDS.map(id => ({
 type Props = NativeStackScreenProps<SettingsStackParamList, 'PlayerControlSettings'>;
 export default function PlayerControlSettings({navigation}: Props) {
   const colors = useM3Colors();
+  const backRef = useRef<View>(null);
+  const [backHandle, setBackHandle] = useState<number>();
+  const [entryHandle, setEntryHandle] = useState<number>();
   const [layout, setLayout] = useState(() => settingsStorage.getPlayerControlLayout());
   const [hidden, setHidden] = useState(() => settingsStorage.getHiddenPlayerControls());
   useFocusEffect(useCallback(() => {
@@ -52,7 +55,8 @@ export default function PlayerControlSettings({navigation}: Props) {
     <GestureHandlerRootView style={{flex: 1}}>
       <TVFocusGuide autoFocus style={{flex: 1, backgroundColor: colors.background, padding: 20}}>
         <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
-          <TVFocusable hasTVPreferredFocus={isTV} accessibilityLabel="Go back"
+          <TVFocusable ref={backRef} onLayout={() => { const handle = findNodeHandle(backRef.current); if (handle) setBackHandle(handle); }}
+            nextFocusDown={entryHandle} hasTVPreferredFocus={isTV} accessibilityLabel="Go back"
             accessibilityRole="button" onPress={() => navigation.goBack()} borderRadius={22}
             style={{alignItems: 'center', height: 44, justifyContent: 'center', marginRight: 10, width: 44}}>
             <MaterialCommunityIcons name="arrow-left" size={28} color={colors.onBackground} />
@@ -65,7 +69,7 @@ export default function PlayerControlSettings({navigation}: Props) {
           Changes save automatically
         </AppText>
         <View style={{flex: 1, paddingTop: 12}}>
-          <PlayerControlArrangement page layout={layout} hiddenControls={hidden} controls={controls}
+          <PlayerControlArrangement page exitUpHandle={backHandle} onEntryHandle={setEntryHandle} layout={layout} hiddenControls={hidden} controls={controls}
             color={colors.primary} onChange={(next, nextHidden) => {
               settingsStorage.setPlayerControlLayout(next);
               settingsStorage.setHiddenPlayerControls(nextHidden);

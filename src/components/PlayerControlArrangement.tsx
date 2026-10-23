@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {ScrollView, Text, View, useWindowDimensions} from 'react-native';
+import {ScrollView, Text, View, UIManager, findNodeHandle, useWindowDimensions} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {runOnJS, useAnimatedStyle, useSharedValue} from 'react-native-reanimated';
@@ -40,6 +40,8 @@ type TokenProps = {
   hidden: boolean;
   epoch: number;
   color: string;
+  onHandle: (id: PlayerControlId, handle: number) => void;
+  nextFocusUp?: number;
   onSelect: (id: PlayerControlId) => void;
   onDragStart: (id: PlayerControlId) => void;
   onDrop: (id: PlayerControlId, x: number, y: number) => void;
@@ -56,10 +58,13 @@ function ControlToken({
   epoch,
   color,
   onSelect,
+  onHandle,
+  nextFocusUp,
   onDragStart,
   onDrop,
 }: TokenProps) {
   const id = control.id;
+  const tokenRef = useRef<View>(null);
   const dx = useSharedValue(0);
   const dy = useSharedValue(0);
   const active = useSharedValue(false);
@@ -141,6 +146,10 @@ function ControlToken({
     return (
       <View style={{position: 'absolute', left: x, top: y}}>
         <TVFocusable
+          ref={tokenRef}
+          onLayout={() => { const handle = findNodeHandle(tokenRef.current); if (handle) onHandle(id, handle); }}
+          nextFocusUp={nextFocusUp}
+          accessibilityState={{selected}}
           registerScreenFocus={false}
           onPress={() => onSelect(control.id)}
           focusBorderColor={color}
@@ -177,25 +186,48 @@ export type PlayerControlArrangementProps = {
   color: string;
   limit?: number;
   page?: boolean;
+  exitUpHandle?: number;
+  onEntryHandle?: (handle: number) => void;
   onChange: (layout: PlayerControlLayout, hidden: PlayerControlId[]) => void;
   onHaptic?: () => void;
 };
 export default function PlayerControlArrangement({layout, hiddenControls, controls, color,
-  limit = MAX_TOP_CONTROLS, page = false, onChange, onHaptic = noop}: PlayerControlArrangementProps) {
+  limit = MAX_TOP_CONTROLS, page = false, exitUpHandle, onEntryHandle, onChange, onHaptic = noop}: PlayerControlArrangementProps) {
   const {width} = useWindowDimensions();
+  const firstActionRef = useRef<View>(null);
+  const focusTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [tokenHandles, setTokenHandles] = useState<Partial<Record<PlayerControlId, number>>>({});
+  const registerToken = useCallback((id: PlayerControlId, handle: number) => {
+    setTokenHandles(previous => previous[id] === handle ? previous : {...previous, [id]: handle});
+  }, []);
+  useEffect(() => () => clearTimeout(focusTimer.current), []);
   const draft = useMemo(() => normalizePlayerControlLayout(layout, limit), [layout, limit]);
   const hidden = hiddenControls || [];
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  useEffect(() => {
+    const first = draft.top[0] ?? draft.bottom[0] ?? draft.more[0];
+    const handle = first ? tokenHandles[first] : undefined;
+    if (handle) onEntryHandle?.(handle);
+  }, [draft, tokenHandles, onEntryHandle]);
   const [selected, setSelected] = useState<PlayerControlId | null>(
     isTV ? 'sleep' : null,
   );
+  const selectControl = useCallback((id: PlayerControlId) => {
+    setSelected(id);
+    if (!isTV) return;
+    clearTimeout(focusTimer.current);
+    focusTimer.current = setTimeout(() => {
+      const handle = findNodeHandle(firstActionRef.current);
+      if (handle) UIManager.dispatchViewManagerCommand(handle, 'requestTVFocus', []);
+    }, 50);
+  }, []);
   const [canvasWidth, setCanvasWidth] = useState(
     Math.max(240, Math.min(600, width - 32) - 28),
   );
   const [epoch, setEpoch] = useState(0);
   const [message, setMessage] = useState(
-    'Hold and drag to rearrange. Tap a control for more options.',
+    isTV ? 'Select a control to open its move actions. Press Up to return to the selected control.' : 'Hold and drag to rearrange. Tap a control for more options.',
   );
   const columns = Math.max(2, Math.floor(canvasWidth / 96));
   const cellWidth = canvasWidth / columns;
@@ -231,7 +263,7 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
           ? id === 'settings' && bar === 'more'
             ? 'Settings stays last in the top or bottom row'
             : `Top bar is full (${limit} controls maximum)`
-          : 'Hold and drag to rearrange. Tap a control for more options.',
+          : isTV ? 'Select a control to open its move actions. Press Up to return to the selected control.' : 'Hold and drag to rearrange. Tap a control for more options.',
       );
       setEpoch(value => value + 1);
     },
@@ -273,6 +305,8 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
     filled = false,
   ) => (
     <TVFocusable
+      ref={title === (activeId === 'settings' ? 'Move left' : hidden.includes(activeId) ? 'Show control' : 'Hide control') ? firstActionRef : undefined}
+      nextFocusUp={isTV ? tokenHandles[activeId] : undefined}
       registerScreenFocus={page}
       hasTVPreferredFocus={filled}
       accessibilityRole="button"
@@ -411,7 +445,11 @@ export default function PlayerControlArrangement({layout, hiddenControls, contro
                           hidden={hidden.includes(id)}
                           epoch={epoch}
                           color={color}
-                          onSelect={setSelected}
+                          onSelect={selectControl}
+                          onHandle={registerToken}
+                          nextFocusUp={isTV ? (top ? exitUpHandle : lane === 'bottom'
+                            ? (slot < columns ? tokenHandles[draft.top[Math.min(slot, draft.top.length - 1)]] ?? exitUpHandle : tokenHandles[draft.bottom[slot - columns]])
+                            : (slot < columns ? tokenHandles[draft.bottom[Math.min(slot, draft.bottom.length - 1)]] ?? exitUpHandle : tokenHandles[draft.more[slot - columns]])) : undefined}
                           onDragStart={startDrag}
                           onDrop={drop}
                         />

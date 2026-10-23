@@ -141,7 +141,7 @@ export default function PlayerSettings({navigation}: Props) {
           <SettingsSection title="Control appearance">
             {getPlayerControlStyleRows({value: controlStyle, color: colors.primary,
               onChange: next => {settingsStorage.setPlayerControlStyle(next); setControlStyle(next);},
-            }).map((row, index) => <View key={'appearance:' + index} style={{paddingHorizontal: 16, paddingBottom: 12}}>{row}</View>)}
+            }).map((row, index) => <View key={'appearance:' + index} style={{paddingHorizontal: 16, paddingTop: index === 0 ? 16 : 0, paddingBottom: 12}}>{row}</View>)}
           </SettingsSection>
           <SettingsSection title="Opening videos">
             {supportsVideoIntents && (

@@ -55,6 +55,7 @@ const Library = () => {
   const colors = useM3Colors();
   const focusBorderColor = useTVFocusBorderColor();
   const {width: screenWidth} = useWindowDimensions();
+  const [containerWidth, setContainerWidth] = useState(screenWidth);
   const navigation =
     useNavigation<NativeStackNavigationProp<WatchListStackParamList>>();
   const remoteWatchList = useWatchListStore(state => state.watchList);
@@ -312,7 +313,7 @@ const Library = () => {
   // Calculate how many items can fit per row
   const containerPadding = 12;
   const itemSpacing = 10;
-  const availableWidth = screenWidth - containerPadding * 2;
+  const availableWidth = containerWidth - containerPadding * 2;
   const targetItemWidth = isTV ? 160 : 100;
   const numColumns = Math.max(
     1,
@@ -466,6 +467,39 @@ const Library = () => {
     </ScrollView>
   );
 
+  const renderLibraryCard = ({item, index}: {item: WatchListItem; index: number}) => {
+    const isTopRow = index < numColumns;
+    return (
+      <MediaPosterCard
+        ref={index === 0 ? firstCardRef : undefined}
+        onLayout={index === 0 ? updateFirstCardNode : undefined}
+        title={item.title}
+        poster={item.poster}
+        width={itemWidth}
+        selected={selectedLinks.has(item.link)}
+        selectionMode={isSelectionMode}
+        hasTVPreferredFocus={
+          isTV &&
+          !isSelectionMode &&
+          index === 0 &&
+          !initialCardFocused
+        }
+        onFocus={
+          initialCardFocused
+            ? undefined
+            : () => setInitialCardFocused(true)
+        }
+        nextFocusUp={
+          isTopRow && !isSelectionMode
+            ? (activeChipNode ?? undefined)
+            : undefined
+        }
+        onPress={() => handleCardPress(item)}
+        onLongPress={() => handleCardLongPress(item)}
+      />
+    );
+  };
+
   const editableCollection = activeCollection;
 
   return (
@@ -559,7 +593,10 @@ const Library = () => {
         />
       )}
 
-      <View className="flex-1 w-full px-3">
+      <View className="flex-1 w-full px-3" onLayout={event => {
+        const width = event.nativeEvent.layout.width;
+        if (width > 0) setContainerWidth(previous => previous === width ? previous : width);
+      }}>
         {!isSelectionMode ? (
           <>
             <View
@@ -657,43 +694,23 @@ const Library = () => {
           </>
         ) : null}
 
-        {visibleItems.length > 0 ? (
+        {visibleItems.length > 0 ? (isTV ? (
+          <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false}
+            contentContainerStyle={{paddingTop: isSelectionMode ? 14 : 0, paddingBottom: isSelectionMode ? 120 : 50}}>
+            <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: itemSpacing}}>
+              {visibleItems.map((item, index) => (
+                <React.Fragment key={JSON.stringify([item.provider, item.link])}>
+                  {renderLibraryCard({item, index})}
+                </React.Fragment>
+              ))}
+            </View>
+          </ScrollView>
+        ) : (
           <FlatList
             style={{flex: 1, minHeight: 0}}
             key={`library-cols-${numColumns}-${filter}`}
             data={visibleItems}
-            renderItem={({item, index}) => {
-              const isTopRow = index < numColumns;
-              return (
-                <MediaPosterCard
-                  ref={index === 0 ? firstCardRef : undefined}
-                  onLayout={index === 0 ? updateFirstCardNode : undefined}
-                  title={item.title}
-                  poster={item.poster}
-                  width={itemWidth}
-                  selected={selectedLinks.has(item.link)}
-                  selectionMode={isSelectionMode}
-                  hasTVPreferredFocus={
-                    isTV &&
-                    !isSelectionMode &&
-                    index === 0 &&
-                    !initialCardFocused
-                  }
-                  onFocus={
-                    initialCardFocused
-                      ? undefined
-                      : () => setInitialCardFocused(true)
-                  }
-                  nextFocusUp={
-                    isTopRow && !isSelectionMode
-                      ? (activeChipNode ?? undefined)
-                      : undefined
-                  }
-                  onPress={() => handleCardPress(item)}
-                  onLongPress={() => handleCardLongPress(item)}
-                />
-              );
-            }}
+            renderItem={renderLibraryCard}
             keyExtractor={item => JSON.stringify([item.provider, item.link])}
             windowSize={isTV ? 21 : 7}
             maxToRenderPerBatch={isTV ? 10 : 8}
@@ -711,7 +728,7 @@ const Library = () => {
             removeClippedSubviews={false}
             showsVerticalScrollIndicator={false}
           />
-        ) : (
+        )) : (
           <View className="flex-1">
             <View className="items-center justify-center mt-16 mb-12 px-6">
               {activeCollection ? (
