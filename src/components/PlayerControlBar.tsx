@@ -136,7 +136,8 @@ export default function PlayerControlBar({
   };
   if (top)
     return (
-      <View collapsable={false} style={[{flexDirection: 'row', gap: 8 * appearance.scale}, backgroundStyle]}>
+      <View testID="player-top-control-row" collapsable={false}
+        style={[{flexDirection: 'row', gap: 8 * appearance.scale}, backgroundStyle, isTV && {overflow: 'visible'}]}>
         {children}
       </View>
     );

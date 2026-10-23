@@ -9,7 +9,9 @@ import {normalizePlayerControlStyle, defaultPlayerControlStyle} from '../src/lib
 
 jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('@expo/vector-icons/MaterialIcons', () => 'Icon');
-jest.mock('../src/lib/tv/constants', () => ({isTV: false}));
+let mockIsTV = false;
+jest.mock('../src/lib/tv/constants', () => ({get isTV() { return mockIsTV; }}));
+beforeEach(() => { mockIsTV = false; });
 
 const controls: PlayerControl[] = [
   {
@@ -162,5 +164,20 @@ it('ignores obsolete saved blur settings and keeps the chosen tint', () => {
     onEdit={() => {}} getTVFocusProps={() => ({})} appearance={appearance} />);});
   const viewport = tree.root.findByProps({testID: 'player-control-row-background'});
   expect(StyleSheet.flatten(viewport.props.style).backgroundColor).toBe('rgba(0,0,0,0.4)');
+  act(() => tree.unmount());
+});
+
+it.each([false, true])('preserves the full top focus border for TV=%s without changing phone clipping', tv => {
+  mockIsTV = tv;
+  let tree!: renderer.ReactTestRenderer;
+  act(() => {tree = renderer.create(<PlayerControlBar top ids={['sleep', 'speed']} controls={controls}
+    appearance={{...defaultPlayerControlStyle(), backgroundOpacity: 0.5}}
+    onEdit={() => {}} getTVFocusProps={() => ({style: {borderWidth: 2.5, borderColor: '#fff'}})} />);});
+  const row = tree.root.findByProps({testID: 'player-top-control-row'});
+  expect(StyleSheet.flatten(row.props.style).overflow).toBe(tv ? 'visible' : 'hidden');
+  expect(StyleSheet.flatten(row.props.style).backgroundColor).toBe('rgba(0,0,0,0.5)');
+  for (const button of tree.root.findAllByType(TouchableOpacity)) {
+    expect(StyleSheet.flatten(button.props.style).borderWidth).toBe(2.5);
+  }
   act(() => tree.unmount());
 });
