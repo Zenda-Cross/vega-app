@@ -370,6 +370,21 @@ class RemoteDeliveryModule(
         }
     }
 
+    private fun executeMediaRequest(client: OkHttpClient, request: Request): OkHttpResponse {
+        try {
+            return client.newCall(request).execute()
+        } catch (error: java.net.ProtocolException) {
+            if (!error.message.orEmpty().contains("Unexpected status line", ignoreCase = true)) throw error
+            // Do not reuse a possibly desynchronized HTTP/1 connection. Only
+            // replay a GET/HEAD before headers/body have reached the receiver.
+            if (request.method !in listOf("GET", "HEAD")) throw error
+            val fresh = client.newBuilder()
+                .connectionPool(okhttp3.ConnectionPool(0, 1, TimeUnit.SECONDS))
+                .build()
+            return fresh.newCall(request.newBuilder().header("Connection", "close").build()).execute()
+        }
+    }
+
     private val hlsClient: OkHttpClient by lazy {
         (DohOkHttpFactory.instance?.createNewNetworkModuleClient() ?: OkHttpClient())
             .newBuilder()
@@ -383,7 +398,10 @@ class RemoteDeliveryModule(
             android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING
         )
         val port = server?.listeningPort ?: 0
-        return "http://127.0.0.1:$port/hls/$sessionId/$encoded/" + if (playlist) "index.m3u8" else "seg.ts"
+        // Browser receivers need LAN URLs for every rendition, segment and key.
+        // Internal FFmpeg inputs keep their existing loopback delivery path.
+        val host = if (sessions[sessionId]?.mode == "proxy") getLocalIpAddress() else "127.0.0.1"
+        return "http://$host:$port/hls/$sessionId/$encoded/" + if (playlist) "index.m3u8" else "seg.ts"
     }
 
     private fun rewritePlaylist(sessionId: String, body: String, base: okhttp3.HttpUrl): String {
@@ -439,7 +457,7 @@ class RemoteDeliveryModule(
             rangeHeader, session.hlsSegmentPrefixes[target] ?: 0
         ))
         RemoteSourceFailures.noteHlsRead()
-        val upstream = hlsClient.newCall(builder.build()).execute()
+        val upstream = executeMediaRequest(hlsClient, builder.build())
         if (!upstream.isSuccessful) {
             RemoteSourceFailures.record(target, upstream.code, upstream.header("Retry-After"))
             val retryAfter = upstream.header("Retry-After")
@@ -538,7 +556,7 @@ class RemoteDeliveryModule(
             val isRemoteHls = !isLocal && sourceUrl.contains(".m3u8", ignoreCase = true)
             // HLS has no container duration; sum the media playlist's #EXTINF values.
             // Probe even when JS passed a duration: it may be a stale store value.
-            val resolvedDuration = if (isRemoteHls) {
+            val resolvedDuration = if (isRemoteHls && mode != "proxy") {
                 val durationKey = metadataKey(sourceUrl, headers)
                 val probed = if (vodHlsSources.contains(sourceUrl)) {
                     hlsDurations.get(durationKey) { hlsPlaylistDuration(sourceUrl, headers) }
@@ -627,6 +645,9 @@ class RemoteDeliveryModule(
                 }
                 "hls" -> "http://$lanIp:$port/hlsout/$sessionId/index.m3u8"
                 "progressive" -> "http://$lanIp:$port/dlna/$sessionId/stream.mp4"
+                "proxy" -> if (isRemoteHls || mimeType.contains("mpegurl", ignoreCase = true)) {
+                    hlsProxyUrl(sessionId, sourceUrl, playlist = true)
+                } else "http://$lanIp:$port/proxy/$sessionId/stream"
                 else -> "http://$lanIp:$port/proxy/$sessionId/stream"
             }
             // Full URL for manual testing: adb logcat -s RemoteDeliveryModule
@@ -1772,7 +1793,7 @@ class RemoteDeliveryModule(
                 requestBuilder.header("Range", rangeHeader)
             }
 
-            val okResponse = httpClient.newCall(requestBuilder.build()).execute()
+            val okResponse = executeMediaRequest(httpClient, requestBuilder.build())
             val responseStatus = Response.Status.lookup(okResponse.code) ?: Response.Status.INTERNAL_ERROR
             val body = okResponse.body
             val inputStream = body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))

@@ -105,6 +105,7 @@ import useDownloadsStore, {
 import {RemotePlayerScreen} from '../../components/remote-player';
 import {useRemoteStore} from '../../lib/remote/remoteStore';
 import {remotePlaybackManager} from '../../lib/remote/remotePlaybackManager';
+import {vegaCastService} from '../../lib/remote/vegaCastService';
 import {remoteDeliveryService} from '../../lib/remote/remoteDeliveryService';
 import {
   RemoteAudioTrack,
@@ -2399,7 +2400,7 @@ const Player = ({route}: Props): React.JSX.Element => {
     // DLNA comes from the store; Cast comes from the live session, so switching
     // Cast devices reloads and the placeholder-then-real-id double load cannot happen.
     const targetDevice: RemoteDevice | null =
-      connectedRemoteDevice?.type === 'dlna'
+      (connectedRemoteDevice?.type === 'dlna' || connectedRemoteDevice?.type === 'vega-cast')
         ? connectedRemoteDevice
         : remoteMediaClient && castDevice
           ? {
@@ -2493,6 +2494,9 @@ const Player = ({route}: Props): React.JSX.Element => {
                 : undefined;
 
         await remotePlaybackManager.startRemotePlayback(targetDevice, {
+          servers:useRemoteStore.getState().servers,
+          serverId:selectedStream?.link,
+          providerStream:selectedStream||undefined,
           sourceUrl: processedStreamUrl,
           sourceType: selectedStream?.type,
           isLocal: Boolean(isLocalOrDownloadedStream),
@@ -3166,6 +3170,15 @@ const Player = ({route}: Props): React.JSX.Element => {
     },
     [setSelectedStream, activeEpisodeKey, clearLocalVideoAssociation],
   );
+  useEffect(()=>vegaCastService.setServerSelector((server,position)=>{
+    if(useRemoteStore.getState().connectedDevice?.type!=='vega-cast')throw new Error('Vega Cast is not connected');
+    const stream=streamData?.find((item:any)=>item.link===server.id||item.link===server.link);
+    if(!stream)throw new Error('This server is no longer available');
+    videoPositionRef.current={...videoPositionRef.current,position};hasProgressRef.current=true;
+    remoteCastPositionRef.current=position;
+    setSelectedStream(stream);appliedPersistedLocalVideoRef.current=true;
+    if(activeEpisodeKey)clearLocalVideoAssociation(activeEpisodeKey);
+  }),[streamData,setSelectedStream,activeEpisodeKey,clearLocalVideoAssociation,videoPositionRef,hasProgressRef]);
   const handleSelectMenuQuality = useCallback(
     (index: number) => {
       if (index === 1000) {

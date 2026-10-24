@@ -10,6 +10,7 @@ import {useM3Colors} from '../../theme/M3PaletteContext';
 import SearchSubtitles, {FoundSubtitle} from '../SearchSubtitles';
 import {useRemoteStore} from '../../lib/remote/remoteStore';
 import {remotePlaybackManager} from '../../lib/remote/remotePlaybackManager';
+import {vegaCastService} from '../../lib/remote/vegaCastService';
 import {
   RemoteAudioTrack,
   RemoteQuality,
@@ -310,6 +311,9 @@ export const RemoteSettingsSheets: React.FC<RemoteSettingsSheetsProps> = ({
   };
 
   const handleSelectSpeed = (speed: number) => {
+    if(connectedDevice?.type==='vega-cast'){
+      void vegaCastService.command('SPEED',speed).catch(error=>useRemoteStore.getState().setErrorMessage(error.message));return;
+    }
     const client = remotePlaybackManager.getCastClient();
     if (!client || connectedDevice?.type !== 'cast') {
       useRemoteStore

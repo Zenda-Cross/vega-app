@@ -7,6 +7,14 @@ const ADD_SOURCE_ACTION = 'vega.intent.action.ADD_SOURCE';
 
 const withAndroidNativeConfig = config => {
   config = withAndroidManifest(config, manifestConfig => {
+    // QR scanning is optional; receivers and TV devices need no camera hardware.
+    const manifest = manifestConfig.modResults.manifest;
+    manifest['uses-feature'] = manifest['uses-feature'] || [];
+    for (const name of ['android.hardware.camera', 'android.hardware.camera.autofocus']) {
+      const feature = manifest['uses-feature'].find(item => item.$?.['android:name'] === name);
+      if (feature) feature.$['android:required'] = 'false';
+      else manifest['uses-feature'].push({$: {'android:name': name, 'android:required': 'false'}});
+    }
     const application = manifestConfig.modResults.manifest.application?.[0];
     if (application?.$) {
       application.$['android:usesCleartextTraffic'] = 'true';

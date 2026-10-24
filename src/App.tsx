@@ -38,7 +38,8 @@ import PlayerSettings from './screens/settings/PlayerSettings';
 import PlayerControlSettings from './screens/settings/PlayerControlSettings';
 import Appearance from './screens/settings/Appearance';
 import {M3ThemeProvider} from './theme/M3ThemeProvider';
-import {AppState, LogBox, useWindowDimensions} from 'react-native';
+import {AppState, Linking, LogBox, useWindowDimensions} from 'react-native';
+import {vegaCastService} from './lib/remote/vegaCastService';
 import {EpisodeLink, Stream} from './lib/providers/types';
 import {
   SafeAreaProvider,
@@ -523,6 +524,11 @@ function TabStack() {
 }
 
 const App = () => {
+  useEffect(()=>{
+    void Linking.getInitialURL().then(url=>{if(url)vegaCastService.handleInvitation(url);});
+    const subscription=Linking.addEventListener('url',event=>{vegaCastService.handleInvitation(event.url);});
+    return()=>subscription.remove();
+  },[]);
   const [hasFirebase] = useState(
     () =>
       Boolean(Constants?.expoConfig?.extra?.hasFirebase) &&

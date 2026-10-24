@@ -26,6 +26,7 @@ module.exports = () => {
   const APP_SCHEME = IS_PLAYSTORE ? 'vegaapp' : 'com.vega';
   const plugins = [
     './plugins/with-custom-native-modules.js',
+    ...(!IS_TV ? [['expo-camera', {cameraPermission: 'Allow Vega to scan receiver QR codes.', recordAudioAndroid: false}]] : []),
     './plugins/android-native-config.js',
     './plugins/with-saf-copy-module.js',
     './plugins/with-uri-permission-module.js',
@@ -138,7 +139,7 @@ module.exports = () => {
   return {
     expo: {
       name: 'Vega',
-      scheme: APP_SCHEME,
+      scheme: [APP_SCHEME, 'vega-cast'],
       displayName: 'Vega',
       jsEngine: 'hermes',
       newArchEnabled: true,
@@ -200,6 +201,10 @@ module.exports = () => {
       },
       platforms: ['ios', 'android'],
       extra: {
+        vegaCastServiceUrl: process.env.VEGA_CAST_SERVICE_URL || 'https://cast.vega-app.in/vega-cast/v1',
+        // Optional STUN/TURN servers. Use short-lived TURN credentials in builds;
+        // never commit a permanent relay secret. Empty means same-LAN ICE only.
+        vegaCastIceServers: JSON.parse(process.env.VEGA_CAST_ICE_SERVERS || '[]'),
         eas: {
           projectId: '40d98354-d3c8-4616-ab2e-70d9c297091f',
         },
