@@ -4,10 +4,30 @@ const {
   withDangerousMod,
   withMainApplication,
   withAppBuildGradle,
+  withProjectBuildGradle,
   withAndroidManifest,
 } = require('expo/config-plugins');
 
 function withCustomNativeModules(config) {
+  config = withProjectBuildGradle(config, cfg => {
+    const marker = '// Vega: align Media3 with react-native-video and its FFmpeg decoder.';
+    if (!cfg.modResults.contents.includes(marker)) {
+      cfg.modResults.contents += `
+${marker}
+allprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'androidx.media3') {
+                details.useVersion '1.8.0'
+                details.because 'react-native-video and the FFmpeg decoder require the Media3 1.8 API'
+            }
+        }
+    }
+}
+`;
+    }
+    return cfg;
+  });
   // 1. Copy the files over
   config = withDangerousMod(config, [
     'android',
